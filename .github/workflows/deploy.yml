@@ -47,7 +47,9 @@ jobs:
             sudo systemctl start postgresql
             sudo systemctl enable postgresql
 
-            # Create database and user
+            # Drop existing database and user (if they exist) and create fresh ones
+            sudo -u postgres psql -c "DROP DATABASE IF EXISTS neustream;"
+            sudo -u postgres psql -c "DROP USER IF EXISTS neustream_user;"
             sudo -u postgres psql -c "CREATE DATABASE neustream;"
             sudo -u postgres psql -c "CREATE USER neustream_user WITH PASSWORD '23k4j123k4ksdhfasiuhe';"
             sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE neustream TO neustream_user;"

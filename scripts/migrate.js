@@ -7,12 +7,8 @@ const pool = new Pool({
   database: "neustream",
   user: "neustream_user",
   password: "23k4j123k4ksdhfasiuhe",
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false,
-  // Prefer IPv6 connections for cloud provider
-  family: 6,
+  // No SSL needed for local connections
+  ssl: false
 });
 
 async function runMigrations() {
