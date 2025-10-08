@@ -15,7 +15,8 @@ db.connect().catch(err => {
 
 // Stream authentication endpoint (called by nginx-rtmp)
 router.post('/stream', async (req, res) => {
-  const { name: streamKey } = req.body;
+  // nginx-rtmp sends stream key as URL-encoded form data, not JSON
+  const streamKey = req.body.name || req.query.name;
 
   try {
     const users = await db.query(
@@ -42,7 +43,8 @@ router.post('/stream', async (req, res) => {
 
 // Stream end callback (called by nginx-rtmp when stream stops)
 router.post('/stream-end', async (req, res) => {
-  const { name: streamKey } = req.body;
+  // nginx-rtmp sends stream key as URL-encoded form data, not JSON
+  const streamKey = req.body.name || req.query.name;
 
   try {
     // Mark the stream as ended
