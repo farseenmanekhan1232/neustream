@@ -34,7 +34,7 @@ router.get('/info', async (req, res) => {
     res.json({
       streamKey,
       isActive,
-      rtmpUrl: `rtmp://${process.env.MEDIA_SERVER_HOST}/live`,
+      rtmpUrl: `rtmp://${process.env.STREAM_DOMAIN || process.env.MEDIA_SERVER_HOST}/live`,
       activeStream: isActive ? activeStreams[0] : null
     });
   } catch (error) {
