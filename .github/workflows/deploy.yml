@@ -78,6 +78,10 @@ jobs:
             # Install nginx for HTTPS reverse proxy
             sudo apt install -y nginx
 
+            # Open firewall ports for HTTP/HTTPS (Oracle Cloud)
+            sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || echo "Port 80 rule already exists"
+            sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || echo "Port 443 rule already exists"
+
             # Create app directory and set ownership (idempotent)
             sudo mkdir -p /opt/neustream
             sudo chown ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
@@ -100,6 +104,32 @@ jobs:
             JWT_SECRET=$(openssl rand -base64 32)
             EOF
 
+            # Setup nginx reverse proxy with SSL (you'll need to configure SSL certificates manually)
+            cat > /tmp/nginx-control-plane.conf << EOF
+            server {
+                listen 80;
+                server_name ${{ secrets.API_DOMAIN }} neustream.app;
+
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOF
+
+            sudo cp /tmp/nginx-control-plane.conf /etc/nginx/sites-available/neustream
+            sudo ln -sf /etc/nginx/sites-available/neustream /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t
+            sudo systemctl restart nginx
+
             # Run database migrations with local PostgreSQL
             echo "Running database migrations..."
             npm run migrate || echo "Migrations failed - please check PostgreSQL logs"
@@ -121,31 +151,6 @@ jobs:
             sleep 5
             pm2 status
             curl -f http://localhost:3000/health || echo "Health check failed but continuing..."
-
-            # Setup nginx reverse proxy with SSL (you'll need to configure SSL certificates manually)
-            cat > /tmp/nginx-control-plane.conf << 'EOF'
-            server {
-                listen 80;
-                server_name ${{ secrets.API_DOMAIN }};
-
-                location / {
-                    proxy_pass http://localhost:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    proxy_cache_bypass $http_upgrade;
-                }
-            }
-            EOF
-
-            sudo cp /tmp/nginx-control-plane.conf /etc/nginx/sites-available/neustream
-            sudo ln -sf /etc/nginx/sites-available/neustream /etc/nginx/sites-enabled/
-            sudo nginx -t
-            sudo systemctl restart nginx
 
             echo "✅ Control Plane setup complete!"
             echo "⚠️  IMPORTANT: You need to:"
@@ -270,10 +275,10 @@ jobs:
             curl -f http://localhost/health || echo "nginx health check failed but continuing..."
 
             # Setup nginx for media server domain (optional - for HLS/HTTP streaming)
-            cat > /tmp/nginx-media-server.conf << 'EOF'
+            cat > /tmp/nginx-media-server.conf << EOF
             server {
                 listen 80;
-                server_name ${{ secrets.STREAM_DOMAIN }};
+                server_name ${{ secrets.STREAM_DOMAIN }} stream.neustream.app;
 
                 # HLS streaming endpoint (if you add HLS support later)
                 location /hls/ {
@@ -305,6 +310,7 @@ jobs:
 
             sudo cp /tmp/nginx-media-server.conf /etc/nginx/sites-available/media-server
             sudo ln -sf /etc/nginx/sites-available/media-server /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t
             sudo systemctl restart nginx
 
