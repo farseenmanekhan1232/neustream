@@ -112,7 +112,7 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    if: github.event_name != 'pull_request'
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -127,6 +127,10 @@ jobs:
 
     - name: Deploy to Vercel
       run: |
-        cd frontend
-        echo "VITE_API_BASE=http://${{ secrets.CONTROL_PLANE_HOST }}:3000/api" > .env.production
-        vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
+        if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+          cd frontend
+          echo "VITE_API_BASE=http://${{ secrets.CONTROL_PLANE_HOST }}:3000/api" > .env.production
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
+        else
+          echo "Skipping Vercel deployment - VERCEL_TOKEN not set"
+        fi
