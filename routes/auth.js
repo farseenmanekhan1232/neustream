@@ -86,4 +86,41 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// User login
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    await db.connect();
+    const users = await db.query(
+      'SELECT id, email, password_hash, stream_key FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = users[0];
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        streamKey: user.stream_key
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  } finally {
+    db.close();
+  }
+});
+
 module.exports = router;

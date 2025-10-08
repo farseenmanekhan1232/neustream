@@ -12,13 +12,19 @@ function App() {
     rtmpUrl: '',
     streamKey: ''
   })
+  const [authForm, setAuthForm] = useState({ email: '', password: '' })
+  const [isLogin, setIsLogin] = useState(true)
+  const [authError, setAuthError] = useState('')
 
-  // Mock user for demo (in real app, implement proper auth)
+  // Check if user is already logged in (from localStorage)
   useEffect(() => {
-    const mockUser = { id: 1, email: 'demo@neustream.com', streamKey: 'demo_stream_key_123' }
-    setUser(mockUser)
-    fetchStreamInfo(mockUser.id)
-    fetchDestinations(mockUser.id)
+    const savedUser = localStorage.getItem('neustream_user')
+    if (savedUser) {
+      const userData = JSON.parse(savedUser)
+      setUser(userData)
+      fetchStreamInfo(userData.id)
+      fetchDestinations(userData.id)
+    }
   }, [])
 
   const fetchStreamInfo = async (userId) => {
@@ -62,15 +68,98 @@ function App() {
     }
   }
 
+  const handleAuth = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+
+    try {
+      const endpoint = isLogin ? '/auth/login' : '/auth/register'
+      const response = await axios.post(`${API_BASE}${endpoint}`, authForm)
+
+      const userData = response.data.user
+      setUser(userData)
+      localStorage.setItem('neustream_user', JSON.stringify(userData))
+
+      fetchStreamInfo(userData.id)
+      fetchDestinations(userData.id)
+    } catch (error) {
+      setAuthError(error.response?.data?.error || 'Authentication failed')
+    }
+  }
+
+  const logout = () => {
+    setUser(null)
+    setStreamInfo(null)
+    setDestinations([])
+    localStorage.removeItem('neustream_user')
+  }
+
   if (!user) {
-    return <div className="container">Loading...</div>
+    return (
+      <div className="container">
+        <div className="header">
+          <h1>Neustream</h1>
+          <p>Multi-platform streaming made simple</p>
+        </div>
+
+        <div className="card">
+          <h2>{isLogin ? 'Login' : 'Register'}</h2>
+          {authError && (
+            <div style={{ color: '#ff6b6b', marginBottom: '16px', padding: '12px', background: '#2a1a1a', borderRadius: '8px' }}>
+              {authError}
+            </div>
+          )}
+          <form onSubmit={handleAuth}>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={authForm.email}
+                onChange={(e) => setAuthForm({...authForm, email: e.target.value})}
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm({...authForm, password: e.target.value})}
+                placeholder="Your password"
+                required
+              />
+            </div>
+            <button type="submit" className="btn" style={{ width: '100%', marginBottom: '12px' }}>
+              {isLogin ? 'Login' : 'Register'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+              onClick={() => setIsLogin(!isLogin)}
+            >
+              {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="container">
       <div className="header">
-        <h1>Neustream</h1>
-        <p>Multi-platform streaming made simple</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Neustream</h1>
+            <p>Multi-platform streaming made simple</p>
+          </div>
+          <div>
+            <span style={{ marginRight: '16px', color: '#cccccc' }}>{user.email}</span>
+            <button onClick={logout} className="btn btn-secondary">Logout</button>
+          </div>
+        </div>
       </div>
 
       {/* Stream Information */}

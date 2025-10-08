@@ -11,6 +11,16 @@ router.get('/', async (req, res) => {
   try {
     await db.connect();
 
+    // Validate user exists
+    const users = await db.query(
+      'SELECT id FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     const destinations = await db.query(
       'SELECT * FROM destinations WHERE user_id = $1 ORDER BY created_at DESC',
       [userId]
@@ -31,6 +41,16 @@ router.post('/', async (req, res) => {
 
   try {
     await db.connect();
+
+    // Validate user exists
+    const users = await db.query(
+      'SELECT id FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     const result = await db.run(
       'INSERT INTO destinations (user_id, platform, rtmp_url, stream_key) VALUES ($1, $2, $3, $4) RETURNING *',
