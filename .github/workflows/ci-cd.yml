@@ -64,6 +64,12 @@ jobs:
           echo "Running database migrations..."
           npm run migrate || echo "Migrations completed or already up to date"
 
+          # Update nginx configuration from project
+          echo "Updating nginx configuration..."
+          sudo cp /opt/neustream/nginx-control-plane.conf /etc/nginx/sites-available/neustream
+          sudo nginx -t
+          sudo systemctl reload nginx
+
           # Restart application
           pm2 restart neustream-control-plane
 
@@ -114,8 +120,9 @@ jobs:
           CONTROL_PLANE_URL=https://api.neustream.app
           EOF
 
-          # Update nginx configuration if needed
-          echo "Checking nginx configuration..."
+          # Update nginx configuration from project
+          echo "Updating nginx configuration..."
+          sudo cp /opt/neustream/nginx-media-server.conf /etc/nginx/nginx.conf
 
           # Test nginx configuration
           sudo nginx -t

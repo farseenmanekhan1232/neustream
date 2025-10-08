@@ -104,36 +104,8 @@ jobs:
             JWT_SECRET=$(openssl rand -base64 32)
             EOF
 
-            # Setup nginx reverse proxy with SSL
-            cat > /tmp/nginx-control-plane.conf << 'EOF'
-            server {
-                listen 80;
-                server_name api.neustream.app;
-                return 301 https://$server_name$request_uri;
-            }
-
-            server {
-                listen 443 ssl;
-                server_name api.neustream.app;
-
-                ssl_certificate /etc/letsencrypt/live/neustream.app/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/neustream.app/privkey.pem;
-
-                location / {
-                    proxy_pass http://localhost:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    proxy_cache_bypass $http_upgrade;
-                }
-            }
-            EOF
-
-            sudo cp /tmp/nginx-control-plane.conf /etc/nginx/sites-available/neustream
+            # Copy nginx configuration from project
+            sudo cp /opt/neustream/nginx-control-plane.conf /etc/nginx/sites-available/neustream
             sudo ln -sf /etc/nginx/sites-available/neustream /etc/nginx/sites-enabled/
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t
@@ -226,63 +198,8 @@ jobs:
             CONTROL_PLANE_URL=https://api.neustream.app
             EOF
 
-            # Create simple nginx config for HTTPS proxy
-            cat > /tmp/nginx-media-server.conf << 'EOF'
-            worker_processes auto;
-            error_log /var/log/nginx/error.log warn;
-            pid /var/run/nginx.pid;
-
-            events {
-                worker_connections 1024;
-            }
-
-            # HTTP server for stats and health checks
-            http {
-                # HTTP redirect to HTTPS
-                server {
-                    listen 80;
-                    server_name stream.neustream.app;
-                    return 301 https://$server_name$request_uri;
-                }
-
-                # HTTPS server
-                server {
-                    listen 443 ssl;
-                    server_name stream.neustream.app;
-
-                    ssl_certificate /etc/letsencrypt/live/stream.neustream.app/fullchain.pem;
-                    ssl_certificate_key /etc/letsencrypt/live/stream.neustream.app/privkey.pem;
-
-                    # Health check endpoint for media server
-                    location /health {
-                        proxy_pass http://localhost:8000;
-                        proxy_http_version 1.1;
-                        proxy_set_header Upgrade $http_upgrade;
-                        proxy_set_header Connection 'upgrade';
-                        proxy_set_header Host $host;
-                        proxy_set_header X-Real-IP $remote_addr;
-                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                        proxy_set_header X-Forwarded-Proto $scheme;
-                        proxy_cache_bypass $http_upgrade;
-                    }
-
-                    # Stats page for Node-Media-Server
-                    location /stat {
-                        proxy_pass http://localhost:8000;
-                        proxy_http_version 1.1;
-                        proxy_set_header Upgrade $http_upgrade;
-                        proxy_set_header Connection 'upgrade';
-                        proxy_set_header Host $host;
-                        proxy_set_header X-Real-IP $remote_addr;
-                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                        proxy_set_header X-Forwarded-Proto $scheme;
-                        proxy_cache_bypass $http_upgrade;
-                    }
-                }
-            }
-            EOF
-
-            sudo cp /tmp/nginx-media-server.conf /etc/nginx/nginx.conf
+            # Copy nginx configuration from project
+            sudo cp /opt/neustream/nginx-media-server.conf /etc/nginx/nginx.conf
             sudo nginx -t
             sudo systemctl restart nginx
             sudo systemctl enable nginx 2>/dev/null || echo "nginx already enabled"
