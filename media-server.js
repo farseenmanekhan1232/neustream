@@ -47,7 +47,7 @@ nms.on("prePublish", async (id, StreamPath, args) => {
   try {
     // Authenticate stream with control plane
     const authResponse = await axios.post(
-      "http://api.neustream.app/api/auth/stream",
+      "https://api.neustream.app/api/auth/stream",
       {
         name: streamKey,
       },
@@ -63,7 +63,7 @@ nms.on("prePublish", async (id, StreamPath, args) => {
 
       // Get forwarding configuration for this stream
       const forwardingResponse = await axios.get(
-        `http://api.neustream.app/api/streams/forwarding/${streamKey}`
+        `https://api.neustream.app/api/streams/forwarding/${streamKey}`
       );
       const { destinations, pushConfig } = forwardingResponse.data;
 
@@ -127,7 +127,7 @@ nms.on("donePublish", async (id, StreamPath, args) => {
   try {
     // Notify control plane that stream ended
     await axios.post(
-      "http://api.neustream.app/api/auth/stream-end",
+      "https://api.neustream.app/api/auth/stream-end",
       {
         name: streamKey,
       },
