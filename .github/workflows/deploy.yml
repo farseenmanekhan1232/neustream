@@ -1,0 +1,43 @@
+name: Deploy Neustream
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-control-plane:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Control Plane
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CONTROL_PLANE_HOST }}
+        username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+        key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+        script: |
+          cd /opt/neustream
+          git pull origin main
+          npm install
+          npm run migrate
+          pm2 restart neustream-control-plane || pm2 start server.js --name "neustream-control-plane"
+
+  deploy-media-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Media Server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.MEDIA_SERVER_HOST }}
+        username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+        key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+        script: |
+          cd /opt/neustream
+          git pull origin main
+          sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
+          sudo nginx -t && sudo systemctl reload nginx

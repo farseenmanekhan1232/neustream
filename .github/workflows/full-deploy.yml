@@ -1,0 +1,132 @@
+name: Full Deploy Neustream
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-control-plane:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Control Plane
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CONTROL_PLANE_HOST }}
+        username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+        key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+        script: |
+          echo "🚀 Deploying Control Plane..."
+
+          # Create app directory if it doesn't exist
+          sudo mkdir -p /opt/neustream
+          sudo chown $USER:$USER /opt/neustream
+          cd /opt/neustream
+
+          # Clone or pull latest code
+          if [ ! -d ".git" ]; then
+            git clone ${{ github.server_url }}/${{ github.repository }} .
+          else
+            git pull origin main
+          fi
+
+          # Create environment file from secrets
+          cat > .env << EOF
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          PORT=3000
+          NODE_ENV=production
+          MEDIA_SERVER_HOST=${{ secrets.MEDIA_SERVER_HOST }}
+          JWT_SECRET=$(openssl rand -base64 32)
+          EOF
+
+          # Install dependencies
+          npm install
+
+          # Run database migrations
+          npm run migrate
+
+          # Start/restart service with PM2
+          npm install -g pm2
+          pm2 delete neustream-control-plane 2>/dev/null || true
+          pm2 start server.js --name "neustream-control-plane"
+          pm2 save
+          pm2 startup
+
+          echo "✅ Control Plane deployed successfully"
+
+  deploy-media-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Media Server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.MEDIA_SERVER_HOST }}
+        username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+        key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+        script: |
+          echo "🚀 Deploying Media Server..."
+
+          # Create app directory if it doesn't exist
+          sudo mkdir -p /opt/neustream
+          sudo chown $USER:$USER /opt/neustream
+          cd /opt/neustream
+
+          # Clone or pull latest code
+          if [ ! -d ".git" ]; then
+            git clone ${{ github.server_url }}/${{ github.repository }} .
+          else
+            git pull origin main
+          fi
+
+          # Update nginx config with control plane IP
+          sed -i "s/CONTROL_PLANE_IP_HERE/${{ secrets.CONTROL_PLANE_HOST }}/g" nginx-rtmp.conf
+
+          # Install nginx with RTMP if not installed
+          if ! command -v nginx &> /dev/null; then
+            sudo yum update -y
+            sudo yum install -y epel-release
+            sudo yum install -y nginx nginx-mod-rtmp ffmpeg
+          fi
+
+          # Configure firewall
+          sudo firewall-cmd --permanent --add-port=1935/tcp 2>/dev/null || true
+          sudo firewall-cmd --permanent --add-port=80/tcp 2>/dev/null || true
+          sudo firewall-cmd --reload 2>/dev/null || true
+
+          # Deploy nginx config
+          sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
+          sudo nginx -t
+          sudo systemctl restart nginx
+          sudo systemctl enable nginx
+
+          echo "✅ Media Server deployed successfully"
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+
+    - name: Deploy to Vercel
+      run: |
+        cd frontend
+        echo "VITE_API_BASE=http://${{ secrets.CONTROL_PLANE_HOST }}:3000/api" > .env.production
+        vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
