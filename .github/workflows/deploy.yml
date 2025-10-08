@@ -338,7 +338,7 @@ jobs:
           if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
             cd frontend
             # Use your domain with HTTPS for API access
-            echo "VITE_API_BASE=https://${{ secrets.API_DOMAIN }}/api" > .env.production
+            echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
             vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
           else
             echo "Skipping Vercel deployment - VERCEL_TOKEN not set"
