@@ -80,7 +80,15 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+
+    // Provide more specific error messages
+    if (error.code === '23505') { // Unique constraint violation
+      res.status(400).json({ error: 'Email already exists' });
+    } else if (error.code === '23502') { // Not null violation
+      res.status(400).json({ error: 'Email and password are required' });
+    } else {
+      res.status(500).json({ error: 'Registration failed' });
+    }
   } finally {
     db.close();
   }
