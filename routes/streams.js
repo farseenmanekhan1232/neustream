@@ -40,8 +40,6 @@ router.get('/info', async (req, res) => {
   } catch (error) {
     console.error('Get stream info error:', error);
     res.status(500).json({ error: 'Failed to fetch stream info' });
-  } finally {
-    db.close();
   }
 });
 
@@ -64,8 +62,6 @@ router.get('/active', async (req, res) => {
   } catch (error) {
     console.error('Get active streams error:', error);
     res.status(500).json({ error: 'Failed to fetch active streams' });
-  } finally {
-    db.close();
   }
 });
 

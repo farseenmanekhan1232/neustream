@@ -30,8 +30,6 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Get destinations error:', error);
     res.status(500).json({ error: 'Failed to fetch destinations' });
-  } finally {
-    db.close();
   }
 });
 
@@ -61,8 +59,6 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Add destination error:', error);
     res.status(500).json({ error: 'Failed to add destination' });
-  } finally {
-    db.close();
   }
 });
 
@@ -87,8 +83,6 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     console.error('Update destination error:', error);
     res.status(500).json({ error: 'Failed to update destination' });
-  } finally {
-    db.close();
   }
 });
 
@@ -104,8 +98,6 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete destination error:', error);
     res.status(500).json({ error: 'Failed to delete destination' });
-  } finally {
-    db.close();
   }
 });
 

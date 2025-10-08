@@ -31,8 +31,6 @@ router.post('/stream', async (req, res) => {
   } catch (error) {
     console.error('Stream auth error:', error);
     res.status(500).send('Internal server error');
-  } finally {
-    db.close();
   }
 });
 
@@ -52,8 +50,6 @@ router.post('/stream-end', async (req, res) => {
   } catch (error) {
     console.error('Stream end error:', error);
     res.status(500).send('Internal server error');
-  } finally {
-    db.close();
   }
 });
 
@@ -89,8 +85,6 @@ router.post('/register', async (req, res) => {
     } else {
       res.status(500).json({ error: 'Registration failed' });
     }
-  } finally {
-    db.close();
   }
 });
 
@@ -126,8 +120,6 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
-  } finally {
-    db.close();
   }
 });
 
