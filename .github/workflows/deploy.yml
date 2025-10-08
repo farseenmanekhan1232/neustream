@@ -49,7 +49,7 @@ jobs:
 
             # Create database and user
             sudo -u postgres psql -c "CREATE DATABASE neustream;"
-            sudo -u postgres psql -c "CREATE USER neustream_user WITH PASSWORD 'neustream_password';"
+            sudo -u postgres psql -c "CREATE USER neustream_user WITH PASSWORD '23k4j123k4ksdhfasiuhe';"
             sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE neustream TO neustream_user;"
 
             # Allow local connections

@@ -1,33 +1,36 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  host: "localhost",
+  port: 5432,
+  database: "neustream",
+  user: "neustream_user",
+  password: "23k4j123k4ksdhfasiuhe",
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
   // Prefer IPv6 connections for cloud provider
-  family: 6
+  family: 6,
 });
 
 async function runMigrations() {
   let client;
 
   try {
-    console.log('Attempting to connect to PostgreSQL database...');
-    console.log('Connection details:', {
+    console.log("Attempting to connect to PostgreSQL database...");
+    console.log("Connection details:", {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME,
-      user: process.env.DB_USER
+      user: process.env.DB_USER,
     });
 
     client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL database');
+    console.log("✅ Connected to PostgreSQL database");
 
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // Create users table
     await client.query(`
@@ -65,13 +68,13 @@ async function runMigrations() {
       )
     `);
 
-    await client.query('COMMIT');
-    console.log('✅ PostgreSQL migrations completed successfully');
+    await client.query("COMMIT");
+    console.log("✅ PostgreSQL migrations completed successfully");
   } catch (err) {
     if (client) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
     }
-    console.error('Migration error:', err);
+    console.error("Migration error:", err);
     throw err;
   } finally {
     if (client) {
