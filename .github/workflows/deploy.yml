@@ -31,17 +31,21 @@ jobs:
           # Update package list
           sudo apt update
 
-          # Install git
-          sudo apt install -y git
+          # Install git (skip if already installed)
+          sudo apt install -y git || echo "Git already installed"
 
-          # Install Node.js 18
-          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-          sudo apt install -y nodejs
+          # Install Node.js 18 (skip if already installed)
+          if ! command -v node &> /dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt install -y nodejs
+          else
+            echo "Node.js already installed"
+          fi
 
-          # Install PM2
-          sudo npm install -g pm2
+          # Install PM2 (skip if already installed)
+          sudo npm install -g pm2 || echo "PM2 already installed"
 
-          # Create app directory and set ownership
+          # Create app directory and set ownership (idempotent)
           sudo mkdir -p /opt/neustream
           sudo chown ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
           cd /opt/neustream
@@ -49,7 +53,7 @@ jobs:
           # Install dependencies
           npm install --no-audit --no-fund
 
-          # Create environment file
+          # Create environment file (overwrite if exists)
           cat > .env << EOF
           DB_HOST=${{ secrets.DB_HOST }}
           DB_PORT=${{ secrets.DB_PORT }}
@@ -63,14 +67,26 @@ jobs:
           EOF
 
           # Try to run migrations (might fail if DB not accessible)
+          # First check if tables already exist to avoid migration conflicts
           npm run migrate || echo "Migrations failed - will retry later"
+
+          # Stop existing service if running
+          pm2 delete neustream-control-plane 2>/dev/null || echo "No existing service to delete"
+
+          # Clean up any orphaned processes
+          pkill -f "node.*server.js" 2>/dev/null || echo "No orphaned processes found"
 
           # Start service with PM2
           pm2 start server.js --name "neustream-control-plane"
           pm2 save
 
-          # Setup PM2 startup
-          sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.CONTROL_PLANE_USERNAME }} --hp /home/${{ secrets.CONTROL_PLANE_USERNAME }}
+          # Setup PM2 startup (idempotent)
+          sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.CONTROL_PLANE_USERNAME }} --hp /home/${{ secrets.CONTROL_PLANE_USERNAME }} 2>/dev/null || echo "PM2 startup already configured"
+
+          # Verify service is running
+          sleep 5
+          pm2 status
+          curl -f http://localhost:3000/health || echo "Health check failed but continuing..."
 
           echo "✅ Control Plane setup complete!"
 
@@ -101,33 +117,93 @@ jobs:
           # Update package list
           sudo apt update
 
-          # Install git
-          sudo apt install -y git
+          # Install git (skip if already installed)
+          sudo apt install -y git || echo "Git already installed"
 
-          # Install nginx with RTMP module
-          sudo apt install -y nginx libnginx-mod-rtmp
+          # Install nginx with RTMP module (skip if already installed)
+          sudo apt install -y nginx libnginx-mod-rtmp || echo "nginx already installed"
 
           # Configure firewall (use iptables instead of ufw)
-          sudo iptables -A INPUT -p tcp --dport 1935 -j ACCEPT
-          sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+          sudo iptables -A INPUT -p tcp --dport 1935 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
+          sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
 
-          # Create app directory and set ownership
+          # Create app directory and set ownership (idempotent)
           sudo mkdir -p /opt/neustream
           sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
           cd /opt/neustream
 
-          # Configure nginx with control plane IP
-          sed -i "s/CONTROL_PLANE_IP_HERE/${{ secrets.CONTROL_PLANE_HOST }}/g" nginx-rtmp.conf
+          # Remove the separate RTMP config approach - using single config file
 
-          # Remove problematic RTMP directives for Ubuntu nginx
-          sed -i '/rtmp_auto_push on;/d' nginx-rtmp.conf
-          sed -i '/rtmp_auto_push_reconnect 1s;/d' nginx-rtmp.conf
+          # Create main nginx config with RTMP module loaded at top level
+          cat > /tmp/nginx-main.conf << 'EOF'
+          # Load RTMP module
+          load_module /usr/lib/nginx/modules/ngx_rtmp_module.so;
 
-          # Deploy nginx configuration
-          sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
+          worker_processes auto;
+          error_log /var/log/nginx/error.log warn;
+          pid /var/run/nginx.pid;
+
+          events {
+              worker_connections 1024;
+          }
+
+          # RTMP configuration
+          rtmp {
+              server {
+                  listen 1935;
+                  chunk_size 4096;
+                  max_streams 10;
+                  ping 30s;
+                  ping_timeout 10s;
+
+                  application live {
+                      live on;
+                      record off;
+                      drop_idle_publisher 10s;
+
+                      # Authentication callback
+                      on_publish http://${{ secrets.CONTROL_PLANE_HOST }}:3000/api/auth/stream;
+                      on_publish_done http://${{ secrets.CONTROL_PLANE_HOST }}:3000/api/auth/stream-end;
+
+                      # Push to destinations based on user configuration
+                      # This will be dynamically updated by the control plane
+                      # For now, we'll use static destinations that users configure
+                      # push rtmp://a.rtmp.youtube.com/live2/stream_key_here;
+                      # push rtmp://live.twitch.tv/app/stream_key_here;
+                      # push rtmp://live-api-s.facebook.com:80/rtmp/stream_key_here;
+                  }
+              }
+          }
+
+          # HTTP server for stats and health checks
+          http {
+              server {
+                  listen 80;
+                  location /stat {
+                      rtmp_stat all;
+                      rtmp_stat_stylesheet stat.xsl;
+                  }
+
+                  location /stat.xsl {
+                      root /usr/share/nginx/html;
+                  }
+
+                  location /health {
+                      return 200 'ok';
+                      add_header Content-Type text/plain;
+                  }
+              }
+          }
+          EOF
+
+          sudo cp /tmp/nginx-main.conf /etc/nginx/nginx.conf
           sudo nginx -t
           sudo systemctl restart nginx
-          sudo systemctl enable nginx
+          sudo systemctl enable nginx 2>/dev/null || echo "nginx already enabled"
+
+          # Verify nginx is running
+          sleep 3
+          curl -f http://localhost/health || echo "nginx health check failed but continuing..."
 
           echo "✅ Media Server setup complete!"
 

@@ -1,56 +1,56 @@
 const express = require('express');
-const { Pool } = require('pg');
+const Database = require('../lib/database');
 
 const router = express.Router();
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+const db = new Database();
 
 // Get user's stream info
 router.get('/info', async (req, res) => {
   const { userId } = req.query;
 
   try {
+    await db.connect();
+
     // Get user's stream key
-    const userResult = await pool.query(
+    const users = await db.query(
       'SELECT stream_key FROM users WHERE id = $1',
       [userId]
     );
 
-    if (userResult.rows.length === 0) {
+    if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const streamKey = userResult.rows[0].stream_key;
+    const streamKey = users[0].stream_key;
 
     // Check if stream is active
-    const streamResult = await pool.query(
+    const activeStreams = await db.query(
       'SELECT * FROM active_streams WHERE user_id = $1 AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1',
       [userId]
     );
 
-    const isActive = streamResult.rows.length > 0;
+    const isActive = activeStreams.length > 0;
 
     res.json({
       streamKey,
       isActive,
       rtmpUrl: `rtmp://${process.env.MEDIA_SERVER_HOST}/live`,
-      activeStream: isActive ? streamResult.rows[0] : null
+      activeStream: isActive ? activeStreams[0] : null
     });
   } catch (error) {
     console.error('Get stream info error:', error);
     res.status(500).json({ error: 'Failed to fetch stream info' });
+  } finally {
+    db.close();
   }
 });
 
 // Get active streams (for monitoring)
 router.get('/active', async (req, res) => {
   try {
-    const result = await pool.query(`
+    await db.connect();
+
+    const activeStreams = await db.query(`
       SELECT
         s.*,
         u.email
@@ -60,10 +60,12 @@ router.get('/active', async (req, res) => {
       ORDER BY s.started_at DESC
     `);
 
-    res.json({ activeStreams: result.rows });
+    res.json({ activeStreams });
   } catch (error) {
     console.error('Get active streams error:', error);
     res.status(500).json({ error: 'Failed to fetch active streams' });
+  } finally {
+    db.close();
   }
 });
 

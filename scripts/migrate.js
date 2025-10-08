@@ -8,14 +8,26 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  // Force IPv4 to avoid IPv6 connection issues
-  family: 4
+  // Prefer IPv6 connections for cloud provider
+  family: 6
 });
 
 async function runMigrations() {
-  const client = await pool.connect();
+  let client;
 
   try {
+    console.log('Attempting to connect to PostgreSQL database via IPv6...');
+    console.log('Connection details:', {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      ipVersion: 'IPv6 (family: 6)'
+    });
+
+    client = await pool.connect();
+    console.log('✅ Connected to PostgreSQL database via IPv6');
+
     await client.query('BEGIN');
 
     // Create users table
@@ -57,11 +69,15 @@ async function runMigrations() {
     await client.query('COMMIT');
     console.log('✅ PostgreSQL migrations completed successfully');
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('Migration error:', err);
     throw err;
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
     await pool.end();
   }
 }

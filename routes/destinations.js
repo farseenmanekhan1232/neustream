@@ -1,29 +1,27 @@
 const express = require('express');
-const { Pool } = require('pg');
+const Database = require('../lib/database');
 
 const router = express.Router();
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+const db = new Database();
 
 // Get user's destinations
 router.get('/', async (req, res) => {
   const { userId } = req.query;
 
   try {
-    const result = await pool.query(
+    await db.connect();
+
+    const destinations = await db.query(
       'SELECT * FROM destinations WHERE user_id = $1 ORDER BY created_at DESC',
       [userId]
     );
 
-    res.json({ destinations: result.rows });
+    res.json({ destinations });
   } catch (error) {
     console.error('Get destinations error:', error);
     res.status(500).json({ error: 'Failed to fetch destinations' });
+  } finally {
+    db.close();
   }
 });
 
@@ -32,15 +30,19 @@ router.post('/', async (req, res) => {
   const { userId, platform, rtmpUrl, streamKey } = req.body;
 
   try {
-    const result = await pool.query(
+    await db.connect();
+
+    const result = await db.run(
       'INSERT INTO destinations (user_id, platform, rtmp_url, stream_key) VALUES ($1, $2, $3, $4) RETURNING *',
       [userId, platform, rtmpUrl, streamKey]
     );
 
-    res.json({ destination: result.rows[0] });
+    res.json({ destination: result });
   } catch (error) {
     console.error('Add destination error:', error);
     res.status(500).json({ error: 'Failed to add destination' });
+  } finally {
+    db.close();
   }
 });
 
@@ -50,19 +52,23 @@ router.put('/:id', async (req, res) => {
   const { platform, rtmpUrl, streamKey, isActive } = req.body;
 
   try {
-    const result = await pool.query(
+    await db.connect();
+
+    const result = await db.run(
       'UPDATE destinations SET platform = $1, rtmp_url = $2, stream_key = $3, is_active = $4 WHERE id = $5 RETURNING *',
       [platform, rtmpUrl, streamKey, isActive, id]
     );
 
-    if (result.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Destination not found' });
     }
 
-    res.json({ destination: result.rows[0] });
+    res.json({ destination: result });
   } catch (error) {
     console.error('Update destination error:', error);
     res.status(500).json({ error: 'Failed to update destination' });
+  } finally {
+    db.close();
   }
 });
 
@@ -71,11 +77,15 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    await pool.query('DELETE FROM destinations WHERE id = $1', [id]);
+    await db.connect();
+
+    await db.run('DELETE FROM destinations WHERE id = $1', [id]);
     res.json({ message: 'Destination deleted successfully' });
   } catch (error) {
     console.error('Delete destination error:', error);
     res.status(500).json({ error: 'Failed to delete destination' });
+  } finally {
+    db.close();
   }
 });
 
