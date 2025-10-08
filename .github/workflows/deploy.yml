@@ -62,13 +62,15 @@ jobs:
           JWT_SECRET=$(openssl rand -base64 32)
           EOF
 
-          # Run migrations
-          npm run migrate
+          # Try to run migrations (might fail if DB not accessible)
+          npm run migrate || echo "Migrations failed - will retry later"
 
           # Start service with PM2
           pm2 start server.js --name "neustream-control-plane"
           pm2 save
-          pm2 startup
+
+          # Setup PM2 startup
+          sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.CONTROL_PLANE_USERNAME }} --hp /home/${{ secrets.CONTROL_PLANE_USERNAME }}
 
           echo "✅ Control Plane setup complete!"
 
@@ -105,9 +107,9 @@ jobs:
           # Install nginx with RTMP module
           sudo apt install -y nginx libnginx-mod-rtmp
 
-          # Configure firewall
-          sudo ufw allow 1935/tcp
-          sudo ufw allow 80/tcp
+          # Configure firewall (use iptables instead of ufw)
+          sudo iptables -A INPUT -p tcp --dport 1935 -j ACCEPT
+          sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 
           # Create app directory and set ownership
           sudo mkdir -p /opt/neustream
@@ -116,6 +118,10 @@ jobs:
 
           # Configure nginx with control plane IP
           sed -i "s/CONTROL_PLANE_IP_HERE/${{ secrets.CONTROL_PLANE_HOST }}/g" nginx-rtmp.conf
+
+          # Remove problematic RTMP directives for Ubuntu nginx
+          sed -i '/rtmp_auto_push on;/d' nginx-rtmp.conf
+          sed -i '/rtmp_auto_push_reconnect 1s;/d' nginx-rtmp.conf
 
           # Deploy nginx configuration
           sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf

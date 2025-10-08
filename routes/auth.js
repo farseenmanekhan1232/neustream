@@ -13,7 +13,7 @@ router.post('/stream', async (req, res) => {
   try {
     await db.connect();
     const users = await db.query(
-      'SELECT id FROM users WHERE stream_key = ?',
+      'SELECT id FROM users WHERE stream_key = $1',
       [streamKey]
     );
 
@@ -23,7 +23,7 @@ router.post('/stream', async (req, res) => {
 
     // Start tracking the active stream
     await db.run(
-      'INSERT INTO active_streams (user_id, stream_key) VALUES (?, ?)',
+      'INSERT INTO active_streams (user_id, stream_key) VALUES ($1, $2)',
       [users[0].id, streamKey]
     );
 
@@ -41,8 +41,9 @@ router.post('/stream-end', async (req, res) => {
   const { name: streamKey } = req.body;
 
   try {
+    await db.connect();
     // Mark the stream as ended
-    await pool.query(
+    await db.run(
       'UPDATE active_streams SET ended_at = NOW() WHERE stream_key = $1 AND ended_at IS NULL',
       [streamKey]
     );
@@ -51,6 +52,8 @@ router.post('/stream-end', async (req, res) => {
   } catch (error) {
     console.error('Stream end error:', error);
     res.status(500).send('Internal server error');
+  } finally {
+    db.close();
   }
 });
 
@@ -59,24 +62,27 @@ router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    await db.connect();
     const passwordHash = await bcrypt.hash(password, 12);
     const streamKey = crypto.randomBytes(24).toString('hex');
 
-    const result = await pool.query(
+    const result = await db.run(
       'INSERT INTO users (email, password_hash, stream_key) VALUES ($1, $2, $3) RETURNING id, email, stream_key',
       [email, passwordHash, streamKey]
     );
 
     res.json({
       user: {
-        id: result.rows[0].id,
-        email: result.rows[0].email,
-        streamKey: result.rows[0].stream_key
+        id: result.id,
+        email: email,
+        streamKey: streamKey
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Registration failed' });
+  } finally {
+    db.close();
   }
 });
 
