@@ -193,59 +193,47 @@ jobs:
             # Install git (skip if already installed)
             sudo apt install -y git || echo "Git already installed"
 
-            # Install nginx with RTMP module (skip if already installed)
-            sudo apt install -y nginx libnginx-mod-rtmp || echo "nginx already installed"
+            # Install Node.js 18 (skip if already installed)
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt install -y nodejs
+            else
+              echo "Node.js already installed"
+            fi
 
-            # No Cloudflare Tunnel needed for media server
+            # Install PM2 (skip if already installed)
+            sudo npm install -g pm2 || echo "PM2 already installed"
+
+            # Install nginx for HTTPS reverse proxy (without RTMP module)
+            sudo apt install -y nginx
 
             # Configure firewall (use iptables instead of ufw)
             sudo iptables -A INPUT -p tcp --dport 1935 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
             sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
+            sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
 
             # Create app directory and set ownership (idempotent)
             sudo mkdir -p /opt/neustream
             sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
             cd /opt/neustream
 
-            # Create main nginx config with RTMP module loaded at top level
-            cat > /tmp/nginx-main.conf << 'EOF'
-            # Load RTMP module
-            load_module /usr/lib/nginx/modules/ngx_rtmp_module.so;
+            # Install dependencies
+            npm install --no-audit --no-fund
 
+            # Create environment file for media server
+            cat > .env << EOF
+            NODE_ENV=production
+            CONTROL_PLANE_URL=https://api.neustream.app
+            EOF
+
+            # Create simple nginx config for HTTPS proxy
+            cat > /tmp/nginx-media-server.conf << 'EOF'
             worker_processes auto;
             error_log /var/log/nginx/error.log warn;
             pid /var/run/nginx.pid;
 
             events {
                 worker_connections 1024;
-            }
-
-            # RTMP configuration
-            rtmp {
-                server {
-                    listen 1935;
-                    chunk_size 4096;
-                    max_streams 10;
-                    ping 30s;
-                    ping_timeout 10s;
-
-                    application live {
-                        live on;
-                        record off;
-                        drop_idle_publisher 10s;
-
-                        # Authentication callback (must use HTTP, not HTTPS for RTMP)
-                        on_publish http://api.neustream.app/api/auth/stream;
-                        on_publish_done http://api.neustream.app/api/auth/stream-end;
-
-                        # Push to destinations based on user configuration
-                        # This will be dynamically updated by the control plane
-                        # For now, we'll use static destinations that users configure
-                        # push rtmp://a.rtmp.youtube.com/live2/stream_key_here;
-                        # push rtmp://live.twitch.tv/app/stream_key_here;
-                        # push rtmp://live-api-s.facebook.com:80/rtmp/stream_key_here;
-                    }
-                }
             }
 
             # HTTP server for stats and health checks
@@ -265,32 +253,57 @@ jobs:
                     ssl_certificate /etc/letsencrypt/live/stream.neustream.app/fullchain.pem;
                     ssl_certificate_key /etc/letsencrypt/live/stream.neustream.app/privkey.pem;
 
-                    # Stats page
-                    location /stat {
-                        rtmp_stat all;
-                        rtmp_stat_stylesheet stat.xsl;
-                    }
-
-                    location /stat.xsl {
-                        root /usr/share/nginx/html;
-                    }
-
+                    # Health check endpoint for media server
                     location /health {
-                        return 200 'ok';
-                        add_header Content-Type text/plain;
+                        proxy_pass http://localhost:8000;
+                        proxy_http_version 1.1;
+                        proxy_set_header Upgrade $http_upgrade;
+                        proxy_set_header Connection 'upgrade';
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_cache_bypass $http_upgrade;
+                    }
+
+                    # Stats page for Node-Media-Server
+                    location /stat {
+                        proxy_pass http://localhost:8000;
+                        proxy_http_version 1.1;
+                        proxy_set_header Upgrade $http_upgrade;
+                        proxy_set_header Connection 'upgrade';
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_cache_bypass $http_upgrade;
                     }
                 }
             }
             EOF
 
-            sudo cp /tmp/nginx-main.conf /etc/nginx/nginx.conf
+            sudo cp /tmp/nginx-media-server.conf /etc/nginx/nginx.conf
             sudo nginx -t
             sudo systemctl restart nginx
             sudo systemctl enable nginx 2>/dev/null || echo "nginx already enabled"
 
-            # Verify nginx is running
-            sleep 3
-            curl -f http://localhost/health || echo "nginx health check failed but continuing..."
+            # Stop existing service if running
+            pm2 delete neustream-media-server 2>/dev/null || echo "No existing service to delete"
+
+            # Clean up any orphaned processes
+            pkill -f "node.*media-server.js" 2>/dev/null || echo "No orphaned processes found"
+
+            # Start media server with PM2
+            pm2 start media-server.js --name "neustream-media-server"
+            pm2 save
+
+            # Setup PM2 startup (idempotent)
+            sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.MEDIA_SERVER_USERNAME }} --hp /home/${{ secrets.MEDIA_SERVER_USERNAME }} 2>/dev/null || echo "PM2 startup already configured"
+
+            # Verify service is running
+            sleep 5
+            pm2 status
+            curl -f http://localhost:8000/api/stat || echo "Media server health check failed but continuing..."
 
             echo "✅ Media Server setup complete!"
             echo "📺 RTMP Streaming URL: rtmp://stream.neustream.app/live"

@@ -105,6 +105,15 @@ jobs:
 
           cd /opt/neustream
 
+          # Install dependencies
+          npm install --no-audit --no-fund
+
+          # Update environment file for control plane communication
+          cat > .env << EOF
+          NODE_ENV=production
+          CONTROL_PLANE_URL=https://api.neustream.app
+          EOF
+
           # Update nginx configuration if needed
           echo "Checking nginx configuration..."
 
@@ -114,8 +123,14 @@ jobs:
           # Reload nginx if config is valid
           sudo systemctl reload nginx
 
+          # Restart Node-Media-Server
+          pm2 restart neustream-media-server
+
+          # Wait for services to be ready
+          sleep 5
+
           # Verify media server is running
-          sleep 3
+          pm2 status
           curl -f https://stream.neustream.app/health || echo "Health check failed - checking logs..."
 
           echo "✅ Media Server deployment complete!"

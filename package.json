@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "media-server": "node media-server.js",
+    "media-dev": "nodemon media-server.js",
     "migrate": "node scripts/migrate.js",
     "test": "echo 'No tests yet - add your test framework here' && exit 0"
   },
@@ -17,7 +19,8 @@
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.1",
     "bcryptjs": "^2.4.3",
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "node-media-server": "^2.4.9"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
