@@ -10,6 +10,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Copy code to Control Plane
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.CONTROL_PLANE_HOST }}
+        username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+        key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+        source: "."
+        target: "/opt/neustream"
+
     - name: Setup Control Plane
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -17,12 +26,49 @@ jobs:
         username: ${{ secrets.CONTROL_PLANE_USERNAME }}
         key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
         script: |
-          echo "🚀 Running minimal Control Plane setup..."
+          echo "🚀 Running complete Control Plane setup..."
 
-          # Download and run minimal setup script
-          curl -O https://raw.githubusercontent.com/farseenmanekhan1232/neustream/main/setup-control-plane-minimal.sh
-          chmod +x setup-control-plane-minimal.sh
-          ./setup-control-plane-minimal.sh
+          # Update package list
+          sudo apt update
+
+          # Install git
+          sudo apt install -y git
+
+          # Install Node.js 18
+          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+          sudo apt install -y nodejs
+
+          # Install PM2
+          sudo npm install -g pm2
+
+          # Create app directory and set ownership
+          sudo mkdir -p /opt/neustream
+          sudo chown ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
+          cd /opt/neustream
+
+          # Install dependencies
+          npm install --no-audit --no-fund
+
+          # Create environment file
+          cat > .env << EOF
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          PORT=3000
+          NODE_ENV=production
+          MEDIA_SERVER_HOST=${{ secrets.MEDIA_SERVER_HOST }}
+          JWT_SECRET=$(openssl rand -base64 32)
+          EOF
+
+          # Run migrations
+          npm run migrate
+
+          # Start service with PM2
+          pm2 start server.js --name "neustream-control-plane"
+          pm2 save
+          pm2 startup
 
           echo "✅ Control Plane setup complete!"
 
@@ -32,6 +78,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Copy code to Media Server
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.MEDIA_SERVER_HOST }}
+        username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+        key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+        source: "."
+        target: "/opt/neustream"
+
     - name: Setup Media Server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -39,12 +94,34 @@ jobs:
         username: ${{ secrets.MEDIA_SERVER_USERNAME }}
         key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
         script: |
-          echo "🚀 Running minimal Media Server setup..."
+          echo "🚀 Running complete Media Server setup..."
 
-          # Download and run minimal setup script
-          curl -O https://raw.githubusercontent.com/farseenmanekhan1232/neustream/main/setup-media-server-minimal.sh
-          chmod +x setup-media-server-minimal.sh
-          ./setup-media-server-minimal.sh
+          # Update package list
+          sudo apt update
+
+          # Install git
+          sudo apt install -y git
+
+          # Install nginx with RTMP module
+          sudo apt install -y nginx libnginx-mod-rtmp
+
+          # Configure firewall
+          sudo ufw allow 1935/tcp
+          sudo ufw allow 80/tcp
+
+          # Create app directory and set ownership
+          sudo mkdir -p /opt/neustream
+          sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
+          cd /opt/neustream
+
+          # Configure nginx with control plane IP
+          sed -i "s/CONTROL_PLANE_IP_HERE/${{ secrets.CONTROL_PLANE_HOST }}/g" nginx-rtmp.conf
+
+          # Deploy nginx configuration
+          sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
+          sudo nginx -t
+          sudo systemctl restart nginx
+          sudo systemctl enable nginx
 
           echo "✅ Media Server setup complete!"
 

@@ -1,130 +1,76 @@
-# 🚀 Manual Setup Guide for Oracle Cloud Free Tier
-
-## ⚠️ Important: Memory Constraints
-
-**Oracle Cloud Free Tier has only 1GB RAM per instance.**
-- `yum update` gets killed due to memory limits
-- Use minimal setup scripts that avoid system updates
-- Run commands one by one with pauses between
+# 🚀 Automated Setup Guide for Ubuntu 20.04
 
 ## 🎯 Recommended Approach
 
-Use the **minimal setup scripts** or follow the **step-by-step manual commands** from `MANUAL_SETUP_STEPS.md`
+Use **GitHub Actions** for complete automation - no manual setup required!
 
 ## 📋 Prerequisites
 
-- 2x Oracle Cloud VM.Standard.E2.1.Micro instances (1GB RAM each)
-- SSH access to both instances
-- GitHub repository with code
+- 2x Ubuntu 20.04 instances (1GB RAM each)
+- PostgreSQL database (external)
+- GitHub repository with secrets configured
 
-## 🔧 Step 1: Control Plane Setup
+## 🔧 Step 1: Configure GitHub Secrets
 
-### SSH to Control Plane Instance
-```bash
-ssh opc@CONTROL_PLANE_IP
-```
+Make sure these secrets are set in your GitHub repository:
 
-### Run Minimal Setup (Recommended)
-```bash
-# Download and run the minimal setup script
-curl -O https://raw.githubusercontent.com/farseenmanekhan1232/neustream/main/setup-control-plane-minimal.sh
-chmod +x setup-control-plane-minimal.sh
-./setup-control-plane-minimal.sh
-```
+### Control Plane Secrets
+- `CONTROL_PLANE_HOST` - IP address of control plane instance
+- `CONTROL_PLANE_USERNAME` - SSH username (usually `ubuntu`)
+- `CONTROL_PLANE_SSH_KEY` - SSH private key
 
-**OR** use the step-by-step manual approach from `MANUAL_SETUP_STEPS.md`
+### Media Server Secrets
+- `MEDIA_SERVER_HOST` - IP address of media server instance
+- `MEDIA_SERVER_USERNAME` - SSH username (usually `ubuntu`)
+- `MEDIA_SERVER_SSH_KEY` - SSH private key
 
-### Manual Steps (if script fails)
-```bash
-# Install git
-sudo yum install -y git
+### Database Secrets
+- `DB_HOST` - PostgreSQL host
+- `DB_PORT` - PostgreSQL port (default: 5432)
+- `DB_NAME` - Database name
+- `DB_USER` - Database user
+- `DB_PASSWORD` - Database password
 
-# Install Node.js
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-sudo yum install -y nodejs
+### Frontend Secrets
+- `VERCEL_TOKEN` - Vercel deployment token
 
-# Install PM2
-sudo npm install -g pm2
+## 🚀 Step 2: Run Automated Setup
 
-# Clone repo
-sudo mkdir -p /opt/neustream
-sudo chown opc:opc /opt/neustream
-cd /opt/neustream
-git clone https://github.com/farseenmanekhan1232/neustream .
+1. Go to your GitHub repository
+2. Navigate to **Actions** tab
+3. Find **"Deploy Neustream (Initial Setup)"** workflow
+4. Click **"Run workflow"**
+5. Wait for all jobs to complete
 
-# Install dependencies
-npm install
+## ✅ What Gets Installed Automatically
 
-# Create environment file
-cat > .env << EOF
-DB_TYPE=sqlite
-DB_PATH=/opt/neustream/data/neustream.db
-PORT=3000
-NODE_ENV=production
-MEDIA_SERVER_HOST=YOUR_MEDIA_SERVER_IP
-JWT_SECRET=$(openssl rand -base64 32)
-EOF
+### Control Plane
+- Node.js 18
+- PM2 process manager
+- Application code from repository
+- PostgreSQL database connection
+- Environment configuration
+- Database migrations
+- Auto-start on boot
 
-# Create data directory
-mkdir -p data
+### Media Server
+- nginx with RTMP module
+- Firewall configuration (ports 1935, 80)
+- Application code from repository
+- nginx configuration with control plane integration
+- Auto-start on boot
 
-# Run migrations
-npm run migrate
+### Frontend
+- Vercel deployment
+- Production environment variables
 
-# Start service
-pm2 start server.js --name "neustream-control-plane"
-pm2 save
-pm2 startup
-```
+## 🔄 Future Updates
 
-## 📡 Step 2: Media Server Setup
+### Health Monitoring
+- **Health Check** workflow runs every 6 hours
+- Monitors both control plane and media server
 
-### SSH to Media Server Instance
-```bash
-ssh opc@MEDIA_SERVER_IP
-```
-
-### Run Minimal Setup (Recommended)
-```bash
-# Download and run the minimal setup script
-curl -O https://raw.githubusercontent.com/farseenmanekhan1232/neustream/main/setup-media-server-minimal.sh
-chmod +x setup-media-server-minimal.sh
-./setup-media-server-minimal.sh
-```
-
-**OR** use the step-by-step manual approach from `MANUAL_SETUP_STEPS.md`
-
-### Manual Steps (if script fails)
-```bash
-# Install git
-sudo yum install -y git
-
-# Install nginx with RTMP
-sudo yum install -y epel-release
-sudo yum install -y nginx nginx-mod-rtmp
-
-# Configure firewall
-sudo firewall-cmd --permanent --add-port=1935/tcp
-sudo firewall-cmd --permanent --add-port=80/tcp
-sudo firewall-cmd --reload
-
-# Clone repo
-sudo mkdir -p /opt/neustream
-sudo chown opc:opc /opt/neustream
-cd /opt/neustream
-git clone https://github.com/farseenmanekhan1232/neustream .
-
-# Update nginx config with control plane IP
-sed -i "s/CONTROL_PLANE_IP_HERE/YOUR_CONTROL_PLANE_IP/g" nginx-rtmp.conf
-
-# Deploy nginx config
-sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
-sudo nginx -t
-sudo systemctl restart nginx
-sudo systemctl enable nginx
-```
-
-## ✅ Step 3: Verification
+## 🧪 Step 3: Verification
 
 ### Test Control Plane
 ```bash
@@ -138,7 +84,7 @@ curl http://MEDIA_SERVER_IP/health
 # Should return: ok
 ```
 
-### Test API
+### Test API Registration
 ```bash
 curl -X POST http://CONTROL_PLANE_IP:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -150,32 +96,19 @@ curl -X POST http://CONTROL_PLANE_IP:3000/api/auth/register \
 - **Server**: `rtmp://MEDIA_SERVER_IP/live`
 - **Stream Key**: Use the key from registration response
 
-## 🔄 Future Updates
-
-### Manual Updates
-```bash
-cd /opt/neustream
-git pull origin main
-npm install
-npm run migrate
-pm2 restart neustream-control-plane
-```
-
-### GitHub Actions Updates
-After manual setup, GitHub Actions will handle updates automatically:
-
-1. **Initial Setup**: Run "Deploy Neustream (Initial Setup)" workflow manually once
-2. **Automatic Updates**: "Update Neustream" workflow runs on every push to main
-3. **Health Checks**: "Health Check" workflow runs every 6 hours
-
-### GitHub Actions Workflows:
-- `deploy.yml` - Initial setup (manual trigger)
-- `update.yml` - Automatic updates (on push to main)
-- `health-check.yml` - Health monitoring (every 6 hours)
-
 ## 🚨 Troubleshooting
 
-- **Port 3000 not accessible**: Check Oracle Cloud security lists
+### GitHub Actions Issues
+- **SSH connection fails**: Check SSH keys and host accessibility
+- **Database connection fails**: Verify PostgreSQL credentials and network access
+- **Service startup fails**: Check logs in GitHub Actions output
+
+### Instance Issues
+- **Port 3000 not accessible**: Check security groups/firewall
 - **nginx fails**: Check config with `sudo nginx -t`
 - **Service not starting**: Check logs with `pm2 logs`
-- **Database issues**: Check `/opt/neustream/data/neustream.db` permissions
+
+## 📁 GitHub Actions Workflows
+
+- `deploy.yml` - Initial setup (manual trigger)
+- `health-check.yml` - Health monitoring (every 6 hours)
