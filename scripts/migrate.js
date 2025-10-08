@@ -1,55 +1,56 @@
-const { Pool } = require('pg');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+// Use SQLite for Oracle Cloud free tier compatibility
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../data/neustream.db');
+const db = new sqlite3.Database(dbPath);
 
-async function runMigrations() {
-  try {
-    await pool.query(`
+function runMigrations() {
+  db.serialize(() => {
+    // Create users table
+    db.run(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        stream_key VARCHAR(64) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        stream_key TEXT UNIQUE NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
     `);
 
-    await pool.query(`
+    // Create destinations table
+    db.run(`
       CREATE TABLE IF NOT EXISTS destinations (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER REFERENCES users(id),
-        platform VARCHAR(50) NOT NULL,
-        rtmp_url VARCHAR(500) NOT NULL,
-        stream_key VARCHAR(255) NOT NULL,
-        is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
+        platform TEXT NOT NULL,
+        rtmp_url TEXT NOT NULL,
+        stream_key TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
     `);
 
-    await pool.query(`
+    // Create active_streams table
+    db.run(`
       CREATE TABLE IF NOT EXISTS active_streams (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER REFERENCES users(id),
-        stream_key VARCHAR(64) NOT NULL,
-        started_at TIMESTAMP DEFAULT NOW(),
-        ended_at TIMESTAMP,
+        stream_key TEXT NOT NULL,
+        started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        ended_at DATETIME,
         destinations_count INTEGER DEFAULT 0
-      );
-    `);
-
-    console.log('Database migrations completed successfully');
-  } catch (error) {
-    console.error('Migration error:', error);
-  } finally {
-    await pool.end();
-  }
+      )
+    `, (err) => {
+      if (err) {
+        console.error('Migration error:', err);
+      } else {
+        console.log('✅ Database migrations completed successfully');
+      }
+      db.close();
+    });
+  });
 }
 
 runMigrations();
