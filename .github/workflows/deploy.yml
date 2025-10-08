@@ -104,22 +104,31 @@ jobs:
             JWT_SECRET=$(openssl rand -base64 32)
             EOF
 
-            # Setup nginx reverse proxy with SSL (you'll need to configure SSL certificates manually)
-            cat > /tmp/nginx-control-plane.conf << EOF
+            # Setup nginx reverse proxy with SSL
+            cat > /tmp/nginx-control-plane.conf << 'EOF'
             server {
                 listen 80;
-                server_name ${{ secrets.API_DOMAIN }} neustream.app;
+                server_name api.neustream.app;
+                return 301 https://$server_name$request_uri;
+            }
+
+            server {
+                listen 443 ssl;
+                server_name api.neustream.app;
+
+                ssl_certificate /etc/letsencrypt/live/neustream.app/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/neustream.app/privkey.pem;
 
                 location / {
                     proxy_pass http://localhost:3000;
                     proxy_http_version 1.1;
-                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Upgrade $http_upgrade;
                     proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host \$host;
-                    proxy_set_header X-Real-IP \$remote_addr;
-                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto \$scheme;
-                    proxy_cache_bypass \$http_upgrade;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_cache_bypass $http_upgrade;
                 }
             }
             EOF
@@ -153,9 +162,6 @@ jobs:
             curl -f http://localhost:3000/health || echo "Health check failed but continuing..."
 
             echo "✅ Control Plane setup complete!"
-            echo "⚠️  IMPORTANT: You need to:"
-            echo "   1. Configure SSL certificates for ${{ secrets.API_DOMAIN }}"
-            echo "   2. Update nginx config to use HTTPS on port 443"
 
   setup-media-server:
     runs-on: ubuntu-latest
@@ -201,8 +207,6 @@ jobs:
             sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
             cd /opt/neustream
 
-            # Remove the separate RTMP config approach - using single config file
-
             # Create main nginx config with RTMP module loaded at top level
             cat > /tmp/nginx-main.conf << 'EOF'
             # Load RTMP module
@@ -230,9 +234,9 @@ jobs:
                         record off;
                         drop_idle_publisher 10s;
 
-                        # Authentication callback
-                        on_publish https://${{ secrets.API_DOMAIN }}/api/auth/stream;
-                        on_publish_done https://${{ secrets.API_DOMAIN }}/api/auth/stream-end;
+                        # Authentication callback (must use HTTP, not HTTPS for RTMP)
+                        on_publish http://api.neustream.app/api/auth/stream;
+                        on_publish_done http://api.neustream.app/api/auth/stream-end;
 
                         # Push to destinations based on user configuration
                         # This will be dynamically updated by the control plane
@@ -246,8 +250,22 @@ jobs:
 
             # HTTP server for stats and health checks
             http {
+                # HTTP redirect to HTTPS
                 server {
                     listen 80;
+                    server_name stream.neustream.app;
+                    return 301 https://$server_name$request_uri;
+                }
+
+                # HTTPS server
+                server {
+                    listen 443 ssl;
+                    server_name stream.neustream.app;
+
+                    ssl_certificate /etc/letsencrypt/live/stream.neustream.app/fullchain.pem;
+                    ssl_certificate_key /etc/letsencrypt/live/stream.neustream.app/privkey.pem;
+
+                    # Stats page
                     location /stat {
                         rtmp_stat all;
                         rtmp_stat_stylesheet stat.xsl;
@@ -274,49 +292,8 @@ jobs:
             sleep 3
             curl -f http://localhost/health || echo "nginx health check failed but continuing..."
 
-            # Setup nginx for media server domain (optional - for HLS/HTTP streaming)
-            cat > /tmp/nginx-media-server.conf << EOF
-            server {
-                listen 80;
-                server_name ${{ secrets.STREAM_DOMAIN }} stream.neustream.app;
-
-                # HLS streaming endpoint (if you add HLS support later)
-                location /hls/ {
-                    types {
-                        application/vnd.apple.mpegurl m3u8;
-                        video/mp2t ts;
-                    }
-                    root /tmp;
-                    add_header Cache-Control no-cache;
-                    add_header Access-Control-Allow-Origin *;
-                }
-
-                # Stats page
-                location /stat {
-                    rtmp_stat all;
-                    rtmp_stat_stylesheet stat.xsl;
-                }
-
-                location /stat.xsl {
-                    root /usr/share/nginx/html;
-                }
-
-                location /health {
-                    return 200 'ok';
-                    add_header Content-Type text/plain;
-                }
-            }
-            EOF
-
-            sudo cp /tmp/nginx-media-server.conf /etc/nginx/sites-available/media-server
-            sudo ln -sf /etc/nginx/sites-available/media-server /etc/nginx/sites-enabled/
-            sudo rm -f /etc/nginx/sites-enabled/default
-            sudo nginx -t
-            sudo systemctl restart nginx
-
             echo "✅ Media Server setup complete!"
-            echo "📺 RTMP Streaming URL: rtmp://${{ secrets.STREAM_DOMAIN }}/live"
-            echo "⚠️  Configure DNS: Point ${{ secrets.STREAM_DOMAIN }} to media server IP"
+            echo "📺 RTMP Streaming URL: rtmp://stream.neustream.app/live"
 
   deploy-frontend:
     runs-on: ubuntu-latest

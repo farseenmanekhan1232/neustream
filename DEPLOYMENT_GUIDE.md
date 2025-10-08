@@ -294,22 +294,19 @@ vercel --prod --token $VERCEL_TOKEN --confirm
 - Vercel frontend deployment
 
 ### Workflow Steps
-1. **Control Plane Setup**:
-   - Copy code via SCP
-   - Install PostgreSQL, Node.js, PM2
-   - Configure nginx with SSL
-   - Run database migrations
-   - Start application with PM2
+1. **Initial Setup Workflow** (`deploy.yml`):
+   - Manual trigger only (`workflow_dispatch`)
+   - Complete server setup from scratch
+   - Install all dependencies and services
+   - Configure SSL certificates
+   - Run initial database migrations
 
-2. **Media Server Setup**:
-   - Copy code via SCP
-   - Install nginx with RTMP module
-   - Configure RTMP streaming
-   - Setup SSL certificates
-
-3. **Frontend Deployment**:
-   - Build and deploy to Vercel
-   - Configure API endpoints
+2. **CI/CD Workflow** (`ci-cd.yml`):
+   - Automatic trigger on push to main
+   - Run tests first
+   - Deploy to control plane (app restart + migrations)
+   - Deploy to media server (nginx reload)
+   - Deploy frontend to Vercel
 
 ## 7. Testing & Verification
 

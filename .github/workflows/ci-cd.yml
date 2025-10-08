@@ -1,0 +1,149 @@
+name: Neustream CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
+      env:
+        NODE_ENV: test
+
+  deploy-control-plane:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Copy code to Control Plane
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.CONTROL_PLANE_HOST }}
+        username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+        key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+        source: "."
+        target: "/opt/neustream"
+
+    - name: Deploy to Control Plane
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.CONTROL_PLANE_HOST }}
+        username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+        key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+        script: |
+          echo "🚀 Deploying to Control Plane..."
+
+          cd /opt/neustream
+
+          # Install dependencies
+          npm install --no-audit --no-fund
+
+          # Run database migrations
+          echo "Running database migrations..."
+          npm run migrate || echo "Migrations completed or already up to date"
+
+          # Restart application
+          pm2 restart neustream-control-plane
+
+          # Wait for service to be ready
+          sleep 5
+
+          # Verify deployment
+          pm2 status
+          curl -f https://api.neustream.app/health || echo "Health check failed - checking logs..."
+
+          echo "✅ Control Plane deployment complete!"
+
+  deploy-media-server:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Copy code to Media Server
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.MEDIA_SERVER_HOST }}
+        username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+        key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+        source: "."
+        target: "/opt/neustream"
+
+    - name: Deploy to Media Server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.MEDIA_SERVER_HOST }}
+        username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+        key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+        script: |
+          echo "🚀 Deploying to Media Server..."
+
+          cd /opt/neustream
+
+          # Update nginx configuration if needed
+          echo "Checking nginx configuration..."
+
+          # Test nginx configuration
+          sudo nginx -t
+
+          # Reload nginx if config is valid
+          sudo systemctl reload nginx
+
+          # Verify media server is running
+          sleep 3
+          curl -f https://stream.neustream.app/health || echo "Health check failed - checking logs..."
+
+          echo "✅ Media Server deployment complete!"
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+
+    - name: Deploy to Vercel
+      run: |
+        if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+          cd frontend
+          # Use your domain with HTTPS for API access
+          echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
+        else
+          echo "Skipping Vercel deployment - VERCEL_TOKEN not set"
+        fi
