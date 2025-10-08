@@ -16,17 +16,16 @@ async function runMigrations() {
   let client;
 
   try {
-    console.log('Attempting to connect to PostgreSQL database via IPv6...');
+    console.log('Attempting to connect to PostgreSQL database...');
     console.log('Connection details:', {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      ipVersion: 'IPv6 (family: 6)'
+      user: process.env.DB_USER
     });
 
     client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL database via IPv6');
+    console.log('✅ Connected to PostgreSQL database');
 
     await client.query('BEGIN');
 

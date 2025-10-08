@@ -34,6 +34,24 @@ jobs:
           # Install git (skip if already installed)
           sudo apt install -y git || echo "Git already installed"
 
+          # Enable IPv6 for database connectivity
+          echo 'net.ipv6.conf.all.disable_ipv6 = 0' | sudo tee -a /etc/sysctl.conf
+          echo 'net.ipv6.conf.default.disable_ipv6 = 0' | sudo tee -a /etc/sysctl.conf
+          sudo sysctl -p
+
+          # Install and configure Cloudflare Tunnel for IPv6 connectivity
+          echo "🚀 Setting up Cloudflare Tunnel..."
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+          sudo cloudflared service install ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+          sudo systemctl start cloudflared
+          sudo systemctl enable cloudflared
+          echo "✅ Cloudflare Tunnel installed and started"
+
+          # Verify Cloudflare Tunnel is running
+          sleep 5
+          sudo systemctl status cloudflared --no-pager || echo "Cloudflare Tunnel status check failed"
+
           # Install Node.js 18 (skip if already installed)
           if ! command -v node &> /dev/null; then
             curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -66,9 +84,14 @@ jobs:
           JWT_SECRET=$(openssl rand -base64 32)
           EOF
 
+          # Test database connectivity through Cloudflare Tunnel
+          echo "Testing database connectivity..."
+          node scripts/test-db-connectivity.js || echo "Database connectivity test failed - continuing anyway"
+
           # Try to run migrations (might fail if DB not accessible)
           # First check if tables already exist to avoid migration conflicts
-          npm run migrate || echo "Migrations failed - will retry later"
+          echo "Attempting database migrations..."
+          npm run migrate || echo "Migrations failed - database may be unreachable"
 
           # Stop existing service if running
           pm2 delete neustream-control-plane 2>/dev/null || echo "No existing service to delete"
@@ -122,6 +145,19 @@ jobs:
 
           # Install nginx with RTMP module (skip if already installed)
           sudo apt install -y nginx libnginx-mod-rtmp || echo "nginx already installed"
+
+          # Install Cloudflare Tunnel for IPv6 connectivity (if needed)
+          echo "🚀 Setting up Cloudflare Tunnel..."
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+          sudo cloudflared service install ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+          sudo systemctl start cloudflared
+          sudo systemctl enable cloudflared
+          echo "✅ Cloudflare Tunnel installed and started"
+
+          # Verify Cloudflare Tunnel is running
+          sleep 5
+          sudo systemctl status cloudflared --no-pager || echo "Cloudflare Tunnel status check failed"
 
           # Configure firewall (use iptables instead of ufw)
           sudo iptables -A INPUT -p tcp --dport 1935 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
