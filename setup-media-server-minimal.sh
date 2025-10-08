@@ -35,14 +35,15 @@ git clone https://github.com/farseenmanekhan1232/neustream .
 # Update nginx config with control plane IP
 echo "⚙️  Configuring nginx..."
 if [ -f "nginx-rtmp.conf" ]; then
-    # Replace placeholder with actual IP
+    # Deploy nginx config first
+    sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
+
+    # Replace placeholder with actual IP in the deployed config
     CONTROL_PLANE_IP="YOUR_CONTROL_PLANE_IP_HERE"
     if [ "$CONTROL_PLANE_IP" != "YOUR_CONTROL_PLANE_IP_HERE" ]; then
-        sed -i "s/CONTROL_PLANE_IP_HERE/$CONTROL_PLANE_IP/g" nginx-rtmp.conf
+        sudo sed -i "s/CONTROL_PLANE_IP_HERE/$CONTROL_PLANE_IP/g" /etc/nginx/nginx.conf
     fi
 
-    # Deploy nginx config
-    sudo cp nginx-rtmp.conf /etc/nginx/nginx.conf
     sudo nginx -t && sudo systemctl restart nginx
     sudo systemctl enable nginx
 else

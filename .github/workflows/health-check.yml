@@ -1,0 +1,30 @@
+name: Health Check
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Control Plane
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.CONTROL_PLANE_HOST }}:3000/health || echo "failed")
+        if [ "$response" = "200" ]; then
+          echo "✅ Control Plane is healthy"
+        else
+          echo "❌ Control Plane is down (HTTP $response)"
+          exit 1
+        fi
+
+    - name: Check Media Server
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.MEDIA_SERVER_HOST }}/health || echo "failed")
+        if [ "$response" = "200" ]; then
+          echo "✅ Media Server is healthy"
+        else
+          echo "❌ Media Server is down (HTTP $response)"
+          exit 1
+        fi

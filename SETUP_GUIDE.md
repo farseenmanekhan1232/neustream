@@ -152,7 +152,7 @@ curl -X POST http://CONTROL_PLANE_IP:3000/api/auth/register \
 
 ## 🔄 Future Updates
 
-After initial setup, you can update by:
+### Manual Updates
 ```bash
 cd /opt/neustream
 git pull origin main
@@ -160,6 +160,18 @@ npm install
 npm run migrate
 pm2 restart neustream-control-plane
 ```
+
+### GitHub Actions Updates
+After manual setup, GitHub Actions will handle updates automatically:
+
+1. **Initial Setup**: Run "Deploy Neustream (Initial Setup)" workflow manually once
+2. **Automatic Updates**: "Update Neustream" workflow runs on every push to main
+3. **Health Checks**: "Health Check" workflow runs every 6 hours
+
+### GitHub Actions Workflows:
+- `deploy.yml` - Initial setup (manual trigger)
+- `update.yml` - Automatic updates (on push to main)
+- `health-check.yml` - Health monitoring (every 6 hours)
 
 ## 🚨 Troubleshooting
 
