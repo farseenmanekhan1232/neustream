@@ -65,4 +65,51 @@ router.get('/active', async (req, res) => {
   }
 });
 
+// Get RTMP forwarding configuration for a stream key
+router.get('/forwarding/:streamKey', async (req, res) => {
+  const { streamKey } = req.params;
+
+  try {
+    await db.connect();
+
+    // Get user ID from stream key
+    const users = await db.query(
+      'SELECT id FROM users WHERE stream_key = $1',
+      [streamKey]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'Stream key not found' });
+    }
+
+    const userId = users[0].id;
+
+    // Get active destinations for this user
+    const destinations = await db.query(
+      'SELECT platform, rtmp_url, stream_key FROM destinations WHERE user_id = $1 AND is_active = true',
+      [userId]
+    );
+
+    // Build RTMP push configuration
+    const pushConfig = destinations.map(dest => {
+      // For YouTube, the stream key is appended to the RTMP URL
+      if (dest.platform === 'youtube') {
+        return `push ${dest.rtmp_url}/${dest.stream_key}`;
+      }
+      // For other platforms, use the standard format
+      return `push ${dest.rtmp_url}/${dest.stream_key}`;
+    });
+
+    res.json({
+      streamKey,
+      userId,
+      destinations: destinations,
+      pushConfig: pushConfig
+    });
+  } catch (error) {
+    console.error('Get forwarding config error:', error);
+    res.status(500).json({ error: 'Failed to fetch forwarding configuration' });
+  }
+});
+
 module.exports = router;
