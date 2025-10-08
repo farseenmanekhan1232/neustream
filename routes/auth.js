@@ -4,14 +4,20 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 const router = express.Router();
+
+// Create a shared database instance for all routes
 const db = new Database();
+
+// Pre-connect to database when the module loads
+db.connect().catch(err => {
+  console.error('Failed to pre-connect to database:', err);
+});
 
 // Stream authentication endpoint (called by nginx-rtmp)
 router.post('/stream', async (req, res) => {
   const { name: streamKey } = req.body;
 
   try {
-    await db.connect();
     const users = await db.query(
       'SELECT id FROM users WHERE stream_key = $1',
       [streamKey]
@@ -39,7 +45,6 @@ router.post('/stream-end', async (req, res) => {
   const { name: streamKey } = req.body;
 
   try {
-    await db.connect();
     // Mark the stream as ended
     await db.run(
       'UPDATE active_streams SET ended_at = NOW() WHERE stream_key = $1 AND ended_at IS NULL',
@@ -58,7 +63,6 @@ router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    await db.connect();
     const passwordHash = await bcrypt.hash(password, 12);
     const streamKey = crypto.randomBytes(24).toString('hex');
 
@@ -93,7 +97,6 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    await db.connect();
     const users = await db.query(
       'SELECT id, email, password_hash, stream_key FROM users WHERE email = $1',
       [email]
