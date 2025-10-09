@@ -86,14 +86,15 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         // Create relay session
         const session = nms.getSession(id);
         if (session) {
-          session.nodeEvent.on("relayTask", (taskId, url, command) => {
-            console.log(
-              `[NodeMediaServer] Relay ${command}: ${taskId} -> ${url}`
-            );
-          });
-
-          // Start relay
-          session.startRelay(relayUrl);
+          try {
+            // Start relay directly without event listeners
+            session.startRelay(relayUrl);
+            console.log(`[NodeMediaServer] Relay started to: ${relayUrl}`);
+          } catch (error) {
+            console.error(`[NodeMediaServer] Relay error:`, error.message);
+          }
+        } else {
+          console.error(`[NodeMediaServer] No session found for id: ${id}`);
         }
       });
     } else {
