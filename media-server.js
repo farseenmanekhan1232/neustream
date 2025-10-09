@@ -19,6 +19,10 @@ const config = {
     publish: true,
     secret: "qoiwerj12ojasldkfjalskej",
   },
+  relay: {
+    ffmpeg: '/usr/bin/ffmpeg',
+    tasks: []
+  },
 };
 
 const nms = new NodeMediaServer(config);
@@ -83,13 +87,13 @@ nms.on("prePublish", async (id, StreamPath, args) => {
 
         console.log(`[NodeMediaServer] Setting up relay to: ${relayUrl}`);
 
-        // Create relay session
+        // Use Node-Media-Server relay API
         const session = nms.getSession(id);
         if (session) {
           try {
-            // Start relay directly without event listeners
-            session.startRelay(relayUrl);
-            console.log(`[NodeMediaServer] Relay started to: ${relayUrl}`);
+            // Create relay using Node-Media-Server's relay functionality
+            const relaySession = nms.relay(StreamPath, relayUrl);
+            console.log(`[NodeMediaServer] Relay created: ${relayUrl}`);
           } catch (error) {
             console.error(`[NodeMediaServer] Relay error:`, error.message);
           }
