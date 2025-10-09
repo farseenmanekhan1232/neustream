@@ -75,19 +75,22 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         streamPath: StreamPath,
       });
 
-      // Set up forwarding for each destination using push
+      // Set up forwarding for each destination using relay
       destinations.forEach((destination) => {
         const { rtmp_url, stream_key } = destination;
-        const pushUrl = `${rtmp_url}/${stream_key}`;
+        const relayUrl = `${rtmp_url}/${stream_key}`;
 
-        console.log(`[NodeMediaServer] Setting up forwarding to: ${pushUrl}`);
+        console.log(`[NodeMediaServer] Setting up relay to: ${relayUrl}`);
 
-        // Use nms session to push stream to destination
-        const session = nms.getSession(id);
-        if (session) {
-          session.pushStream(pushUrl);
-          console.log(`[NodeMediaServer] Started pushing to: ${pushUrl}`);
-        }
+        // Add relay task to config
+        config.relay.tasks.push({
+          app: 'live',
+          mode: 'push',
+          name: streamKey,
+          edge: relayUrl,
+        });
+
+        console.log(`[NodeMediaServer] Added relay task for: ${relayUrl}`);
       });
 
       // Explicitly return true to allow the stream
