@@ -155,4 +155,6 @@ nms.on("relayPushDone", (id, relayUrl, args) => {
   console.log(`[NodeMediaServer] Relay push ended: ${id} -> ${relayUrl}`);
 });
 
+nms.run();
+
 module.exports = nms;
