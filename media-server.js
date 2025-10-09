@@ -14,6 +14,10 @@ const config = {
     allow_origin: "*",
     mediaroot: "./media",
   },
+  relay: {
+    ffmpeg: '/usr/bin/ffmpeg',
+    tasks: []
+  },
 };
 
 const nms = new NodeMediaServer(config);
@@ -71,12 +75,19 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         streamPath: StreamPath,
       });
 
-      // Set up forwarding for each destination
+      // Set up forwarding for each destination using push
       destinations.forEach((destination) => {
         const { rtmp_url, stream_key } = destination;
-        const relayUrl = `${rtmp_url}/${stream_key}`;
+        const pushUrl = `${rtmp_url}/${stream_key}`;
 
-        console.log(`[NodeMediaServer] Would forward to: ${relayUrl}`);
+        console.log(`[NodeMediaServer] Setting up forwarding to: ${pushUrl}`);
+
+        // Use nms session to push stream to destination
+        const session = nms.getSession(id);
+        if (session) {
+          session.pushStream(pushUrl);
+          console.log(`[NodeMediaServer] Started pushing to: ${pushUrl}`);
+        }
       });
 
       // Explicitly return true to allow the stream
