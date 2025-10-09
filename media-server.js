@@ -14,15 +14,6 @@ const config = {
     allow_origin: "*",
     mediaroot: "./media",
   },
-  auth: {
-    play: false,
-    publish: true,
-    secret: "qoiwerj12ojasldkfjalskej",
-  },
-  relay: {
-    ffmpeg: '/usr/bin/ffmpeg',
-    tasks: []
-  },
 };
 
 const nms = new NodeMediaServer(config);
@@ -82,16 +73,14 @@ nms.on("prePublish", async (id, StreamPath, args) => {
 
       // Set up forwarding for each destination
       destinations.forEach((destination) => {
-        const { platform, rtmp_url, stream_key } = destination;
+        const { rtmp_url, stream_key } = destination;
         const relayUrl = `${rtmp_url}/${stream_key}`;
 
-        console.log(`[NodeMediaServer] Setting up relay to: ${relayUrl}`);
-
-        // For now, just log the relay configuration
-        // The actual relay will be handled by Node-Media-Server's built-in relay
-        // when we configure it properly in the future
-        console.log(`[NodeMediaServer] Relay configured for: ${relayUrl}`);
+        console.log(`[NodeMediaServer] Would forward to: ${relayUrl}`);
       });
+
+      // Explicitly return true to allow the stream
+      return true;
     } else {
       console.log(
         `[NodeMediaServer] Stream authentication failed: ${streamKey}`
@@ -143,13 +132,6 @@ nms.on("donePublish", async (id, StreamPath, args) => {
   }
 });
 
-nms.on("relayPush", (id, relayUrl, args) => {
-  console.log(`[NodeMediaServer] Relay push started: ${id} -> ${relayUrl}`);
-});
-
-nms.on("relayPushDone", (id, relayUrl, args) => {
-  console.log(`[NodeMediaServer] Relay push ended: ${id} -> ${relayUrl}`);
-});
 
 nms.run();
 
