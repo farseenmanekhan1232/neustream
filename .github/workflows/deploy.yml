@@ -237,16 +237,21 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Deploy to Vercel
+      - name: Install dependencies
         run: |
-          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
-            cd frontend
-            # Use your domain with HTTPS for API access
-            echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
-            vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          else
-            echo "Skipping Vercel deployment - VERCEL_TOKEN not set"
-          fi
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=neustream-frontend
+          workingDirectory: frontend
