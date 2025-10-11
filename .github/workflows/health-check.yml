@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Check Control Plane
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.CONTROL_PLANE_HOST }}/health || echo "failed")
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://api.neustream.app/health || echo "failed")
           if [ "$response" = "200" ]; then
             echo "✅ Control Plane is healthy"
           else
@@ -21,7 +21,7 @@ jobs:
 
       - name: Check Media Server
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.MEDIA_SERVER_HOST }}/health || echo "failed")
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://stream.neustream.app/ || echo "failed")
           if [ "$response" = "200" ]; then
             echo "✅ Media Server is healthy"
           else
