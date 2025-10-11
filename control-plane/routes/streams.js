@@ -9,8 +9,6 @@ router.get('/info', async (req, res) => {
   const { userId } = req.query;
 
   try {
-    await db.connect();
-
     // Get user's stream key
     const users = await db.query(
       'SELECT stream_key FROM users WHERE id = $1',
@@ -46,8 +44,6 @@ router.get('/info', async (req, res) => {
 // Get active streams (for monitoring)
 router.get('/active', async (req, res) => {
   try {
-    await db.connect();
-
     const activeStreams = await db.query(`
       SELECT
         s.*,
@@ -70,8 +66,6 @@ router.get('/forwarding/:streamKey', async (req, res) => {
   const { streamKey } = req.params;
 
   try {
-    await db.connect();
-
     // Get user ID from stream key
     const users = await db.query(
       'SELECT id FROM users WHERE stream_key = $1',

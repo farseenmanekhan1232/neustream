@@ -9,8 +9,6 @@ router.get('/', async (req, res) => {
   const { userId } = req.query;
 
   try {
-    await db.connect();
-
     // Validate user exists
     const users = await db.query(
       'SELECT id FROM users WHERE id = $1',
@@ -38,8 +36,6 @@ router.post('/', async (req, res) => {
   const { userId, platform, rtmpUrl, streamKey } = req.body;
 
   try {
-    await db.connect();
-
     // Validate user exists
     const users = await db.query(
       'SELECT id FROM users WHERE id = $1',
@@ -68,8 +64,6 @@ router.put('/:id', async (req, res) => {
   const { platform, rtmpUrl, streamKey, isActive } = req.body;
 
   try {
-    await db.connect();
-
     const result = await db.run(
       'UPDATE destinations SET platform = $1, rtmp_url = $2, stream_key = $3, is_active = $4 WHERE id = $5 RETURNING *',
       [platform, rtmpUrl, streamKey, isActive, id]
@@ -91,8 +85,6 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    await db.connect();
-
     await db.run('DELETE FROM destinations WHERE id = $1', [id]);
     res.json({ message: 'Destination deleted successfully' });
   } catch (error) {
