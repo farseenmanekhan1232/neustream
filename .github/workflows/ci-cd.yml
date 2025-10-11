@@ -75,8 +75,8 @@ jobs:
             sudo nginx -t
             sudo systemctl reload nginx
 
-            # Restart application
-            pm2 restart neustream-control-plane
+            # Restart application (start if doesn't exist)
+            pm2 restart neustream-control-plane || pm2 start server.js --name neustream-control-plane
 
             # Wait for service to be ready
             sleep 5
@@ -84,6 +84,7 @@ jobs:
             # Verify deployment
             pm2 status
             curl -f https://api.neustream.app/health || echo "Health check failed - checking logs..."
+            curl -f "https://api.neustream.app/api/streams/info?userId=1" || echo "Streams info endpoint failed - checking logs..."
 
             echo "✅ Control Plane deployment complete!"
 
@@ -140,8 +141,8 @@ jobs:
             # Reload nginx if config is valid
             sudo systemctl reload nginx
 
-            # Restart Node-Media-Server
-            pm2 restart neustream-media-server
+            # Restart Node-Media-Server (start if doesn't exist)
+            pm2 restart neustream-media-server || pm2 start media-server.js --name neustream-media-server
 
             # Wait for services to be ready
             sleep 5

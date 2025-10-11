@@ -132,6 +132,7 @@ jobs:
             sleep 5
             pm2 status
             curl -f http://localhost:3000/health || echo "Health check failed but continuing..."
+            curl -f "http://localhost:3000/api/streams/info?userId=1" || echo "Streams info endpoint failed but continuing..."
 
             echo "✅ Control Plane setup complete!"
 
