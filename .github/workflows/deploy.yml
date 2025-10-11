@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
-          source: "."
+          source: "control-plane/"
           target: "/opt/neustream"
 
       - name: Setup Control Plane
@@ -147,7 +147,7 @@ jobs:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
-          source: "."
+          source: "media-server/"
           target: "/opt/neustream"
 
       - name: Setup Media Server

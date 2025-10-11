@@ -19,12 +19,17 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: control-plane/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd control-plane
+          npm ci
 
       - name: Run tests
-        run: npm test
+        run: |
+          cd control-plane
+          npm test
         env:
           NODE_ENV: test
 
@@ -43,7 +48,7 @@ jobs:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
-          source: "."
+          source: "control-plane/"
           target: "/opt/neustream"
 
       - name: Deploy to Control Plane
@@ -97,7 +102,7 @@ jobs:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
-          source: "."
+          source: "media-server/"
           target: "/opt/neustream"
 
       - name: Deploy to Media Server
