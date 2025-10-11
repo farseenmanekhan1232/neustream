@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Copy, Check, Eye, EyeOff, Youtube, Twitch, Facebook, Radio, ExternalLink, Clock } from 'lucide-react'
+import { Copy, Check, Eye, EyeOff, Youtube, Twitch, Facebook, Radio, ExternalLink, Clock, Play, Settings, BarChart3 } from 'lucide-react'
 import { toast, Toaster } from 'sonner'
 import Header from '../components/Header'
 import { Badge } from '../components/ui/badge'
@@ -73,6 +73,9 @@ function Dashboard({ user, onLogout }) {
   })
 
   const destinations = destinationsData?.destinations || []
+
+  // Check if user is new (no destinations configured)
+  const isNewUser = destinations.length === 0
 
   // Copy to clipboard function
   const copyToClipboard = async (text, field) => {
@@ -195,11 +198,25 @@ function Dashboard({ user, onLogout }) {
           {/* Welcome Section */}
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">
-              Welcome to Your <span className="gradient-text">Dashboard</span>
+              {isNewUser ? (
+                <>Welcome to <span className="gradient-text">NeuStream</span></>
+              ) : (
+                <>Your <span className="gradient-text">Dashboard</span></>
+              )}
             </h1>
             <p className="text-xl text-muted-foreground mb-4">
-              Manage your multi-platform streaming setup
+              {isNewUser
+                ? "Let's get you streaming to multiple platforms"
+                : "Manage your multi-platform streaming setup"
+              }
             </p>
+            {isNewUser && (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4 max-w-md mx-auto">
+                <p className="text-sm text-primary-foreground">
+                  <strong>First time here?</strong> Start by adding your streaming platforms below.
+                </p>
+              </div>
+            )}
             <button
               onClick={onLogout}
               className="btn btn-outline"
@@ -303,6 +320,63 @@ function Dashboard({ user, onLogout }) {
             </div>
           </div>
 
+          {/* Quick Actions */}
+          <div className="card">
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold">Quick Actions</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {streamInfo && (
+                  <>
+                    <button
+                      onClick={() => copyToClipboard(streamInfo.streamKey, 'Stream Key')}
+                      className="p-4 border rounded-lg hover:border-primary/50 transition-colors text-left group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg bg-blue-500 text-white">
+                          <Copy className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Copy Stream Key</h3>
+                          <p className="text-xs text-muted-foreground">For OBS setup</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => copyToClipboard(streamInfo.rtmpUrl, 'RTMP URL')}
+                      className="p-4 border rounded-lg hover:border-primary/50 transition-colors text-left group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg bg-green-500 text-white">
+                          <Play className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">Copy RTMP URL</h3>
+                          <p className="text-xs text-muted-foreground">For streaming software</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      className="p-4 border rounded-lg hover:border-primary/50 transition-colors text-left group opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg bg-purple-500 text-white">
+                          <BarChart3 className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">View Analytics</h3>
+                          <p className="text-xs text-muted-foreground">Coming soon</p>
+                        </div>
+                      </div>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Destinations */}
           <div className="card">
             <div className="space-y-6">
@@ -313,7 +387,12 @@ function Dashboard({ user, onLogout }) {
                 <div className="grid gap-6 md:grid-cols-2">
                   {/* Platform Selection */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Select Platform</h3>
+                    <div>
+                      <h3 className="text-lg font-medium">Select Platform</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Choose where you want to stream. RTMP URL will auto-fill for standard platforms.
+                      </p>
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       {Object.keys(platformRtmpUrls).map((platform) => {
                         const PlatformIcon = platformIcons[platform]
@@ -325,14 +404,14 @@ function Dashboard({ user, onLogout }) {
                             key={platform}
                             type="button"
                             onClick={() => handlePlatformChange(platform)}
-                            className={`p-4 border rounded-lg text-left transition-all ${
+                            className={`p-4 border rounded-lg text-left transition-all group ${
                               isSelected
                                 ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
-                                : 'border-border hover:border-primary/50'
+                                : 'border-border hover:border-primary/50 hover:bg-accent/50'
                             }`}
                           >
                             <div className="flex items-center space-x-3">
-                              <div className={`p-2 rounded-lg ${platformColor} text-white`}>
+                              <div className={`p-2 rounded-lg ${platformColor} text-white group-hover:scale-105 transition-transform`}>
                                 <PlatformIcon className="h-5 w-5" />
                               </div>
                               <div>
@@ -342,6 +421,11 @@ function Dashboard({ user, onLogout }) {
                                 </div>
                               </div>
                             </div>
+                            {isSelected && (
+                              <div className="mt-2 text-xs text-primary font-medium">
+                                ✓ Selected
+                              </div>
+                            )}
                           </button>
                         )
                       })}
@@ -354,7 +438,14 @@ function Dashboard({ user, onLogout }) {
 
                     {/* RTMP URL */}
                     <div className="form-group">
-                      <label htmlFor="rtmpUrl" className="form-label">RTMP URL</label>
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="rtmpUrl" className="form-label">RTMP URL</label>
+                        {newDestination.platform !== 'custom' && (
+                          <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                            Auto-filled
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <input
                           id="rtmpUrl"
@@ -480,12 +571,22 @@ function Dashboard({ user, onLogout }) {
                     )
                   })
                 ) : (
-                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                    <Radio className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No destinations added yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Add your first streaming platform to start multi-streaming
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/20">
+                    <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      {isNewUser ? "Ready to start streaming?" : "No destinations added yet"}
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      {isNewUser
+                        ? "Add your first streaming platform to broadcast to multiple platforms simultaneously"
+                        : "Add a streaming platform to start multi-streaming"
+                      }
                     </p>
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <p>🎯 <strong>Popular platforms:</strong> YouTube, Twitch, Facebook</p>
+                      <p>⚡ <strong>Quick setup:</strong> Just paste your stream key</p>
+                      <p>🔄 <strong>Real-time:</strong> Stream to all platforms at once</p>
+                    </div>
                   </div>
                 )}
               </div>
