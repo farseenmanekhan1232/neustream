@@ -1,11 +1,5 @@
 const NodeMediaServer = require("node-media-server");
 const axios = require("axios");
-const { spawn } = require("child_process");
-
-// Global FFmpeg process for all streams
-let globalFFmpegProcess = null;
-const activeStreams = new Map();
-const streamDestinations = new Map();
 
 const config = {
   rtmp: {
@@ -20,6 +14,10 @@ const config = {
     allow_origin: "*",
     mediaroot: "./media",
   },
+  relay: {
+    ffmpeg: '/usr/bin/ffmpeg',
+    tasks: []
+  }
 };
 
 const nms = new NodeMediaServer(config);
@@ -63,26 +61,25 @@ nms.on("prePublish", async (id, StreamPath, args) => {
       const forwardingResponse = await axios.get(
         `https://api.neustream.app/api/streams/forwarding/${streamKey}`
       );
-      const { destinations, pushConfig } = forwardingResponse.data;
+      const { destinations } = forwardingResponse.data;
 
       console.log(`[NodeMediaServer] Forwarding destinations:`, destinations);
 
-      // Store forwarding configuration for this stream
-      activeStreams.set(streamKey, {
-        destinations,
-        pushConfig,
-        streamPath: StreamPath,
+      // Set up relay tasks for each destination
+      destinations.forEach((destination, index) => {
+        const { rtmp_url, stream_key } = destination;
+        const outputUrl = `${rtmp_url}/${stream_key}`;
+
+        const relayTask = {
+          app: 'live',
+          mode: 'push',
+          name: `${streamKey}_${index}`,
+          edge: outputUrl,
+        };
+
+        config.relay.tasks.push(relayTask);
+        console.log(`[NodeMediaServer] Added relay task: ${outputUrl}`);
       });
-
-      // Store destinations for this stream
-      streamDestinations.set(streamKey, destinations);
-      console.log(
-        `[NodeMediaServer] Stored destinations for stream ${streamKey}:`,
-        destinations
-      );
-
-      // Start or restart global FFmpeg process with all active streams
-      restartGlobalFFmpeg();
 
       // Explicitly return true to allow the stream
       return true;
@@ -111,14 +108,9 @@ nms.on("donePublish", async (id, StreamPath, args) => {
 
   const streamKey = StreamPath.split("/").pop();
 
-  // Clean up forwarding configuration
-  activeStreams.delete(streamKey);
-
-  // Remove stream from destinations
-  streamDestinations.delete(streamKey);
-
-  // Restart global FFmpeg process with updated configuration
-  restartGlobalFFmpeg();
+  // Clean up relay tasks for this stream
+  config.relay.tasks = config.relay.tasks.filter(task => !task.name.startsWith(`${streamKey}_`));
+  console.log(`[NodeMediaServer] Cleaned up relay tasks for stream: ${streamKey}`);
 
   try {
     // Notify control plane that stream ended
@@ -142,68 +134,6 @@ nms.on("donePublish", async (id, StreamPath, args) => {
     );
   }
 });
-
-// Global FFmpeg process management
-function restartGlobalFFmpeg() {
-  // Kill existing FFmpeg process
-  if (globalFFmpegProcess) {
-    globalFFmpegProcess.kill("SIGTERM");
-    console.log("[NodeMediaServer] Stopped previous global FFmpeg process");
-  }
-
-  // Build FFmpeg command for all active streams
-  const ffmpegArgs = [];
-
-  // If no active streams, don't start FFmpeg
-  if (streamDestinations.size === 0) {
-    console.log("[NodeMediaServer] No active streams, FFmpeg not started");
-    return;
-  }
-
-  let inputIndex = 0;
-  let outputCount = 0;
-
-  // Process each stream and its destinations
-  for (const [streamKey, destinations] of streamDestinations) {
-    // Add input for this stream
-    ffmpegArgs.push("-i", `rtmp://localhost:1935/live/${streamKey}`);
-
-    // Add outputs for this stream's destinations
-    destinations.forEach((destination) => {
-      const { rtmp_url, stream_key } = destination;
-      const outputUrl = `${rtmp_url}/${stream_key}`;
-
-      // Map input to output using -map
-      ffmpegArgs.push("-map", `${inputIndex}:v`, "-map", `${inputIndex}:a`);
-      ffmpegArgs.push("-c", "copy", "-f", "flv", outputUrl);
-
-      outputCount++;
-    });
-
-    inputIndex++;
-  }
-
-  console.log(
-    `[NodeMediaServer] Starting global FFmpeg with ${streamDestinations.size} streams and ${outputCount} destinations`
-  );
-  console.log(`[NodeMediaServer] FFmpeg args:`, ffmpegArgs);
-
-  // Start global FFmpeg process
-  globalFFmpegProcess = spawn("ffmpeg", ffmpegArgs);
-
-  globalFFmpegProcess.stdout.on("data", (data) => {
-    console.log(`[FFmpeg] ${data}`);
-  });
-
-  globalFFmpegProcess.stderr.on("data", (data) => {
-    console.log(`[FFmpeg Error] ${data}`);
-  });
-
-  globalFFmpegProcess.on("close", (code) => {
-    console.log(`[FFmpeg] Global process exited with code ${code}`);
-    globalFFmpegProcess = null;
-  });
-}
 
 nms.run();
 
