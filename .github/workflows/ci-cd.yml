@@ -65,12 +65,9 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Create environment file with PostHog configuration
-            cat > .env << EOF
-            NODE_ENV=production
-            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
-            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
-            EOF
+            # Add PostHog configuration to existing environment file
+            echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
+            echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
 
             # Run database migrations
             echo "Running database migrations..."
@@ -132,13 +129,9 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Update environment file for control plane communication
-            cat > .env << EOF
-            NODE_ENV=production
-            CONTROL_PLANE_URL=https://api.neustream.app
-            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
-            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
-            EOF
+            # Add PostHog configuration to existing environment file
+            echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
+            echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
 
             # Update nginx configuration from project
             echo "Updating nginx configuration..."
