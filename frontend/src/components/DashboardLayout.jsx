@@ -24,6 +24,7 @@ import {
   Bell,
   ChevronRight,
 } from "lucide-react";
+import { usePostHog } from "../hooks/usePostHog";
 
 const navItems = [
   {
@@ -61,6 +62,7 @@ function DashboardLayout({ user, onLogout, children }) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const { trackUIInteraction } = usePostHog();
 
   useEffect(() => {
     setIsMounted(true);
@@ -131,7 +133,19 @@ function DashboardLayout({ user, onLogout, children }) {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
-          <Link key={item.id} to={item.path} onClick={onNavigate}>
+          <Link
+            key={item.id}
+            to={item.path}
+            onClick={() => {
+              if (onNavigate) onNavigate();
+              // Track navigation clicks
+              trackUIInteraction(`nav_${item.id}`, "click", {
+                from_page: location.pathname,
+                to_page: item.path,
+                item_label: item.label,
+              });
+            }}
+          >
             <NavItem
               item={item}
               isActive={location.pathname === item.path}

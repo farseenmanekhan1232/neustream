@@ -13,11 +13,13 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import DestinationsManager from "./components/DestinationsManager";
+import { usePostHog } from "./hooks/usePostHog";
 
 const queryClient = new QueryClient();
 
 function App() {
   const [user, setUser] = useState(null);
+  const { identifyUser, resetUser } = usePostHog();
 
   // Check if user is already logged in (from localStorage)
   useEffect(() => {
@@ -25,17 +27,23 @@ function App() {
     if (savedUser) {
       const userData = JSON.parse(savedUser);
       setUser(userData);
+      // Identify user in PostHog
+      identifyUser(userData.id, { email: userData.email });
     }
-  }, []);
+  }, [identifyUser]);
 
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("neustream_user", JSON.stringify(userData));
+    // Identify user in PostHog
+    identifyUser(userData.id, { email: userData.email });
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("neustream_user");
+    // Reset user in PostHog
+    resetUser();
   };
 
   return (

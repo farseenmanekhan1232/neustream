@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { usePostHog } from "../hooks/usePostHog";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
@@ -86,6 +87,7 @@ function DestinationsManager({ user }) {
     rtmpUrl: platformConfig.youtube.rtmpUrl,
     streamKey: "",
   });
+  const { trackUIInteraction, trackDestinationEvent } = usePostHog();
 
   // Fetch destinations
   const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
@@ -122,7 +124,12 @@ function DestinationsManager({ user }) {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Track destination addition
+      trackDestinationEvent(data.destination.id, "destination_added", {
+        platform: newDestination.platform,
+        rtmp_url: newDestination.rtmpUrl,
+      });
       setNewDestination({
         platform: "youtube",
         rtmpUrl: platformConfig.youtube.rtmpUrl,
@@ -133,6 +140,11 @@ function DestinationsManager({ user }) {
       toast.success("Destination added successfully!");
     },
     onError: (error) => {
+      // Track destination addition failure
+      trackDestinationEvent(null, "destination_add_failed", {
+        platform: newDestination.platform,
+        error: error.message,
+      });
       toast.error(error.message);
     },
   });
@@ -150,11 +162,17 @@ function DestinationsManager({ user }) {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      // Track destination removal
+      trackDestinationEvent(id, "destination_removed");
       queryClient.invalidateQueries(["destinations", user.id]);
       toast.success("Destination removed successfully!");
     },
-    onError: (error) => {
+    onError: (error, id) => {
+      // Track destination removal failure
+      trackDestinationEvent(id, "destination_remove_failed", {
+        error: error.message,
+      });
       toast.error(error.message);
     },
   });
@@ -165,6 +183,11 @@ function DestinationsManager({ user }) {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
       toast.success(`${field} copied to clipboard!`);
+      // Track copy actions
+      trackUIInteraction(`copy_${field.toLowerCase().replace(/\s+/g, '_')}`, "click", {
+        field_type: field,
+        content_length: text.length,
+      });
       setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
       toast.error("Failed to copy to clipboard");
@@ -179,15 +202,27 @@ function DestinationsManager({ user }) {
       platform,
       rtmpUrl: config.rtmpUrl,
     });
+    // Track platform selection
+    trackUIInteraction("platform_selection", "change", {
+      selected_platform: platform,
+    });
   };
 
   const handleAddDestination = (e) => {
     e.preventDefault();
+    // Track form submission
+    trackUIInteraction("add_destination_form", "submit", {
+      platform: newDestination.platform,
+    });
     addDestinationMutation.mutate(newDestination);
   };
 
   const handleDeleteDestination = (id) => {
     if (window.confirm("Are you sure you want to remove this destination?")) {
+      // Track delete confirmation
+      trackUIInteraction("delete_destination", "click", {
+        destination_id: id,
+      });
       deleteDestinationMutation.mutate(id);
     }
   };

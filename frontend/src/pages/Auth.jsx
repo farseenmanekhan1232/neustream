@@ -12,12 +12,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { usePostHog } from "../hooks/usePostHog";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
   const [authForm, setAuthForm] = useState({ email: "", password: "" });
+  const { trackAuthEvent, trackUIInteraction } = usePostHog();
 
   const authMutation = useMutation({
     mutationFn: async (formData) => {
@@ -38,7 +40,19 @@ function Auth({ onLogin }) {
       return response.json();
     },
     onSuccess: (data) => {
+      // Track successful authentication
+      trackAuthEvent(isLogin ? "login_success" : "registration_success", {
+        user_id: data.user.id,
+        email: data.user.email,
+      });
       onLogin(data.user);
+    },
+    onError: (error) => {
+      // Track authentication failure
+      trackAuthEvent(isLogin ? "login_failed" : "registration_failed", {
+        email: authForm.email,
+        error: error.message,
+      });
     },
   });
 

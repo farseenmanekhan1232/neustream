@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { usePostHog } from "../hooks/usePostHog";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
@@ -35,6 +36,7 @@ function DashboardOverview({ user }) {
   const [showStreamKey, setShowStreamKey] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const [streamDuration, setStreamDuration] = useState(0);
+  const { trackUIInteraction, trackStreamEvent } = usePostHog();
 
   // Fetch stream info
   const { data: streamInfo, isLoading: streamLoading } = useQuery({
@@ -71,6 +73,11 @@ function DashboardOverview({ user }) {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
       toast.success(`${field} copied to clipboard!`);
+      // Track copy actions
+      trackUIInteraction(`copy_${field.toLowerCase().replace(/\s+/g, '_')}`, "click", {
+        field_type: field,
+        content_length: text.length,
+      });
       setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
       toast.error("Failed to copy to clipboard");
