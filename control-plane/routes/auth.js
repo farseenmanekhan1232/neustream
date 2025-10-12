@@ -2,6 +2,7 @@ const express = require('express');
 const Database = require('../lib/database');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const posthogService = require('../services/posthog');
 
 const router = express.Router();
 
@@ -25,14 +26,22 @@ router.post('/stream', async (req, res) => {
     );
 
     if (users.length === 0) {
+      posthogService.trackStreamEvent('anonymous', streamKey, 'stream_auth_failed', {
+        reason: 'invalid_stream_key'
+      });
       return res.status(401).send('Invalid stream key');
     }
+
+    const userId = users[0].id;
 
     // Start tracking the active stream
     await db.run(
       'INSERT INTO active_streams (user_id, stream_key) VALUES ($1, $2)',
-      [users[0].id, streamKey]
+      [userId, streamKey]
     );
+
+    // Track successful stream authentication
+    posthogService.trackStreamEvent(userId, streamKey, 'stream_auth_success');
 
     res.status(200).send('OK');
   } catch (error) {
@@ -47,11 +56,23 @@ router.post('/stream-end', async (req, res) => {
   const streamKey = req.body.name || req.query.name;
 
   try {
+    // Get user ID for tracking
+    const users = await db.query(
+      'SELECT user_id FROM active_streams WHERE stream_key = $1 AND ended_at IS NULL',
+      [streamKey]
+    );
+
     // Mark the stream as ended
     await db.run(
       'UPDATE active_streams SET ended_at = NOW() WHERE stream_key = $1 AND ended_at IS NULL',
       [streamKey]
     );
+
+    // Track stream end
+    if (users.length > 0) {
+      const userId = users[0].user_id;
+      posthogService.trackStreamEvent(userId, streamKey, 'stream_ended');
+    }
 
     res.status(200).send('OK');
   } catch (error) {
@@ -73,9 +94,18 @@ router.post('/register', async (req, res) => {
       [email, passwordHash, streamKey]
     );
 
+    const userId = result.id;
+
+    // Track successful registration
+    posthogService.trackAuthEvent(userId, 'user_registered');
+    posthogService.identifyUser(userId, {
+      email: email,
+      registered_at: new Date().toISOString(),
+    });
+
     res.json({
       user: {
-        id: result.id,
+        id: userId,
         email: email,
         streamKey: streamKey
       }
@@ -105,6 +135,10 @@ router.post('/login', async (req, res) => {
     );
 
     if (users.length === 0) {
+      posthogService.trackAuthEvent('anonymous', 'login_failed', {
+        reason: 'user_not_found',
+        email: email
+      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -112,8 +146,19 @@ router.post('/login', async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
+      posthogService.trackAuthEvent(user.id, 'login_failed', {
+        reason: 'invalid_password',
+        email: email
+      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Track successful login
+    posthogService.trackAuthEvent(user.id, 'login_success');
+    posthogService.identifyUser(user.id, {
+      email: user.email,
+      last_login: new Date().toISOString(),
+    });
 
     res.json({
       user: {

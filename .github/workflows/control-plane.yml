@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'control-plane/**'
-      - '.github/workflows/control-plane.yml'
+      - "control-plane/**"
+      - ".github/workflows/control-plane.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'control-plane/**'
-      - '.github/workflows/control-plane.yml'
+      - "control-plane/**"
+      - ".github/workflows/control-plane.yml"
 
 jobs:
   test:
@@ -70,6 +70,13 @@ jobs:
 
             # Install dependencies
             npm install --no-audit --no-fund
+
+            # Create environment file with PostHog configuration
+            cat > .env << EOF
+            NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            EOF
 
             # Run database migrations
             echo "Running database migrations..."

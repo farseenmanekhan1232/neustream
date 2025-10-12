@@ -65,6 +65,13 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
+            # Create environment file with PostHog configuration
+            cat > .env << EOF
+            NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            EOF
+
             # Run database migrations
             echo "Running database migrations..."
             npm run migrate || echo "Migrations completed or already up to date"
@@ -129,6 +136,8 @@ jobs:
             cat > .env << EOF
             NODE_ENV=production
             CONTROL_PLANE_URL=https://api.neustream.app
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
             EOF
 
             # Update nginx configuration from project
@@ -176,6 +185,8 @@ jobs:
         run: |
           cd frontend
           echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          echo "VITE_PUBLIC_POSTHOG_KEY=${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}" >> .env.production
+          echo "VITE_PUBLIC_POSTHOG_HOST=${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}" >> .env.production
           npm run build
 
       - name: Deploy to Cloudflare Pages

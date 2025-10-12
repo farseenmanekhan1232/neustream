@@ -80,6 +80,8 @@ jobs:
             cat > .env << EOF
             NODE_ENV=production
             CONTROL_PLANE_URL=https://api.neustream.app
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
             EOF
 
             # Update nginx configuration from project

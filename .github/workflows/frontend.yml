@@ -43,6 +43,8 @@ jobs:
         run: |
           cd frontend
           echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          echo "VITE_PUBLIC_POSTHOG_KEY=phc_LOfW9gikjblOGLM7IhkzYlvBtbVzGhFY1j8cBStYZTb" >> .env.production
+          echo "VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com" >> .env.production
           npm run build
 
       - name: Upload build artifacts
@@ -77,6 +79,8 @@ jobs:
         run: |
           cd frontend
           echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          echo "VITE_PUBLIC_POSTHOG_KEY=phc_LOfW9gikjblOGLM7IhkzYlvBtbVzGhFY1j8cBStYZTb" >> .env.production
+          echo "VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com" >> .env.production
           npm run build
 
       - name: Deploy to Cloudflare Pages
