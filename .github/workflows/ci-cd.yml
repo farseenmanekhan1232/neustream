@@ -68,6 +68,7 @@ jobs:
             # Add PostHog configuration to existing environment file
             echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
             echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
+            echo "STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}" >> .env
 
             # Run database migrations
             echo "Running database migrations..."
