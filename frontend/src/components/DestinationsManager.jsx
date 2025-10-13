@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -78,7 +79,8 @@ const platformConfig = {
   },
 };
 
-function DestinationsManager({ user }) {
+function DestinationsManager() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
   const [copiedField, setCopiedField] = useState(null);

@@ -95,18 +95,29 @@ class AuthService {
 
   async validateToken(token) {
     console.log('AuthService: Validating token...');
-    const response = await this.request("/auth/validate-token", {
-      method: "POST",
-      body: JSON.stringify({ token }),
-    });
 
-    console.log('AuthService: Validation response:', response);
+    try {
+      const response = await this.request("/auth/validate-token", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      });
 
-    if (response.user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+      console.log('AuthService: Validation response:', response);
+
+      if (response.user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+        return response.user;
+      }
+    } catch (error) {
+      console.error('AuthService: Token validation failed:', error);
+      // If validation fails, try to get user from localStorage
+      const storedUser = this.getCurrentUser();
+      if (storedUser) {
+        console.log('AuthService: Using stored user data from localStorage');
+        return storedUser;
+      }
+      throw error;
     }
-
-    return response.user;
   }
 
   // Temporary token generation for backward compatibility

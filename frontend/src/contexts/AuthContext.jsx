@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Token found:', !!token);
       console.log('User data found:', !!userData);
 
-      if (token && userData) {
+      if (token && userData && currentPath === '/auth') {
         console.log('Processing OAuth callback with token and user data...');
         try {
           console.log('Token length:', token.length);
@@ -71,6 +71,10 @@ export const AuthProvider = ({ children }) => {
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
           console.log('URL cleaned, user should be logged in');
+
+          // Store user data in localStorage for persistence
+          localStorage.setItem('neustream_user', JSON.stringify(parsedUser));
+          console.log('User data stored in localStorage');
 
         } catch (error) {
           console.error('OAuth callback processing error:', error);
