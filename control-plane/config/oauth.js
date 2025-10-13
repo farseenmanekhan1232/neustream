@@ -62,14 +62,16 @@ async (accessToken, refreshToken, profile, done) => {
 
     // Check if user exists with the same email (for account linking)
     const emailUsers = await db.query(
-      'SELECT id, email, password_hash, stream_key FROM users WHERE email = $1 AND oauth_provider IS NULL',
+      'SELECT id, email, password_hash, stream_key, oauth_provider FROM users WHERE email = $1',
       [profile.emails[0]?.value]
     );
 
     if (emailUsers.length > 0) {
-      // User exists with email/password, link Google account
+      // User exists with this email, link Google account
       const existingUser = emailUsers[0];
 
+      // If user already has a different OAuth provider, we should still allow linking
+      // This handles the case where someone signed up with Twitch and now wants to use Google
       await db.run(
         'UPDATE users SET oauth_provider = $1, oauth_id = $2, display_name = $3, avatar_url = $4, oauth_email = $5 WHERE id = $6',
         ['google', profile.id, profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, existingUser.id]
@@ -82,6 +84,7 @@ async (accessToken, refreshToken, profile, done) => {
         display_name: profile.displayName,
         oauth_provider: 'google',
         account_linked: true,
+        previous_oauth_provider: existingUser.oauth_provider
       });
 
       return done(null, {
@@ -182,14 +185,16 @@ async (accessToken, refreshToken, profile, done) => {
 
     // Check if user exists with the same email (for account linking)
     const emailUsers = await db.query(
-      'SELECT id, email, password_hash, stream_key FROM users WHERE email = $1 AND oauth_provider IS NULL',
+      'SELECT id, email, password_hash, stream_key, oauth_provider FROM users WHERE email = $1',
       [profile.email]
     );
 
     if (emailUsers.length > 0) {
-      // User exists with email/password, link Twitch account
+      // User exists with this email, link Twitch account
       const existingUser = emailUsers[0];
 
+      // If user already has a different OAuth provider, we should still allow linking
+      // This handles the case where someone signed up with Google and now wants to use Twitch
       await db.run(
         'UPDATE users SET oauth_provider = $1, oauth_id = $2, display_name = $3, avatar_url = $4, oauth_email = $5 WHERE id = $6',
         ['twitch', profile.id, profile.display_name, profile.profile_image_url, profile.email, existingUser.id]
@@ -202,6 +207,7 @@ async (accessToken, refreshToken, profile, done) => {
         display_name: profile.display_name,
         oauth_provider: 'twitch',
         account_linked: true,
+        previous_oauth_provider: existingUser.oauth_provider
       });
 
       return done(null, {
