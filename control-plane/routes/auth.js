@@ -5,7 +5,6 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const posthogService = require('../services/posthog');
 const { passport, generateToken, JWT_SECRET } = require('../config/oauth');
-const { passport: twitchPassport } = require('../config/twitch-oauth');
 
 const router = express.Router();
 
@@ -248,7 +247,7 @@ router.post('/google/token',
 
 // Twitch OAuth endpoints
 router.get('/twitch',
-  twitchPassport.authenticate('twitch')
+  passport.authenticate('twitch')
 );
 
 router.get('/twitch/callback',
@@ -260,7 +259,7 @@ router.get('/twitch/callback',
     console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
     next();
   },
-  twitchPassport.authenticate('twitch', { session: false }),
+  passport.authenticate('twitch', { session: false }),
   (req, res) => {
     console.log('=== TWITCH OAUTH CALLBACK PROCESSING ===');
     console.log('Authenticated user:', req.user);
