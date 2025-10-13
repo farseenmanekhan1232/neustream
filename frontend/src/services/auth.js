@@ -94,10 +94,13 @@ class AuthService {
   }
 
   async validateToken(token) {
+    console.log('AuthService: Validating token...');
     const response = await this.request("/auth/validate-token", {
       method: "POST",
       body: JSON.stringify({ token }),
     });
+
+    console.log('AuthService: Validation response:', response);
 
     if (response.user) {
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));

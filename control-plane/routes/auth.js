@@ -183,12 +183,23 @@ router.get('/google',
 router.get('/google/callback',
   passport.authenticate('google', { session: false }),
   (req, res) => {
-    // Generate JWT token for the authenticated user
-    const token = generateToken(req.user);
+    try {
+      console.log('Google OAuth callback received, user:', req.user);
 
-    // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'https://www.neustream.app';
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+      // Generate JWT token for the authenticated user
+      const token = generateToken(req.user);
+      console.log('Generated JWT token:', token.substring(0, 20) + '...');
+
+      // Redirect to frontend auth page with token
+      const frontendUrl = process.env.FRONTEND_URL || 'https://www.neustream.app';
+      const redirectUrl = `${frontendUrl}/auth?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`;
+      console.log('Redirecting to:', redirectUrl);
+
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.status(500).json({ error: 'OAuth callback failed' });
+    }
   }
 );
 
@@ -218,7 +229,9 @@ router.post('/validate-token', async (req, res) => {
   }
 
   try {
+    console.log('Validating token...');
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('Token decoded:', decoded);
 
     // Verify user still exists
     const users = await db.query(
@@ -227,10 +240,13 @@ router.post('/validate-token', async (req, res) => {
     );
 
     if (users.length === 0) {
+      console.log('User not found for userId:', decoded.userId);
       return res.status(401).json({ error: 'User not found' });
     }
 
     const user = users[0];
+    console.log('User found:', user);
+
     res.json({
       user: {
         id: user.id,

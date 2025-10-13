@@ -43,14 +43,22 @@ export const AuthProvider = ({ children }) => {
       const token = urlParams.get('token');
       const userData = urlParams.get('user');
 
+      console.log('AuthContext: Checking for OAuth callback...');
+      console.log('AuthContext: Token found:', !!token);
+      console.log('AuthContext: User data found:', !!userData);
+
       if (token && userData) {
         try {
+          console.log('AuthContext: Processing OAuth callback...');
           const parsedUser = JSON.parse(decodeURIComponent(userData));
+          console.log('AuthContext: Parsed user:', parsedUser);
+
           authService.setToken(token);
           setUser(parsedUser);
 
           // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
+          console.log('AuthContext: OAuth callback processed successfully');
         } catch (error) {
           console.error('Google OAuth callback error:', error);
           setError('Failed to complete Google sign-in');

@@ -17,6 +17,11 @@ passport.use(new GoogleStrategy({
   callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/api/auth/google/callback"
 },
 async (accessToken, refreshToken, profile, done) => {
+  console.log('=== GOOGLE OAUTH STRATEGY ===');
+  console.log('Profile ID:', profile.id);
+  console.log('Profile Email:', profile.emails?.[0]?.value);
+  console.log('Profile Display Name:', profile.displayName);
+  console.log('Profile Photos:', profile.photos?.[0]?.value);
   try {
     // Check if user exists with this Google ID
     const existingUsers = await db.query(

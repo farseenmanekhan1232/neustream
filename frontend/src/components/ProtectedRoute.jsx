@@ -6,6 +6,10 @@ function ProtectedRoute({ children, requireAuth = true }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  // Check if this is an OAuth callback (has token in URL)
+  const urlParams = new URLSearchParams(location.search);
+  const hasOAuthToken = urlParams.has('token');
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -17,13 +21,14 @@ function ProtectedRoute({ children, requireAuth = true }) {
     );
   }
 
+  // Allow OAuth callbacks to proceed even if user is authenticated
   if (requireAuth && !user) {
     // Redirect to login with return URL
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (!requireAuth && user) {
-    // Redirect authenticated users away from auth pages
+  if (!requireAuth && user && !hasOAuthToken) {
+    // Redirect authenticated users away from auth pages, but allow OAuth callbacks
     return <Navigate to="/dashboard" replace />;
   }
 
