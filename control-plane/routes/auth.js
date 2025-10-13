@@ -181,10 +181,24 @@ router.get('/google',
 );
 
 router.get('/google/callback',
+  (req, res, next) => {
+    console.log('=== GOOGLE OAUTH CALLBACK START ===');
+    console.log('Callback URL:', req.url);
+    console.log('Callback Query:', req.query);
+    console.log('Callback Code:', req.query.code);
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+    next();
+  },
   passport.authenticate('google', { session: false }),
   (req, res) => {
     try {
-      console.log('Google OAuth callback received, user:', req.user);
+      console.log('=== GOOGLE OAUTH CALLBACK PROCESSING ===');
+      console.log('Authenticated user:', req.user);
+
+      if (!req.user) {
+        console.error('No user found in OAuth callback');
+        return res.status(400).json({ error: 'Authentication failed' });
+      }
 
       // Generate JWT token for the authenticated user
       const token = generateToken(req.user);
@@ -192,13 +206,24 @@ router.get('/google/callback',
 
       // Redirect to frontend auth page with token
       const frontendUrl = process.env.FRONTEND_URL || 'https://www.neustream.app';
-      const redirectUrl = `${frontendUrl}/auth?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`;
-      console.log('Redirecting to:', redirectUrl);
+      const userData = encodeURIComponent(JSON.stringify(req.user));
+      const redirectUrl = `${frontendUrl}/auth?token=${token}&user=${userData}`;
+
+      console.log('Redirect URL:', redirectUrl);
+      console.log('Redirect URL length:', redirectUrl.length);
+      console.log('Token length:', token.length);
+      console.log('User data length:', userData.length);
+
+      // Check if URL is too long (browser limit is ~2000 chars)
+      if (redirectUrl.length > 2000) {
+        console.warn('Redirect URL is very long, might cause issues');
+      }
 
       res.redirect(redirectUrl);
+      console.log('=== GOOGLE OAUTH CALLBACK COMPLETE ===');
     } catch (error) {
       console.error('Google OAuth callback error:', error);
-      res.status(500).json({ error: 'OAuth callback failed' });
+      res.status(500).json({ error: 'OAuth callback failed', details: error.message });
     }
   }
 );

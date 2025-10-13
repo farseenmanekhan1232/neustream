@@ -160,18 +160,30 @@ passport.deserializeUser(async (id, done) => {
 
 // Generate JWT token for API authentication
 function generateToken(user) {
-  return jwt.sign(
-    {
-      userId: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      streamKey: user.streamKey,
-      oauthProvider: user.oauthProvider
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  console.log('=== GENERATING JWT TOKEN ===');
+  console.log('User data for token:', user);
+  console.log('JWT Secret available:', !!JWT_SECRET);
+  console.log('JWT Secret length:', JWT_SECRET.length);
+
+  const payload = {
+    userId: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    streamKey: user.streamKey,
+    oauthProvider: user.oauthProvider
+  };
+
+  console.log('Token payload:', payload);
+
+  try {
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    console.log('Token generated successfully, length:', token.length);
+    return token;
+  } catch (error) {
+    console.error('JWT Token generation failed:', error);
+    throw error;
+  }
 }
 
 module.exports = {

@@ -39,30 +39,45 @@ export const AuthProvider = ({ children }) => {
   // Handle Google OAuth callback
   useEffect(() => {
     const handleGoogleCallback = async () => {
+      console.log('=== AUTHCONTEXT OAUTH CHECK ===');
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
       const userData = urlParams.get('user');
+      const currentPath = window.location.pathname;
 
-      console.log('AuthContext: Checking for OAuth callback...');
-      console.log('AuthContext: Token found:', !!token);
-      console.log('AuthContext: User data found:', !!userData);
+      console.log('Current pathname:', currentPath);
+      console.log('Full URL:', window.location.href);
+      console.log('Token found:', !!token);
+      console.log('User data found:', !!userData);
 
       if (token && userData) {
+        console.log('Processing OAuth callback with token and user data...');
         try {
-          console.log('AuthContext: Processing OAuth callback...');
-          const parsedUser = JSON.parse(decodeURIComponent(userData));
-          console.log('AuthContext: Parsed user:', parsedUser);
+          console.log('Token length:', token.length);
+          console.log('User data length:', userData.length);
 
+          const parsedUser = JSON.parse(decodeURIComponent(userData));
+          console.log('Parsed user data:', parsedUser);
+
+          // Set the token and user immediately
           authService.setToken(token);
           setUser(parsedUser);
+          setError(null);
 
-          // Clean up URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          console.log('AuthContext: OAuth callback processed successfully');
+          console.log('User state set successfully');
+
+          // Clean up URL but keep the user logged in
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          console.log('URL cleaned, user should be logged in');
+
         } catch (error) {
-          console.error('Google OAuth callback error:', error);
+          console.error('OAuth callback processing error:', error);
           setError('Failed to complete Google sign-in');
+          authService.clearToken();
         }
+      } else {
+        console.log('No OAuth callback data found, proceeding with normal auth check');
       }
     };
 

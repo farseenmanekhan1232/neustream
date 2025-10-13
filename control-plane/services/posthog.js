@@ -93,7 +93,7 @@ class PostHogService {
     if (!this.isEnabled || !this.client) return;
 
     try {
-      await this.client.shutdownAsync();
+      await this.client.shutdown();
     } catch (error) {
       console.error('PostHog flush error:', error);
     }
