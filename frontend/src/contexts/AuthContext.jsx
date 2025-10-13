@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/auth';
+import posthogService from '../services/posthog';
 
 const AuthContext = createContext(null);
 
@@ -113,10 +114,24 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
+    // Track logout event before clearing user data
+    if (user) {
+      posthogService.trackAuthEvent('user_logout', {
+        user_id: user.id,
+        oauth_provider: user.oauthProvider,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Clear authentication
     authService.logout();
     setUser(null);
     setError(null);
-  }, []);
+
+    // Reset PostHog analytics - clear user identification and tracking
+    posthogService.resetUser();
+    console.log('PostHog analytics reset on logout');
+  }, [user]);
 
   const updateUser = useCallback((updates) => {
     setUser(prev => prev ? { ...prev, ...updates } : null);

@@ -121,7 +121,11 @@ function DashboardLayout({ children }) {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.displayName || user.email} className="rounded-full" />
+              <img
+                src={user.avatarUrl}
+                alt={user.displayName || user.email}
+                className="rounded-full"
+              />
             ) : (
               <AvatarFallback className="bg-primary/10 text-primary">
                 {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
@@ -129,8 +133,12 @@ function DashboardLayout({ children }) {
             )}
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.displayName || user?.email}</p>
-            <p className="text-xs text-muted-foreground">{user?.oauthProvider ? `${user.oauthProvider} User` : 'Streamer'}</p>
+            <p className="text-sm font-medium truncate">
+              {user?.displayName || user?.email}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {user?.oauthProvider ? `${user.oauthProvider} User` : "Streamer"}
+            </p>
           </div>
         </div>
       </div>
@@ -177,7 +185,7 @@ function DashboardLayout({ children }) {
           variant="ghost"
           size="sm"
           className="w-full justify-start text-destructive"
-          onClick={onLogout}
+          onClick={logout}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Logout
@@ -227,10 +235,16 @@ function DashboardLayout({ children }) {
               </Button>
               <Avatar className="h-8 w-8">
                 {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.displayName || user.email} className="rounded-full" />
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.displayName || user.email}
+                    className="rounded-full"
+                  />
                 ) : (
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
+                    {(user?.displayName || user?.email)
+                      ?.charAt(0)
+                      .toUpperCase()}
                   </AvatarFallback>
                 )}
               </Avatar>

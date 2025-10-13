@@ -18,6 +18,7 @@ import {
 import { toast, Toaster } from "sonner";
 import Header from "../components/Header";
 import { Badge } from "../components/ui/badge";
+import { useAuth } from "../contexts/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
@@ -53,11 +54,12 @@ const platformDescriptions = {
   custom: "Custom RTMP Server",
 };
 
-function Dashboard({ user, onLogout }) {
+function Dashboard() {
+  const { user, logout } = useAuth();
   const queryClient = useQueryClient();
   const [newDestination, setNewDestination] = useState({
     platform: "youtube",
-    rtmpUrl: "",
+    rtmpUrl: "rtmp://a.rtmp.youtube.com/live2",
     streamKey: "",
   });
   const [showStreamKey, setShowStreamKey] = useState(false);
@@ -241,7 +243,7 @@ function Dashboard({ user, onLogout }) {
                 </p>
               </div>
             )}
-            <button onClick={onLogout} className="btn btn-outline">
+            <button onClick={logout} className="btn btn-outline">
               Logout
             </button>
           </div>

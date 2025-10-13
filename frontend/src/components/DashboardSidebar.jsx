@@ -12,8 +12,10 @@ import {
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
 
-function DashboardSidebar({ user, onLogout, isCollapsed, setIsCollapsed }) {
+function DashboardSidebar({ user, isCollapsed, setIsCollapsed }) {
+  const { logout } = useAuth();
   const navItems = [
     {
       id: "overview",
@@ -113,7 +115,7 @@ function DashboardSidebar({ user, onLogout, isCollapsed, setIsCollapsed }) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={onLogout}
+          onClick={logout}
           className={`w-full justify-start ${
             isCollapsed ? "justify-center" : ""
           }`}
