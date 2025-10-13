@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const posthogService = require('../services/posthog');
 const { passport, generateToken, JWT_SECRET } = require('../config/oauth');
+const { passport: twitchPassport } = require('../config/twitch-oauth');
 
 const router = express.Router();
 
@@ -242,6 +243,54 @@ router.post('/google/token',
       console.error('Token generation error:', error);
       res.status(500).json({ error: 'Token generation failed' });
     }
+  }
+);
+
+// Twitch OAuth endpoints
+router.get('/twitch',
+  twitchPassport.authenticate('twitch')
+);
+
+router.get('/twitch/callback',
+  (req, res, next) => {
+    console.log('=== TWITCH OAUTH CALLBACK START ===');
+    console.log('Callback URL:', req.url);
+    console.log('Callback Query:', req.query);
+    console.log('Callback Code:', req.query.code);
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+    next();
+  },
+  twitchPassport.authenticate('twitch', { session: false }),
+  (req, res) => {
+    console.log('=== TWITCH OAUTH CALLBACK PROCESSING ===');
+    console.log('Authenticated user:', req.user);
+
+    if (!req.user) {
+      console.error('No user found in Twitch OAuth callback');
+      return res.status(400).json({ error: 'Authentication failed' });
+    }
+
+    // Generate JWT token for the authenticated user
+    const token = generateToken(req.user);
+    console.log('Generated JWT token:', token.substring(0, 20) + '...');
+
+    // Redirect to frontend auth page with token
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.neustream.app';
+    const userData = encodeURIComponent(JSON.stringify(req.user));
+    const redirectUrl = `${frontendUrl}/auth?token=${token}&user=${userData}`;
+
+    console.log('Redirect URL:', redirectUrl);
+    console.log('Redirect URL length:', redirectUrl.length);
+    console.log('Token length:', token.length);
+    console.log('User data length:', userData.length);
+
+    // Check if URL is too long (browser limit is ~2000 chars)
+    if (redirectUrl.length > 2000) {
+      console.warn('Redirect URL is very long, might cause issues');
+    }
+
+    res.redirect(redirectUrl);
+    console.log('=== TWITCH OAUTH CALLBACK COMPLETE ===');
   }
 );
 

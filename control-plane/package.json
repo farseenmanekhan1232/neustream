@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "passport-twitch-strategy": "^2.2.0",
     "pg": "^8.11.3",
     "posthog-node": "^5.9.5"
   },

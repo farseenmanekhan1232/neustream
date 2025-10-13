@@ -44,13 +44,18 @@ class AuthService {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: "Request failed" }));
+        const error = await response
+          .json()
+          .catch(() => ({ error: "Request failed" }));
         throw new Error(error.error || "Request failed");
       }
 
       return await response.json();
     } catch (error) {
-      if (error.message === "Unauthorized" || error.message === "Invalid token") {
+      if (
+        error.message === "Unauthorized" ||
+        error.message === "Invalid token"
+      ) {
         this.clearToken();
         window.location.href = "/auth";
       }
@@ -66,7 +71,9 @@ class AuthService {
     });
 
     if (response.user) {
-      this.setToken(response.token || this.generateTemporaryToken(response.user));
+      this.setToken(
+        response.token || this.generateTemporaryToken(response.user)
+      );
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
 
@@ -80,7 +87,9 @@ class AuthService {
     });
 
     if (response.user) {
-      this.setToken(response.token || this.generateTemporaryToken(response.user));
+      this.setToken(
+        response.token || this.generateTemporaryToken(response.user)
+      );
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
 
@@ -93,8 +102,14 @@ class AuthService {
     window.location.href = googleAuthUrl;
   }
 
+  loginWithTwitch() {
+    // Redirect to Twitch OAuth endpoint
+    const twitchAuthUrl = `${API_BASE}/auth/twitch`;
+    window.location.href = twitchAuthUrl;
+  }
+
   async validateToken(token) {
-    console.log('AuthService: Validating token...');
+    console.log("AuthService: Validating token...");
 
     try {
       const response = await this.request("/auth/validate-token", {
@@ -102,18 +117,18 @@ class AuthService {
         body: JSON.stringify({ token }),
       });
 
-      console.log('AuthService: Validation response:', response);
+      console.log("AuthService: Validation response:", response);
 
       if (response.user) {
         localStorage.setItem(USER_KEY, JSON.stringify(response.user));
         return response.user;
       }
     } catch (error) {
-      console.error('AuthService: Token validation failed:', error);
+      console.error("AuthService: Token validation failed:", error);
       // If validation fails, try to get user from localStorage
       const storedUser = this.getCurrentUser();
       if (storedUser) {
-        console.log('AuthService: Using stored user data from localStorage');
+        console.log("AuthService: Using stored user data from localStorage");
         return storedUser;
       }
       throw error;
@@ -124,12 +139,14 @@ class AuthService {
   generateTemporaryToken(user) {
     // This is a temporary solution until backend returns JWT tokens
     // In production, the backend should return a proper JWT token
-    return btoa(JSON.stringify({
-      userId: user.id,
-      email: user.email,
-      streamKey: user.streamKey,
-      timestamp: Date.now(),
-    }));
+    return btoa(
+      JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        streamKey: user.streamKey,
+        timestamp: Date.now(),
+      })
+    );
   }
 
   // User management
@@ -137,7 +154,7 @@ class AuthService {
     try {
       const userData = localStorage.getItem(USER_KEY);
       return userData ? JSON.parse(userData) : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -151,19 +168,13 @@ class AuthService {
     // Add response interceptor to handle token expiration
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
-      try {
-        const response = await originalFetch(...args);
-
-        // Check if response indicates token expiration
-        if (response.status === 401) {
-          this.clearToken();
-          // Don't redirect here, let the component handle it
-        }
-
-        return response;
-      } catch (error) {
-        throw error;
+      const response = await originalFetch(...args);
+      // Check if response indicates token expiration
+      if (response.status === 401) {
+        this.clearToken();
+        // Don't redirect here, let the component handle it
       }
+      return response;
     };
   }
 }

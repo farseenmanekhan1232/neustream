@@ -78,6 +78,10 @@ jobs:
             echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
             echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" >> .env
 
+            echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
+            echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
+            echo "TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}" >> .env
+
             # Run database migrations
             echo "Running database migrations..."
             npm run migrate || echo "Migrations completed or already up to date"

@@ -1,13 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService } from '../services/auth';
-import posthogService from '../services/posthog';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { authService } from "../services/auth";
+import posthogService from "../services/posthog";
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -27,7 +33,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error("Auth initialization error:", error);
         authService.clearToken();
       } finally {
         setLoading(false);
@@ -37,52 +43,53 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Handle Google OAuth callback
+  // Handle OAuth callback (Google and Twitch)
   useEffect(() => {
     const handleGoogleCallback = async () => {
-      console.log('=== AUTHCONTEXT OAUTH CHECK ===');
+      console.log("=== AUTHCONTEXT OAUTH CHECK ===");
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const userData = urlParams.get('user');
+      const token = urlParams.get("token");
+      const userData = urlParams.get("user");
       const currentPath = window.location.pathname;
 
-      console.log('Current pathname:', currentPath);
-      console.log('Full URL:', window.location.href);
-      console.log('Token found:', !!token);
-      console.log('User data found:', !!userData);
+      console.log("Current pathname:", currentPath);
+      console.log("Full URL:", window.location.href);
+      console.log("Token found:", !!token);
+      console.log("User data found:", !!userData);
 
-      if (token && userData && currentPath === '/auth') {
-        console.log('Processing OAuth callback with token and user data...');
+      if (token && userData && currentPath === "/auth") {
+        console.log("Processing OAuth callback with token and user data...");
         try {
-          console.log('Token length:', token.length);
-          console.log('User data length:', userData.length);
+          console.log("Token length:", token.length);
+          console.log("User data length:", userData.length);
 
           const parsedUser = JSON.parse(decodeURIComponent(userData));
-          console.log('Parsed user data:', parsedUser);
+          console.log("Parsed user data:", parsedUser);
 
           // Set the token and user immediately
           authService.setToken(token);
           setUser(parsedUser);
           setError(null);
 
-          console.log('User state set successfully');
+          console.log("User state set successfully");
 
           // Clean up URL but keep the user logged in
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
-          console.log('URL cleaned, user should be logged in');
+          console.log("URL cleaned, user should be logged in");
 
           // Store user data in localStorage for persistence
-          localStorage.setItem('neustream_user', JSON.stringify(parsedUser));
-          console.log('User data stored in localStorage');
-
+          localStorage.setItem("neustream_user", JSON.stringify(parsedUser));
+          console.log("User data stored in localStorage");
         } catch (error) {
-          console.error('OAuth callback processing error:', error);
-          setError('Failed to complete Google sign-in');
+          console.error("OAuth callback processing error:", error);
+          setError("Failed to complete OAuth sign-in");
           authService.clearToken();
         }
       } else {
-        console.log('No OAuth callback data found, proceeding with normal auth check');
+        console.log(
+          "No OAuth callback data found, proceeding with normal auth check"
+        );
       }
     };
 
@@ -117,10 +124,14 @@ export const AuthProvider = ({ children }) => {
     authService.loginWithGoogle();
   }, []);
 
+  const loginWithTwitch = useCallback(() => {
+    authService.loginWithTwitch();
+  }, []);
+
   const logout = useCallback(() => {
     // Track logout event before clearing user data
     if (user) {
-      posthogService.trackAuthEvent('user_logout', {
+      posthogService.trackAuthEvent("user_logout", {
         user_id: user.id,
         oauth_provider: user.oauthProvider,
         timestamp: new Date().toISOString(),
@@ -134,11 +145,11 @@ export const AuthProvider = ({ children }) => {
 
     // Reset PostHog analytics - clear user identification and tracking
     posthogService.resetUser();
-    console.log('PostHog analytics reset on logout');
+    console.log("PostHog analytics reset on logout");
   }, [user]);
 
   const updateUser = useCallback((updates) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   }, []);
 
   const value = {
@@ -148,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     loginWithGoogle,
+    loginWithTwitch,
     logout,
     updateUser,
     isAuthenticated: !!user,

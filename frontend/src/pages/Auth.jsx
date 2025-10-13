@@ -26,6 +26,7 @@ function Auth() {
     login,
     register,
     loginWithGoogle,
+    loginWithTwitch,
     error: authError,
     user,
   } = useAuth();
@@ -90,6 +91,11 @@ function Auth() {
   const handleGoogleSignIn = () => {
     setError("");
     loginWithGoogle();
+  };
+
+  const handleTwitchSignIn = () => {
+    setError("");
+    loginWithTwitch();
   };
 
   const handleInputChange = (e) => {
@@ -175,6 +181,42 @@ function Auth() {
                     />
                   </svg>
                   Continue with Google
+                </Button>
+
+                {/* Twitch Sign In */}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleTwitchSignIn}
+                  disabled={authMutation.isPending}
+                >
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M11.64 5.36L10.2 8.74H14.38L12.96 12.12L16.28 12.13L14.86 15.5L18.18 15.51L19.6 12.13L22.92 12.14L11.64 5.36Z"
+                      fill="#9146FF"
+                    />
+                    <path
+                      d="M2.43 21.5L4.7 15.5L8.02 15.51L5.75 21.5H2.43Z"
+                      fill="#9146FF"
+                    />
+                    <path
+                      d="M5.75 21.5L8.02 15.5L11.34 15.51L9.07 21.5H5.75Z"
+                      fill="#9146FF"
+                    />
+                    <path
+                      d="M9.07 21.5L11.34 15.5L14.66 15.51L12.39 21.5H9.07Z"
+                      fill="#9146FF"
+                    />
+                    <path
+                      d="M12.39 21.5L14.66 15.5L17.98 15.51L15.71 21.5H12.39Z"
+                      fill="#9146FF"
+                    />
+                  </svg>
+                  Continue with Twitch
                 </Button>
 
                 <div className="relative">
