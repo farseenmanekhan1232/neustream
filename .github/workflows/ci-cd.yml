@@ -70,9 +70,21 @@ jobs:
             echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
             echo "STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}" >> .env
 
+            # Add Google OAuth configuration
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+            echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" >> .env
+
             # Run database migrations
             echo "Running database migrations..."
             npm run migrate || echo "Migrations completed or already up to date"
+
+            # Run OAuth migrations for Google auth support
+            echo "Running OAuth migrations..."
+            node scripts/migrate-oauth.js || echo "OAuth migrations completed or already up to date"
 
             # Update nginx configuration from project
             echo "Updating nginx configuration..."

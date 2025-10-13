@@ -5,7 +5,6 @@ import { ExternalLinkIcon } from "lucide-react";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
 
   const isActivePath = (path) => location.pathname === path;
 

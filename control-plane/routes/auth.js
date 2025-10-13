@@ -2,7 +2,9 @@ const express = require('express');
 const Database = require('../lib/database');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const posthogService = require('../services/posthog');
+const { passport, generateToken, JWT_SECRET } = require('../config/oauth');
 
 const router = express.Router();
 
@@ -170,6 +172,78 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Google OAuth endpoints
+router.get('/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/google/callback',
+  passport.authenticate('google', { session: false }),
+  (req, res) => {
+    // Generate JWT token for the authenticated user
+    const token = generateToken(req.user);
+
+    // Redirect to frontend with token
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.neustream.app';
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(req.user))}`);
+  }
+);
+
+// Google OAuth for API-based authentication (for frontend popup flow)
+router.post('/google/token',
+  passport.authenticate('google-token', { session: false }),
+  (req, res) => {
+    try {
+      const token = generateToken(req.user);
+      res.json({
+        token,
+        user: req.user
+      });
+    } catch (error) {
+      console.error('Token generation error:', error);
+      res.status(500).json({ error: 'Token generation failed' });
+    }
+  }
+);
+
+// JWT token validation endpoint
+router.post('/validate-token', async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verify user still exists
+    const users = await db.query(
+      'SELECT id, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1',
+      [decoded.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const user = users[0];
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name,
+        avatarUrl: user.avatar_url,
+        streamKey: user.stream_key,
+        oauthProvider: user.oauth_provider
+      }
+    });
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(401).json({ error: 'Invalid token' });
   }
 });
 

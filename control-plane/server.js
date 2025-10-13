@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const session = require('express-session');
 require('dotenv').config();
 
+const { passport } = require('./config/oauth');
 const authRoutes = require('./routes/auth');
 const streamRoutes = require('./routes/streams');
 const destinationRoutes = require('./routes/destinations');
@@ -13,6 +15,21 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport and restore authentication state, if any, from the session
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(cors({
   origin: ['https://www.neustream.app', 'https://neustream.app'],
   credentials: true,

@@ -1,10 +1,8 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import posthogService from '../services/posthog';
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import posthogService from "../services/posthog";
 
 export const usePostHog = () => {
-  const location = useLocation();
-
   // Track page views
   useEffect(() => {
     if (posthogService.isEnabled()) {
@@ -35,12 +33,20 @@ export const usePostHog = () => {
 
     // Track destination events
     trackDestinationEvent: (destinationId, eventName, properties = {}) => {
-      posthogService.trackDestinationEvent(destinationId, eventName, properties);
+      posthogService.trackDestinationEvent(
+        destinationId,
+        eventName,
+        properties
+      );
     },
 
     // Track UI interactions
     trackUIInteraction: (elementName, interactionType, properties = {}) => {
-      posthogService.trackUIInteraction(elementName, interactionType, properties);
+      posthogService.trackUIInteraction(
+        elementName,
+        interactionType,
+        properties
+      );
     },
 
     // Identify user

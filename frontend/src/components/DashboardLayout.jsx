@@ -59,7 +59,6 @@ const navItems = [
 ];
 
 function DashboardLayout({ user, onLogout, children }) {
-  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { trackUIInteraction } = usePostHog();
