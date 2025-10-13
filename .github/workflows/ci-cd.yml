@@ -48,8 +48,9 @@ jobs:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
-          source: "control-plane/"
+          source: "control-plane/*"
           target: "/opt/neustream"
+          strip_components: 1
 
       - name: Deploy to Control Plane
         uses: appleboy/ssh-action@v1.0.0
@@ -62,25 +63,35 @@ jobs:
 
             cd /opt/neustream
 
+            # Backup existing .env file
+            if [ -f .env ]; then
+              cp .env .env.backup
+            fi
+
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Add PostHog configuration to existing environment file
-            echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
-            echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
-            echo "STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}" >> .env
-
-            # Add Google OAuth configuration
-            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-            echo "GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}" >> .env
-
-            echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
-            echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
-            echo "TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}" >> .env
+            # Create fresh environment file
+            cat > .env << EOF
+            NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}
+            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
+            TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
+            TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
+            TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+            DB_HOST=localhost
+            DB_PORT=5432
+            DB_NAME=neustream
+            DB_USER=neustream_user
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            EOF
 
             # Run database migrations
             echo "Running database migrations..."
@@ -92,20 +103,27 @@ jobs:
 
             # Update nginx configuration from project
             echo "Updating nginx configuration..."
-            sudo cp /opt/neustream/control-plane/nginx-control-plane.conf /etc/nginx/sites-available/neustream
+            sudo cp /opt/neustream/nginx-control-plane.conf /etc/nginx/sites-available/neustream
             sudo nginx -t
             sudo systemctl reload nginx
 
-            # Restart application (start if doesn't exist)
-            pm2 restart neustream-control-plane || pm2 start server.js --name neustream-control-plane
+            # Restart application properly
+            pm2 stop neustream-control-plane || true
+            pm2 start server.js --name neustream-control-plane --env production
+            pm2 save
 
             # Wait for service to be ready
             sleep 5
 
             # Verify deployment
             pm2 status
-            curl -f https://api.neustream.app/health || echo "Health check failed - checking logs..."
-            curl -f "https://api.neustream.app/api/streams/info?userId=1" || echo "Streams info endpoint failed - checking logs..."
+            if curl -f http://localhost:3000/health; then
+              echo "✅ Control Plane health check passed"
+            else
+              echo "❌ Control Plane health check failed - checking logs..."
+              pm2 logs neustream-control-plane --lines 20
+              exit 1
+            fi
 
             echo "✅ Control Plane deployment complete!"
 
@@ -124,8 +142,9 @@ jobs:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
-          source: "media-server/"
+          source: "media-server/*"
           target: "/opt/neustream"
+          strip_components: 1
 
       - name: Deploy to Media Server
         uses: appleboy/ssh-action@v1.0.0
@@ -138,6 +157,11 @@ jobs:
 
             cd /opt/neustream
 
+            # Backup existing .env file
+            if [ -f .env ]; then
+              cp .env .env.backup
+            fi
+
             # Install FFmpeg for Node-Media-Server relays
             echo "Installing FFmpeg..."
             sudo apt-get update
@@ -146,9 +170,13 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Add PostHog configuration to existing environment file
-            echo "POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}" >> .env
-            echo "POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}" >> .env
+            # Create fresh environment file
+            cat > .env << EOF
+            NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            CONTROL_PLANE_URL=https://api.neustream.app
+            EOF
 
             # Update nginx configuration from project
             echo "Updating nginx configuration..."
@@ -160,15 +188,23 @@ jobs:
             # Reload nginx if config is valid
             sudo systemctl reload nginx
 
-            # Restart Node-Media-Server (start if doesn't exist)
-            pm2 restart neustream-media-server || pm2 start media-server.js --name neustream-media-server
+            # Restart Node-Media-Server properly
+            pm2 stop neustream-media-server || true
+            pm2 start media-server.js --name neustream-media-server --env production
+            pm2 save
 
             # Wait for services to be ready
             sleep 5
 
             # Verify media server is running
             pm2 status
-            curl -f https://stream.neustream.app/health || echo "Health check failed - checking logs..."
+            if curl -f http://localhost:8000/stat; then
+              echo "✅ Media Server stats endpoint responding"
+            else
+              echo "⚠️  Media Server stats endpoint not responding - checking logs..."
+              pm2 logs neustream-media-server --lines 20
+              # Don't fail the deployment for stats endpoint issues
+            fi
 
             echo "✅ Media Server deployment complete!"
 
