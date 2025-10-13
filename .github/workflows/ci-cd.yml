@@ -88,7 +88,7 @@ jobs:
 
             # Update nginx configuration from project
             echo "Updating nginx configuration..."
-            sudo cp /opt/neustream/nginx-control-plane.conf /etc/nginx/sites-available/neustream
+            sudo cp /opt/neustream/control-plane/nginx-control-plane.conf /etc/nginx/sites-available/neustream
             sudo nginx -t
             sudo systemctl reload nginx
 
