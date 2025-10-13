@@ -68,7 +68,7 @@ function Dashboard() {
 
   // Fetch stream info with real-time polling
   const { data: streamInfo, isLoading: streamLoading } = useQuery({
-    queryKey: ["streamInfo", user.id],
+    queryKey: ["streamInfo", user?.id],
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/streams/info?userId=${user.id}`
@@ -78,11 +78,12 @@ function Dashboard() {
     },
     refetchInterval: 5000, // Poll every 5 seconds
     refetchIntervalInBackground: true,
+    enabled: !!user, // Only run query when user is available
   });
 
   // Fetch destinations
   const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
-    queryKey: ["destinations", user.id],
+    queryKey: ["destinations", user?.id],
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/destinations?userId=${user.id}`
@@ -90,6 +91,7 @@ function Dashboard() {
       if (!response.ok) throw new Error("Failed to fetch destinations");
       return response.json();
     },
+    enabled: !!user, // Only run query when user is available
   });
 
   const destinations = destinationsData?.destinations || [];
@@ -104,7 +106,7 @@ function Dashboard() {
       setCopiedField(field);
       toast.success(`${field} copied to clipboard!`);
       setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy to clipboard");
     }
   };
@@ -142,6 +144,8 @@ function Dashboard() {
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
+      if (!user) throw new Error("User not authenticated");
+
       const response = await fetch(`${API_BASE}/destinations`, {
         method: "POST",
         headers: {
@@ -162,7 +166,7 @@ function Dashboard() {
     },
     onSuccess: () => {
       setNewDestination({ platform: "youtube", rtmpUrl: "", streamKey: "" });
-      queryClient.invalidateQueries(["destinations", user.id]);
+      queryClient.invalidateQueries(["destinations", user?.id]);
       toast.success("Destination added successfully!");
     },
     onError: (error) => {
@@ -184,7 +188,7 @@ function Dashboard() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["destinations", user.id]);
+      queryClient.invalidateQueries(["destinations", user?.id]);
       toast.success("Destination removed successfully!");
     },
     onError: (error) => {
@@ -210,6 +214,21 @@ function Dashboard() {
   const handleDeleteDestination = (id) => {
     deleteDestinationMutation.mutate(id);
   };
+
+  // Early return if user is not available
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

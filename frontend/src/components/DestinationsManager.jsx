@@ -91,7 +91,7 @@ function DestinationsManager({ user }) {
 
   // Fetch destinations
   const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
-    queryKey: ["destinations", user.id],
+    queryKey: ["destinations", user?.id],
     queryFn: async () => {
       const response = await fetch(
         `${API_BASE}/destinations?userId=${user.id}`
@@ -99,6 +99,7 @@ function DestinationsManager({ user }) {
       if (!response.ok) throw new Error("Failed to fetch destinations");
       return response.json();
     },
+    enabled: !!user, // Only run query when user is available
   });
 
   const destinations = destinationsData?.destinations || [];
@@ -136,7 +137,7 @@ function DestinationsManager({ user }) {
         streamKey: "",
       });
       setShowAddForm(false);
-      queryClient.invalidateQueries(["destinations", user.id]);
+      queryClient.invalidateQueries(["destinations", user?.id]);
       toast.success("Destination added successfully!");
     },
     onError: (error) => {
@@ -165,7 +166,7 @@ function DestinationsManager({ user }) {
     onSuccess: (_, id) => {
       // Track destination removal
       trackDestinationEvent(id, "destination_removed");
-      queryClient.invalidateQueries(["destinations", user.id]);
+      queryClient.invalidateQueries(["destinations", user?.id]);
       toast.success("Destination removed successfully!");
     },
     onError: (error, id) => {
@@ -184,12 +185,16 @@ function DestinationsManager({ user }) {
       setCopiedField(field);
       toast.success(`${field} copied to clipboard!`);
       // Track copy actions
-      trackUIInteraction(`copy_${field.toLowerCase().replace(/\s+/g, '_')}`, "click", {
-        field_type: field,
-        content_length: text.length,
-      });
+      trackUIInteraction(
+        `copy_${field.toLowerCase().replace(/\s+/g, "_")}`,
+        "click",
+        {
+          field_type: field,
+          content_length: text.length,
+        }
+      );
       setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy to clipboard");
     }
   };
@@ -217,15 +222,10 @@ function DestinationsManager({ user }) {
     addDestinationMutation.mutate(newDestination);
   };
 
-  const handleDeleteDestination = (id) => {
-    if (window.confirm("Are you sure you want to remove this destination?")) {
-      // Track delete confirmation
-      trackUIInteraction("delete_destination", "click", {
-        destination_id: id,
-      });
-      deleteDestinationMutation.mutate(id);
-    }
-  };
+  // Early return if user is not available (after all hooks are called)
+  if (!user) {
+    return <DestinationsSkeleton />;
+  }
 
   if (destinationsLoading) {
     return <DestinationsSkeleton />;

@@ -38,6 +38,11 @@ function DashboardOverview({ user }) {
   const [streamDuration, setStreamDuration] = useState(0);
   const { trackUIInteraction, trackStreamEvent } = usePostHog();
 
+  // Add early return if user is not available
+  if (!user) {
+    return <DashboardOverviewSkeleton />;
+  }
+
   // Fetch stream info
   const { data: streamInfo, isLoading: streamLoading } = useQuery({
     queryKey: ["streamInfo", user.id],
@@ -50,6 +55,7 @@ function DashboardOverview({ user }) {
     },
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
+    enabled: !!user, // Only run query when user is available
   });
 
   // Fetch destinations
@@ -62,6 +68,7 @@ function DashboardOverview({ user }) {
       if (!response.ok) throw new Error("Failed to fetch destinations");
       return response.json();
     },
+    enabled: !!user, // Only run query when user is available
   });
 
   const destinations = destinationsData?.destinations || [];

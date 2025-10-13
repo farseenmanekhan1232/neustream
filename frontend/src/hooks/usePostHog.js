@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import posthogService from "../services/posthog";
 
 export const usePostHog = () => {
+  const location = useLocation();
   // Track page views
   useEffect(() => {
     if (posthogService.isEnabled()) {
