@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { usePostHog } from "../hooks/usePostHog";
+import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
   {
@@ -58,7 +59,8 @@ const navItems = [
   },
 ];
 
-function DashboardLayout({ user, onLogout, children }) {
+function DashboardLayout({ children }) {
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { trackUIInteraction } = usePostHog();
@@ -118,13 +120,17 @@ function DashboardLayout({ user, onLogout, children }) {
       <div className="p-4 border-b">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {user?.email?.charAt(0).toUpperCase()}
-            </AvatarFallback>
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.displayName || user.email} className="rounded-full" />
+            ) : (
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.email}</p>
-            <p className="text-xs text-muted-foreground">Streamer</p>
+            <p className="text-sm font-medium truncate">{user?.displayName || user?.email}</p>
+            <p className="text-xs text-muted-foreground">{user?.oauthProvider ? `${user.oauthProvider} User` : 'Streamer'}</p>
           </div>
         </div>
       </div>
@@ -220,9 +226,13 @@ function DashboardLayout({ user, onLogout, children }) {
                 <Bell className="h-5 w-5" />
               </Button>
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </AvatarFallback>
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.displayName || user.email} className="rounded-full" />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                    {(user?.displayName || user?.email)?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </div>
           </header>

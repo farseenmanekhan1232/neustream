@@ -6,7 +6,8 @@ import {
   Outlet,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -14,114 +15,116 @@ import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import DestinationsManager from "./components/DestinationsManager";
 import { usePostHog } from "./hooks/usePostHog";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-function App() {
-  const [user, setUser] = useState(null);
+// Main app component with auth provider
+function AppContent() {
+  const { user, loading } = useAuth();
   const { identifyUser, resetUser } = usePostHog();
 
-  // Check if user is already logged in (from localStorage)
+  // Handle user identification for PostHog
   useEffect(() => {
-    const savedUser = localStorage.getItem("neustream_user");
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      // Identify user in PostHog
-      identifyUser(userData.id, { email: userData.email });
+    if (user) {
+      identifyUser(user.id, {
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        oauthProvider: user.oauthProvider,
+      });
+    } else {
+      resetUser();
     }
-  }, [identifyUser]);
+  }, [user, identifyUser, resetUser]);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    localStorage.setItem("neustream_user", JSON.stringify(userData));
-    // Identify user in PostHog
-    identifyUser(userData.id, { email: userData.email });
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("neustream_user");
-    // Reset user in PostHog
-    resetUser();
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/auth"
-            element={
-              user ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Auth onLogin={handleLogin} />
-              )
-            }
-          />
+    <Routes>
+      <Route path="/" element={<Landing />} />
 
-          {/* Dashboard routes with layout */}
-          <Route
-            path="/dashboard"
-            element={
-              user ? (
-                <DashboardLayout user={user} onLogout={handleLogout}>
-                  <Outlet />
-                </DashboardLayout>
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          >
-            <Route index element={<DashboardOverview user={user} />} />
-            <Route
-              path="destinations"
-              element={<DestinationsManager user={user} />}
-            />
-            <Route
-              path="analytics"
-              element={
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold mb-4">Analytics</h2>
-                  <p className="text-muted-foreground">
-                    Coming soon! Track your stream performance and viewer
-                    engagement.
-                  </p>
-                </div>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold mb-4">Settings</h2>
-                  <p className="text-muted-foreground">
-                    Account settings coming soon!
-                  </p>
-                </div>
-              }
-            />
-          </Route>
+      {/* Auth routes - redirect authenticated users to dashboard */}
+      <Route
+        path="/auth"
+        element={
+          <ProtectedRoute requireAuth={false}>
+            <Auth />
+          </ProtectedRoute>
+        }
+      />
 
-          {/* Legacy dashboard route for backward compatibility */}
-          <Route
-            path="/dashboard/old"
-            element={
-              user ? (
-                <Dashboard user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
+      {/* Dashboard routes - require authentication */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardOverview />} />
+        <Route path="destinations" element={<DestinationsManager />} />
+        <Route
+          path="analytics"
+          element={
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold mb-4">Analytics</h2>
+              <p className="text-muted-foreground">
+                Coming soon! Track your stream performance and viewer
+                engagement.
+              </p>
+            </div>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-bold mb-4">Settings</h2>
+              <p className="text-muted-foreground">
+                Account settings coming soon! Manage your profile, streaming
+                preferences, and integrations.
+              </p>
+            </div>
+          }
+        />
+      </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </QueryClientProvider>
+      {/* Legacy dashboard route for backward compatibility */}
+      <Route
+        path="/dashboard/old"
+        element={
+          <ProtectedRoute requireAuth={true}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
