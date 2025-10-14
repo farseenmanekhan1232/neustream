@@ -141,7 +141,7 @@ jobs:
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
           source: "media-server/*"
-          target: "/opt/neustream/media-server"
+          target: "/opt/neustream"
           strip_components: 1
 
       - name: Deploy to Media Server
@@ -158,6 +158,7 @@ jobs:
             # Backup existing .env file
             if [ -f .env ]; then
               cp .env .env.backup
+              echo "✅ Backed up existing .env file"
             fi
 
             # Install FFmpeg for Node-Media-Server relays
@@ -166,6 +167,7 @@ jobs:
             sudo apt-get install -y ffmpeg
 
             # Install dependencies
+            echo "Installing dependencies..."
             npm install --no-audit --no-fund
 
             # Create fresh environment file
@@ -186,19 +188,47 @@ jobs:
             # Reload nginx if config is valid
             sudo systemctl reload nginx
 
-            # Clean up any existing processes and old directories
+            # Clean up any existing processes
             echo "Cleaning up existing processes..."
             pm2 stop neustream-media-server || true
-            rm -rf /opt/neustream/media-server || true
-
-            # Copy files to correct location
-            echo "Copying files to correct location..."
-            mkdir -p /opt/neustream
-            cp -r /opt/neustream/media-server/* /opt/neustream/ || true
+            pm2 delete neustream-media-server || true
 
             # Restart Node-Media-Server properly
-            cd /opt/neustream
+            echo "Starting media server..."
             pm2 start media-server.js --name neustream-media-server --env production
+
+            # Wait for service to be ready
+            sleep 5
+
+            # Verify deployment success
+            echo "Verifying deployment..."
+            pm2 status
+
+            # Check if media server process is running
+            if pm2 describe neustream-media-server | grep -q "online"; then
+              echo "✅ Media Server process is running"
+            else
+              echo "❌ Media Server process failed to start"
+              pm2 logs neustream-media-server --lines 30
+              exit 1
+            fi
+
+            # Check if ports are listening
+            if sudo ss -tlnp | grep -q ":1935.*node"; then
+              echo "✅ RTMP port 1935 is listening"
+            else
+              echo "❌ RTMP port 1935 is not listening"
+              exit 1
+            fi
+
+            if sudo ss -tlnp | grep -q ":8000.*node"; then
+              echo "✅ HTTP port 8000 is listening"
+            else
+              echo "❌ HTTP port 8000 is not listening"
+              exit 1
+            fi
+
+            echo "✅ Media Server deployment verified successfully!"
 
             # Wait for services to be ready
             sleep 5
