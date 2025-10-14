@@ -7,14 +7,16 @@ const pool = new Pool({
   database: process.env.DB_NAME || "neustream",
   user: process.env.DB_USER || "neustream_user",
   password: process.env.DB_PASSWORD || "23k4j123k4ksdhfasiuhe",
-  ssl: process.env.NODE_ENV === "production"
+  ssl: false,
 });
 
 async function runOAuthMigrations() {
   let client;
 
   try {
-    console.log("Attempting to connect to PostgreSQL database for OAuth migrations...");
+    console.log(
+      "Attempting to connect to PostgreSQL database for OAuth migrations..."
+    );
 
     client = await pool.connect();
     console.log("✅ Connected to PostgreSQL database");
