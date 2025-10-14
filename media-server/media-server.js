@@ -2,6 +2,9 @@ const NodeMediaServer = require("node-media-server");
 const axios = require("axios");
 const posthogService = require("./services/posthog");
 
+// Store relay tasks by stream key for proper cleanup
+const activeRelayTasks = new Map();
+
 const config = {
   rtmp: {
     port: 1935,
@@ -50,6 +53,10 @@ nms.on("prePublish", async (id, StreamPath, args) => {
   // Extract stream key from StreamPath (format: /live/streamKey)
   const streamKey = StreamPath.split("/").pop();
 
+  // Create unique stream identifier using connection ID and stream key
+  // This prevents overlap between multiple users with the same stream key
+  const uniqueStreamId = `${streamKey}_${id}`;
+
   // Track stream publishing attempt
   posthogService.trackStreamEvent(streamKey, "stream_publishing_started", {
     connection_id: id,
@@ -91,26 +98,28 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         destinations: destinations.map((d) => d.rtmp_url),
       });
 
-      // Set up relay tasks for each destination
+      // Configure relay tasks for each destination
+      const relayTasks = [];
       destinations.forEach((destination, index) => {
         const { rtmp_url, stream_key } = destination;
         const outputUrl = `${rtmp_url}/${stream_key}`;
 
+        // Create relay task for node-media-server
         const relayTask = {
-          app: "live",
-          mode: "push",
-          name: `${streamKey}_${index}`,
+          app: 'live',
+          mode: 'push',
           edge: outputUrl,
+          name: `${streamKey}_dest_${index}`,
         };
 
-        config.relay.tasks.push(relayTask);
-        console.log(`[NodeMediaServer] Added relay task: ${outputUrl}`);
+        relayTasks.push(relayTask);
+        console.log(`[NodeMediaServer] Configured relay task: ${outputUrl}`);
 
         // Track individual relay setup
         posthogService.trackRelayEvent(
           streamKey,
           outputUrl,
-          "relay_task_added",
+          'relay_task_configured',
           {
             task_index: index,
             destination_url: rtmp_url,
@@ -118,6 +127,24 @@ nms.on("prePublish", async (id, StreamPath, args) => {
           }
         );
       });
+
+      // Store relay tasks for this stream
+      activeRelayTasks.set(streamKey, relayTasks);
+
+      // Add relay tasks to configuration
+      config.relay.tasks.push(...relayTasks);
+
+      // Restart relay server to pick up new tasks
+      if (nms.relayServer) {
+        console.log(`[NodeMediaServer] Restarting relay server with new tasks...`);
+        try {
+          nms.relayServer.stop();
+          nms.relayServer.run();
+          console.log(`[NodeMediaServer] Relay server restarted successfully`);
+        } catch (error) {
+          console.error(`[NodeMediaServer] Failed to restart relay server:`, error);
+        }
+      }
 
       // Explicitly return true to allow the stream
       return true;
@@ -161,6 +188,9 @@ nms.on("donePublish", async (id, StreamPath, args) => {
 
   const streamKey = StreamPath.split("/").pop();
 
+  // Create the same unique stream identifier used during publishing
+  const uniqueStreamId = `${streamKey}_${id}`;
+
   // Track stream publishing ended
   posthogService.trackStreamEvent(streamKey, "stream_publishing_ended", {
     connection_id: id,
@@ -169,20 +199,34 @@ nms.on("donePublish", async (id, StreamPath, args) => {
   });
 
   // Clean up relay tasks for this stream
-  const removedTasks = config.relay.tasks.filter((task) =>
-    task.name.startsWith(`${streamKey}_`)
-  );
-  config.relay.tasks = config.relay.tasks.filter(
-    (task) => !task.name.startsWith(`${streamKey}_`)
-  );
-  console.log(
-    `[NodeMediaServer] Cleaned up relay tasks for stream: ${streamKey}`
-  );
+  const relayTasks = activeRelayTasks.get(streamKey);
+  if (relayTasks) {
+    console.log(`[NodeMediaServer] Cleaning up relay tasks for stream: ${streamKey}`);
+
+    // Remove relay tasks from configuration
+    config.relay.tasks = config.relay.tasks.filter(
+      task => !relayTasks.some(relayTask => relayTask.name === task.name)
+    );
+
+    // Restart relay server to apply cleanup
+    if (nms.relayServer) {
+      console.log(`[NodeMediaServer] Restarting relay server after task cleanup...`);
+      try {
+        nms.relayServer.stop();
+        nms.relayServer.run();
+        console.log(`[NodeMediaServer] Relay server restarted successfully`);
+      } catch (error) {
+        console.error(`[NodeMediaServer] Failed to restart relay server:`, error);
+      }
+    }
+
+    // Remove from active tasks
+    activeRelayTasks.delete(streamKey);
+  }
 
   // Track relay cleanup
   posthogService.trackStreamEvent(streamKey, "relay_tasks_cleaned", {
-    removed_task_count: removedTasks.length,
-    removed_tasks: removedTasks.map((task) => task.edge),
+    cleaned_task_count: relayTasks ? relayTasks.length : 0,
   });
 
   try {
@@ -227,10 +271,6 @@ const gracefulShutdown = async () => {
   );
 
   // Stop the media server
-  if (globalFFmpegProcess) {
-    globalFFmpegProcess.kill("SIGTERM");
-  }
-
   nms.stop();
 
   // Flush PostHog events
