@@ -97,14 +97,6 @@ jobs:
             NODE_ENV=production
             EOF
 
-            # Run database migrations
-            echo "Running database migrations..."
-            npm run migrate || echo "Migrations completed or already up to date"
-
-            # Run OAuth migrations for Google auth support
-            echo "Running OAuth migrations..."
-            node scripts/migrate-oauth.js || echo "OAuth migrations completed or already up to date"
-
             # Update nginx configuration from project
             echo "Updating nginx configuration..."
             sudo cp /opt/neustream/nginx-control-plane.conf /etc/nginx/sites-available/neustream
