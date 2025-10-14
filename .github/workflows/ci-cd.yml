@@ -86,6 +86,7 @@ jobs:
             TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
             TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
             TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+            FRONTEND_URL=https://www.neustream.app
             DB_HOST=localhost
             DB_PORT=5432
             DB_NAME=neustream
