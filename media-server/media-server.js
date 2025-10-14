@@ -94,23 +94,49 @@ nms.on("prePublish", async (id, StreamPath, args) => {
       // Set up relay tasks for each destination
       destinations.forEach((destination, index) => {
         const { rtmp_url, stream_key } = destination;
-        const outputUrl = `${rtmp_url}/${stream_key}`;
 
-        const relayTask = {
-          app: 'live',
-          mode: 'push',
-          name: `${streamKey}_${index}`,
-          edge: outputUrl,
-        };
+        // For YouTube, use the correct RTMP URL format
+        // YouTube expects: rtmp://a.rtmp.youtube.com/live2/STREAM_KEY
+        // Other platforms may have different formats
+        let outputUrl;
+        if (rtmp_url.includes('youtube.com')) {
+          // YouTube: stream key is part of the URL path
+          outputUrl = `${rtmp_url}/${stream_key}`;
+        } else {
+          // Other platforms: standard format
+          outputUrl = `${rtmp_url}/${stream_key}`;
+        }
 
-        config.relay.tasks.push(relayTask);
-        console.log(`[NodeMediaServer] Added relay task: ${outputUrl}`);
+        console.log(`[NodeMediaServer] Setting up relay to: ${outputUrl}`);
 
-        // Track individual relay setup
-        posthogService.trackRelayEvent(streamKey, outputUrl, 'relay_task_added', {
-          task_index: index,
-          destination_url: rtmp_url,
-          destination_stream_key: stream_key
+        // Use NodeMediaServer's relay push functionality
+        // This dynamically adds relay tasks at runtime
+        nms.nodeEvent.on('postPublish', (_id, StreamPath, _args) => {
+          if (StreamPath === `/live/${streamKey}`) {
+            console.log(`[NodeMediaServer] Starting relay to: ${outputUrl}`);
+
+            // Start relay push
+            nms.relayTask.push(StreamPath, outputUrl, (err) => {
+              if (err) {
+                console.error(`[NodeMediaServer] Relay push failed for ${outputUrl}:`, err);
+
+                // Track relay failure
+                posthogService.trackRelayEvent(streamKey, outputUrl, 'relay_push_failed', {
+                  task_index: index,
+                  error: err.message
+                });
+              } else {
+                console.log(`[NodeMediaServer] Relay push started for ${outputUrl}`);
+
+                // Track successful relay start
+                posthogService.trackRelayEvent(streamKey, outputUrl, 'relay_push_started', {
+                  task_index: index,
+                  destination_url: rtmp_url,
+                  destination_stream_key: stream_key
+                });
+              }
+            });
+          }
         });
       });
 
