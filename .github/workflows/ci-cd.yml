@@ -90,7 +90,7 @@ jobs:
             DB_PORT=5432
             DB_NAME=neustream
             DB_USER=neustream_user
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_PASSWORD=23k4j123k4ksdhfasiuhe
             EOF
 
             # Run database migrations
