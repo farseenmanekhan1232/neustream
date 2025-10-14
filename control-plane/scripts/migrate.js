@@ -7,8 +7,10 @@ const pool = new Pool({
   database: "neustream",
   user: "neustream_user",
   password: "23k4j123k4ksdhfasiuhe",
-  // No SSL needed for local connections
-  ssl: false,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 async function runMigrations() {

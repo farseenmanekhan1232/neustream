@@ -92,6 +92,9 @@ jobs:
             DB_NAME=neustream
             DB_USER=neustream_user
             DB_PASSWORD=23k4j123k4ksdhfasiuhe
+
+            PORT=3000
+            NODE_ENV=production
             EOF
 
             # Run database migrations
