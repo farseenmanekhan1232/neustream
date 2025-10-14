@@ -1,9 +1,10 @@
 const NodeMediaServer = require("node-media-server");
 const axios = require("axios");
+const { spawn } = require("child_process");
 const posthogService = require("./services/posthog");
 
-// Store relay tasks by stream key for proper cleanup
-const activeRelayTasks = new Map();
+// Store active FFmpeg processes for stream forwarding
+const activeFFmpegProcesses = new Map();
 
 const config = {
   rtmp: {
@@ -18,9 +19,10 @@ const config = {
     allow_origin: "*",
     mediaroot: "./media",
   },
+  // Disable built-in relay server - we'll handle forwarding with FFmpeg
   relay: {
     ffmpeg: "/usr/bin/ffmpeg",
-    tasks: [],
+    tasks: [], // Keep empty - we'll handle this manually
   },
 };
 
@@ -106,8 +108,8 @@ nms.on("prePublish", async (id, StreamPath, args) => {
 
         // Create relay task for node-media-server
         const relayTask = {
-          app: 'live',
-          mode: 'push',
+          app: "live",
+          mode: "push",
           edge: outputUrl,
           name: `${streamKey}_dest_${index}`,
         };
@@ -119,7 +121,7 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         posthogService.trackRelayEvent(
           streamKey,
           outputUrl,
-          'relay_task_configured',
+          "relay_task_configured",
           {
             task_index: index,
             destination_url: rtmp_url,
@@ -128,23 +130,79 @@ nms.on("prePublish", async (id, StreamPath, args) => {
         );
       });
 
-      // Store relay tasks for this stream
-      activeRelayTasks.set(streamKey, relayTasks);
+      // Start FFmpeg processes for stream forwarding
+      const ffmpegProcesses = [];
+      destinations.forEach((destination) => {
+        const { rtmp_url, stream_key } = destination;
+        const outputUrl = `${rtmp_url}/${stream_key}`;
 
-      // Add relay tasks to configuration
-      config.relay.tasks.push(...relayTasks);
+        console.log(`[NodeMediaServer] Starting FFmpeg forwarding to: ${outputUrl}`);
 
-      // Restart relay server to pick up new tasks
-      if (nms.relayServer) {
-        console.log(`[NodeMediaServer] Restarting relay server with new tasks...`);
-        try {
-          nms.relayServer.stop();
-          nms.relayServer.run();
-          console.log(`[NodeMediaServer] Relay server restarted successfully`);
-        } catch (error) {
-          console.error(`[NodeMediaServer] Failed to restart relay server:`, error);
-        }
-      }
+        // Start FFmpeg process to forward the stream
+        // Use the connection-specific stream path to avoid overlap
+        const ffmpegProcess = spawn('ffmpeg', [
+          '-i', `rtmp://localhost:1935${StreamPath}`,
+          '-c', 'copy',
+          '-f', 'flv',
+          outputUrl
+        ]);
+
+        ffmpegProcesses.push(ffmpegProcess);
+
+        // Handle FFmpeg process events
+        ffmpegProcess.stdout.on('data', (data) => {
+          console.log(`[FFmpeg ${streamKey}] stdout: ${data}`);
+        });
+
+        ffmpegProcess.stderr.on('data', (data) => {
+          console.log(`[FFmpeg ${streamKey}] stderr: ${data}`);
+        });
+
+        ffmpegProcess.on('close', (code) => {
+          console.log(`[FFmpeg ${streamKey}] process exited with code ${code}`);
+
+          // Track relay failure
+          posthogService.trackStreamEvent(
+            streamKey,
+            'ffmpeg_process_exited',
+            {
+              exit_code: code,
+              destination_url: rtmp_url,
+              destination_stream_key: stream_key
+            }
+          );
+        });
+
+        ffmpegProcess.on('error', (error) => {
+          console.error(`[FFmpeg ${streamKey}] error:`, error);
+
+          // Track relay failure
+          posthogService.trackStreamEvent(
+            streamKey,
+            'ffmpeg_process_error',
+            {
+              error: error.message,
+              destination_url: rtmp_url,
+              destination_stream_key: stream_key
+            }
+          );
+        });
+
+        console.log(`[NodeMediaServer] Started FFmpeg forwarding to: ${outputUrl}`);
+
+        // Track successful FFmpeg start
+        posthogService.trackStreamEvent(
+          streamKey,
+          'ffmpeg_forwarding_started',
+          {
+            destination_url: rtmp_url,
+            destination_stream_key: stream_key,
+          }
+        );
+      });
+
+      // Store FFmpeg processes for cleanup
+      activeFFmpegProcesses.set(streamKey, ffmpegProcesses);
 
       // Explicitly return true to allow the stream
       return true;
@@ -188,9 +246,6 @@ nms.on("donePublish", async (id, StreamPath, args) => {
 
   const streamKey = StreamPath.split("/").pop();
 
-  // Create the same unique stream identifier used during publishing
-  const uniqueStreamId = `${streamKey}_${id}`;
-
   // Track stream publishing ended
   posthogService.trackStreamEvent(streamKey, "stream_publishing_ended", {
     connection_id: id,
@@ -198,35 +253,24 @@ nms.on("donePublish", async (id, StreamPath, args) => {
     args: args,
   });
 
-  // Clean up relay tasks for this stream
-  const relayTasks = activeRelayTasks.get(streamKey);
-  if (relayTasks) {
-    console.log(`[NodeMediaServer] Cleaning up relay tasks for stream: ${streamKey}`);
+  // Clean up FFmpeg processes for this stream
+  const ffmpegProcesses = activeFFmpegProcesses.get(streamKey);
+  if (ffmpegProcesses) {
+    console.log(`[NodeMediaServer] Cleaning up FFmpeg processes for stream: ${streamKey}`);
 
-    // Remove relay tasks from configuration
-    config.relay.tasks = config.relay.tasks.filter(
-      task => !relayTasks.some(relayTask => relayTask.name === task.name)
-    );
-
-    // Restart relay server to apply cleanup
-    if (nms.relayServer) {
-      console.log(`[NodeMediaServer] Restarting relay server after task cleanup...`);
-      try {
-        nms.relayServer.stop();
-        nms.relayServer.run();
-        console.log(`[NodeMediaServer] Relay server restarted successfully`);
-      } catch (error) {
-        console.error(`[NodeMediaServer] Failed to restart relay server:`, error);
+    ffmpegProcesses.forEach((process, index) => {
+      if (!process.killed) {
+        process.kill('SIGTERM');
+        console.log(`[NodeMediaServer] Terminated FFmpeg process ${index} for stream: ${streamKey}`);
       }
-    }
+    });
 
-    // Remove from active tasks
-    activeRelayTasks.delete(streamKey);
+    activeFFmpegProcesses.delete(streamKey);
   }
 
-  // Track relay cleanup
-  posthogService.trackStreamEvent(streamKey, "relay_tasks_cleaned", {
-    cleaned_task_count: relayTasks ? relayTasks.length : 0,
+  // Track FFmpeg cleanup
+  posthogService.trackStreamEvent(streamKey, "ffmpeg_processes_cleaned", {
+    cleaned_process_count: ffmpegProcesses ? ffmpegProcesses.length : 0,
   });
 
   try {
