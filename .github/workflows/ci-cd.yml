@@ -106,11 +106,9 @@ jobs:
             # Restart application properly
             echo "Restarting control plane..."
             pm2 stop neustream-control-plane || true
-            pkill -f server.js || true
 
             cd /opt/neustream
             pm2 start server.js --name neustream-control-plane --env production
-            pm2 save
 
             # Wait for service to be ready
             sleep 5
@@ -191,7 +189,6 @@ jobs:
             # Clean up any existing processes and old directories
             echo "Cleaning up existing processes..."
             pm2 stop neustream-media-server || true
-            pkill -f media-server.js || true
             rm -rf /opt/neustream/media-server || true
 
             # Copy files to correct location
@@ -202,7 +199,6 @@ jobs:
             # Restart Node-Media-Server properly
             cd /opt/neustream
             pm2 start media-server.js --name neustream-media-server --env production
-            pm2 save
 
             # Wait for services to be ready
             sleep 5
