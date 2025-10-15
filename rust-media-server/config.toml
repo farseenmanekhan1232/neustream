@@ -1,0 +1,26 @@
+[control_plane]
+url = "https://api.neustream.app"
+timeout_seconds = 10
+retry_attempts = 3
+
+[rtmp]
+port = 1935
+chunk_size = 60000
+gop_cache = true
+ping_interval_seconds = 30
+ping_timeout_seconds = 60
+
+[http]
+port = 8000
+allow_origin = "*"
+
+[streaming]
+max_destinations_per_stream = 10
+memory_pool_size_mb = 64
+buffer_size_kb = 64
+connection_timeout_seconds = 30
+stats_update_interval_seconds = 5
+
+[logging]
+level = "info"
+format = "json"

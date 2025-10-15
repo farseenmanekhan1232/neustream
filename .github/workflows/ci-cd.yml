@@ -134,135 +134,139 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy code to Media Server
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust-media-server
+
+      - name: Build Rust Media Server
+        run: |
+          echo "🔨 Building Rust Media Server..."
+          cd rust-media-server
+          cargo build --release
+
+          # Verify the binary was created
+          if [ -f target/release/rust-media-server ]; then
+            echo "✅ Rust binary built successfully"
+            ls -la target/release/rust-media-server
+          else
+            echo "❌ Rust binary not found"
+            exit 1
+          fi
+
+      - name: Copy Rust binary to Media Server
         uses: appleboy/scp-action@v0.1.3
         with:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
-          source: "media-server/*"
-          target: "/opt/neustream"
+          source: "rust-media-server/target/release/rust-media-server,rust-media-server/config.toml,rust-media-server/rust-media-server.service,rust-media-server/nginx-rust-media-server.conf"
+          target: "/tmp/rust-deploy"
           strip_components: 1
 
-      - name: Deploy to Media Server
+      - name: Deploy Rust Media Server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
           script: |
-            echo "🚀 Deploying to Media Server..."
+            echo "🚀 Deploying Rust Media Server..."
 
-            cd /opt/neustream
-
-            # Backup existing .env file
-            if [ -f .env ]; then
-              cp .env .env.backup
-              echo "✅ Backed up existing .env file"
-            fi
-
-            # Install FFmpeg for Node-Media-Server relays
-            echo "Installing FFmpeg..."
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
-
-            # Install dependencies
-            echo "Installing dependencies..."
-            npm install --no-audit --no-fund
-
-            # Create fresh environment file
-            cat > .env << EOF
-            NODE_ENV=production
-            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
-            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
-            CONTROL_PLANE_URL=https://api.neustream.app
-            EOF
-
-            # Update nginx configuration from project
-            echo "Updating nginx configuration..."
-            sudo cp /opt/neustream/nginx-media-server.conf /etc/nginx/nginx.conf
-
-            # Test nginx configuration
-            sudo nginx -t
-
-            # Reload nginx if config is valid
-            sudo systemctl reload nginx
-
-            # Clean up any existing processes
-            echo "Cleaning up existing processes..."
+            # Stop existing Node.js media server
+            echo "Stopping existing Node.js media server..."
             pm2 stop neustream-media-server || true
             pm2 delete neustream-media-server || true
 
-            # Restart Node-Media-Server properly
-            echo "Starting media server..."
-            pm2 start media-server.js --name neustream-media-server --env production
+            # Create backup of current deployment
+            if [ -f /opt/neustream/rust-media-server ]; then
+              echo "Creating backup of current Rust binary..."
+              sudo cp /opt/neustream/rust-media-server /opt/neustream/rust-media-server.backup
+            fi
 
-            # Wait for service to be ready
+            # Install Rust binary
+            echo "Installing Rust Media Server..."
+            sudo mv /tmp/rust-deploy/rust-media-server /opt/neustream/rust-media-server
+            sudo mv /tmp/rust-deploy/config.toml /opt/neustream/config.toml
+            sudo mv /tmp/rust-deploy/rust-media-server.service /etc/systemd/system/rust-media-server.service
+
+            # Set proper permissions
+            sudo chmod +x /opt/neustream/rust-media-server
+            sudo chown neustream:neustream /opt/neustream/rust-media-server
+            sudo chown neustream:neustream /opt/neustream/config.toml
+
+            # Create environment file for Rust server
+            cat > /opt/neustream/rust-env << EOF
+            CONTROL_PLANE_URL=https://api.neustream.app
+            RTMP_PORT=1935
+            HTTP_PORT=8000
+            RUST_LOG=info
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            EOF
+
+            # Install systemd service
+            echo "Setting up systemd service..."
+            sudo systemctl daemon-reload
+            sudo systemctl enable rust-media-server
+
+            # Update nginx configuration
+            echo "Updating nginx configuration..."
+            sudo cp /tmp/rust-deploy/nginx-rust-media-server.conf /etc/nginx/nginx.conf
+            sudo nginx -t
+            sudo systemctl reload nginx
+
+            # Stop any existing Rust server
+            sudo systemctl stop rust-media-server || true
+
+            # Start the new Rust server
+            echo "Starting Rust Media Server..."
+            sudo systemctl start rust-media-server
+
+            # Wait for service to start
             sleep 5
 
-            # Verify deployment success
-            echo "Verifying deployment..."
-            pm2 status
-
-            # Check if media server process is running
-            if pm2 describe neustream-media-server | grep -q "online"; then
-              echo "✅ Media Server process is running"
+            # Check service status
+            if sudo systemctl is-active --quiet rust-media-server; then
+              echo "✅ Rust Media Server is running"
             else
-              echo "❌ Media Server process failed to start"
-              pm2 logs neustream-media-server --lines 30
+              echo "❌ Rust Media Server failed to start"
+              sudo systemctl status rust-media-server
+              sudo journalctl -u rust-media-server -n 50
+              exit 1
+            fi
+
+            # Verify health endpoint
+            echo "Testing health endpoint..."
+            if curl -f http://localhost:8000/health; then
+              echo "✅ Health check passed"
+            else
+              echo "❌ Health check failed"
               exit 1
             fi
 
             # Check if ports are listening
-            if sudo ss -tlnp | grep -q ":1935.*node"; then
+            echo "Checking port status..."
+            if sudo ss -tlnp | grep -q ":1935.*rust-media-server"; then
               echo "✅ RTMP port 1935 is listening"
             else
               echo "❌ RTMP port 1935 is not listening"
               exit 1
             fi
 
-            if sudo ss -tlnp | grep -q ":8000.*node"; then
+            if sudo ss -tlnp | grep -q ":8000.*rust-media-server"; then
               echo "✅ HTTP port 8000 is listening"
             else
               echo "❌ HTTP port 8000 is not listening"
               exit 1
             fi
 
-            echo "✅ Media Server deployment verified successfully!"
-
-            # Wait for services to be ready
-            sleep 5
-
-            # Verify deployment success
-            echo "Verifying deployment..."
-            pm2 status
-
-            # Check if media server process is running
-            if pm2 describe neustream-media-server | grep -q "online"; then
-              echo "✅ Media Server process is running"
-            else
-              echo "❌ Media Server process failed to start"
-              pm2 logs neustream-media-server --lines 30
-              exit 1
-            fi
-
-            # Check if ports are listening
-            if sudo ss -tlnp | grep -q ":1935.*node"; then
-              echo "✅ RTMP port 1935 is listening"
-            else
-              echo "❌ RTMP port 1935 is not listening"
-              exit 1
-            fi
-
-            if sudo ss -tlnp | grep -q ":8000.*node"; then
-              echo "✅ HTTP port 8000 is listening"
-            else
-              echo "❌ HTTP port 8000 is not listening"
-              exit 1
-            fi
-
-            echo "✅ Media Server deployment verified successfully!"
-
+            echo "✅ Rust Media Server deployment verified successfully!"
             echo "✅ Media Server deployment complete!"
 
   deploy-frontend:
