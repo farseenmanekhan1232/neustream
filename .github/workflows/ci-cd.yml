@@ -161,9 +161,10 @@ jobs:
               echo "✅ Backed up existing .env file"
             fi
 
-            # Install yq
-            echo "Installing yq..."
+            # Install required dependencies
+            echo "Installing dependencies..."
             sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+            sudo apt-get update && sudo apt-get install -y jq
 
             # Install mediamtx
             echo "Installing mediamtx..."

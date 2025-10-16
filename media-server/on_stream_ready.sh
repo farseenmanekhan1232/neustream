@@ -23,32 +23,51 @@ if [ -z "$FORWARDING_CONFIG" ] || [ "$FORWARDING_CONFIG" = "null" ]; then
   exit 0
 fi
 
-# Add forwarding destinations using MediaMTX API
-echo "$FORWARDING_CONFIG" | /usr/bin/jq -r '.destinations[] | .rtmp_url + "/" + .stream_key' | while read -r dest; do
+# Build FFmpeg command with multiple outputs (1 process per user)
+TEMP_FILE="/tmp/ffmpeg_destinations_$STREAM_KEY.txt"
+DESTINATION_COUNT=0
+
+# Extract destinations to a temporary file
+echo "$FORWARDING_CONFIG" | /usr/bin/jq -r '.destinations[] | .rtmp_url + "/" + .stream_key' > "$TEMP_FILE"
+
+# Build FFmpeg command from destinations file
+OUTPUT_ARGS=""
+while read -r dest; do
   if [ -n "$dest" ] && [ "$dest" != "null" ]; then
-    # use random id for path name
-    id=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())")
-    path_name="$STREAM_KEY-$id"
+    echo "Adding destination: $dest"
 
-    echo "Adding forwarding destination: $dest to path: $path_name"
-
-    # Create path configuration using MediaMTX API
-    path_config="{
-      \"source\": \"rtmp://localhost:1935/$STREAM_PATH\",
-      \"rtmpPush\": \"$dest\"
-    }"
-
-    # Add the path via MediaMTX API
-    if curl -s -X POST -H "Content-Type: application/json" \
-      -d "$path_config" \
-      "http://localhost:9997/v3/config/paths/add/$path_name" > /dev/null; then
-      echo "Successfully added path: $path_name"
+    # Build output arguments for FFmpeg (each destination needs its own output flags)
+    if [ $DESTINATION_COUNT -eq 0 ]; then
+      OUTPUT_ARGS="-c copy -f flv $dest"
     else
-      echo "Failed to add path: $path_name"
+      # Add additional outputs
+      OUTPUT_ARGS="$OUTPUT_ARGS -c copy -f flv $dest"
     fi
-  fi
-done
 
-# Reload paths to apply changes
-curl -s -X POST http://localhost:9997/v3/config/paths/reload > /dev/null
-echo "MediaMTX configuration reloaded via API"
+    DESTINATION_COUNT=$((DESTINATION_COUNT + 1))
+  fi
+done < "$TEMP_FILE"
+
+# Clean up temp file
+rm -f "$TEMP_FILE"
+
+# Start single FFmpeg process for all destinations
+if [ $DESTINATION_COUNT -gt 0 ]; then
+  pid_file="/tmp/ffmpeg-$STREAM_KEY.pid"
+  log_file="/tmp/ffmpeg-$STREAM_KEY.log"
+
+  echo "Starting single FFmpeg process for $DESTINATION_COUNT destinations"
+  echo "Command: ffmpeg -i rtmp://localhost:1935/$STREAM_PATH $OUTPUT_ARGS"
+
+  # Build the final FFmpeg command
+  FFMPEG_CMD="/usr/bin/ffmpeg -i rtmp://localhost:1935/$STREAM_PATH $OUTPUT_ARGS"
+
+  # Start FFmpeg with all destinations
+  nohup $FFMPEG_CMD > "$log_file" 2>&1 &
+
+  # Store FFmpeg process ID for cleanup
+  echo $! > "$pid_file"
+  echo "FFmpeg multi-destination forwarding started with PID: $(cat $pid_file)"
+else
+  echo "No valid destinations found"
+fi

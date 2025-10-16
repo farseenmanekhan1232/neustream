@@ -10,23 +10,34 @@ echo "Stream ended: $STREAM_KEY at path: $STREAM_PATH"
 # Notify control-plane
 curl -s -X POST -d "name=$STREAM_KEY" https://api.neustream.app/api/auth/stream-end
 
-# Remove forwarding paths using MediaMTX API
-# Get all paths and find ones matching this stream key
-PATHS_JSON=$(curl -s "http://localhost:9997/v3/config/paths/list")
+# Stop FFmpeg forwarding process (single process per user)
+echo "Stopping FFmpeg forwarding process for stream: $STREAM_KEY"
 
-echo "$PATHS_JSON" | /usr/bin/jq -r '.paths[] | select(.name | startswith("'"$STREAM_KEY"'-")) | .name' | while read -r path_name; do
-  if [ -n "$path_name" ]; then
-    echo "Removing forwarding path: $path_name"
+pid_file="/tmp/ffmpeg-$STREAM_KEY.pid"
 
-    # Remove the path via MediaMTX API
-    if curl -s -X POST "http://localhost:9997/v3/config/paths/remove/$path_name" > /dev/null; then
-      echo "Successfully removed path: $path_name"
-    else
-      echo "Failed to remove path: $path_name"
+# Kill the single FFmpeg process for this stream
+if [ -f "$pid_file" ]; then
+  pid=$(cat "$pid_file")
+  if kill -0 "$pid" 2>/dev/null; then
+    echo "Killing FFmpeg process $pid for stream $STREAM_KEY"
+    kill "$pid"
+    # Wait a moment for graceful shutdown
+    sleep 2
+    # Force kill if still running
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "Force killing FFmpeg process $pid"
+      kill -9 "$pid"
     fi
   fi
-done
+  rm -f "$pid_file"
+else
+  echo "No PID file found for stream $STREAM_KEY"
+fi
 
-# Reload paths to apply changes
-curl -s -X POST http://localhost:9997/v3/config/paths/reload > /dev/null
-echo "MediaMTX configuration reloaded via API"
+# Clean up any remaining FFmpeg processes for this stream (fallback)
+pkill -f "ffmpeg.*$STREAM_KEY" 2>/dev/null || true
+
+# Clean up temp destination files
+rm -f "/tmp/ffmpeg_destinations_$STREAM_KEY.txt" 2>/dev/null || true
+
+echo "FFmpeg forwarding process stopped"
