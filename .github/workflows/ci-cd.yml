@@ -195,9 +195,9 @@ jobs:
             pm2 stop neustream-media-server || true
             pm2 delete neustream-media-server || true
 
-            # Start mediamtx
+            # Start mediamtx with proper configuration
             echo "Starting media server..."
-            pm2 start /usr/local/bin/mediamtx --name neustream-media-server
+            pm2 start /usr/local/bin/mediamtx --name neustream-media-server -- /etc/mediamtx.yml
 
             # Wait for service to be ready
             sleep 5
@@ -227,6 +227,14 @@ jobs:
               echo "✅ API port 9997 is listening"
             else
               echo "❌ API port 9997 is not listening"
+              exit 1
+            fi
+
+            # Check MediaMTX API health
+            if curl -f http://localhost:9997/v2/config/global > /dev/null 2>&1; then
+              echo "✅ MediaMTX API is responding"
+            else
+              echo "❌ MediaMTX API is not responding"
               exit 1
             fi
 

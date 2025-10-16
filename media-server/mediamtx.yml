@@ -1,8 +1,38 @@
+# MediaMTX Configuration for Neustream
 api: yes
 apiAddress: 0.0.0.0:9997
+
+# RTMP Configuration
 rtmp: yes
 rtmpAddress: :1935
+
+# HLS Configuration (optional - for playback)
+hls: yes
+hlsAddress: :8888
+hlsVariant: lowLatency
+
+# WebRTC Configuration (optional - for low latency playback)
+webrtc: yes
+webrtcAddress: :8889
+
+# Paths Configuration
 paths:
+  # Default path for incoming streams
+  live:
+    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
+    runOnUnpublish: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
+
+  # Catch-all for any stream key
   all_others:
     runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
     runOnUnpublish: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
+
+# Global Settings
+logLevel: info
+logDest: stdout
+
+# Authentication (if needed in future)
+# readUser: user
+# readPass: password
+# publishUser: user
+# publishPass: password
