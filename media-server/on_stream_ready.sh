@@ -23,11 +23,8 @@ if [ -z "$FORWARDING_CONFIG" ] || [ "$FORWARDING_CONFIG" = "null" ]; then
   exit 0
 fi
 
-# Atomically update mediamtx.yml
-TMP_YAML=$(mktemp)
-cp /etc/mediamtx.yml $TMP_YAML
-
-echo "$FORWARDING_CONFIG" | jq -r '.destinations[] | .rtmp_url + "/" + .stream_key' | while read -r dest; do
+# Add forwarding destinations using MediaMTX API
+echo "$FORWARDING_CONFIG" | /usr/bin/jq -r '.destinations[] | .rtmp_url + "/" + .stream_key' | while read -r dest; do
   if [ -n "$dest" ] && [ "$dest" != "null" ]; then
     # use random id for path name
     id=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())")
@@ -35,21 +32,23 @@ echo "$FORWARDING_CONFIG" | jq -r '.destinations[] | .rtmp_url + "/" + .stream_k
 
     echo "Adding forwarding destination: $dest to path: $path_name"
 
-    # Use correct yq syntax and MediaMTX configuration format
-    yq eval ".paths += {\"$path_name\": {\"source\": \"rtmp://localhost:1935/$STREAM_PATH\", \"rtmpPush\": \"$dest\"}}" -i $TMP_YAML
+    # Create path configuration using MediaMTX API
+    path_config="{
+      \"source\": \"rtmp://localhost:1935/$STREAM_PATH\",
+      \"rtmpPush\": \"$dest\"
+    }"
+
+    # Add the path via MediaMTX API
+    if curl -s -X POST -H "Content-Type: application/json" \
+      -d "$path_config" \
+      "http://localhost:9997/v3/config/paths/add/$path_name" > /dev/null; then
+      echo "Successfully added path: $path_name"
+    else
+      echo "Failed to add path: $path_name"
+    fi
   fi
 done
 
-# Validate YAML before moving
-if yq eval '.' $TMP_YAML > /dev/null 2>&1; then
-  sudo mv $TMP_YAML /etc/mediamtx.yml
-  echo "Configuration updated successfully"
-
-  # Reload mediamtx paths configuration
-  curl -s -X POST http://localhost:9997/v3/config/paths/reload
-  echo "MediaMTX configuration reloaded"
-else
-  echo "Invalid YAML generated, keeping original configuration"
-  rm $TMP_YAML
-  exit 1
-fi
+# Reload paths to apply changes
+curl -s -X POST http://localhost:9997/v3/config/paths/reload > /dev/null
+echo "MediaMTX configuration reloaded via API"

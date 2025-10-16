@@ -10,24 +10,23 @@ echo "Stream ended: $STREAM_KEY at path: $STREAM_PATH"
 # Notify control-plane
 curl -s -X POST -d "name=$STREAM_KEY" https://api.neustream.app/api/auth/stream-end
 
-# Atomically update mediamtx.yml
-TMP_YAML=$(mktemp)
-cp /etc/mediamtx.yml $TMP_YAML
+# Remove forwarding paths using MediaMTX API
+# Get all paths and find ones matching this stream key
+PATHS_JSON=$(curl -s "http://localhost:9997/v3/config/paths/list")
 
-# Remove all paths that match this stream key pattern
-# Use proper yq syntax to delete paths by pattern
-yq eval "del(.paths[\"$STREAM_KEY-\*\"])" -i $TMP_YAML
+echo "$PATHS_JSON" | /usr/bin/jq -r '.paths[] | select(.name | startswith("'"$STREAM_KEY"'-")) | .name' | while read -r path_name; do
+  if [ -n "$path_name" ]; then
+    echo "Removing forwarding path: $path_name"
 
-# Validate YAML before moving
-if yq eval '.' $TMP_YAML > /dev/null 2>&1; then
-  sudo mv $TMP_YAML /etc/mediamtx.yml
-  echo "Stream paths removed successfully"
+    # Remove the path via MediaMTX API
+    if curl -s -X POST "http://localhost:9997/v3/config/paths/remove/$path_name" > /dev/null; then
+      echo "Successfully removed path: $path_name"
+    else
+      echo "Failed to remove path: $path_name"
+    fi
+  fi
+done
 
-  # Reload mediamtx paths configuration
-  curl -s -X POST http://localhost:9997/v3/config/paths/reload
-  echo "MediaMTX configuration reloaded"
-else
-  echo "Invalid YAML generated, keeping original configuration"
-  rm $TMP_YAML
-  exit 1
-fi
+# Reload paths to apply changes
+curl -s -X POST http://localhost:9997/v3/config/paths/reload > /dev/null
+echo "MediaMTX configuration reloaded via API"
