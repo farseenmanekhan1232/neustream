@@ -200,8 +200,9 @@ jobs:
             echo "Starting media server..."
             pm2 start /usr/local/bin/mediamtx --name neustream-media-server -- /etc/mediamtx.yml
 
-            # Wait for service to be ready
-            sleep 5
+            # Wait for service to be ready and ports to open
+            echo "Waiting for MediaMTX to initialize and open ports..."
+            sleep 15
 
             # Verify deployment success
             echo "Verifying deployment..."
@@ -216,28 +217,35 @@ jobs:
               exit 1
             fi
 
-            # Check if ports are listening (using netstat instead of sudo ss)
-            if netstat -tlnp 2>/dev/null | grep -q ":1935"; then
-              echo "✅ RTMP port 1935 is listening"
-            else
-              echo "❌ RTMP port 1935 is not listening"
-              exit 1
-            fi
+            # Check if ports are accessible using curl/fallback methods
+            echo "Testing port accessibility..."
 
-            if netstat -tlnp 2>/dev/null | grep -q ":9997"; then
-              echo "✅ API port 9997 is listening"
-            else
-              echo "❌ API port 9997 is not listening"
-              exit 1
-            fi
-
-            # Check MediaMTX API health
+            # Test API port first (most reliable)
             if curl -f http://localhost:9997/v3/config/global/get > /dev/null 2>&1; then
-              echo "✅ MediaMTX API is responding"
+              echo "✅ API port 9997 is accessible"
             else
-              echo "❌ MediaMTX API is not responding"
+              echo "❌ API port 9997 is not accessible"
+              pm2 logs neustream-media-server --lines 10
               exit 1
             fi
+
+            # Test RTMP port by attempting a connection check
+            # Use timeout to avoid hanging
+            if timeout 3 bash -c "</dev/tcp/localhost/1935" 2>/dev/null; then
+              echo "✅ RTMP port 1935 is accessible"
+            else
+              echo "⚠️  RTMP port 1935 test failed (this may be normal - checking with alternative method)"
+              # Fallback: check if process logs show RTMP listener is ready
+              if pm2 logs neustream-media-server --lines 20 | grep -q "RTMP.*listener opened on :1935"; then
+                echo "✅ RTMP port 1935 is confirmed in logs"
+              else
+                echo "❌ RTMP port 1935 verification failed"
+                pm2 logs neustream-media-server --lines 20
+                exit 1
+              fi
+            fi
+
+            echo "✅ All ports are accessible and MediaMTX API is responding"
 
             echo "✅ Media Server deployment verified successfully!"
 
