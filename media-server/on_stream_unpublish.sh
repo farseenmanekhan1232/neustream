@@ -2,13 +2,6 @@
 
 set -e
 
-# Check if yq is installed
-if ! command -v yq &> /dev/null
-then
-    echo "yq could not be found, installing..."
-    sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
-fi
-
 STREAM_PATH=$1
 STREAM_KEY=$(basename $STREAM_PATH)
 

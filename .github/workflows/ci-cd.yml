@@ -161,6 +161,10 @@ jobs:
               echo "✅ Backed up existing .env file"
             fi
 
+            # Install yq
+            echo "Installing yq..."
+            sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
             # Install mediamtx
             echo "Installing mediamtx..."
             wget https://github.com/bluenviron/mediamtx/releases/download/v1.8.0/mediamtx_v1.8.0_linux_amd64.tar.gz
