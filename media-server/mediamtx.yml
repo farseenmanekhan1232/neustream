@@ -1,0 +1,8 @@
+api: yes
+apiAddress: 0.0.0.0:9997
+rtmp: yes
+rtmpAddress: :1935
+paths:
+  all_others:
+    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
+    runOnUnpublish: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
