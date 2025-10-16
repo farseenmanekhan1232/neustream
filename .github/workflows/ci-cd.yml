@@ -216,15 +216,15 @@ jobs:
               exit 1
             fi
 
-            # Check if ports are listening
-            if sudo ss -tlnp | grep -q ":1935"; then
+            # Check if ports are listening (using netstat instead of sudo ss)
+            if netstat -tlnp 2>/dev/null | grep -q ":1935"; then
               echo "✅ RTMP port 1935 is listening"
             else
               echo "❌ RTMP port 1935 is not listening"
               exit 1
             fi
 
-            if sudo ss -tlnp | grep -q ":9997"; then
+            if netstat -tlnp 2>/dev/null | grep -q ":9997"; then
               echo "✅ API port 9997 is listening"
             else
               echo "❌ API port 9997 is not listening"
