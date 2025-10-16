@@ -231,7 +231,7 @@ jobs:
             fi
 
             # Check MediaMTX API health
-            if curl -f http://localhost:9997/v2/config/global > /dev/null 2>&1; then
+            if curl -f http://localhost:9997/v3/config/global/get > /dev/null 2>&1; then
               echo "✅ MediaMTX API is responding"
             else
               echo "❌ MediaMTX API is not responding"

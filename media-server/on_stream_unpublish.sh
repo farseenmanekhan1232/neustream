@@ -16,15 +16,15 @@ cp /etc/mediamtx.yml $TMP_YAML
 
 # Remove all paths that match this stream key pattern
 # Use proper yq syntax to delete paths by pattern
-yq eval "del(.paths | select(keys[] | startswith(\"$STREAM_KEY-\")))" -i $TMP_YAML
+yq eval "del(.paths[\"$STREAM_KEY-\*\"])" -i $TMP_YAML
 
 # Validate YAML before moving
 if yq eval '.' $TMP_YAML > /dev/null 2>&1; then
-  mv $TMP_YAML /etc/mediamtx.yml
+  sudo mv $TMP_YAML /etc/mediamtx.yml
   echo "Stream paths removed successfully"
 
   # Reload mediamtx paths configuration
-  curl -s -X POST http://localhost:9997/v2/config/paths/reload
+  curl -s -X POST http://localhost:9997/v3/config/paths/reload
   echo "MediaMTX configuration reloaded"
 else
   echo "Invalid YAML generated, keeping original configuration"
