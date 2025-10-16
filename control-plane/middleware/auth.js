@@ -1,6 +1,12 @@
 const jwt = require("jsonwebtoken");
 const Database = require("../lib/database");
-const { JWT_SECRET } = require("../config/oauth");
+
+// Get JWT_SECRET directly from environment variables to ensure consistency
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-in-production';
+
+console.log('=== AUTH MIDDLEWARE INIT ===');
+console.log('JWT_SECRET loaded:', !!JWT_SECRET);
+console.log('JWT_SECRET length:', JWT_SECRET.length);
 
 const db = new Database();
 
@@ -24,6 +30,11 @@ const authenticateToken = async (req, res, next) => {
 
   try {
     console.log("Verifying JWT token...");
+    console.log("Token length:", token.length);
+    console.log("Token first 50 chars:", token.substring(0, 50) + "...");
+    console.log("JWT_SECRET available:", !!JWT_SECRET);
+    console.log("JWT_SECRET length:", JWT_SECRET.length);
+
     const decoded = jwt.verify(token, JWT_SECRET);
     console.log("Token decoded successfully:", decoded);
 

@@ -40,8 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+import { apiService } from "../services/api";
 
 // Platform configuration
 const platformConfig = {
@@ -95,11 +94,9 @@ function DestinationsManager() {
   const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
     queryKey: ["destinations", user?.id],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/destinations?userId=${user.id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch destinations");
-      return response.json();
+      // Use authenticated API service - no userId needed since server gets it from token
+      const response = await apiService.get("/destinations");
+      return response;
     },
     enabled: !!user, // Only run query when user is available
   });
@@ -109,23 +106,9 @@ function DestinationsManager() {
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
-      const response = await fetch(`${API_BASE}/destinations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...destination,
-          userId: user.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to add destination");
-      }
-
-      return response.json();
+      // Use authenticated API service - no userId needed since server gets it from token
+      const response = await apiService.post("/destinations", destination);
+      return response;
     },
     onSuccess: (data) => {
       // Track destination addition
@@ -155,15 +138,9 @@ function DestinationsManager() {
   // Delete destination mutation
   const deleteDestinationMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await fetch(`${API_BASE}/destinations/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete destination");
-      }
-
-      return response.json();
+      // Use authenticated API service
+      const response = await apiService.delete(`/destinations/${id}`);
+      return response;
     },
     onSuccess: (_, id) => {
       // Track destination removal

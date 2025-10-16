@@ -30,8 +30,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+import { apiService } from "../services/api";
 
 function DashboardOverview() {
   const { user } = useAuth();
@@ -44,11 +43,9 @@ function DashboardOverview() {
   const { data: streamInfo, isLoading: streamLoading } = useQuery({
     queryKey: ["streamInfo", user.id],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/streams/info?userId=${user.id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch stream info");
-      return response.json();
+      // Use authenticated API service - no userId needed since server gets it from token
+      const response = await apiService.get("/streams/info");
+      return response;
     },
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
@@ -59,11 +56,9 @@ function DashboardOverview() {
   const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
     queryKey: ["destinations", user.id],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/destinations?userId=${user.id}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch destinations");
-      return response.json();
+      // Use authenticated API service - no userId needed since server gets it from token
+      const response = await apiService.get("/destinations");
+      return response;
     },
     enabled: !!user, // Only run query when user is available
   });

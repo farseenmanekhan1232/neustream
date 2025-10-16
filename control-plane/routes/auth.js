@@ -105,11 +105,25 @@ router.post('/register', async (req, res) => {
       registered_at: new Date().toISOString(),
     });
 
+    // Generate JWT token for API authentication
+    const token = generateToken({
+      id: userId,
+      email: email,
+      displayName: null,
+      avatarUrl: null,
+      streamKey: streamKey,
+      oauthProvider: null
+    });
+
     res.json({
+      token,
       user: {
         id: userId,
         email: email,
-        streamKey: streamKey
+        displayName: null,
+        avatarUrl: null,
+        streamKey: streamKey,
+        oauthProvider: null
       }
     });
   } catch (error) {
@@ -132,7 +146,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const users = await db.query(
-      'SELECT id, email, password_hash, stream_key FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, stream_key, display_name, avatar_url, oauth_provider FROM users WHERE email = $1',
       [email]
     );
 
@@ -162,11 +176,25 @@ router.post('/login', async (req, res) => {
       last_login: new Date().toISOString(),
     });
 
+    // Generate JWT token for API authentication
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name,
+      avatarUrl: user.avatar_url,
+      streamKey: user.stream_key,
+      oauthProvider: user.oauth_provider
+    });
+
     res.json({
+      token,
       user: {
         id: user.id,
         email: user.email,
-        streamKey: user.stream_key
+        displayName: user.display_name,
+        avatarUrl: user.avatar_url,
+        streamKey: user.stream_key,
+        oauthProvider: user.oauth_provider
       }
     });
   } catch (error) {
