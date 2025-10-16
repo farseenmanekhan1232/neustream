@@ -26,15 +26,24 @@ export const AuthProvider = ({ children }) => {
   // Check for existing session on mount
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("=== AUTH CONTEXT INITIALIZATION ===");
       try {
         const token = authService.getToken();
+        console.log("Token found on mount:", !!token);
+
         if (token) {
+          console.log("Validating existing token...");
           const userData = await authService.validateToken(token);
+          console.log("Token validation successful, user data:", userData);
           setUser(userData);
+        } else {
+          console.log("No token found, user is not authenticated");
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        authService.clearToken();
+        // Clear invalid token but don't clear localStorage user data yet
+        // It might be recovered during OAuth callback processing
+        localStorage.removeItem("neustream_token");
       } finally {
         setLoading(false);
       }
@@ -45,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
   // Handle OAuth callback (Google and Twitch)
   useEffect(() => {
-    const handleGoogleCallback = async () => {
+    const handleOAuthCallback = async () => {
       console.log("=== AUTHCONTEXT OAUTH CHECK ===");
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("token");
@@ -70,6 +79,7 @@ export const AuthProvider = ({ children }) => {
           authService.setToken(token);
           setUser(parsedUser);
           setError(null);
+          setLoading(false); // Ensure loading is set to false
 
           console.log("User state set successfully");
 
@@ -81,20 +91,52 @@ export const AuthProvider = ({ children }) => {
           // Store user data in localStorage for persistence
           localStorage.setItem("neustream_user", JSON.stringify(parsedUser));
           console.log("User data stored in localStorage");
+
+          // Validate the token with the server to ensure it's legitimate
+          try {
+            const validatedUser = await authService.validateToken(token);
+            console.log("Token validated by server:", validatedUser);
+            // Update user with validated data
+            setUser(validatedUser);
+            localStorage.setItem("neustream_user", JSON.stringify(validatedUser));
+          } catch (validationError) {
+            console.error("Token validation failed, but keeping user session:", validationError);
+            // Keep the user logged in even if server validation fails
+            // This prevents logout due to temporary network issues
+          }
         } catch (error) {
           console.error("OAuth callback processing error:", error);
           setError("Failed to complete OAuth sign-in");
           authService.clearToken();
+          setLoading(false);
         }
       } else {
-        console.log(
-          "No OAuth callback data found, proceeding with normal auth check"
-        );
+        console.log("No OAuth callback data found, proceeding with normal auth check");
+
+        // If we're on the auth page but there's no OAuth callback,
+        // check if there's stored user data we can validate
+        if (currentPath === "/auth" && !loading) {
+          const storedUser = authService.getCurrentUser();
+          if (storedUser && authService.getToken()) {
+            console.log("Found stored user data, attempting validation...");
+            try {
+              const validatedUser = await authService.validateToken(authService.getToken());
+              setUser(validatedUser);
+              console.log("Stored token validated successfully");
+            } catch (validationError) {
+              console.log("Stored token invalid, clearing auth data");
+              authService.clearToken();
+            }
+          }
+        }
       }
     };
 
-    handleGoogleCallback();
-  }, []);
+    // Only run this effect after the initial auth initialization is complete
+    if (!loading) {
+      handleOAuthCallback();
+    }
+  }, [loading]);
 
   const login = useCallback(async (email, password) => {
     try {

@@ -125,12 +125,9 @@ class AuthService {
       }
     } catch (error) {
       console.error("AuthService: Token validation failed:", error);
-      // If validation fails, try to get user from localStorage
-      const storedUser = this.getCurrentUser();
-      if (storedUser) {
-        console.log("AuthService: Using stored user data from localStorage");
-        return storedUser;
-      }
+      // Remove the localStorage fallback - it causes inconsistent state
+      // If token validation fails, we should clear auth data
+      this.clearToken();
       throw error;
     }
   }

@@ -1,12 +1,14 @@
 const express = require('express');
 const Database = require('../lib/database');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 const db = new Database();
 
-// Get user's stream info
-router.get('/info', async (req, res) => {
-  const { userId } = req.query;
+// Get user's stream info - requires authentication
+router.get('/info', authenticateToken, async (req, res) => {
+  // Use authenticated user ID instead of query parameter
+  const userId = req.user.id;
 
   try {
     // Get user's stream key
@@ -41,8 +43,8 @@ router.get('/info', async (req, res) => {
   }
 });
 
-// Get active streams (for monitoring)
-router.get('/active', async (req, res) => {
+// Get active streams (for monitoring) - requires authentication
+router.get('/active', authenticateToken, async (req, res) => {
   try {
     const activeStreams = await db.query(`
       SELECT
@@ -61,22 +63,22 @@ router.get('/active', async (req, res) => {
   }
 });
 
-// Get RTMP forwarding configuration for a stream key
-router.get('/forwarding/:streamKey', async (req, res) => {
+// Get RTMP forwarding configuration for a stream key - requires authentication
+router.get('/forwarding/:streamKey', authenticateToken, async (req, res) => {
   const { streamKey } = req.params;
 
   try {
-    // Get user ID from stream key
+    // Verify the stream key belongs to the authenticated user
     const users = await db.query(
-      'SELECT id FROM users WHERE stream_key = $1',
-      [streamKey]
+      'SELECT id FROM users WHERE stream_key = $1 AND id = $2',
+      [streamKey, req.user.id]
     );
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'Stream key not found' });
+      return res.status(404).json({ error: 'Stream key not found or unauthorized' });
     }
 
-    const userId = users[0].id;
+    const userId = req.user.id;
 
     // Get active destinations for this user
     const destinations = await db.query(
