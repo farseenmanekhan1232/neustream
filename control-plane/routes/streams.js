@@ -63,22 +63,22 @@ router.get('/active', authenticateToken, async (req, res) => {
   }
 });
 
-// Get RTMP forwarding configuration for a stream key - requires authentication
-router.get('/forwarding/:streamKey', authenticateToken, async (req, res) => {
+// Get RTMP forwarding configuration for a stream key - accessible by media-server
+router.get('/forwarding/:streamKey', async (req, res) => {
   const { streamKey } = req.params;
 
   try {
-    // Verify the stream key belongs to the authenticated user
+    // Get user ID from stream key (media-server access)
     const users = await db.query(
-      'SELECT id FROM users WHERE stream_key = $1 AND id = $2',
-      [streamKey, req.user.id]
+      'SELECT id FROM users WHERE stream_key = $1',
+      [streamKey]
     );
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'Stream key not found or unauthorized' });
+      return res.status(404).json({ error: 'Stream key not found' });
     }
 
-    const userId = req.user.id;
+    const userId = users[0].id;
 
     // Get active destinations for this user
     const destinations = await db.query(
