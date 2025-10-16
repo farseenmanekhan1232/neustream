@@ -166,6 +166,7 @@ jobs:
             wget https://github.com/bluenviron/mediamtx/releases/download/v1.8.0/mediamtx_v1.8.0_linux_amd64.tar.gz
             tar -xvf mediamtx_v1.8.0_linux_amd64.tar.gz
             sudo mv mediamtx /usr/local/bin/
+            sudo cp /opt/neustream/mediamtx.yml /etc/mediamtx.yml
 
             # Create fresh environment file
             cat > .env << EOF
@@ -192,7 +193,7 @@ jobs:
 
             # Start mediamtx
             echo "Starting media server..."
-            pm2 start /usr/local/bin/mediamtx --name neustream-media-server -- /opt/neustream/mediamtx.yml
+            pm2 start /usr/local/bin/mediamtx --name neustream-media-server
 
             # Wait for service to be ready
             sleep 5
