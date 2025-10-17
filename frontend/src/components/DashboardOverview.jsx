@@ -164,7 +164,7 @@ function DashboardOverview() {
           {isNewUser ? (
             <div className="flex max-md:flex-col gap-2 items-center space-x-4">
               <Button asChild>
-                <Link to="/dashboard/sources">
+                <Link to="/dashboard/streaming">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Your First Stream Source
                 </Link>
@@ -242,59 +242,65 @@ function DashboardOverview() {
 
       {/* Quick Actions */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span className="flex items-center">
-                <Radio className="h-5 w-5 mr-2 text-primary" />
-                Manage Destinations
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription>
-              Add or configure your streaming platforms like YouTube, Twitch,
-              and Facebook.
-            </CardDescription>
-          </CardContent>
-        </Card>
+        <Link to="/dashboard/streaming">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span className="flex items-center">
+                  <Radio className="h-5 w-5 mr-2 text-primary" />
+                  Manage Destinations
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Add or configure your streaming platforms like YouTube, Twitch,
+                and Facebook.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span className="flex items-center">
-                <MonitorSpeaker className="h-5 w-5 mr-2 text-primary" />
-                Stream Sources
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription>
-              Manage multiple stream sources, each with their own destinations
-              and settings.
-            </CardDescription>
-          </CardContent>
-        </Card>
+        <Link to="/dashboard/streaming">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span className="flex items-center">
+                  <MonitorSpeaker className="h-5 w-5 mr-2 text-primary" />
+                  Stream Sources
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Manage multiple stream sources, each with their own destinations
+                and settings.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span className="flex items-center">
-                <Settings className="h-5 w-5 mr-2 text-primary" />
-                Stream Setup
-              </span>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription>
-              Get your RTMP URL and stream key for OBS Studio or other streaming
-              software.
-            </CardDescription>
-          </CardContent>
-        </Card>
+        <Link to="/dashboard/streaming">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span className="flex items-center">
+                  <Settings className="h-5 w-5 mr-2 text-primary" />
+                  Stream Setup
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Get your RTMP URL and stream key for OBS Studio or other streaming
+                software.
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card className="hover:border-primary/50 transition-colors cursor-pointer group opacity-50">
           <CardHeader className="pb-3">
@@ -325,7 +331,7 @@ function DashboardOverview() {
             <CardTitle className="text-xl flex items-center justify-between">
               <span>Stream Sources</span>
               <Button variant="outline" size="sm" asChild>
-                <Link to="/dashboard/sources" className="flex items-center">
+                <Link to="/dashboard/streaming" className="flex items-center">
                   Manage All
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
@@ -402,7 +408,7 @@ function DashboardOverview() {
                       )}
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/dashboard/sources?source=${source.id}`}>
+                      <Link to={`/dashboard/streaming?source=${source.id}`}>
                         <Settings className="h-4 w-4" />
                       </Link>
                     </Button>
@@ -413,7 +419,7 @@ function DashboardOverview() {
               {sources.length > 3 && (
                 <Button variant="ghost" className="w-full" asChild>
                   <Link
-                    to="/dashboard/sources"
+                    to="/dashboard/streaming"
                     className="flex items-center justify-center"
                   >
                     View {sources.length - 3} more source
@@ -566,7 +572,7 @@ function DashboardOverview() {
               <span>Active Destinations</span>
               <Button variant="ghost" size="sm" asChild>
                 <Link
-                  to="/dashboard/destinations"
+                  to="/dashboard/streaming"
                   className="flex items-center"
                 >
                   Manage All
@@ -631,7 +637,7 @@ function DashboardOverview() {
               {destinations.length > 3 && (
                 <Button variant="ghost" className="w-full" asChild>
                   <Link
-                    to="/dashboard/destinations"
+                    to="/dashboard/streaming"
                     className="flex items-center justify-center"
                   >
                     View {destinations.length - 3} more destinations
@@ -719,7 +725,7 @@ function DashboardOverview() {
             </div>
 
             <Button className="w-full" asChild>
-              <Link to="/dashboard/sources">
+              <Link to="/dashboard/streaming">
                 Get Started
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Link>

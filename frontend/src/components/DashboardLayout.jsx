@@ -37,18 +37,11 @@ const navItems = [
     description: "View your streaming setup",
   },
   {
-    id: "sources",
-    label: "Stream Sources",
+    id: "streaming",
+    label: "Streaming Configuration",
     icon: MonitorSpeaker,
-    path: "/dashboard/sources",
-    description: "Manage multiple stream sources",
-  },
-  {
-    id: "destinations",
-    label: "Destinations",
-    icon: Radio,
-    path: "/dashboard/destinations",
-    description: "Manage streaming platforms",
+    path: "/dashboard/streaming",
+    description: "Manage sources and destinations",
   },
   {
     id: "analytics",
