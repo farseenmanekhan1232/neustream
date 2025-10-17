@@ -406,7 +406,8 @@ jobs:
   # Deployment Summary and Migration Status
   deployment-summary:
     runs-on: ubuntu-latest
-    needs: [deploy-control-plane, deploy-media-server, deploy-frontend, deploy-admin]
+    needs:
+      [deploy-control-plane, deploy-media-server, deploy-frontend, deploy-admin]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
