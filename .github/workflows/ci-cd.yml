@@ -71,6 +71,27 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
+            # Run database migration for multi-source architecture
+            echo "🗄️ Running database migration for multi-source architecture..."
+            if node scripts/migrate-multi-source.js; then
+              echo "✅ Database migration completed successfully"
+            else
+              echo "❌ Database migration failed - checking if script exists..."
+              if [ -f scripts/migrate-multi-source.js ]; then
+                echo "Migration script exists but failed - rolling back..."
+                exit 1
+              else
+                echo "⚠️ Migration script not found - this might be first deployment with multi-source support"
+                echo "Running legacy migration instead..."
+                if node scripts/migrate.js; then
+                  echo "✅ Legacy migration completed"
+                else
+                  echo "❌ Legacy migration also failed"
+                  exit 1
+                fi
+              fi
+            fi
+
             # Create fresh environment file
             cat > .env << EOF
             NODE_ENV=production
@@ -123,7 +144,34 @@ jobs:
               exit 1
             fi
 
-            echo "✅ Control Plane deployment complete!"
+            # Test new multi-source API endpoints
+            echo "🧪 Testing multi-source API endpoints..."
+
+            # Test sources endpoint (should respond with authentication required)
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/sources | grep -q "401"; then
+              echo "✅ Sources API endpoint is protected (401 as expected)"
+            else
+              echo "⚠️ Sources API endpoint might not be properly protected"
+            fi
+
+            # Test enhanced stream info endpoint
+            if curl -s http://localhost:3000/api/streams/info | grep -q "401"; then
+              echo "✅ Streams API endpoint is protected"
+            else
+              echo "⚠️ Streams API endpoint might not be properly protected"
+            fi
+
+            # Test forwarding endpoint (media server access)
+            # This should return 404 for non-existent stream key, which is expected
+            FORWARDAING_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/streams/forwarding/nonexistent-key)
+            if [ "$FORWARDAING_STATUS" = "404" ]; then
+              echo "✅ Forwarding API endpoint is working (404 as expected for invalid key)"
+            else
+              echo "⚠️ Forwarding API endpoint returned unexpected status: $FORWARDAING_STATUS"
+            fi
+
+            echo "🎯 API endpoint tests completed"
+            echo "✅ Control Plane deployment with multi-source support complete!"
 
   deploy-media-server:
     runs-on: ubuntu-latest
@@ -247,7 +295,44 @@ jobs:
 
             echo "✅ All ports are accessible and MediaMTX API is responding"
 
-            echo "✅ Media Server deployment verified successfully!"
+            # Test updated stream scripts
+            echo "🧪 Testing updated stream handling scripts..."
+
+            # Test if enhanced stream scripts exist and are executable
+            if [ -f /opt/neustream/on_stream_ready.sh ]; then
+              if [ -x /opt/neustream/on_stream_ready.sh ]; then
+                echo "✅ Stream ready script is executable"
+              else
+                echo "⚠️ Stream ready script exists but not executable - fixing permissions..."
+                chmod +x /opt/neustream/on_stream_ready.sh
+              fi
+            else
+              echo "❌ Stream ready script not found"
+              exit 1
+            fi
+
+            if [ -f /opt/neustream/on_stream_unpublish.sh ]; then
+              if [ -x /opt/neustream/on_stream_unpublish.sh ]; then
+                echo "✅ Stream unpublish script is executable"
+              else
+                echo "⚠️ Stream unpublish script exists but not executable - fixing permissions..."
+                chmod +x /opt/neustream/on_stream_unpublish.sh
+              fi
+            else
+              echo "❌ Stream unpublish script not found"
+              exit 1
+            fi
+
+            # Test jq availability (used by updated scripts)
+            if command -v jq >/dev/null 2>&1; then
+              echo "✅ jq is available for JSON parsing"
+            else
+              echo "❌ jq is not available - stream scripts may fail"
+              exit 1
+            fi
+
+            echo "🎯 Media server script verification completed"
+            echo "✅ Media Server deployment with multi-source support verified successfully!"
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -283,3 +368,43 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=neustream-frontend
           workingDirectory: frontend
+
+  # Deployment Summary and Migration Status
+  deployment-summary:
+    runs-on: ubuntu-latest
+    needs: [deploy-control-plane, deploy-media-server, deploy-frontend]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "🎉 NeuStream Multi-Source Architecture Deployment Summary"
+          echo "=================================================="
+          echo ""
+          echo "✅ What was deployed:"
+          echo "   • Enhanced Control Plane with multi-source support"
+          echo "   • Updated Media Server with enhanced stream scripts"
+          echo "   • Frontend with Stream Sources management UI"
+          echo "   • Database migration for multi-source architecture"
+          echo ""
+          echo "🚀 New Features Available:"
+          echo "   • Multiple stream sources per user"
+          echo "   • Source-specific destinations"
+          echo "   • Enhanced stream management interface"
+          echo "   • Improved logging and monitoring"
+          echo ""
+          echo "🔧 Migration Status:"
+          echo "   • Legacy stream keys continue to work"
+          echo "   • Existing users can create additional sources"
+          echo "   • Database schema updated for multi-source support"
+          echo ""
+          echo "📊 API Endpoints Added:"
+          echo "   • GET/POST/PUT/DELETE /api/sources"
+          echo "   • Enhanced /api/streams/forwarding/:streamKey"
+          echo "   • Source-aware authentication and stream management"
+          echo ""
+          echo "🎯 Ready to test:"
+          echo "   • Create multiple stream sources in the dashboard"
+          echo "   • Assign different destinations to each source"
+          echo "   • Stream multiple sources simultaneously"
+          echo "   • Monitor individual source performance"

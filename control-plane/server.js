@@ -8,6 +8,7 @@ const { passport } = require('./config/oauth');
 const authRoutes = require('./routes/auth');
 const streamRoutes = require('./routes/streams');
 const destinationRoutes = require('./routes/destinations');
+const sourceRoutes = require('./routes/sources');
 const posthogService = require('./services/posthog');
 
 const app = express();
@@ -43,6 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/streams', streamRoutes);
 app.use('/api/destinations', destinationRoutes);
+app.use('/api/sources', sourceRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -14,6 +14,9 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  MonitorSpeaker,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DestinationsSkeleton } from "@/components/LoadingSkeletons";
@@ -38,9 +41,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
+import { Link, useSearchParams } from "react-router-dom";
 
 // Platform configuration
 const platformConfig = {
@@ -83,31 +94,80 @@ function DestinationsManager() {
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const [selectedSourceId, setSelectedSourceId] = useState(null);
   const [newDestination, setNewDestination] = useState({
     platform: "youtube",
     rtmpUrl: platformConfig.youtube.rtmpUrl,
     streamKey: "",
   });
+  const [searchParams] = useSearchParams();
   const { trackUIInteraction, trackDestinationEvent } = usePostHog();
 
-  // Fetch destinations
-  const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
-    queryKey: ["destinations", user?.id],
+  // Get source ID from URL params if provided
+  const urlSourceId = searchParams.get('source');
+
+  // Fetch stream sources
+  const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
+    queryKey: ["streamSources", user?.id],
     queryFn: async () => {
-      // Use authenticated API service - no userId needed since server gets it from token
+      const response = await apiService.get("/sources");
+      return response;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch destinations for selected source
+  const { data: sourceDestinationsData, isLoading: sourceDestinationsLoading } = useQuery({
+    queryKey: ["sourceDestinations", selectedSourceId],
+    queryFn: async () => {
+      if (!selectedSourceId) return { destinations: [] };
+      const response = await apiService.get(`/sources/${selectedSourceId}`);
+      return response;
+    },
+    enabled: !!user && !!selectedSourceId,
+  });
+
+  // Fetch legacy destinations (backward compatibility)
+  const { data: legacyDestinationsData, isLoading: legacyDestinationsLoading } = useQuery({
+    queryKey: ["legacyDestinations", user?.id],
+    queryFn: async () => {
       const response = await apiService.get("/destinations");
       return response;
     },
-    enabled: !!user, // Only run query when user is available
+    enabled: !!user && (!selectedSourceId || sourcesData?.sources?.length === 0),
   });
 
-  const destinations = destinationsData?.destinations || [];
+  const sources = sourcesData?.sources || [];
+  const sourceDestinations = sourceDestinationsData?.destinations || [];
+  const legacyDestinations = legacyDestinationsData?.destinations || [];
+
+  // Auto-select first source if available and no source is selected
+  useEffect(() => {
+    if (sources.length > 0 && !selectedSourceId && !urlSourceId) {
+      setSelectedSourceId(sources[0].id);
+    } else if (urlSourceId) {
+      setSelectedSourceId(urlSourceId);
+    }
+  }, [sources, selectedSourceId, urlSourceId]);
+
+  // Get the current destinations based on what's selected
+  const destinations = selectedSourceId ? sourceDestinations : legacyDestinations;
+  const currentSource = sources.find(s => s.id === selectedSourceId);
+  const isUsingSources = sources.length > 0;
 
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
-      // Use authenticated API service - no userId needed since server gets it from token
-      const response = await apiService.post("/destinations", destination);
+      let response;
+
+      if (selectedSourceId) {
+        // Add destination to specific source
+        response = await apiService.post(`/sources/${selectedSourceId}/destinations`, destination);
+      } else {
+        // Legacy destination (user-level)
+        response = await apiService.post("/destinations", destination);
+      }
+
       return response;
     },
     onSuccess: (data) => {
@@ -115,6 +175,8 @@ function DestinationsManager() {
       trackDestinationEvent(data.destination.id, "destination_added", {
         platform: newDestination.platform,
         rtmp_url: newDestination.rtmpUrl,
+        source_id: selectedSourceId,
+        source_name: currentSource?.name,
       });
       setNewDestination({
         platform: "youtube",
@@ -122,7 +184,14 @@ function DestinationsManager() {
         streamKey: "",
       });
       setShowAddForm(false);
-      queryClient.invalidateQueries(["destinations", user?.id]);
+
+      // Invalidate appropriate queries
+      if (selectedSourceId) {
+        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
+      } else {
+        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
+      }
+
       toast.success("Destination added successfully!");
     },
     onError: (error) => {
@@ -130,6 +199,7 @@ function DestinationsManager() {
       trackDestinationEvent(null, "destination_add_failed", {
         platform: newDestination.platform,
         error: error.message,
+        source_id: selectedSourceId,
       });
       toast.error(error.message);
     },
@@ -138,20 +208,39 @@ function DestinationsManager() {
   // Delete destination mutation
   const deleteDestinationMutation = useMutation({
     mutationFn: async (id) => {
-      // Use authenticated API service
-      const response = await apiService.delete(`/destinations/${id}`);
+      let response;
+
+      if (selectedSourceId) {
+        // Delete destination from specific source
+        response = await apiService.delete(`/sources/${selectedSourceId}/destinations/${id}`);
+      } else {
+        // Legacy destination deletion
+        response = await apiService.delete(`/destinations/${id}`);
+      }
+
       return response;
     },
     onSuccess: (_, id) => {
       // Track destination removal
-      trackDestinationEvent(id, "destination_removed");
-      queryClient.invalidateQueries(["destinations", user?.id]);
+      trackDestinationEvent(id, "destination_removed", {
+        source_id: selectedSourceId,
+        source_name: currentSource?.name,
+      });
+
+      // Invalidate appropriate queries
+      if (selectedSourceId) {
+        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
+      } else {
+        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
+      }
+
       toast.success("Destination removed successfully!");
     },
     onError: (error, id) => {
       // Track destination removal failure
       trackDestinationEvent(id, "destination_remove_failed", {
         error: error.message,
+        source_id: selectedSourceId,
       });
       toast.error(error.message);
     },
@@ -206,7 +295,9 @@ function DestinationsManager() {
     return <DestinationsSkeleton />;
   }
 
-  if (destinationsLoading) {
+  const isLoading = sourcesLoading || sourceDestinationsLoading || legacyDestinationsLoading;
+
+  if (isLoading) {
     return <DestinationsSkeleton />;
   }
 
@@ -217,16 +308,105 @@ function DestinationsManager() {
         <div>
           <div className="text-3xl font-bold">Streaming Destinations</div>
           <p className="text-muted-foreground">
-            Manage your connected platforms and streaming endpoints
+            {isUsingSources
+              ? `Manage destinations for ${currentSource?.name || 'selected source'}`
+              : "Manage your connected platforms and streaming endpoints"
+            }
           </p>
         </div>
-        {destinations.length > 0 && !showAddForm && (
-          <Button onClick={() => setShowAddForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Destination
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Source Selection */}
+          {isUsingSources && (
+            <Select value={selectedSourceId || ""} onValueChange={setSelectedSourceId}>
+              <SelectTrigger className="w-48">
+                <div className="flex items-center gap-2">
+                  <MonitorSpeaker className="h-4 w-4" />
+                  <SelectValue placeholder="Select source" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {sources.map((source) => (
+                  <SelectItem key={source.id} value={source.id}>
+                    <div className="flex items-center gap-2">
+                      <MonitorSpeaker className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">{source.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {source.destinations_count} destination{source.destinations_count !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Add Destination Button */}
+          {destinations.length > 0 && !showAddForm && (
+            <Button onClick={() => setShowAddForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Destination
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Source Info Card */}
+      {isUsingSources && currentSource && (
+        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/20 rounded-lg">
+                <MonitorSpeaker className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium">{currentSource.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {currentSource.description || 'No description'}
+                </p>
+                <div className="flex items-center gap-4 mt-2 text-sm">
+                  <span className="text-muted-foreground">
+                    {currentSource.destinations_count} destination{currentSource.destinations_count !== 1 ? 's' : ''}
+                  </span>
+                  <span className="text-muted-foreground">
+                    Created {new Date(currentSource.created_at).toLocaleDateString()}
+                  </span>
+                  {currentSource.is_active && (
+                    <Badge variant="default" className="bg-green-500">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Active
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Legacy User Warning */}
+      {!isUsingSources && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              <div>
+                <h3 className="font-medium text-orange-700">Legacy Destination Management</h3>
+                <p className="text-sm text-orange-600 mt-1">
+                  You're using the legacy destination system. Consider creating stream sources for better organization and multi-source streaming capabilities.
+                </p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link to="/dashboard/sources">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Stream Sources
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Destination Form */}
       {showAddForm && (
@@ -528,16 +708,32 @@ function DestinationsManager() {
           <CardContent className="text-center py-12">
             <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">
-              No destinations configured
+              {isUsingSources
+                ? `No destinations for ${currentSource?.name || 'this source'}`
+                : "No destinations configured"
+              }
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Add your first streaming platform to start broadcasting to
-              multiple destinations simultaneously.
+              {isUsingSources
+                ? `Add streaming platforms to ${currentSource?.name || 'this source'} to start broadcasting to multiple destinations.`
+                : "Add your first streaming platform to start broadcasting to multiple destinations simultaneously."
+              }
             </p>
             <Button onClick={() => setShowAddForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Your First Destination
+              {isUsingSources ? `Add Destination to ${currentSource?.name || 'Source'}` : 'Add Your First Destination'}
             </Button>
+            {!isUsingSources && (
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Or create stream sources for better organization:</p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link to="/dashboard/sources">
+                    <MonitorSpeaker className="h-4 w-4 mr-2" />
+                    Create Stream Sources
+                  </Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -16,6 +16,7 @@ import {
   Settings,
   ArrowRight,
   BarChart3,
+  MonitorSpeaker,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
@@ -63,8 +64,24 @@ function DashboardOverview() {
     enabled: !!user, // Only run query when user is available
   });
 
+  // Fetch stream sources
+  const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
+    queryKey: ["streamSources", user.id],
+    queryFn: async () => {
+      const response = await apiService.get("/sources");
+      return response;
+    },
+    enabled: !!user,
+    refetchInterval: 10000, // Refresh every 10 seconds for live status
+  });
+
   const destinations = destinationsData?.destinations || [];
-  const isNewUser = destinations.length === 0;
+  const sources = sourcesData?.sources || [];
+  const activeSources = sources.filter(source => source.is_active);
+  const totalDestinationsAcrossSources = sources.reduce((sum, source) => sum + source.destinations_count, 0);
+
+  // Check if user is new (no sources and no destinations)
+  const isNewUser = sources.length === 0 && destinations.length === 0;
 
   // Copy to clipboard function
   const copyToClipboard = async (text, field) => {
@@ -115,7 +132,7 @@ function DashboardOverview() {
     }
   }, [streamInfo?.isActive, streamInfo?.activeStream?.started_at]);
 
-  if (streamLoading || destinationsLoading) {
+  if (streamLoading || destinationsLoading || sourcesLoading) {
     return <DashboardOverviewSkeleton />;
   }
 
@@ -144,9 +161,9 @@ function DashboardOverview() {
           {isNewUser ? (
             <div className="flex max-md:flex-col gap-2 items-center space-x-4">
               <Button asChild>
-                <Link to="/dashboard/destinations">
+                <Link to="/dashboard/sources">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Destination
+                  Create Your First Stream Source
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -160,26 +177,39 @@ function DashboardOverview() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                  <Radio className="h-5 w-5 text-primary" />
+                  <MonitorSpeaker className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {destinations.length} Destinations
+                    {sources.length} Stream Source{sources.length !== 1 ? 's' : ''}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Active platforms
+                    {activeSources.length} active
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                  <Radio className="h-5 w-5 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {totalDestinationsAcrossSources} Destination{totalDestinationsAcrossSources !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Across all sources
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    streamInfo?.isActive ? "bg-green-500/20" : "bg-gray-500/20"
+                    activeSources.length > 0 ? "bg-green-500/20" : "bg-gray-500/20"
                   }`}
                 >
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      streamInfo?.isActive
+                      activeSources.length > 0
                         ? "bg-green-500 animate-pulse"
                         : "bg-gray-500"
                     }`}
@@ -187,23 +217,10 @@ function DashboardOverview() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {streamInfo?.isActive ? "Live Now" : "Offline"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Stream status</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">
-                    {streamInfo?.isActive
-                      ? formatDuration(streamDuration)
-                      : "--:--:--"}
+                    {activeSources.length > 0 ? "Streaming" : "Ready"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Stream duration
+                    {activeSources.length > 0 ? `${activeSources.length} source${activeSources.length !== 1 ? 's' : ''} live` : "All sources offline"}
                   </p>
                 </div>
               </div>
@@ -228,6 +245,23 @@ function DashboardOverview() {
             <CardDescription>
               Add or configure your streaming platforms like YouTube, Twitch,
               and Facebook.
+            </CardDescription>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span className="flex items-center">
+                <MonitorSpeaker className="h-5 w-5 mr-2 text-primary" />
+                Stream Sources
+              </span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>
+              Manage multiple stream sources, each with their own destinations and settings.
             </CardDescription>
           </CardContent>
         </Card>
@@ -272,8 +306,119 @@ function DashboardOverview() {
         </Card>
       </div>
 
-      {/* Stream Configuration */}
-      {streamInfo && (
+      {/* Stream Sources Overview */}
+      {sources.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center justify-between">
+              <span>Stream Sources</span>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard/sources" className="flex items-center">
+                  Manage All
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            </CardTitle>
+            <CardDescription>
+              Your active stream sources with their streaming keys and current status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {sources.slice(0, 3).map((source) => (
+                <div
+                  key={source.id}
+                  className={`flex items-center justify-between p-4 border rounded-lg ${
+                    source.is_active ? 'border-green-200 bg-green-50/50' : 'hover:border-primary/50'
+                  } transition-colors`}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      source.is_active ? 'bg-green-500/20' : 'bg-gray-500/20'
+                    }`}>
+                      <MonitorSpeaker className={`h-5 w-5 ${
+                        source.is_active ? 'text-green-500' : 'text-gray-500'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium">{source.name}</h4>
+                        {source.is_active && (
+                          <Badge variant="default" className="bg-green-500 text-xs">
+                            <Play className="h-3 w-3 mr-1" />
+                            LIVE
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {source.description || 'No description'}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="text-muted-foreground">
+                          {source.destinations_count} destination{source.destinations_count !== 1 ? 's' : ''}
+                        </span>
+                        <span className="text-muted-foreground">
+                          Created {new Date(source.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(source.stream_key, "Stream Key")}
+                    >
+                      {copiedField === `Stream Key-${source.id}` ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/dashboard/sources?source=${source.id}`}>
+                        <Settings className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {sources.length > 3 && (
+                <Button variant="ghost" className="w-full" asChild>
+                  <Link to="/dashboard/sources" className="flex items-center justify-center">
+                    View {sources.length - 3} more source{sources.length - 3 !== 1 ? 's' : ''}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              )}
+
+              {/* Active Streaming Status */}
+              {activeSources.length > 0 && (
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Play className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="font-medium text-green-700 dark:text-green-300">
+                        {activeSources.length === 1 ? 'Stream is live!' : `${activeSources.length} streams are live!`}
+                      </p>
+                      <p className="text-sm text-green-600 dark:text-green-400">
+                        {activeSources.length === 1
+                          ? 'Your stream is being forwarded to all configured destinations'
+                          : 'Multiple sources are streaming to their respective destinations'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Legacy Stream Configuration (for backward compatibility) */}
+      {streamInfo && sources.length === 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Stream Configuration</CardTitle>
@@ -481,20 +626,26 @@ function DashboardOverview() {
               {[
                 {
                   step: 1,
-                  title: "Add streaming destinations",
-                  description: "Connect YouTube, Twitch, Facebook, etc.",
+                  title: "Create stream sources",
+                  description: "Set up different streaming sources for various content types",
                   completed: false,
                 },
                 {
                   step: 2,
-                  title: "Configure OBS Studio",
-                  description: "Set up your streaming software",
+                  title: "Add destinations to sources",
+                  description: "Connect YouTube, Twitch, Facebook to each source",
                   completed: false,
                 },
                 {
                   step: 3,
-                  title: "Start streaming",
-                  description: "Go live to all your platforms",
+                  title: "Configure streaming software",
+                  description: "Set up OBS Studio with your stream source keys",
+                  completed: false,
+                },
+                {
+                  step: 4,
+                  title: "Start multi-platform streaming",
+                  description: "Go live with multiple sources to different platforms",
                   completed: false,
                 },
               ].map((item) => (
@@ -534,7 +685,7 @@ function DashboardOverview() {
             </div>
 
             <Button className="w-full" asChild>
-              <Link to="/dashboard/destinations">
+              <Link to="/dashboard/sources">
                 Get Started
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Link>

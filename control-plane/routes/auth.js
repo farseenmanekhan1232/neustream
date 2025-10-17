@@ -22,32 +22,108 @@ router.post('/stream', async (req, res) => {
   const streamKey = req.body.name || req.query.name;
 
   try {
-    const users = await db.query(
-      'SELECT id FROM users WHERE stream_key = $1',
+    let sourceInfo = null;
+    let userId = null;
+
+    // First, try to find the stream key in stream_sources table (new architecture)
+    const sources = await db.query(
+      'SELECT s.*, u.email FROM stream_sources s JOIN users u ON s.user_id = u.id WHERE s.stream_key = $1 AND s.is_active = true',
       [streamKey]
     );
 
-    if (users.length === 0) {
-      posthogService.trackStreamEvent('anonymous', streamKey, 'stream_auth_failed', {
-        reason: 'invalid_stream_key'
-      });
-      return res.status(401).send('Invalid stream key');
+    if (sources.length > 0) {
+      // Found in stream_sources table (new architecture)
+      sourceInfo = sources[0];
+      userId = sourceInfo.user_id;
+
+      console.log(`Stream authenticated via stream_sources: user=${sourceInfo.email}, source=${sourceInfo.name}`);
+    } else {
+      // Fallback to legacy users table for backward compatibility
+      const users = await db.query(
+        'SELECT id, email FROM users WHERE stream_key = $1',
+        [streamKey]
+      );
+
+      if (users.length > 0) {
+        // Found in users table (legacy architecture)
+        userId = users[0].id;
+
+        console.log(`Stream authenticated via legacy users table: user=${users[0].email}`);
+
+        // For legacy streams, we don't have a source_id, but we still track them
+        posthogService.trackStreamEvent(userId, streamKey, 'legacy_stream_auth', {
+          authentication_method: 'legacy_users_table'
+        });
+      } else {
+        // Stream key not found anywhere
+        posthogService.trackStreamEvent('anonymous', streamKey, 'stream_auth_failed', {
+          reason: 'invalid_stream_key',
+          attempted_tables: ['stream_sources', 'users']
+        });
+        return res.status(401).send('Invalid stream key');
+      }
     }
 
-    const userId = users[0].id;
-
-    // Start tracking the active stream
-    await db.run(
-      'INSERT INTO active_streams (user_id, stream_key) VALUES ($1, $2)',
-      [userId, streamKey]
+    // Check if there's already an active stream with this key
+    const existingActiveStream = await db.query(
+      'SELECT id FROM active_streams WHERE stream_key = $1 AND ended_at IS NULL',
+      [streamKey]
     );
 
+    if (existingActiveStream.length > 0) {
+      console.log(`Stream ${streamKey} is already active, updating existing record`);
+
+      // Update the last activity timestamp for the existing stream
+      if (sourceInfo) {
+        await db.run(
+          'UPDATE stream_sources SET last_used_at = NOW() WHERE id = $1',
+          [sourceInfo.id]
+        );
+      }
+
+      // Track duplicate stream attempt
+      posthogService.trackStreamEvent(userId, streamKey, 'duplicate_stream_attempt', {
+        source_id: sourceInfo?.id,
+        source_name: sourceInfo?.name
+      });
+
+      return res.status(200).send('OK');
+    }
+
+    // Start tracking the active stream with source_id if available
+    const insertQuery = sourceInfo
+      ? 'INSERT INTO active_streams (source_id, user_id, stream_key) VALUES ($1, $2, $3) RETURNING id'
+      : 'INSERT INTO active_streams (user_id, stream_key) VALUES ($1, $2) RETURNING id';
+
+    const insertParams = sourceInfo
+      ? [sourceInfo.id, userId, streamKey]
+      : [userId, streamKey];
+
+    const result = await db.run(insertQuery, insertParams);
+
+    // Update last_used_at timestamp for the source
+    if (sourceInfo) {
+      await db.run(
+        'UPDATE stream_sources SET last_used_at = NOW() WHERE id = $1',
+        [sourceInfo.id]
+      );
+    }
+
     // Track successful stream authentication
-    posthogService.trackStreamEvent(userId, streamKey, 'stream_auth_success');
+    posthogService.trackStreamEvent(userId, streamKey, 'stream_auth_success', {
+      source_id: sourceInfo?.id,
+      source_name: sourceInfo?.name,
+      authentication_method: sourceInfo ? 'stream_sources_table' : 'legacy_users_table',
+      active_stream_id: result.id
+    });
 
     res.status(200).send('OK');
   } catch (error) {
     console.error('Stream auth error:', error);
+    posthogService.trackStreamEvent('anonymous', streamKey, 'stream_auth_error', {
+      error_message: error.message,
+      error_code: error.code
+    });
     res.status(500).send('Internal server error');
   }
 });
@@ -58,27 +134,66 @@ router.post('/stream-end', async (req, res) => {
   const streamKey = req.body.name || req.query.name;
 
   try {
-    // Get user ID for tracking
-    const users = await db.query(
-      'SELECT user_id FROM active_streams WHERE stream_key = $1 AND ended_at IS NULL',
+    // Get active stream details for tracking
+    const activeStreams = await db.query(
+      `SELECT
+        as_.*,
+        ss.name as source_name,
+        ss.id as source_id,
+        u.email
+      FROM active_streams as_
+      LEFT JOIN stream_sources ss ON as_.source_id = ss.id
+      LEFT JOIN users u ON as_.user_id = u.id
+      WHERE as_.stream_key = $1 AND as_.ended_at IS NULL`,
       [streamKey]
     );
 
-    // Mark the stream as ended
-    await db.run(
-      'UPDATE active_streams SET ended_at = NOW() WHERE stream_key = $1 AND ended_at IS NULL',
-      [streamKey]
-    );
-
-    // Track stream end
-    if (users.length > 0) {
-      const userId = users[0].user_id;
-      posthogService.trackStreamEvent(userId, streamKey, 'stream_ended');
+    if (activeStreams.length === 0) {
+      console.log(`No active stream found for key: ${streamKey}`);
+      return res.status(200).send('OK'); // Still return OK to prevent media server retries
     }
+
+    const activeStream = activeStreams[0];
+
+    // Calculate stream duration
+    const startTime = new Date(activeStream.started_at);
+    const endTime = new Date();
+    const duration = Math.floor((endTime - startTime) / 1000); // Duration in seconds
+
+    // Mark the stream as ended with duration
+    await db.run(
+      `UPDATE active_streams
+       SET ended_at = NOW(),
+           destinations_count = COALESCE(
+             (SELECT COUNT(*) FROM source_destinations sd
+              WHERE sd.source_id = $1 AND sd.is_active = true),
+             (SELECT COUNT(*) FROM destinations d
+              WHERE d.user_id = $2 AND d.is_active = true),
+             0
+           )
+       WHERE stream_key = $3 AND ended_at IS NULL`,
+      [activeStream.source_id, activeStream.user_id, streamKey]
+    );
+
+    // Track stream end with detailed information
+    posthogService.trackStreamEvent(activeStream.user_id, streamKey, 'stream_ended', {
+      source_id: activeStream.source_id,
+      source_name: activeStream.source_name,
+      duration_seconds: duration,
+      stream_type: activeStream.source_id ? 'multi_source' : 'legacy',
+      active_stream_id: activeStream.id,
+      user_email: activeStream.email
+    });
+
+    console.log(`Stream ended: key=${streamKey}, user=${activeStream.email}, source=${activeStream.source_name || 'legacy'}, duration=${duration}s`);
 
     res.status(200).send('OK');
   } catch (error) {
     console.error('Stream end error:', error);
+    posthogService.trackStreamEvent('anonymous', streamKey, 'stream_end_error', {
+      error_message: error.message,
+      error_code: error.code
+    });
     res.status(500).send('Internal server error');
   }
 });
