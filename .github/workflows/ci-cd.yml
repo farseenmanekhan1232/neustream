@@ -369,10 +369,44 @@ jobs:
           command: pages deploy dist --project-name=neustream-frontend
           workingDirectory: frontend
 
+  deploy-admin:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd admin
+          npm ci
+
+      - name: Build admin
+        run: |
+          cd admin
+          echo "VITE_API_URL=https://api.neustream.app" > .env.production
+          echo "VITE_NODE_ENV=production" >> .env.production
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=neustream-admin
+          workingDirectory: admin
+
   # Deployment Summary and Migration Status
   deployment-summary:
     runs-on: ubuntu-latest
-    needs: [deploy-control-plane, deploy-media-server, deploy-frontend]
+    needs: [deploy-control-plane, deploy-media-server, deploy-frontend, deploy-admin]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -385,12 +419,15 @@ jobs:
           echo "   • Enhanced Control Plane with multi-source support"
           echo "   • Updated Media Server with enhanced stream scripts"
           echo "   • Frontend with Stream Sources management UI"
+          echo "   • Admin Panel for platform management"
           echo "   • Database migration for multi-source architecture"
           echo ""
           echo "🚀 New Features Available:"
           echo "   • Multiple stream sources per user"
           echo "   • Source-specific destinations"
           echo "   • Enhanced stream management interface"
+          echo "   • Admin Panel for platform monitoring and user management"
+          echo "   • Real-time stream analytics and system health"
           echo "   • Improved logging and monitoring"
           echo ""
           echo "🔧 Migration Status:"
@@ -401,6 +438,9 @@ jobs:
           echo "📊 API Endpoints Added:"
           echo "   • GET/POST/PUT/DELETE /api/sources"
           echo "   • Enhanced /api/streams/forwarding/:streamKey"
+          echo "   • GET /api/admin/users - User management"
+          echo "   • GET /api/admin/stats - System statistics"
+          echo "   • GET /api/admin/analytics - Platform analytics"
           echo "   • Source-aware authentication and stream management"
           echo ""
           echo "🎯 Ready to test:"
@@ -408,3 +448,5 @@ jobs:
           echo "   • Assign different destinations to each source"
           echo "   • Stream multiple sources simultaneously"
           echo "   • Monitor individual source performance"
+          echo "   • Access admin panel at: https://neustream-admin.pages.dev"
+          echo "   • Sign in as admin@neustream.app to access platform management"
