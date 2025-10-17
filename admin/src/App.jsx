@@ -4,9 +4,9 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Users from './pages/Users';
+import UsersPage from './pages/Users';
 import Streams from './pages/Streams';
-import Settings from './pages/Settings';
+import SettingsPage from './pages/Settings';
 import './App.css';
 
 // Protected route component
@@ -73,7 +73,7 @@ function App() {
               path="/users"
               element={
                 <ProtectedRoute>
-                  <Users />
+                  <UsersPage />
                 </ProtectedRoute>
               }
             />
@@ -89,7 +89,7 @@ function App() {
               path="/settings"
               element={
                 <ProtectedRoute>
-                  <Settings />
+                  <SettingsPage />
                 </ProtectedRoute>
               }
             />

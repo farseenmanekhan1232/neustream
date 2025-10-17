@@ -10,7 +10,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const Users = () => {
+const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -287,4 +287,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default UsersPage;

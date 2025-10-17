@@ -12,7 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-const Settings = () => {
+const SettingsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [showApiKeys, setShowApiKeys] = useState({});
@@ -353,4 +353,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsPage;
