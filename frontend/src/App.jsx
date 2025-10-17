@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import DestinationsManager from "./components/DestinationsManager";
+import StreamSources from "./components/StreamSources";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 
@@ -75,6 +76,7 @@ function AppContent() {
         }
       >
         <Route index element={<DashboardOverview />} />
+        <Route path="sources" element={<StreamSources />} />
         <Route path="destinations" element={<DestinationsManager />} />
         <Route
           path="analytics"

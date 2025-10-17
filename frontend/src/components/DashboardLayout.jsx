@@ -23,6 +23,7 @@ import {
   X,
   Bell,
   ChevronRight,
+  MonitorSpeaker,
 } from "lucide-react";
 import { usePostHog } from "../hooks/usePostHog";
 import { useAuth } from "../contexts/AuthContext";
@@ -34,6 +35,13 @@ const navItems = [
     icon: LayoutDashboard,
     path: "/dashboard",
     description: "View your streaming setup",
+  },
+  {
+    id: "sources",
+    label: "Stream Sources",
+    icon: MonitorSpeaker,
+    path: "/dashboard/sources",
+    description: "Manage multiple stream sources",
   },
   {
     id: "destinations",
