@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api';
+import React, { useState, useEffect } from "react";
+import { adminApi } from "../services/api";
 import {
   Users,
   Activity,
   Wifi,
   WifiOff,
   TrendingUp,
-  Clock
-} from 'lucide-react';
+  Clock,
+} from "lucide-react";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeStreams: 0,
     totalStreams: 0,
-    systemUptime: '0d 0h 0m'
+    systemUptime: "0d 0h 0m",
   });
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
@@ -30,18 +30,18 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      console.log('🔄 Loading dashboard data...');
+      console.log("🔄 Loading dashboard data...");
 
       // Get system statistics
-      console.log('📊 Fetching system statistics...');
+      console.log("📊 Fetching system statistics...");
       const statsResponse = await adminApi.getStats();
-      console.log('📊 Stats response:', statsResponse);
+      console.log("📊 Stats response:", statsResponse);
       const stats = statsResponse;
 
       // Get active streams
-      console.log('📺 Fetching active streams...');
+      console.log("📺 Fetching active streams...");
       const streamsResponse = await adminApi.getActiveStreams();
-      console.log('📺 Streams response:', streamsResponse);
+      console.log("📺 Streams response:", streamsResponse);
       const activeStreams = streamsResponse.activeStreams || [];
 
       // Update dashboard stats
@@ -49,27 +49,27 @@ const Dashboard = () => {
         totalUsers: stats.users?.total_users || 0,
         activeStreams: activeStreams.length,
         totalStreams: stats.streams?.total_sources || 0,
-        systemUptime: calculateUptime()
+        systemUptime: calculateUptime(),
       });
 
       // Process recent activity from streams
-      const activity = activeStreams.slice(0, 5).map(stream => ({
+      const activity = activeStreams.slice(0, 5).map((stream) => ({
         id: stream.id,
-        type: 'stream_started',
+        type: "stream_started",
         message: `Stream started by ${stream.email}`,
         timestamp: stream.started_at,
-        icon: Activity
+        icon: Activity,
       }));
 
       setRecentActivity(activity);
-      console.log('✅ Dashboard data loaded successfully');
+      console.log("✅ Dashboard data loaded successfully");
     } catch (error) {
-      console.error('❌ Failed to load dashboard data:', error);
-      console.error('❌ Error details:', {
+      console.error("❌ Failed to load dashboard data:", error);
+      console.error("❌ Error details:", {
         message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
-        data: error.response?.data
+        data: error.response?.data,
       });
     } finally {
       setLoading(false);
@@ -78,7 +78,7 @@ const Dashboard = () => {
 
   const calculateUptime = () => {
     // This would come from a system endpoint
-    const uptime = process.env.NODE_ENV === 'production' ? '99.9%' : 'Local Dev';
+    const uptime = "99.9%";
     return uptime;
   };
 
@@ -89,17 +89,25 @@ const Dashboard = () => {
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-semibold text-gray-900">{value}</p>
           {change && (
-            <p className={`text-sm ${changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
+            <p
+              className={`text-sm ${
+                changeType === "positive" ? "text-green-600" : "text-red-600"
+              }`}
+            >
               {change}
             </p>
           )}
         </div>
-        <div className={`p-3 rounded-full ${
-          title.includes('Active') ? 'bg-green-100' : 'bg-blue-100'
-        }`}>
-          <Icon className={`h-6 w-6 ${
-            title.includes('Active') ? 'text-green-600' : 'text-blue-600'
-          }`} />
+        <div
+          className={`p-3 rounded-full ${
+            title.includes("Active") ? "bg-green-100" : "bg-blue-100"
+          }`}
+        >
+          <Icon
+            className={`h-6 w-6 ${
+              title.includes("Active") ? "text-green-600" : "text-blue-600"
+            }`}
+          />
         </div>
       </div>
     </div>
@@ -110,7 +118,10 @@ const Dashboard = () => {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+            <div
+              key={i}
+              className="bg-white rounded-lg shadow p-6 animate-pulse"
+            >
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
               <div className="h-8 bg-gray-200 rounded w-3/4"></div>
             </div>
@@ -173,14 +184,19 @@ const Dashboard = () => {
               {recentActivity.map((activity) => {
                 const Icon = activity.icon;
                 return (
-                  <div key={activity.id} className="flex items-center space-x-3">
+                  <div
+                    key={activity.id}
+                    className="flex items-center space-x-3"
+                  >
                     <div className="flex-shrink-0">
                       <div className="p-2 bg-blue-100 rounded-full">
                         <Icon className="h-4 w-4 text-blue-600" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.message}</p>
+                      <p className="text-sm text-gray-900">
+                        {activity.message}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {new Date(activity.timestamp).toLocaleString()}
                       </p>
@@ -192,7 +208,9 @@ const Dashboard = () => {
           ) : (
             <div className="text-center py-8">
               <Activity className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No recent activity
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
                 Activity will appear here as users start streaming.
               </p>

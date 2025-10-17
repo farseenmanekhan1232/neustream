@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   BarChart3,
@@ -11,7 +11,7 @@ import {
   Menu
 } from 'lucide-react';
 
-const Layout = () => {
+const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -109,7 +109,7 @@ const Layout = () => {
 
         {/* Page content */}
         <main className="p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
