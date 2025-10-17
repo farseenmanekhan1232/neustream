@@ -29,8 +29,7 @@ router.get('/users', async (req, res) => {
         u.stream_key,
         u.created_at,
         COALESCE(ss.source_count, 0) as total_sources,
-        COALESCE(active.active_count, 0) as active_streams,
-        u.last_login
+        COALESCE(active.active_count, 0) as active_streams
       FROM users u
       LEFT JOIN (
         SELECT user_id, COUNT(*) as source_count
