@@ -77,8 +77,11 @@ function DashboardOverview() {
 
   const destinations = destinationsData?.destinations || [];
   const sources = sourcesData?.sources || [];
-  const activeSources = sources.filter(source => source.is_active);
-  const totalDestinationsAcrossSources = sources.reduce((sum, source) => sum + source.destinations_count, 0);
+  const activeSources = sources.filter((source) => source.is_active);
+  const totalDestinationsAcrossSources = sources.reduce(
+    (sum, source) => sum + parseInt(source.destinations_count || 0, 10),
+    0
+  );
 
   // Check if user is new (no sources and no destinations)
   const isNewUser = sources.length === 0 && destinations.length === 0;
@@ -181,7 +184,8 @@ function DashboardOverview() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {sources.length} Stream Source{sources.length !== 1 ? 's' : ''}
+                    {sources.length} Stream Source
+                    {sources.length !== 1 ? "s" : ""}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {activeSources.length} active
@@ -194,7 +198,8 @@ function DashboardOverview() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">
-                    {totalDestinationsAcrossSources} Destination{totalDestinationsAcrossSources !== 1 ? 's' : ''}
+                    {totalDestinationsAcrossSources} Destination
+                    {totalDestinationsAcrossSources !== 1 ? "s" : ""}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Across all sources
@@ -204,7 +209,9 @@ function DashboardOverview() {
               <div className="flex items-center space-x-3">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    activeSources.length > 0 ? "bg-green-500/20" : "bg-gray-500/20"
+                    activeSources.length > 0
+                      ? "bg-green-500/20"
+                      : "bg-gray-500/20"
                   }`}
                 >
                   <div
@@ -220,7 +227,11 @@ function DashboardOverview() {
                     {activeSources.length > 0 ? "Streaming" : "Ready"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {activeSources.length > 0 ? `${activeSources.length} source${activeSources.length !== 1 ? 's' : ''} live` : "All sources offline"}
+                    {activeSources.length > 0
+                      ? `${activeSources.length} source${
+                          activeSources.length !== 1 ? "s" : ""
+                        } live`
+                      : "All sources offline"}
                   </p>
                 </div>
               </div>
@@ -261,7 +272,8 @@ function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <CardDescription>
-              Manage multiple stream sources, each with their own destinations and settings.
+              Manage multiple stream sources, each with their own destinations
+              and settings.
             </CardDescription>
           </CardContent>
         </Card>
@@ -320,7 +332,8 @@ function DashboardOverview() {
               </Button>
             </CardTitle>
             <CardDescription>
-              Your active stream sources with their streaming keys and current status
+              Your active stream sources with their streaming keys and current
+              status
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -329,36 +342,47 @@ function DashboardOverview() {
                 <div
                   key={source.id}
                   className={`flex items-center justify-between p-4 border rounded-lg ${
-                    source.is_active ? 'border-green-200 bg-green-50/50' : 'hover:border-primary/50'
+                    source.is_active
+                      ? "border-green-200 bg-green-50/50"
+                      : "hover:border-primary/50"
                   } transition-colors`}
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      source.is_active ? 'bg-green-500/20' : 'bg-gray-500/20'
-                    }`}>
-                      <MonitorSpeaker className={`h-5 w-5 ${
-                        source.is_active ? 'text-green-500' : 'text-gray-500'
-                      }`} />
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        source.is_active ? "bg-green-500/20" : "bg-gray-500/20"
+                      }`}
+                    >
+                      <MonitorSpeaker
+                        className={`h-5 w-5 ${
+                          source.is_active ? "text-green-500" : "text-gray-500"
+                        }`}
+                      />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium">{source.name}</h4>
                         {source.is_active && (
-                          <Badge variant="default" className="bg-green-500 text-xs">
+                          <Badge
+                            variant="default"
+                            className="bg-green-500 text-xs"
+                          >
                             <Play className="h-3 w-3 mr-1" />
                             LIVE
                           </Badge>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {source.description || 'No description'}
+                        {source.description || "No description"}
                       </p>
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-muted-foreground">
-                          {source.destinations_count} destination{source.destinations_count !== 1 ? 's' : ''}
+                          {source.destinations_count} destination
+                          {source.destinations_count !== 1 ? "s" : ""}
                         </span>
                         <span className="text-muted-foreground">
-                          Created {new Date(source.created_at).toLocaleDateString()}
+                          Created{" "}
+                          {new Date(source.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -367,7 +391,9 @@ function DashboardOverview() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => copyToClipboard(source.stream_key, "Stream Key")}
+                      onClick={() =>
+                        copyToClipboard(source.stream_key, "Stream Key")
+                      }
                     >
                       {copiedField === `Stream Key-${source.id}` ? (
                         <Check className="h-4 w-4 text-green-500" />
@@ -386,8 +412,12 @@ function DashboardOverview() {
 
               {sources.length > 3 && (
                 <Button variant="ghost" className="w-full" asChild>
-                  <Link to="/dashboard/sources" className="flex items-center justify-center">
-                    View {sources.length - 3} more source{sources.length - 3 !== 1 ? 's' : ''}
+                  <Link
+                    to="/dashboard/sources"
+                    className="flex items-center justify-center"
+                  >
+                    View {sources.length - 3} more source
+                    {sources.length - 3 !== 1 ? "s" : ""}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
@@ -400,13 +430,14 @@ function DashboardOverview() {
                     <Play className="h-5 w-5 text-green-500" />
                     <div>
                       <p className="font-medium text-green-700 dark:text-green-300">
-                        {activeSources.length === 1 ? 'Stream is live!' : `${activeSources.length} streams are live!`}
+                        {activeSources.length === 1
+                          ? "Stream is live!"
+                          : `${activeSources.length} streams are live!`}
                       </p>
                       <p className="text-sm text-green-600 dark:text-green-400">
                         {activeSources.length === 1
-                          ? 'Your stream is being forwarded to all configured destinations'
-                          : 'Multiple sources are streaming to their respective destinations'
-                        }
+                          ? "Your stream is being forwarded to all configured destinations"
+                          : "Multiple sources are streaming to their respective destinations"}
                       </p>
                     </div>
                   </div>
@@ -627,13 +658,15 @@ function DashboardOverview() {
                 {
                   step: 1,
                   title: "Create stream sources",
-                  description: "Set up different streaming sources for various content types",
+                  description:
+                    "Set up different streaming sources for various content types",
                   completed: false,
                 },
                 {
                   step: 2,
                   title: "Add destinations to sources",
-                  description: "Connect YouTube, Twitch, Facebook to each source",
+                  description:
+                    "Connect YouTube, Twitch, Facebook to each source",
                   completed: false,
                 },
                 {
@@ -645,7 +678,8 @@ function DashboardOverview() {
                 {
                   step: 4,
                   title: "Start multi-platform streaming",
-                  description: "Go live with multiple sources to different platforms",
+                  description:
+                    "Go live with multiple sources to different platforms",
                   completed: false,
                 },
               ].map((item) => (
