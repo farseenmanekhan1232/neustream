@@ -82,6 +82,7 @@ const Dashboard = () => {
     return uptime;
   };
 
+  // eslint-disable-next-line no-unused-vars
   const StatCard = ({ title, value, icon: Icon, change, changeType }) => (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between">

@@ -120,6 +120,106 @@ export const adminApi = {
       token
     });
     return response.data;
+  },
+
+  // ============================================
+  // STREAM SOURCES MANAGEMENT
+  // ============================================
+
+  // Get all stream sources
+  getSources: async () => {
+    const response = await api.get('/api/admin/sources');
+    return response.data;
+  },
+
+  // Get specific stream source
+  getSource: async (sourceId) => {
+    const response = await api.get(`/api/admin/sources/${sourceId}`);
+    return response.data;
+  },
+
+  // Update stream source
+  updateSource: async (sourceId, sourceData) => {
+    const response = await api.put(`/api/admin/sources/${sourceId}`, sourceData);
+    return response.data;
+  },
+
+  // Delete stream source
+  deleteSource: async (sourceId) => {
+    const response = await api.delete(`/api/admin/sources/${sourceId}`);
+    return response.data;
+  },
+
+  // Regenerate stream source key
+  regenerateSourceKey: async (sourceId) => {
+    const response = await api.post(`/api/admin/sources/${sourceId}/regenerate-key`);
+    return response.data;
+  },
+
+  // ============================================
+  // DESTINATIONS MANAGEMENT
+  // ============================================
+
+  // Get all destinations
+  getDestinations: async () => {
+    const response = await api.get('/api/admin/destinations');
+    return response.data;
+  },
+
+  // Get specific destination
+  getDestination: async (destinationId) => {
+    const response = await api.get(`/api/admin/destinations/${destinationId}`);
+    return response.data;
+  },
+
+  // Update destination
+  updateDestination: async (destinationId, destinationData) => {
+    const response = await api.put(`/api/admin/destinations/${destinationId}`, destinationData);
+    return response.data;
+  },
+
+  // Delete destination
+  deleteDestination: async (destinationId) => {
+    const response = await api.delete(`/api/admin/destinations/${destinationId}`);
+    return response.data;
+  },
+
+  // ============================================
+  // USER MANAGEMENT EXTENSIONS
+  // ============================================
+
+  // Suspend user
+  suspendUser: async (userId) => {
+    const response = await api.post(`/api/admin/users/${userId}/suspend`);
+    return response.data;
+  },
+
+  // Unsuspend user
+  unsuspendUser: async (userId) => {
+    const response = await api.post(`/api/admin/users/${userId}/unsuspend`);
+    return response.data;
+  },
+
+  // Reset user stream key
+  resetUserStreamKey: async (userId) => {
+    const response = await api.post(`/api/admin/users/${userId}/reset-stream-key`);
+    return response.data;
+  },
+
+  // ============================================
+  // ANALYTICS AND REPORTS
+  // ============================================
+
+  // Get detailed user analytics
+  getUserAnalytics: async (period = '30d') => {
+    const response = await api.get(`/api/admin/analytics/users?period=${period}`);
+    return response.data;
+  },
+
+  // Get detailed stream analytics
+  getStreamAnalytics: async (period = '30d') => {
+    const response = await api.get(`/api/admin/analytics/streams?period=${period}`);
+    return response.data;
   }
 };
 

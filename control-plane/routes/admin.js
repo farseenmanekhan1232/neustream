@@ -372,4 +372,598 @@ router.get('/health', async (req, res) => {
   }
 });
 
+// ============================================
+// STREAM SOURCES MANAGEMENT
+// ============================================
+
+// Get all stream sources with user info
+router.get('/sources', async (req, res) => {
+  try {
+    const sources = await db.query(`
+      SELECT
+        ss.*,
+        u.email,
+        u.display_name,
+        COUNT(sd.id) as destinations_count,
+        EXISTS(
+          SELECT 1 FROM active_streams
+          WHERE source_id = ss.id AND ended_at IS NULL
+        ) as is_active
+      FROM stream_sources ss
+      LEFT JOIN users u ON ss.user_id = u.id
+      LEFT JOIN source_destinations sd ON ss.id = sd.source_id
+      GROUP BY ss.id, u.email, u.display_name
+      ORDER BY ss.created_at DESC
+    `);
+
+    res.json({ sources });
+  } catch (error) {
+    console.error('Get sources error:', error);
+    res.status(500).json({ error: 'Failed to fetch stream sources' });
+  }
+});
+
+// Get specific stream source with destinations
+router.get('/sources/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Get the stream source
+    const sources = await db.query(`
+      SELECT ss.*, u.email, u.display_name
+      FROM stream_sources ss
+      LEFT JOIN users u ON ss.user_id = u.id
+      WHERE ss.id = $1
+    `, [id]);
+
+    if (sources.length === 0) {
+      return res.status(404).json({ error: 'Stream source not found' });
+    }
+
+    const source = sources[0];
+
+    // Get destinations for this source
+    const destinations = await db.query(`
+      SELECT * FROM source_destinations
+      WHERE source_id = $1
+      ORDER BY created_at DESC
+    `, [id]);
+
+    // Check if currently active
+    const activeStream = await db.query(`
+      SELECT * FROM active_streams
+      WHERE source_id = $1 AND ended_at IS NULL
+      ORDER BY started_at DESC LIMIT 1
+    `, [id]);
+
+    // Get stream statistics
+    const streamStats = await db.query(`
+      SELECT
+        COUNT(*) as total_streams,
+        AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
+      FROM active_streams
+      WHERE source_id = $1 AND ended_at IS NOT NULL
+    `, [id]);
+
+    res.json({
+      source: {
+        ...source,
+        is_active: activeStream.length > 0,
+        active_stream: activeStream[0] || null,
+        stats: {
+          totalStreams: parseInt(streamStats[0]?.total_streams) || 0,
+          avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0
+        }
+      },
+      destinations
+    });
+  } catch (error) {
+    console.error('Get source error:', error);
+    res.status(500).json({ error: 'Failed to fetch stream source' });
+  }
+});
+
+// Update stream source
+router.put('/sources/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, description, is_active } = req.body;
+
+  try {
+    // Check if source exists
+    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    if (existingSource.length === 0) {
+      return res.status(404).json({ error: 'Stream source not found' });
+    }
+
+    // Check if source is currently active before deactivating
+    if (is_active === false) {
+      const activeStream = await db.query(
+        'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+        [id]
+      );
+
+      if (activeStream.length > 0) {
+        return res.status(400).json({ error: 'Cannot deactivate source while streaming' });
+      }
+    }
+
+    // Update the source
+    const result = await db.run(
+      'UPDATE stream_sources SET name = COALESCE($1, name), description = COALESCE($2, description), is_active = COALESCE($3, is_active) WHERE id = $4 RETURNING *',
+      [name?.trim(), description?.trim(), is_active, id]
+    );
+
+    res.json({ source: result });
+  } catch (error) {
+    console.error('Update source error:', error);
+    res.status(500).json({ error: 'Failed to update stream source' });
+  }
+});
+
+// Delete stream source
+router.delete('/sources/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if source exists
+    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    if (existingSource.length === 0) {
+      return res.status(404).json({ error: 'Stream source not found' });
+    }
+
+    // Check if source is currently active
+    const activeStream = await db.query(
+      'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+      [id]
+    );
+
+    if (activeStream.length > 0) {
+      return res.status(400).json({ error: 'Cannot delete source while streaming' });
+    }
+
+    // Delete the source (destinations will be deleted due to CASCADE)
+    const result = await db.run('DELETE FROM stream_sources WHERE id = $1', [id]);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Stream source not found' });
+    }
+
+    res.json({ message: 'Stream source deleted successfully' });
+  } catch (error) {
+    console.error('Delete source error:', error);
+    res.status(500).json({ error: 'Failed to delete stream source' });
+  }
+});
+
+// Regenerate stream key for source
+router.post('/sources/:id/regenerate-key', async (req, res) => {
+  const { id } = req.params;
+  const crypto = require('crypto');
+
+  try {
+    // Check if source exists
+    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    if (existingSource.length === 0) {
+      return res.status(404).json({ error: 'Stream source not found' });
+    }
+
+    // Check if source is currently active
+    const activeStream = await db.query(
+      'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+      [id]
+    );
+
+    if (activeStream.length > 0) {
+      return res.status(400).json({ error: 'Cannot regenerate stream key while streaming' });
+    }
+
+    // Generate unique stream key
+    let streamKey;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 10) {
+      streamKey = crypto.randomBytes(24).toString('hex');
+
+      // Check uniqueness in both stream_sources and users table
+      const existingInSources = await db.query(
+        'SELECT id FROM stream_sources WHERE stream_key = $1 AND id != $2',
+        [streamKey, id]
+      );
+
+      const existingInUsers = await db.query(
+        'SELECT id FROM users WHERE stream_key = $1',
+        [streamKey]
+      );
+
+      if (existingInSources.length === 0 && existingInUsers.length === 0) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!isUnique) {
+      return res.status(500).json({ error: 'Failed to generate unique stream key' });
+    }
+
+    // Update the stream key
+    const result = await db.run(
+      'UPDATE stream_sources SET stream_key = $1 WHERE id = $2 RETURNING *',
+      [streamKey, id]
+    );
+
+    res.json({
+      message: 'Stream key regenerated successfully',
+      source: result
+    });
+  } catch (error) {
+    console.error('Regenerate stream key error:', error);
+    res.status(500).json({ error: 'Failed to regenerate stream key' });
+  }
+});
+
+// ============================================
+// DESTINATIONS MANAGEMENT
+// ============================================
+
+// Get all destinations with source info
+router.get('/destinations', async (req, res) => {
+  try {
+    const destinations = await db.query(`
+      SELECT
+        sd.*,
+        ss.name as source_name,
+        u.email as user_email,
+        u.display_name as user_display_name
+      FROM source_destinations sd
+      LEFT JOIN stream_sources ss ON sd.source_id = ss.id
+      LEFT JOIN users u ON ss.user_id = u.id
+      ORDER BY sd.created_at DESC
+    `);
+
+    res.json({ destinations });
+  } catch (error) {
+    console.error('Get destinations error:', error);
+    res.status(500).json({ error: 'Failed to fetch destinations' });
+  }
+});
+
+// Get specific destination
+router.get('/destinations/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const destinations = await db.query(`
+      SELECT
+        sd.*,
+        ss.name as source_name,
+        u.email as user_email,
+        u.display_name as user_display_name
+      FROM source_destinations sd
+      LEFT JOIN stream_sources ss ON sd.source_id = ss.id
+      LEFT JOIN users u ON ss.user_id = u.id
+      WHERE sd.id = $1
+    `, [id]);
+
+    if (destinations.length === 0) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+
+    res.json({ destination: destinations[0] });
+  } catch (error) {
+    console.error('Get destination error:', error);
+    res.status(500).json({ error: 'Failed to fetch destination' });
+  }
+});
+
+// Update destination
+router.put('/destinations/:id', async (req, res) => {
+  const { id } = req.params;
+  const { platform, rtmp_url, stream_key, is_active } = req.body;
+
+  try {
+    // Check if destination exists
+    const existingDest = await db.query('SELECT * FROM source_destinations WHERE id = $1', [id]);
+    if (existingDest.length === 0) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+
+    // Update the destination
+    const result = await db.run(
+      'UPDATE source_destinations SET platform = COALESCE($1, platform), rtmp_url = COALESCE($2, rtmp_url), stream_key = COALESCE($3, stream_key), is_active = COALESCE($4, is_active) WHERE id = $5 RETURNING *',
+      [platform, rtmp_url, stream_key, is_active, id]
+    );
+
+    res.json({ destination: result });
+  } catch (error) {
+    console.error('Update destination error:', error);
+    res.status(500).json({ error: 'Failed to update destination' });
+  }
+});
+
+// Delete destination
+router.delete('/destinations/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.run('DELETE FROM source_destinations WHERE id = $1', [id]);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Destination not found' });
+    }
+
+    res.json({ message: 'Destination deleted successfully' });
+  } catch (error) {
+    console.error('Delete destination error:', error);
+    res.status(500).json({ error: 'Failed to delete destination' });
+  }
+});
+
+// ============================================
+// USER MANAGEMENT EXTENSIONS
+// ============================================
+
+// Suspend user
+router.post('/users/:id/suspend', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if user exists
+    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    if (userCheck.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has active streams
+    const activeStreams = await db.query(
+      'SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL',
+      [id]
+    );
+
+    if (parseInt(activeStreams[0].count) > 0) {
+      return res.status(400).json({ error: 'Cannot suspend user with active streams' });
+    }
+
+    // Deactivate all user's stream sources
+    await db.run(
+      'UPDATE stream_sources SET is_active = false WHERE user_id = $1',
+      [id]
+    );
+
+    // Update user with suspended flag (using display_name to store suspension info)
+    await db.run(
+      "UPDATE users SET display_name = CASE WHEN display_name LIKE '[SUSPENDED]%' THEN display_name ELSE '[SUSPENDED] ' || COALESCE(display_name, email) END WHERE id = $1",
+      [id]
+    );
+
+    res.json({ message: 'User suspended successfully' });
+  } catch (error) {
+    console.error('Suspend user error:', error);
+    res.status(500).json({ error: 'Failed to suspend user' });
+  }
+});
+
+// Unsuspend user
+router.post('/users/:id/unsuspend', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if user exists
+    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    if (userCheck.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Remove suspension prefix from display_name
+    await db.run(
+      "UPDATE users SET display_name = CASE WHEN display_name LIKE '[SUSPENDED]%' THEN SUBSTRING(display_name, 12) ELSE display_name END WHERE id = $1",
+      [id]
+    );
+
+    res.json({ message: 'User unsuspended successfully' });
+  } catch (error) {
+    console.error('Unsuspend user error:', error);
+    res.status(500).json({ error: 'Failed to unsuspend user' });
+  }
+});
+
+// Reset user stream key
+router.post('/users/:id/reset-stream-key', async (req, res) => {
+  const { id } = req.params;
+  const crypto = require('crypto');
+
+  try {
+    // Check if user exists
+    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    if (userCheck.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has active streams
+    const activeStreams = await db.query(
+      'SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL',
+      [id]
+    );
+
+    if (parseInt(activeStreams[0].count) > 0) {
+      return res.status(400).json({ error: 'Cannot reset stream key while user has active streams' });
+    }
+
+    // Generate unique stream key
+    let streamKey;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 10) {
+      streamKey = crypto.randomBytes(24).toString('hex');
+
+      const existingInSources = await db.query(
+        'SELECT id FROM stream_sources WHERE stream_key = $1',
+        [streamKey]
+      );
+
+      const existingInUsers = await db.query(
+        'SELECT id FROM users WHERE stream_key = $1 AND id != $2',
+        [streamKey, id]
+      );
+
+      if (existingInSources.length === 0 && existingInUsers.length === 0) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!isUnique) {
+      return res.status(500).json({ error: 'Failed to generate unique stream key' });
+    }
+
+    // Update user stream key
+    await db.run(
+      'UPDATE users SET stream_key = $1 WHERE id = $2',
+      [streamKey, id]
+    );
+
+    res.json({
+      message: 'Stream key reset successfully',
+      streamKey: streamKey
+    });
+  } catch (error) {
+    console.error('Reset stream key error:', error);
+    res.status(500).json({ error: 'Failed to reset stream key' });
+  }
+});
+
+// ============================================
+// ANALYTICS AND REPORTS
+// ============================================
+
+// Get detailed user analytics
+router.get('/analytics/users', async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    let periodFilter = "NOW() - INTERVAL '30 days'";
+
+    if (period === '7d') {
+      periodFilter = "NOW() - INTERVAL '7 days'";
+    } else if (period === '24h') {
+      periodFilter = "NOW() - INTERVAL '24 hours'";
+    }
+
+    // User registration trends
+    const registrationTrends = await db.query(`
+      SELECT
+        DATE_TRUNC('day', created_at) as date,
+        COUNT(*) as registrations,
+        COUNT(CASE WHEN oauth_provider = 'google' THEN 1 END) as google_registrations,
+        COUNT(CASE WHEN oauth_provider = 'twitch' THEN 1 END) as twitch_registrations,
+        COUNT(CASE WHEN oauth_provider IS NULL THEN 1 END) as email_registrations
+      FROM users
+      WHERE created_at > ${periodFilter}
+      GROUP BY DATE_TRUNC('day', created_at)
+      ORDER BY date ASC
+    `);
+
+    // User activity metrics
+    const activityMetrics = await db.query(`
+      SELECT
+        COUNT(DISTINCT u.id) as total_users,
+        COUNT(DISTINCT CASE WHEN as_.started_at > ${periodFilter} THEN u.id END) as active_users,
+        COUNT(DISTINCT CASE WHEN as_.started_at > NOW() - INTERVAL '7 days' THEN u.id END) as active_users_7d,
+        COUNT(DISTINCT CASE WHEN as_.started_at > NOW() - INTERVAL '24 hours' THEN u.id END) as active_users_24h
+      FROM users u
+      LEFT JOIN stream_sources ss ON u.id = ss.user_id
+      LEFT JOIN active_streams as_ ON ss.id = as_.source_id
+    `);
+
+    // User retention metrics
+    const retentionMetrics = await db.query(`
+      SELECT
+        DATE_TRUNC('day', u.created_at) as cohort_date,
+        COUNT(*) as cohort_size,
+        COUNT(DISTINCT CASE WHEN as_.started_at > u.created_at + INTERVAL '1 day' THEN u.id END) as retained_day1,
+        COUNT(DISTINCT CASE WHEN as_.started_at > u.created_at + INTERVAL '7 days' THEN u.id END) as retained_day7,
+        COUNT(DISTINCT CASE WHEN as_.started_at > u.created_at + INTERVAL '30 days' THEN u.id END) as retained_day30
+      FROM users u
+      LEFT JOIN stream_sources ss ON u.id = ss.user_id
+      LEFT JOIN active_streams as_ ON ss.id = as_.source_id
+      WHERE u.created_at > ${periodFilter}
+      GROUP BY DATE_TRUNC('day', u.created_at)
+      ORDER BY cohort_date ASC
+    `);
+
+    res.json({
+      registrationTrends,
+      activityMetrics: activityMetrics[0],
+      retentionMetrics
+    });
+  } catch (error) {
+    console.error('Get user analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch user analytics' });
+  }
+});
+
+// Get detailed stream analytics
+router.get('/analytics/streams', async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    let periodFilter = "NOW() - INTERVAL '30 days'";
+
+    if (period === '7d') {
+      periodFilter = "NOW() - INTERVAL '7 days'";
+    } else if (period === '24h') {
+      periodFilter = "NOW() - INTERVAL '24 hours'";
+    }
+
+    // Stream activity trends
+    const streamTrends = await db.query(`
+      SELECT
+        DATE_TRUNC('day', started_at) as date,
+        COUNT(*) as streams_started,
+        COUNT(CASE WHEN ended_at IS NOT NULL THEN 1 END) as streams_completed,
+        AVG(EXTRACT(EPOCH FROM (COALESCE(ended_at, NOW()) - started_at))) as avg_duration_seconds,
+        COUNT(DISTINCT user_id) as unique_streamers
+      FROM active_streams
+      WHERE started_at > ${periodFilter}
+      GROUP BY DATE_TRUNC('day', started_at)
+      ORDER BY date ASC
+    `);
+
+    // Platform usage analytics
+    const platformAnalytics = await db.query(`
+      SELECT
+        sd.platform,
+        COUNT(*) as total_destinations,
+        COUNT(CASE WHEN sd.is_active = true THEN 1 END) as active_destinations,
+        COUNT(DISTINCT sd.source_id) as unique_sources,
+        COUNT(DISTINCT ss.user_id) as unique_users
+      FROM source_destinations sd
+      LEFT JOIN stream_sources ss ON sd.source_id = ss.id
+      GROUP BY sd.platform
+      ORDER BY total_destinations DESC
+    `);
+
+    // Streaming quality metrics
+    const qualityMetrics = await db.query(`
+      SELECT
+        COUNT(*) as total_sessions,
+        COUNT(CASE WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) < 60 THEN 1 END) as under_1min,
+        COUNT(CASE WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) BETWEEN 60 AND 300 THEN 1 END) as between_1_5min,
+        COUNT(CASE WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) BETWEEN 300 AND 1800 THEN 1 END) as between_5_30min,
+        COUNT(CASE WHEN EXTRACT(EPOCH FROM (ended_at - started_at)) > 1800 THEN 1 END) as over_30min,
+        AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration_seconds
+      FROM active_streams
+      WHERE started_at > ${periodFilter} AND ended_at IS NOT NULL
+    `);
+
+    res.json({
+      streamTrends,
+      platformAnalytics,
+      qualityMetrics: qualityMetrics[0]
+    });
+  } catch (error) {
+    console.error('Get stream analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch stream analytics' });
+  }
+});
+
 module.exports = router;

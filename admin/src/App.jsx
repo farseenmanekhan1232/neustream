@@ -6,6 +6,9 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UsersPage from './pages/Users';
 import Streams from './pages/Streams';
+import Sources from './pages/Sources';
+import Destinations from './pages/Destinations';
+import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
 import './App.css';
 
@@ -74,6 +77,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sources"
+              element={
+                <ProtectedRoute>
+                  <Sources />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/destinations"
+              element={
+                <ProtectedRoute>
+                  <Destinations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />
