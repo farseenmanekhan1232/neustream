@@ -30,19 +30,25 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      console.log('🔄 Loading dashboard data...');
+
       // Get system statistics
+      console.log('📊 Fetching system statistics...');
       const statsResponse = await adminApi.getStats();
+      console.log('📊 Stats response:', statsResponse);
       const stats = statsResponse;
 
       // Get active streams
+      console.log('📺 Fetching active streams...');
       const streamsResponse = await adminApi.getActiveStreams();
+      console.log('📺 Streams response:', streamsResponse);
       const activeStreams = streamsResponse.activeStreams || [];
 
       // Update dashboard stats
       setStats({
-        totalUsers: stats.users.total_users,
+        totalUsers: stats.users?.total_users || 0,
         activeStreams: activeStreams.length,
-        totalStreams: stats.streams.total_sources,
+        totalStreams: stats.streams?.total_sources || 0,
         systemUptime: calculateUptime()
       });
 
@@ -56,8 +62,15 @@ const Dashboard = () => {
       }));
 
       setRecentActivity(activity);
+      console.log('✅ Dashboard data loaded successfully');
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('❌ Failed to load dashboard data:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
     } finally {
       setLoading(false);
     }

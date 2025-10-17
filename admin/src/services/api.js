@@ -13,17 +13,44 @@ const api = axios.create({
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('admin_token');
+  console.log('🚀 Making API request:', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    baseURL: config.baseURL,
+    fullURL: `${config.baseURL}${config.url}`,
+    hasToken: !!token
+  });
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('🔑 Added auth token to request');
+  } else {
+    console.log('⚠️ No auth token found in localStorage');
   }
   return config;
 });
 
 // Handle auth errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API response received:', {
+      status: response.status,
+      url: response.config.url,
+      hasData: !!response.data
+    });
+    return response;
+  },
   (error) => {
+    console.error('❌ API error received:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      message: error.message,
+      data: error.response?.data
+    });
+
     if (error.response?.status === 401) {
+      console.log('🚪 Redirecting to login due to 401 error');
       localStorage.removeItem('admin_token');
       window.location.href = '/login';
     }

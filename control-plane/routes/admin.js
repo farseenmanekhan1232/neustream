@@ -26,6 +26,7 @@ router.get('/users', async (req, res) => {
         u.display_name,
         u.avatar_url,
         u.oauth_provider,
+        u.stream_key,
         u.created_at,
         COALESCE(ss.source_count, 0) as total_sources,
         COALESCE(active.active_count, 0) as active_streams,
@@ -60,7 +61,7 @@ router.get('/users/:id', async (req, res) => {
   try {
     // Get user basic info
     const users = await db.query(`
-      SELECT id, email, display_name, avatar_url, oauth_provider, created_at
+      SELECT id, email, display_name, avatar_url, oauth_provider, stream_key, created_at
       FROM users WHERE id = $1
     `, [id]);
 

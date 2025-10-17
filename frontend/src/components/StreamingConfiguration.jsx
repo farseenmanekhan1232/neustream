@@ -538,7 +538,6 @@ function StreamingConfiguration() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Streaming Configuration</h1>
           <p className="text-muted-foreground">
             Manage your stream sources and configure destinations for
             multi-platform broadcasting

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  Settings as SettingsIcon,
+  Settings,
   User,
   Shield,
   Database,

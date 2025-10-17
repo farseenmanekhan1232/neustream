@@ -28,19 +28,30 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = async (token) => {
     try {
+      console.log('🔍 Validating token...', { hasToken: !!token });
       const response = await axios.post(`${API_BASE_URL}/api/auth/validate-token`, {
         token
       });
 
+      console.log('✅ Token validation response:', response.data);
+
       // Check if user is admin
       if (response.data.user.email === 'admin@neustream.app') {
+        console.log('👑 Admin user confirmed, setting user state');
         setUser(response.data.user);
         localStorage.setItem('admin_token', token);
       } else {
+        console.log('🚫 Non-admin user attempted access:', response.data.user.email);
         localStorage.removeItem('admin_token');
       }
     } catch (error) {
-      console.error('Token validation failed:', error);
+      console.error('❌ Token validation failed:', error);
+      console.error('❌ Validation error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
       localStorage.removeItem('admin_token');
     } finally {
       setLoading(false);
