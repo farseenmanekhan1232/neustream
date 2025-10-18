@@ -2,8 +2,13 @@
 
 set -e
 
-STREAM_PATH=$1
-STREAM_KEY=$(basename $STREAM_PATH)
+# MediaMTX passes the path as MTX_PATH environment variable, not as argument
+STREAM_PATH=${MTX_PATH:-$1}
+if [ -z "$STREAM_PATH" ]; then
+  echo "❌ No stream path provided (MTX_PATH is empty and no argument given)"
+  exit 1
+fi
+STREAM_KEY=$(basename "$STREAM_PATH")
 
 echo "=== Stream Ended ==="
 echo "Stream Key: $STREAM_KEY"
