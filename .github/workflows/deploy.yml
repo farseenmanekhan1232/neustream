@@ -289,15 +289,6 @@ jobs:
             sudo mv mediamtx /usr/local/bin/
             sudo cp /opt/neustream/mediamtx.yml /etc/mediamtx.yml
 
-            # Install dependencies
-            echo "📦 Installing Node.js dependencies..."
-            if npm install --no-audit --no-fund; then
-              echo "✅ Dependencies installed successfully"
-            else
-              echo "❌ Failed to install dependencies"
-              exit 1
-            fi
-
             # Create enhanced environment file for media server
             cat > .env << EOF
             NODE_ENV=production
