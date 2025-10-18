@@ -24,6 +24,14 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -190,145 +198,132 @@ const SourcesPage = () => {
     }
   };
 
-  const SourceCard = ({ source }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <div
-                className={`p-3 rounded-full ${
-                  source.is_active ? "bg-success/10" : "bg-muted"
-                }`}
-              >
-                {source.is_active ? (
-                  <Wifi className="h-6 w-6 text-success" />
-                ) : (
-                  <WifiOff className="h-6 w-6 text-muted-foreground" />
-                )}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-                {source.name}
-                {!source.is_active && (
-                  <Badge variant="secondary">Inactive</Badge>
-                )}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {source.display_name || source.email}
-              </p>
-              {source.description && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {source.description}
-                </p>
+  const SourceTableRow = ({ source }) => (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div
+              className={`p-2 rounded-full ${
+                source.is_active ? "bg-success/10" : "bg-muted"
+              }`}
+            >
+              {source.is_active ? (
+                <Wifi className="h-4 w-4 text-success" />
+              ) : (
+                <WifiOff className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={
-                source.oauth_provider === "google"
-                  ? "default"
-                  : source.oauth_provider === "twitch"
-                  ? "secondary"
-                  : "outline"
-              }
-            >
-              {source.oauth_provider || "email"}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-foreground">
-              {source.destinations_count || 0}
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{source.name}</span>
+              {!source.is_active && (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {source.display_name || source.email}
             </p>
-            <p className="text-xs text-muted-foreground">Destinations</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-success">
-              {source.is_active ? "Live" : "Offline"}
-            </p>
-            <p className="text-xs text-muted-foreground">Status</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-foreground">
-              {new Date(source.created_at).toLocaleDateString()}
-            </p>
-            <p className="text-xs text-muted-foreground">Created</p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            Stream Key:
-            <span
-              className="font-mono bg-muted px-2 py-1 rounded ml-2 cursor-pointer hover:bg-muted/80"
-              onClick={() => handleCopyToClipboard(source.stream_key, "stream")}
-            >
-              {source.stream_key?.substring(0, 12)}...
-            </span>
-            {copiedKey === "stream" && (
-              <CheckCircle className="inline h-3 w-3 text-success ml-1" />
+            {source.description && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {source.description}
+              </p>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewSource(source)}
-            >
-              <Eye className="h-3 w-3 mr-1" />
-              View
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleEditSource(source)}
-            >
-              <Edit className="h-3 w-3 mr-1" />
-              Edit
-            </Button>
-          </div>
         </div>
-      </CardContent>
-
-      {/* Quick Actions */}
-      <CardFooter className="border-t bg-muted/50 px-6 py-3">
-        <div className="flex items-center justify-between w-full">
-          <div className="text-xs text-muted-foreground">
-            Last used:{" "}
-            {source.last_used_at
-              ? new Date(source.last_used_at).toLocaleDateString()
-              : "Never"}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleRegenerateKey(source.id)}
-              disabled={actionLoading}
-              className="text-warning border-warning/30 hover:bg-warning/10"
-            >
-              <Key className="h-3 w-3 mr-1" />
-              Regenerate Key
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDeleteSource(source.id)}
-              disabled={actionLoading}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              Delete
-            </Button>
-          </div>
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant={
+            source.oauth_provider === "google"
+              ? "default"
+              : source.oauth_provider === "twitch"
+              ? "secondary"
+              : "outline"
+          }
+        >
+          {source.oauth_provider || "email"}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <div className="text-center">
+          <p className="font-medium">{source.destinations_count || 0}</p>
         </div>
-      </CardFooter>
-    </Card>
+      </TableCell>
+      <TableCell>
+        <div className="text-center">
+          <p className={`font-medium ${source.is_active ? "text-success" : "text-muted-foreground"}`}>
+            {source.is_active ? "Live" : "Offline"}
+          </p>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-center">
+          <p className="font-medium">
+            {new Date(source.created_at).toLocaleDateString()}
+          </p>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-xs">
+          <span
+            className="font-mono bg-muted px-2 py-1 rounded cursor-pointer hover:bg-muted/80"
+            onClick={() => handleCopyToClipboard(source.stream_key, "stream")}
+          >
+            {source.stream_key?.substring(0, 12)}...
+          </span>
+          {copiedKey === "stream" && (
+            <CheckCircle className="inline h-3 w-3 text-success ml-1" />
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-xs text-center">
+          {source.last_used_at
+            ? new Date(source.last_used_at).toLocaleDateString()
+            : "Never"}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleViewSource(source)}
+            className="h-8 w-8 p-0"
+          >
+            <Eye className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEditSource(source)}
+            className="h-8 w-8 p-0"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleRegenerateKey(source.id)}
+            disabled={actionLoading}
+            className="h-8 w-8 p-0 text-warning border-warning/30 hover:bg-warning/10"
+          >
+            <Key className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDeleteSource(source.id)}
+            disabled={actionLoading}
+            className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 
   if (loading) {
@@ -337,25 +332,64 @@ const SourcesPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Stream Sources</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 bg-muted rounded-full"></div>
-                  <div>
-                    <div className="h-4 bg-muted rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-48"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded w-full"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-center">Destinations</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Created</TableHead>
+                  <TableHead className="text-center">Stream Key</TableHead>
+                  <TableHead className="text-center">Last Used</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-48"></div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-6 bg-muted rounded w-20"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-8 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-12 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-20 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-3 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 justify-center">
+                        {[1, 2, 3, 4].map((j) => (
+                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                        ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -507,13 +541,31 @@ const SourcesPage = () => {
         </CardContent>
       </Card>
 
-      {/* Sources Grid */}
+      {/* Sources Table */}
       {filteredSources.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSources.map((source) => (
-            <SourceCard key={source.id} source={source} />
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-center">Destinations</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Created</TableHead>
+                  <TableHead className="text-center">Stream Key</TableHead>
+                  <TableHead className="text-center">Last Used</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSources.map((source) => (
+                  <SourceTableRow key={source.id} source={source} />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-12 text-center">

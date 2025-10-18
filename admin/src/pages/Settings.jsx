@@ -14,6 +14,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +38,63 @@ const SettingsPage = () => {
     systemAlerts: false,
     weeklyReports: true,
   });
+
+  const NotificationSettingsRow = ({ key, label, description, enabled }) => (
+    <TableRow>
+      <TableCell>
+        <div>
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleNotificationChange(key)}
+          className={cn(
+            "relative inline-flex h-6 w-11 items-center rounded-full p-0",
+            enabled ? "bg-primary" : "bg-muted"
+          )}
+        >
+          <span
+            className={cn(
+              "inline-block h-5 w-5 transform rounded-full bg-background transition-transform",
+              enabled ? "translate-x-5" : "translate-x-0"
+            )}
+          />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+
+  const SystemInfoRow = ({ label, value }) => (
+    <TableRow>
+      <TableCell className="font-medium text-muted-foreground">
+        {label}
+      </TableCell>
+      <TableCell>
+        {value}
+      </TableCell>
+    </TableRow>
+  );
+
+  const SystemHealthRow = ({ service, status, badgeVariant, badgeClass }) => (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center space-x-2">
+          <div className={`h-2 w-2 rounded-full ${status}`}></div>
+          <span className="text-sm font-medium">{service}</span>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <Badge variant={badgeVariant} className={badgeClass}>
+          {service === "API Server" ? "Operational" :
+           service === "Database" ? "Connected" : "Limited Data"}
+        </Badge>
+      </TableCell>
+    </TableRow>
+  );
 
   const handleNotificationChange = (key) => {
     setNotifications((prev) => ({
@@ -210,35 +275,33 @@ const SettingsPage = () => {
         <CardHeader>
           <CardTitle>Database Information</CardTitle>
         </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                Database Type
-              </dt>
-              <dd className="mt-1 text-sm">PostgreSQL</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                Environment
-              </dt>
-              <dd className="mt-1 text-sm">
-                {import.meta.env.MODE || "development"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                API Version
-              </dt>
-              <dd className="mt-1 text-sm">v1.0.0</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                Last Deployment
-              </dt>
-              <dd className="mt-1 text-sm">Unknown</dd>
-            </div>
-          </dl>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Setting</TableHead>
+                <TableHead>Value</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <SystemInfoRow
+                label="Database Type"
+                value="PostgreSQL"
+              />
+              <SystemInfoRow
+                label="Environment"
+                value={import.meta.env.MODE || "development"}
+              />
+              <SystemInfoRow
+                label="API Version"
+                value="v1.0.0"
+              />
+              <SystemInfoRow
+                label="Last Deployment"
+                value="Unknown"
+              />
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -246,36 +309,35 @@ const SettingsPage = () => {
         <CardHeader>
           <CardTitle>System Health</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-success rounded-full"></div>
-                <span className="text-sm font-medium">API Server</span>
-              </div>
-              <Badge variant="default" className="bg-success/10 text-success">
-                Operational
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-success rounded-full"></div>
-                <span className="text-sm font-medium">Database</span>
-              </div>
-              <Badge variant="default" className="bg-success/10 text-success">
-                Connected
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-warning rounded-full"></div>
-                <span className="text-sm font-medium">Analytics</span>
-              </div>
-              <Badge variant="secondary" className="bg-warning/10 text-warning">
-                Limited Data
-              </Badge>
-            </div>
-          </div>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Service</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <SystemHealthRow
+                service="API Server"
+                status="bg-success"
+                badgeVariant="default"
+                badgeClass="bg-success/10 text-success"
+              />
+              <SystemHealthRow
+                service="Database"
+                status="bg-success"
+                badgeVariant="default"
+                badgeClass="bg-success/10 text-success"
+              />
+              <SystemHealthRow
+                service="Analytics"
+                status="bg-warning"
+                badgeVariant="secondary"
+                badgeClass="bg-warning/10 text-warning"
+              />
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
@@ -287,53 +349,41 @@ const SettingsPage = () => {
         <CardHeader>
           <CardTitle>Notification Preferences</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {[
-            {
-              key: "emailAlerts",
-              label: "Email Alerts",
-              description:
-                "Receive email notifications for important system events",
-            },
-            {
-              key: "streamNotifications",
-              label: "Stream Notifications",
-              description: "Get notified when users start/stop streaming",
-            },
-            {
-              key: "systemAlerts",
-              label: "System Alerts",
-              description: "Critical system errors and downtime notifications",
-            },
-            {
-              key: "weeklyReports",
-              label: "Weekly Reports",
-              description: "Receive weekly usage and performance summaries",
-            },
-          ].map(({ key, label, description }) => (
-            <div key={key} className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">{label}</p>
-                <p className="text-sm text-muted-foreground">{description}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleNotificationChange(key)}
-                className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full p-0",
-                  notifications[key] ? "bg-primary" : "bg-muted"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-5 w-5 transform rounded-full bg-background transition-transform",
-                    notifications[key] ? "translate-x-5" : "translate-x-0"
-                  )}
-                />
-              </Button>
-            </div>
-          ))}
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Notification</TableHead>
+                <TableHead className="text-right">Enabled</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <NotificationSettingsRow
+                key="emailAlerts"
+                label="Email Alerts"
+                description="Receive email notifications for important system events"
+                enabled={notifications.emailAlerts}
+              />
+              <NotificationSettingsRow
+                key="streamNotifications"
+                label="Stream Notifications"
+                description="Get notified when users start/stop streaming"
+                enabled={notifications.streamNotifications}
+              />
+              <NotificationSettingsRow
+                key="systemAlerts"
+                label="System Alerts"
+                description="Critical system errors and downtime notifications"
+                enabled={notifications.systemAlerts}
+              />
+              <NotificationSettingsRow
+                key="weeklyReports"
+                label="Weekly Reports"
+                description="Receive weekly usage and performance summaries"
+                enabled={notifications.weeklyReports}
+              />
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

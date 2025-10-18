@@ -23,6 +23,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -209,153 +217,129 @@ const DestinationsPage = () => {
     }
   };
 
-  const DestinationCard = ({ destination }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <div className="p-3 bg-muted rounded-full">
-                <span className="text-2xl">
-                  {getPlatformIcon(destination.platform)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {destination.platform.charAt(0).toUpperCase() +
-                  destination.platform.slice(1)}
-                {!destination.is_active && (
-                  <Badge variant="secondary">Inactive</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>
-                Source: {destination.source_name || "Unknown"}
-              </CardDescription>
-              <p className="text-xs text-muted-foreground">
-                Owner: {destination.user_display_name || destination.user_email}
-              </p>
+  const DestinationTableRow = ({ destination }) => (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="p-2 bg-muted rounded-full">
+              <span className="text-sm">
+                {getPlatformIcon(destination.platform)}
+              </span>
             </div>
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium capitalize">
+                {destination.platform}
+              </span>
+              {!destination.is_active && (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Source: {destination.source_name || "Unknown"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Owner: {destination.user_display_name || destination.user_email}
+            </p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-muted px-2 py-1 rounded font-mono truncate max-w-[200px]">
+              {destination.rtmp_url}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                handleCopyToClipboard(destination.rtmp_url, "rtmp")
+              }
+              className="h-6 w-6 p-0"
+            >
+              {copiedText === "rtmp" ? (
+                <CheckCircle className="h-3 w-3 text-success" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-muted px-2 py-1 rounded font-mono truncate max-w-[200px]">
+              {destination.stream_key}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                handleCopyToClipboard(destination.stream_key, "key")
+              }
+              className="h-6 w-6 p-0"
+            >
+              {copiedText === "key" ? (
+                <CheckCircle className="h-3 w-3 text-success" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-center">
           <Badge
-            variant="outline"
-            className={cn(getPlatformColor(destination.platform))}
+            variant={destination.is_active ? "default" : "secondary"}
+            className={cn(destination.is_active ? "bg-success/10 text-success" : "")}
           >
-            {destination.platform}
+            {destination.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4 pb-4">
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs font-medium uppercase tracking-wider">
-              RTMP URL
-            </Label>
-            <div className="mt-1 flex items-center">
-              <code className="flex-1 text-xs bg-muted px-2 py-1 rounded font-mono truncate">
-                {destination.rtmp_url}
-              </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  handleCopyToClipboard(destination.rtmp_url, "rtmp")
-                }
-                className="ml-2 h-8 w-8 p-0"
-              >
-                {copiedText === "rtmp" ? (
-                  <CheckCircle className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs font-medium uppercase tracking-wider">
-              Stream Key
-            </Label>
-            <div className="mt-1 flex items-center">
-              <code className="flex-1 text-xs bg-muted px-2 py-1 rounded font-mono truncate">
-                {destination.stream_key}
-              </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  handleCopyToClipboard(destination.stream_key, "key")
-                }
-                className="ml-2 h-8 w-8 p-0"
-              >
-                {copiedText === "key" ? (
-                  <CheckCircle className="h-4 w-4 text-success" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-center">
+          <p className="text-sm">
+            {new Date(destination.created_at).toLocaleDateString()}
+          </p>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold">
-              {destination.is_active ? "Active" : "Inactive"}
-            </p>
-            <p className="text-xs text-muted-foreground">Status</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">
-              {new Date(destination.created_at).toLocaleDateString()}
-            </p>
-            <p className="text-xs text-muted-foreground">Created</p>
-          </div>
+      </TableCell>
+      <TableCell>
+        <div className="text-xs text-center font-mono">
+          {destination.id}
         </div>
-      </CardContent>
-
-      <CardFooter className="flex items-center justify-between pt-0">
-        <div className="text-xs text-muted-foreground">
-          ID: <span className="font-mono">{destination.id}</span>
-        </div>
-        <div className="flex gap-2">
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-1 justify-center">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleViewDestination(destination)}
+            className="h-8 w-8 p-0"
           >
-            <Eye className="h-3 w-3 mr-1" />
-            View
+            <Eye className="h-3 w-3" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleEditDestination(destination)}
+            className="h-8 w-8 p-0"
           >
-            <Edit className="h-3 w-3 mr-1" />
-            Edit
+            <Edit className="h-3 w-3" />
           </Button>
-        </div>
-      </CardFooter>
-
-      {/* Quick Actions */}
-      <div className="border-t bg-muted/50 px-6 py-3 rounded-b-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>Platform: {destination.platform}</span>
-          </div>
           <Button
-            variant="destructive"
+            variant="outline"
             size="sm"
             onClick={() => handleDeleteDestination(destination.id)}
             disabled={actionLoading}
+            className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Delete
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
-      </div>
-    </Card>
+      </TableCell>
+    </TableRow>
   );
 
   if (loading) {
@@ -364,25 +348,59 @@ const DestinationsPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Destinations</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 bg-muted rounded-full"></div>
-                  <div>
-                    <div className="h-4 bg-muted rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-48"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded w-full"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Destination</TableHead>
+                  <TableHead>RTMP Configuration</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Created</TableHead>
+                  <TableHead className="text-center">ID</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-muted rounded w-24 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-32"></div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-muted rounded w-full"></div>
+                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-6 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-20 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-3 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 justify-center">
+                        {[1, 2, 3].map((j) => (
+                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                        ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -555,13 +573,29 @@ const DestinationsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Destinations Grid */}
+      {/* Destinations Table */}
       {filteredDestinations.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDestinations.map((destination) => (
-            <DestinationCard key={destination.id} destination={destination} />
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Destination</TableHead>
+                  <TableHead>RTMP Configuration</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Created</TableHead>
+                  <TableHead className="text-center">ID</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDestinations.map((destination) => (
+                  <DestinationTableRow key={destination.id} destination={destination} />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-12 text-center">

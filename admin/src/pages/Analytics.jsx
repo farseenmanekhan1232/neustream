@@ -19,6 +19,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -35,6 +43,67 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("30d");
   const [activeTab, setActiveTab] = useState("overview");
+
+  const UserRegistrationTrendRow = ({ trend }) => (
+    <TableRow>
+      <TableCell>
+        <span className="text-sm text-muted-foreground">
+          {formatDate(trend.date)}
+        </span>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="outline">
+            Total: {trend.registrations}
+          </Badge>
+          <Badge variant="outline">
+            Google: {trend.google_registrations}
+          </Badge>
+          <Badge variant="outline">
+            Twitch: {trend.twitch_registrations}
+          </Badge>
+          <Badge variant="outline">
+            Email: {trend.email_registrations}
+          </Badge>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
+  const PlatformAnalyticsRow = ({ platform }) => (
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center">
+          <span className="text-xl mr-3">
+            {getPlatformIcon(platform.platform)}
+          </span>
+          <span className="font-medium capitalize">
+            {platform.platform}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant="secondary">
+          {platform.total_destinations} destinations
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <span className="font-medium text-success">
+          {platform.active_destinations}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="font-medium">
+          {platform.unique_sources}
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="font-medium">
+          {platform.unique_users}
+        </span>
+      </TableCell>
+    </TableRow>
+  );
 
   useEffect(() => {
     loadAnalytics();
@@ -78,10 +147,29 @@ const AnalyticsPage = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // const getGrowthRate = (current, previous) => {
-  //   if (!previous || previous === 0) return 0;
-  //   return ((current - previous) / previous * 100).toFixed(1);
-  // };
+  const getPlatformIcon = (platform) => {
+  switch (platform.toLowerCase()) {
+    case "youtube":
+      return "🎥";
+    case "twitch":
+      return "📺";
+    case "facebook":
+      return "📘";
+    case "instagram":
+      return "📷";
+    case "linkedin":
+      return "💼";
+    case "twitter":
+      return "🐦";
+    default:
+      return "📡";
+  }
+};
+
+// const getGrowthRate = (current, previous) => {
+//   if (!previous || previous === 0) return 0;
+//   return ((current - previous) / previous * 100).toFixed(1);
+// };
 
   if (loading) {
     return (
@@ -358,37 +446,22 @@ const AnalyticsPage = () => {
                     <CardHeader>
                       <CardTitle>User Registration Trends</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {userAnalytics.registrationTrends
-                          .slice(-7)
-                          .map((trend, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                            >
-                              <div>
-                                <span className="text-sm text-muted-foreground">
-                                  {formatDate(trend.date)}
-                                </span>
-                                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                  <Badge variant="outline">
-                                    Total: {trend.registrations}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Google: {trend.google_registrations}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Twitch: {trend.twitch_registrations}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Email: {trend.email_registrations}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Registration Breakdown</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {userAnalytics.registrationTrends
+                            .slice(-7)
+                            .map((trend, index) => (
+                              <UserRegistrationTrendRow key={index} trend={trend} />
+                            ))}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                 )}
@@ -507,57 +580,25 @@ const AnalyticsPage = () => {
                     <CardHeader>
                       <CardTitle>Platform Usage Analytics</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {streamAnalytics.platformAnalytics.map(
-                          (platform, index) => (
-                            <div
-                              key={index}
-                              className="border-b border-border pb-4 last:border-0"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center">
-                                  <span className="text-xl mr-3">
-                                    {getPlatformIcon(platform.platform)}
-                                  </span>
-                                  <span className="font-medium capitalize">
-                                    {platform.platform}
-                                  </span>
-                                </div>
-                                <Badge variant="secondary">
-                                  {platform.total_destinations} destinations
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-3 gap-4 text-sm">
-                                <div>
-                                  <span className="text-muted-foreground">
-                                    Active:
-                                  </span>
-                                  <span className="ml-2 font-medium text-success">
-                                    {platform.active_destinations}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">
-                                    Sources:
-                                  </span>
-                                  <span className="ml-2 font-medium">
-                                    {platform.unique_sources}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-muted-foreground">
-                                    Users:
-                                  </span>
-                                  <span className="ml-2 font-medium">
-                                    {platform.unique_users}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Platform</TableHead>
+                            <TableHead>Total Destinations</TableHead>
+                            <TableHead>Active</TableHead>
+                            <TableHead>Sources</TableHead>
+                            <TableHead>Users</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {streamAnalytics.platformAnalytics.map(
+                            (platform, index) => (
+                              <PlatformAnalyticsRow key={index} platform={platform} />
+                            )
+                          )}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                   </Card>
                 )}
@@ -567,25 +608,6 @@ const AnalyticsPage = () => {
       </Tabs>
     </div>
   );
-};
-
-const getPlatformIcon = (platform) => {
-  switch (platform.toLowerCase()) {
-    case "youtube":
-      return "🎥";
-    case "twitch":
-      return "📺";
-    case "facebook":
-      return "📘";
-    case "instagram":
-      return "📷";
-    case "linkedin":
-      return "💼";
-    case "twitter":
-      return "🐦";
-    default:
-      return "📡";
-  }
 };
 
 export default AnalyticsPage;

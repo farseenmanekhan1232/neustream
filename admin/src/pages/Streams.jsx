@@ -6,6 +6,14 @@ import { Activity, Wifi, WifiOff, RefreshCw, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -73,71 +81,63 @@ const Streams = () => {
     }
   };
 
-  const StreamCard = ({ stream }) => (
-    <Card
-      className="hover:shadow-md transition-shadow cursor-pointer"
+  const StreamTableRow = ({ stream }) => (
+    <TableRow
+      className="cursor-pointer hover:bg-muted/50"
       onClick={() => {
         setSelectedStream(stream);
         loadStreamDetails(stream.stream_key);
       }}
     >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="p-2 bg-success/10 rounded-full">
-                <Wifi className="h-5 w-5 text-success" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-foreground">
-                {stream.email || "Unknown User"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Stream Key: {stream.stream_key.substring(0, 8)}...
-              </p>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="p-2 bg-success/10 rounded-full">
+              <Wifi className="h-4 w-4 text-success" />
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="default" className="bg-success/10 text-success">
-              Live
-            </Badge>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Started</p>
-            <p className="text-sm text-foreground">
-              {new Date(stream.started_at).toLocaleString()}
+            <p className="font-medium">
+              {stream.email || "Unknown User"}
             </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Duration
-            </p>
-            <p className="text-sm text-foreground">
-              {formatDuration(stream.started_at)}
+            <p className="text-sm text-muted-foreground">
+              {stream.stream_key.substring(0, 8)}...
             </p>
           </div>
         </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>Updated {formatDuration(stream.started_at)} ago</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-primary hover:text-primary/80"
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            View Details
-          </Button>
+      </TableCell>
+      <TableCell>
+        <Badge variant="default" className="bg-success/10 text-success">
+          Live
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <div className="text-sm">
+          {new Date(stream.started_at).toLocaleString()}
         </div>
-      </CardContent>
-    </Card>
+      </TableCell>
+      <TableCell>
+        <div className="text-sm">
+          {formatDuration(stream.started_at)}
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>{formatDuration(stream.started_at)} ago</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary hover:text-primary/80"
+        >
+          <Eye className="h-4 w-4 mr-1" />
+          View Details
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 
   if (loading) {
@@ -146,17 +146,52 @@ const Streams = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Active Streams</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
-                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-2/3"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Stream</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-24"></div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-6 bg-muted rounded w-16"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-32"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-24"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-8 w-20 bg-muted rounded"></div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -202,13 +237,29 @@ const Streams = () => {
         </CardContent>
       </Card>
 
-      {/* Streams Grid */}
+      {/* Streams Table */}
       {streams.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {streams.map((stream) => (
-            <StreamCard key={stream.id} stream={stream} />
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Stream</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {streams.map((stream) => (
+                  <StreamTableRow key={stream.id} stream={stream} />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-12 text-center">

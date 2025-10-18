@@ -18,12 +18,19 @@ import {
   RefreshCw,
   Key,
   X,
-  MoreVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -210,165 +217,140 @@ const UsersPage = () => {
 
   const isSuspended = (user) => user.display_name?.startsWith("[SUSPENDED]");
 
-  const UserCard = ({ user }) => {
+  const UserTableRow = ({ user }) => {
     const suspended = isSuspended(user);
     return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                {user.avatar_url ? (
-                  <img
-                    className="h-12 w-12 rounded-full"
-                    src={user.avatar_url || "/placeholder.svg"}
-                    alt={user.display_name || user.email}
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-lg font-medium text-muted-foreground">
-                      {user.display_name?.[0] || user.email[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-                  {user.display_name?.replace("[SUSPENDED] ", "") ||
-                    "No Display Name"}
-                  {suspended && <Badge variant="destructive">Suspended</Badge>}
-                </h3>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={
-                  user.oauth_provider === "google"
-                    ? "default"
-                    : user.oauth_provider === "twitch"
-                    ? "secondary"
-                    : "outline"
-                }
-              >
-                {user.oauth_provider || "email"}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowEditModal(user.id)}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {user.total_sources || 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Sources</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-success">
-                {user.active_streams || 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Active</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {new Date(user.created_at).toLocaleDateString()}
-              </p>
-              <p className="text-xs text-muted-foreground">Joined</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">
-              Stream Key:{" "}
-              <span className="font-mono bg-muted px-2 py-1 rounded">
-                {user.stream_key?.substring(0, 12)}...
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleViewUser(user)}
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                View
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEditUser(user)}
-              >
-                <Edit className="h-3 w-3 mr-1" />
-                Edit
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-
-        {/* Quick Actions */}
-        <CardFooter className="border-t bg-muted/50 px-6 py-3">
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs text-muted-foreground">
-              Last login:{" "}
-              {user.last_login
-                ? new Date(user.last_login).toLocaleDateString()
-                : "Never"}
-            </div>
-            <div className="flex gap-2">
-              {!suspended ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSuspendUser(user.id)}
-                  disabled={actionLoading}
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                >
-                  <Ban className="h-3 w-3 mr-1" />
-                  Suspend
-                </Button>
+      <TableRow>
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              {user.avatar_url ? (
+                <img
+                  className="h-8 w-8 rounded-full"
+                  src={user.avatar_url || "/placeholder.svg"}
+                  alt={user.display_name || user.email}
+                />
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUnsuspendUser(user.id)}
-                  disabled={actionLoading}
-                  className="text-success border-success/30 hover:bg-success/10"
-                >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Unsuspend
-                </Button>
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {user.display_name?.[0] || user.email[0]?.toUpperCase()}
+                  </span>
+                </div>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleResetStreamKey(user.id)}
-                disabled={actionLoading}
-                className="text-warning border-warning/30 hover:bg-warning/10"
-              >
-                <Key className="h-3 w-3 mr-1" />
-                Reset Key
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteUser(user.id)}
-                disabled={actionLoading}
-                className="text-destructive border-destructive/30 hover:bg-destructive/10"
-              >
-                <Trash2 className="h-3 w-3 mr-1" />
-                Delete
-              </Button>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  {user.display_name?.replace("[SUSPENDED] ", "") || "No Display Name"}
+                </span>
+                {suspended && <Badge variant="destructive">Suspended</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
-        </CardFooter>
-      </Card>
+        </TableCell>
+        <TableCell>
+          <Badge
+            variant={
+              user.oauth_provider === "google"
+                ? "default"
+                : user.oauth_provider === "twitch"
+                ? "secondary"
+                : "outline"
+            }
+          >
+            {user.oauth_provider || "email"}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <div className="text-center">
+            <p className="font-medium">{user.total_sources || 0}</p>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="text-center">
+            <p className="font-medium text-success">{user.active_streams || 0}</p>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="text-center">
+            <p className="font-medium">
+              {new Date(user.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="text-xs font-mono bg-muted px-2 py-1 rounded text-center">
+            {user.stream_key?.substring(0, 12)}...
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="text-xs text-center">
+            {user.last_login
+              ? new Date(user.last_login).toLocaleDateString()
+              : "Never"}
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleViewUser(user)}
+              className="h-8 w-8 p-0"
+            >
+              <Eye className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEditUser(user)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            {!suspended ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSuspendUser(user.id)}
+                disabled={actionLoading}
+                className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                <Ban className="h-3 w-3" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleUnsuspendUser(user.id)}
+                disabled={actionLoading}
+                className="h-8 w-8 p-0 text-success border-success/30 hover:bg-success/10"
+              >
+                <CheckCircle className="h-3 w-3" />
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleResetStreamKey(user.id)}
+              disabled={actionLoading}
+              className="h-8 w-8 p-0 text-warning border-warning/30 hover:bg-warning/10"
+            >
+              <Key className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeleteUser(user.id)}
+              disabled={actionLoading}
+              className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
     );
   };
 
@@ -378,25 +360,64 @@ const UsersPage = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Users</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 bg-muted rounded-full"></div>
-                  <div>
-                    <div className="h-4 bg-muted rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-48"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded w-full"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-center">Sources</TableHead>
+                  <TableHead className="text-center">Active</TableHead>
+                  <TableHead className="text-center">Joined</TableHead>
+                  <TableHead className="text-center">Stream Key</TableHead>
+                  <TableHead className="text-center">Last Login</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-muted rounded-full"></div>
+                        <div>
+                          <div className="h-4 bg-muted rounded w-32 mb-2"></div>
+                          <div className="h-3 bg-muted rounded w-48"></div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-6 bg-muted rounded w-20"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-8 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-8 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-4 bg-muted rounded w-20 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="h-3 bg-muted rounded w-16 mx-auto"></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 justify-center">
+                        {[1, 2, 3, 4, 5].map((j) => (
+                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                        ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -569,13 +590,31 @@ const UsersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Users Grid */}
+      {/* Users Table */}
       {filteredUsers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user) => (
-            <UserCard key={user.id} user={user} />
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-center">Sources</TableHead>
+                  <TableHead className="text-center">Active</TableHead>
+                  <TableHead className="text-center">Joined</TableHead>
+                  <TableHead className="text-center">Stream Key</TableHead>
+                  <TableHead className="text-center">Last Login</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <UserTableRow key={user.id} user={user} />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-12 text-center">
