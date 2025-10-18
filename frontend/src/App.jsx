@@ -10,7 +10,6 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import StreamingConfiguration from "./components/StreamingConfiguration";
@@ -102,16 +101,6 @@ function AppContent() {
           }
         />
       </Route>
-
-      {/* Legacy dashboard route for backward compatibility */}
-      <Route
-        path="/dashboard/old"
-        element={
-          <ProtectedRoute requireAuth={true}>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -198,25 +198,6 @@ const DestinationsPage = () => {
     }
   };
 
-  const getPlatformColor = (platform) => {
-    switch (platform.toLowerCase()) {
-      case "youtube":
-        return "bg-destructive/10 text-destructive";
-      case "twitch":
-        return "bg-primary/10 text-primary";
-      case "facebook":
-        return "bg-primary/10 text-primary";
-      case "instagram":
-        return "bg-primary/10 text-primary";
-      case "linkedin":
-        return "bg-primary/10 text-primary";
-      case "twitter":
-        return "bg-primary/10 text-primary";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
   const DestinationTableRow = ({ destination }) => (
     <TableRow>
       <TableCell>
@@ -292,7 +273,9 @@ const DestinationsPage = () => {
         <div className="text-center">
           <Badge
             variant={destination.is_active ? "default" : "secondary"}
-            className={cn(destination.is_active ? "bg-success/10 text-success" : "")}
+            className={cn(
+              destination.is_active ? "bg-success/10 text-success" : ""
+            )}
           >
             {destination.is_active ? "Active" : "Inactive"}
           </Badge>
@@ -306,9 +289,7 @@ const DestinationsPage = () => {
         </div>
       </TableCell>
       <TableCell>
-        <div className="text-xs text-center font-mono">
-          {destination.id}
-        </div>
+        <div className="text-xs text-center font-mono">{destination.id}</div>
       </TableCell>
       <TableCell>
         <div className="flex gap-1 justify-center">
@@ -391,7 +372,10 @@ const DestinationsPage = () => {
                     <TableCell>
                       <div className="flex gap-1 justify-center">
                         {[1, 2, 3].map((j) => (
-                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                          <div
+                            key={j}
+                            className="h-8 w-8 bg-muted rounded"
+                          ></div>
                         ))}
                       </div>
                     </TableCell>
@@ -590,7 +574,10 @@ const DestinationsPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredDestinations.map((destination) => (
-                  <DestinationTableRow key={destination.id} destination={destination} />
+                  <DestinationTableRow
+                    key={destination.id}
+                    destination={destination}
+                  />
                 ))}
               </TableBody>
             </Table>

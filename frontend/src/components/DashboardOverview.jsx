@@ -29,6 +29,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import StreamPreview from "./StreamPreview";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
@@ -324,6 +325,80 @@ function DashboardOverview() {
         </Card>
       </div>
 
+      {/* Stream Preview - Show when sources are active */}
+      {activeSources.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center justify-between">
+              <span>Live Stream Preview</span>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>
+                  {activeSources.length} active source{activeSources.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Preview your current live stream in real-time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Show preview for the first active source */}
+              {(() => {
+                const activeSource = activeSources[0];
+                return (
+                  <div key={activeSource.id}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <MonitorSpeaker className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{activeSource.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {activeSource.description || "Primary stream source"}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="default" className="bg-green-500">
+                        LIVE
+                      </Badge>
+                    </div>
+
+                    <StreamPreview
+                      streamKey={activeSource.stream_key}
+                      isActive={activeSource.is_active}
+                    />
+
+                    {/* Show additional active sources */}
+                    {activeSources.length > 1 && (
+                      <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Additional active sources ({activeSources.length - 1}):
+                        </p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {activeSources.slice(1).map((source) => (
+                            <div key={source.id} className="flex items-center space-x-2 p-2 bg-background rounded border">
+                              <MonitorSpeaker className="h-4 w-4 text-green-500" />
+                              <span className="text-sm font-medium">{source.name}</span>
+                              <Badge variant="outline" className="text-xs">Active</Badge>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Preview shows first active source. Switch to streaming page to view other sources.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stream Sources Overview */}
       {sources.length > 0 && (
         <Card>
@@ -449,6 +524,55 @@ function DashboardOverview() {
                   </div>
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Legacy Stream Preview (for backward compatibility) */}
+      {streamInfo?.isActive && sources.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center justify-between">
+              <span>Live Stream Preview</span>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Legacy stream active</span>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Preview your current live stream in real-time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <Radio className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Legacy Stream</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your primary streaming connection
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="default" className="bg-green-500">
+                  LIVE
+                </Badge>
+              </div>
+
+              <StreamPreview
+                streamKey={streamInfo.streamKey}
+                isActive={streamInfo.isActive}
+              />
+
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  <strong>Note:</strong> You're using the legacy streaming system. Consider creating multiple stream sources for better organization and multi-platform support.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
