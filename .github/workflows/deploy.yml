@@ -10,6 +10,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create target directory on Control Plane
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.CONTROL_PLANE_HOST }}
+          username: ${{ secrets.CONTROL_PLANE_USERNAME }}
+          key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
+          script: |
+            echo "📁 Creating target directory..."
+            sudo mkdir -p /opt/neustream
+            sudo chown ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
+            echo "✅ Target directory created and permissions set"
+
       - name: Copy code to Control Plane
         uses: appleboy/scp-action@v0.1.3
         with:
@@ -19,6 +31,10 @@ jobs:
           source: "control-plane/*"
           target: "/opt/neustream"
           strip_components: 1
+          timeout: 300s
+          command_timeout: 60s
+          overwrite: true
+          rm: false
 
       - name: Setup Control Plane with Multi-Source Architecture
         uses: appleboy/ssh-action@v1.0.0
@@ -81,13 +97,18 @@ jobs:
             sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || echo "Port 80 rule already exists"
             sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || echo "Port 443 rule already exists"
 
-            # Create app directory and set ownership (idempotent)
-            sudo mkdir -p /opt/neustream
-            sudo chown ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
+            # Verify directory ownership and navigate to app directory
+            sudo chown -R ${{ secrets.CONTROL_PLANE_USERNAME }}:${{ secrets.CONTROL_PLANE_USERNAME }} /opt/neustream
             cd /opt/neustream
 
             # Install dependencies
-            npm install --no-audit --no-fund
+            echo "📦 Installing Node.js dependencies..."
+            if npm install --no-audit --no-fund; then
+              echo "✅ Dependencies installed successfully"
+            else
+              echo "❌ Failed to install dependencies"
+              exit 1
+            fi
 
             # Create enhanced environment file with multi-source support
             cat > .env << EOF
@@ -192,6 +213,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create target directory on Media Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.MEDIA_SERVER_HOST }}
+          username: ${{ secrets.MEDIA_SERVER_USERNAME }}
+          key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
+          script: |
+            echo "📁 Creating target directory..."
+            sudo mkdir -p /opt/neustream
+            sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
+            echo "✅ Target directory created and permissions set"
+
       - name: Copy code to Media Server
         uses: appleboy/scp-action@v0.1.3
         with:
@@ -201,6 +234,10 @@ jobs:
           source: "media-server/*"
           target: "/opt/neustream"
           strip_components: 1
+          timeout: 300s
+          command_timeout: 60s
+          overwrite: true
+          rm: false
 
       - name: Setup Media Server with MediaMTX and Enhanced Scripts
         uses: appleboy/ssh-action@v1.0.0
@@ -236,9 +273,8 @@ jobs:
             sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
             sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || echo "Firewall rule already exists"
 
-            # Create app directory and set ownership (idempotent)
-            sudo mkdir -p /opt/neustream
-            sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
+            # Verify directory ownership and navigate to app directory
+            sudo chown -R ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
             cd /opt/neustream
 
             # Install required dependencies
@@ -254,7 +290,13 @@ jobs:
             sudo cp /opt/neustream/mediamtx.yml /etc/mediamtx.yml
 
             # Install dependencies
-            npm install --no-audit --no-fund
+            echo "📦 Installing Node.js dependencies..."
+            if npm install --no-audit --no-fund; then
+              echo "✅ Dependencies installed successfully"
+            else
+              echo "❌ Failed to install dependencies"
+              exit 1
+            fi
 
             # Create enhanced environment file for media server
             cat > .env << EOF
