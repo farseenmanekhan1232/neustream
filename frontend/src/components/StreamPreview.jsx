@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 const StreamPreview = ({ streamKey, isActive }) => {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const timeoutRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +14,44 @@ const StreamPreview = ({ streamKey, isActive }) => {
 
   // Construct HLS URL - use your media server domain
   const hlsUrl = `https://stream.neustream.app:8888/${streamKey}/index.m3u8`;
+
+  // Manual retry function
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Trigger re-initialization by forcing the effect to run again
+    // This will cause the HLS instance to be recreated
+    const video = videoRef.current;
+    if (video) {
+      video.src = '';
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    }
+  };
+
+  // Set a timeout to handle cases where stream doesn't load
+  useEffect(() => {
+    if (isLoading && isActive) {
+      timeoutRef.current = setTimeout(() => {
+        setError('Stream connection timeout. This usually means the stream is not broadcasting. Please start your streaming software first.');
+        setIsLoading(false);
+      }, 15000); // 15 second timeout
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, isActive]);
 
   useEffect(() => {
     if (!streamKey || !isActive) return;
@@ -36,12 +75,20 @@ const StreamPreview = ({ streamKey, isActive }) => {
 
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: true,
+            lowLatencyMode: false, // Disable low latency for better compatibility
             backBufferLength: 90,
             maxBufferLength: 30,
             maxMaxBufferLength: 600,
             maxBufferSize: 60 * 1000 * 1000,
-            maxBufferHole: 0.5
+            maxBufferHole: 0.5,
+            debug: false, // Enable debug logging in development
+            // Add retry configuration
+            fragLoadingTimeOut: 20000, // 20 seconds
+            fragLoadingMaxRetry: 3,
+            manifestLoadingTimeOut: 10000, // 10 seconds
+            manifestLoadingMaxRetry: 3,
+            levelLoadingTimeOut: 10000, // 10 seconds
+            levelLoadingMaxRetry: 3
           });
 
           hlsRef.current = hls;
@@ -60,7 +107,35 @@ const StreamPreview = ({ streamKey, isActive }) => {
           hls.on(Hls.Events.ERROR, (event, data) => {
             console.error('HLS Error:', data);
             if (data.fatal) {
-              setError('Stream load failed. Please check if the stream is active.');
+              let errorMessage = 'Stream load failed. ';
+
+              switch (data.details) {
+                case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+                  errorMessage += 'Stream is not currently broadcasting. Please start your stream first.';
+                  break;
+                case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+                  errorMessage += 'Stream connection timed out. The stream may not be active.';
+                  break;
+                case Hls.ErrorDetails.MANIFEST_PARSING_ERROR:
+                  errorMessage += 'Stream manifest is invalid or corrupted.';
+                  break;
+                case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+                  errorMessage += 'Could not load stream quality levels.';
+                  break;
+                case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+                  errorMessage += 'Stream quality loading timed out.';
+                  break;
+                case Hls.ErrorDetails.FRAG_LOAD_ERROR:
+                  errorMessage += 'Could not load stream segments.';
+                  break;
+                case Hls.ErrorDetails.FRAG_LOAD_TIMEOUT:
+                  errorMessage += 'Stream segment loading timed out.';
+                  break;
+                default:
+                  errorMessage += 'Stream may not be active. Please check your streaming software.';
+              }
+
+              setError(errorMessage);
               setIsLoading(false);
             }
           });
@@ -100,7 +175,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
         hlsRef.current = null;
       }
     };
-  }, [streamKey, isActive, hlsUrl]);
+  }, [streamKey, isActive, hlsUrl, error]); // Add error dependency to re-run on retry
 
   // Handle play/pause
   const togglePlay = () => {
@@ -213,11 +288,19 @@ const StreamPreview = ({ streamKey, isActive }) => {
       {/* Error Message */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-center text-white p-4">
-            <p className="text-red-400 mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-              Retry
-            </Button>
+          <div className="text-center text-white p-4 max-w-md">
+            <p className="text-red-400 mb-4 text-sm">{error}</p>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" size="sm" onClick={handleRetry}>
+                Retry Loading
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+                Dismiss
+              </Button>
+            </div>
+            <p className="text-xs text-gray-400 mt-4">
+              Make sure your streaming software (OBS, Streamlabs, etc.) is actively broadcasting to the correct RTMP URL.
+            </p>
           </div>
         </div>
       )}
