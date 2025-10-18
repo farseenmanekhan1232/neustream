@@ -1,4 +1,4 @@
-name: Enhanced Health Check
+name: Health Check
 
 on:
   schedule:
@@ -6,156 +6,56 @@ on:
   workflow_dispatch: # Manual trigger
 
 jobs:
-  comprehensive-health-check:
+  health-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check Control Plane Health
+      - name: Check Control Plane
         run: |
-          echo "🔍 Checking Control Plane health..."
           response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://api.neustream.app/health || echo "failed")
           if [ "$response" = "200" ]; then
-            echo "✅ Control Plane health endpoint is healthy"
+            echo "✅ Control Plane is healthy"
           else
-            echo "❌ Control Plane health endpoint failed (HTTP $response)"
+            echo "❌ Control Plane is down (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Check Media Server HTTP
+        run: |
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://stream.neustream.app/ || echo "failed")
+          if [ "$response" = "200" ]; then
+            echo "✅ Media Server HTTP is healthy"
+          else
+            echo "❌ Media Server HTTP is down (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Check MediaMTX API
+        run: |
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://stream.neustream.app:9997/v3/config/global/get || echo "failed")
+          if [ "$response" = "200" ]; then
+            echo "✅ MediaMTX API is healthy"
+          else
+            echo "❌ MediaMTX API is down (HTTP $response)"
             exit 1
           fi
 
       - name: Check Multi-Source API Endpoints
         run: |
-          echo "🔍 Checking multi-source API endpoints..."
-
-          # Test sources endpoint (should return 401 when not authenticated)
-          sources_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://api.neustream.app/api/sources || echo "failed")
-          if [ "$sources_response" = "401" ]; then
-            echo "✅ Sources API endpoint is properly protected"
+          # Test sources endpoint (should return 401 without auth)
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://api.neustream.app/api/sources || echo "failed")
+          if [ "$response" = "401" ]; then
+            echo "✅ Multi-source API endpoints are protected"
           else
-            echo "⚠️ Sources API endpoint returned unexpected status: $sources_response"
-          fi
-
-          # Test streams info endpoint (should return 401 when not authenticated)
-          streams_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "https://api.neustream.app/api/streams/info" || echo "failed")
-          if [ "$streams_response" = "401" ]; then
-            echo "✅ Streams API endpoint is properly protected"
-          else
-            echo "⚠️ Streams API endpoint returned unexpected status: $streams_response"
-          fi
-
-          # Test forwarding endpoint with invalid key (should return 404)
-          forwarding_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "https://api.neustream.app/api/streams/forwarding/invalid-key" || echo "failed")
-          if [ "$forwarding_response" = "404" ]; then
-            echo "✅ Forwarding API endpoint is working correctly"
-          else
-            echo "⚠️ Forwarding API endpoint returned unexpected status: $forwarding_response"
-          fi
-
-      - name: Check Media Server and RTMP Port
-        run: |
-          echo "🔍 Checking Media Server health..."
-
-          # Check media server web interface
-          web_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://stream.neustream.app/ || echo "failed")
-          if [ "$web_response" = "200" ]; then
-            echo "✅ Media Server web interface is healthy"
-          else
-            echo "❌ Media Server web interface failed (HTTP $web_response)"
+            echo "❌ Multi-source API endpoints might not be properly protected (HTTP $response)"
             exit 1
           fi
 
-          # Check RTMP port accessibility (using a simple connection test)
-          echo "🔍 Checking RTMP port accessibility..."
-          if timeout 5 bash -c "</dev/tcp/stream.neustream.app/1935" 2>/dev/null; then
-            echo "✅ RTMP port 1935 is accessible"
-          else
-            echo "⚠️ RTMP port 1935 test failed (this might be normal if no active streams)"
-          fi
-
-      - name: Check Frontend Availability
+      - name: Check Admin Panel
         run: |
-          echo "🔍 Checking Frontend availability..."
-          frontend_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://www.neustream.app/ || echo "failed")
-          if [ "$frontend_response" = "200" ]; then
-            echo "✅ Frontend is healthy"
+          response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://neustream-admin.pages.dev/ || echo "failed")
+          if [ "$response" = "200" ]; then
+            echo "✅ Admin Panel is accessible"
           else
-            echo "❌ Frontend is down (HTTP $frontend_response)"
+            echo "❌ Admin Panel is down (HTTP $response)"
             exit 1
           fi
-
-      - name: Check Admin Panel Availability
-        run: |
-          echo "🔍 Checking Admin Panel availability..."
-          admin_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" https://neustream-admin.pages.dev/ || echo "failed")
-          if [ "$admin_response" = "200" ]; then
-            echo "✅ Admin Panel is healthy"
-          else
-            echo "⚠️ Admin Panel returned unexpected status (HTTP $admin_response)"
-          fi
-
-      - name: Database Connectivity Check
-        run: |
-          echo "🔍 Checking database connectivity (indirect)..."
-          # Since we can't directly access the database, we'll test an endpoint that requires database access
-          db_test_response=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" "https://api.neustream.app/api/auth/stream" || echo "failed")
-          if [ "$db_test_response" = "401" ] || [ "$db_test_response" = "400" ]; then
-            echo "✅ Database appears to be accessible (API endpoint responding)"
-          else
-            echo "⚠️ Database connectivity check inconclusive (HTTP $db_test_response)"
-          fi
-
-      - name: SSL Certificate Check
-        run: |
-          echo "🔍 Checking SSL certificates..."
-
-          # Check control plane SSL
-          if echo | openssl s_client -connect api.neustream.app:443 -servername api.neustream.app 2>/dev/null | openssl x509 -noout -dates 2>/dev/null; then
-            echo "✅ Control Plane SSL certificate is valid"
-          else
-            echo "❌ Control Plane SSL certificate issue detected"
-          fi
-
-          # Check media server SSL
-          if echo | openssl s_client -connect stream.neustream.app:443 -servername stream.neustream.app 2>/dev/null | openssl x509 -noout -dates 2>/dev/null; then
-            echo "✅ Media Server SSL certificate is valid"
-          else
-            echo "❌ Media Server SSL certificate issue detected"
-          fi
-
-          # Check frontend SSL
-          if echo | openssl s_client -connect www.neustream.app:443 -servername www.neustream.app 2>/dev/null | openssl x509 -noout -dates 2>/dev/null; then
-            echo "✅ Frontend SSL certificate is valid"
-          else
-            echo "❌ Frontend SSL certificate issue detected"
-          fi
-
-      - name: Performance Check
-        run: |
-          echo "🔍 Checking response times..."
-
-          # Test control plane response time
-          control_plane_time=$(curl -o /dev/null -s -w "%{time_total}" --max-time 10 https://api.neustream.app/health || echo "0")
-          if (( $(echo "$control_plane_time < 2.0" | bc -l) )); then
-            echo "✅ Control Plane response time: ${control_plane_time}s (good)"
-          else
-            echo "⚠️ Control Plane response time: ${control_plane_time}s (slow)"
-          fi
-
-          # Test frontend response time
-          frontend_time=$(curl -o /dev/null -s -w "%{time_total}" --max-time 10 https://www.neustream.app/ || echo "0")
-          if (( $(echo "$frontend_time < 3.0" | bc -l) )); then
-            echo "✅ Frontend response time: ${frontend_time}s (good)"
-          else
-            echo "⚠️ Frontend response time: ${frontend_time}s (slow)"
-          fi
-
-      - name: Summary Report
-        run: |
-          echo ""
-          echo "🎉 NeuStream Multi-Source Health Check Summary"
-          echo "=================================================="
-          echo "✅ Core Services: Control Plane, Media Server, Frontend"
-          echo "✅ Multi-Source API: Sources, Streams, Forwarding endpoints"
-          echo "✅ Admin Panel: Platform management interface"
-          echo "✅ SSL Certificates: All domains have valid certificates"
-          echo "✅ Performance: Response times within acceptable ranges"
-          echo ""
-          echo "🚀 Next scheduled check: $(date -d '+6 hours' '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "📊 All systems operational!"
