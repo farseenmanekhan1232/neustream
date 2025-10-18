@@ -1,16 +1,20 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import UsersPage from './pages/Users';
-import Streams from './pages/Streams';
-import Sources from './pages/Sources';
-import Destinations from './pages/Destinations';
-import Analytics from './pages/Analytics';
-import SettingsPage from './pages/Settings';
-import './App.css';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Layout from "./components/Layout";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import UsersPage from "./pages/Users";
+import Streams from "./pages/Streams";
+import Sources from "./pages/Sources";
+import Destinations from "./pages/Destinations";
+import Analytics from "./pages/Analytics";
+import SettingsPage from "./pages/Settings";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -128,4 +132,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
