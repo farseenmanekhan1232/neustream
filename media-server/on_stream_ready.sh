@@ -2,8 +2,13 @@
 
 set -e
 
-STREAM_PATH=$1
-STREAM_KEY=$(basename $STREAM_PATH)
+# MediaMTX passes the path as MTX_PATH environment variable, not as argument
+STREAM_PATH=${MTX_PATH:-$1}
+if [ -z "$STREAM_PATH" ]; then
+  echo "❌ No stream path provided (MTX_PATH is empty and no argument given)"
+  exit 1
+fi
+STREAM_KEY=$(basename "$STREAM_PATH")
 
 echo "=== Stream Started ==="
 echo "Stream Key: $STREAM_KEY"
@@ -95,12 +100,26 @@ if [ $DESTINATION_COUNT -gt 0 ]; then
   echo "📝 Log file: $log_file"
   echo "🆔 PID file: $pid_file"
 
+  # Add delay to ensure stream is fully established
+  echo "⏳ Waiting for stream to stabilize..."
+  sleep 3
+
   # Start FFmpeg with all destinations
+  echo "🚀 Starting FFmpeg process..."
   nohup $FFMPEG_CMD > "$log_file" 2>&1 &
 
   # Store FFmpeg process ID for cleanup
   FFMPEG_PID=$!
   echo $FFMPEG_PID > "$pid_file"
+
+  # Give FFmpeg a moment to start and check if it's running
+  sleep 2
+  if ! kill -0 $FFMPEG_PID 2>/dev/null; then
+    echo "❌ FFmpeg process died immediately"
+    echo "📋 FFmpeg log contents:"
+    tail -10 "$log_file"
+    exit 1
+  fi
 
   echo "✅ FFmpeg multi-destination forwarding started successfully"
   echo "   - PID: $FFMPEG_PID"
