@@ -28,7 +28,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
   const [retryCount, setRetryCount] = useState(0);
 
   // Construct HLS URL - use nginx SSL proxy on port 443
-  const hlsUrl = `https://stream.neustream.app/hls/${streamKey}/index.m3u8`;
+  const hlsUrl = `https://stream.neustream.app/hls/live/${streamKey}/index.m3u8`;
   const mediaMtxApiUrl = `https://stream.neustream.app/api/v2/paths/${streamKey}/`;
 
   // HLS Health Check function
