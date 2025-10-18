@@ -17,6 +17,8 @@ import {
   ArrowRight,
   BarChart3,
   MonitorSpeaker,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
@@ -39,6 +41,7 @@ function DashboardOverview() {
   const [showStreamKey, setShowStreamKey] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const [streamDuration, setStreamDuration] = useState(0);
+  const [selectedSourceId, setSelectedSourceId] = useState(null);
   const { trackUIInteraction } = usePostHog();
 
   // Fetch stream info
@@ -84,6 +87,20 @@ function DashboardOverview() {
     0
   );
 
+  // Auto-select first active source if none selected
+  const selectedSource = selectedSourceId
+    ? activeSources.find(source => source.id === selectedSourceId) || activeSources[0]
+    : activeSources[0];
+
+  // Update selected source when active sources change
+  useEffect(() => {
+    if (activeSources.length > 0 && !selectedSourceId) {
+      setSelectedSourceId(activeSources[0].id);
+    } else if (activeSources.length === 0) {
+      setSelectedSourceId(null);
+    }
+  }, [activeSources, selectedSourceId]);
+
   // Check if user is new (no sources and no destinations)
   const isNewUser = sources.length === 0 && destinations.length === 0;
 
@@ -105,6 +122,23 @@ function DashboardOverview() {
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
       toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  // Handle source switching
+  const handleSourceSwitch = (sourceId) => {
+    setSelectedSourceId(sourceId);
+    const source = activeSources.find(s => s.id === sourceId);
+    if (source) {
+      trackUIInteraction(
+        "switch_preview_source",
+        "click",
+        {
+          source_id: sourceId,
+          source_name: source.name,
+          total_active_sources: activeSources.length
+        }
+      );
     }
   };
 
@@ -344,56 +378,121 @@ function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Show preview for the first active source */}
-              {(() => {
-                const activeSource = activeSources[0];
-                return (
-                  <div key={activeSource.id}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                          <MonitorSpeaker className="h-4 w-4 text-green-500" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{activeSource.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {activeSource.description || "Primary stream source"}
-                          </p>
-                        </div>
+              {selectedSource && (
+                <>
+                  {/* Source Selector and Info */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                        <MonitorSpeaker className="h-4 w-4 text-green-500" />
                       </div>
+                      <div>
+                        <h3 className="font-medium">{selectedSource.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedSource.description || "Stream source"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {activeSources.length > 1 && (
+                        <div className="flex items-center space-x-1 text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                          <span>{activeSources.findIndex(s => s.id === selectedSource.id) + 1}/{activeSources.length}</span>
+                        </div>
+                      )}
                       <Badge variant="default" className="bg-green-500">
                         LIVE
                       </Badge>
                     </div>
-
-                    <StreamPreview
-                      streamKey={activeSource.stream_key}
-                      isActive={activeSource.is_active}
-                    />
-
-                    {/* Show additional active sources */}
-                    {activeSources.length > 1 && (
-                      <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Additional active sources ({activeSources.length - 1}):
-                        </p>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          {activeSources.slice(1).map((source) => (
-                            <div key={source.id} className="flex items-center space-x-2 p-2 bg-background rounded border">
-                              <MonitorSpeaker className="h-4 w-4 text-green-500" />
-                              <span className="text-sm font-medium">{source.name}</span>
-                              <Badge variant="outline" className="text-xs">Active</Badge>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Preview shows first active source. Switch to streaming page to view other sources.
-                        </p>
-                      </div>
-                    )}
                   </div>
-                );
-              })()}
+
+                  {/* Stream Preview */}
+                  <StreamPreview
+                    streamKey={selectedSource.stream_key}
+                    isActive={selectedSource.is_active}
+                  />
+
+                  {/* Source Navigation */}
+                  {activeSources.length > 1 && (
+                    <div className="flex items-center justify-between space-x-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const currentIndex = activeSources.findIndex(s => s.id === selectedSource.id);
+                          const prevIndex = currentIndex === 0 ? activeSources.length - 1 : currentIndex - 1;
+                          handleSourceSwitch(activeSources[prevIndex].id);
+                        }}
+                        className="flex items-center space-x-1"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span>Previous</span>
+                      </Button>
+
+                      <div className="flex items-center space-x-2">
+                        {activeSources.map((source) => (
+                          <button
+                            key={source.id}
+                            onClick={() => handleSourceSwitch(source.id)}
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              source.id === selectedSource.id
+                                ? 'bg-primary'
+                                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                            }`}
+                            title={source.name}
+                          />
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const currentIndex = activeSources.findIndex(s => s.id === selectedSource.id);
+                          const nextIndex = (currentIndex + 1) % activeSources.length;
+                          handleSourceSwitch(activeSources[nextIndex].id);
+                        }}
+                        className="flex items-center space-x-1"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Additional Sources Info */}
+                  {activeSources.length > 1 && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        All active sources ({activeSources.length}):
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {activeSources.map((source) => (
+                          <button
+                            key={source.id}
+                            onClick={() => handleSourceSwitch(source.id)}
+                            className={`flex items-center space-x-2 p-2 rounded border transition-colors text-left ${
+                              source.id === selectedSource.id
+                                ? 'bg-primary/10 border-primary/30'
+                                : 'bg-background border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <MonitorSpeaker className="h-4 w-4 text-green-500" />
+                            <span className="text-sm font-medium">{source.name}</span>
+                            {source.id === selectedSource.id ? (
+                              <Badge variant="default" className="text-xs bg-green-500">Current</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">Active</Badge>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Click any source to switch preview. Each source streams to its own destinations.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
