@@ -1,4 +1,4 @@
-name: Deploy Neustream (Initial Setup)
+name: Deploy Neustream (Initial Setup with Multi-Source Architecture)
 
 on:
   workflow_dispatch: # Manual trigger only
@@ -16,17 +16,18 @@ jobs:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
-          source: "control-plane/"
+          source: "control-plane/*"
           target: "/opt/neustream"
+          strip_components: 1
 
-      - name: Setup Control Plane
+      - name: Setup Control Plane with Multi-Source Architecture
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
           script: |
-            echo "🚀 Running complete Control Plane setup..."
+            echo "🚀 Running complete Control Plane setup with multi-source architecture..."
 
             # Update package list
             sudo apt update
@@ -62,9 +63,9 @@ jobs:
 
             echo "✅ Local PostgreSQL database installed and configured"
 
-            # Install Node.js 18 (skip if already installed)
+            # Install Node.js 20 (matching ci-cd.yml)
             if ! command -v node &> /dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt install -y nodejs
             else
               echo "Node.js already installed"
@@ -72,8 +73,6 @@ jobs:
 
             # Install PM2 (skip if already installed)
             sudo npm install -g pm2 || echo "PM2 already installed"
-
-            # No Cloudflare Tunnel needed - using Hostinger domain with SSL
 
             # Install nginx for HTTPS reverse proxy
             sudo apt install -y nginx
@@ -90,18 +89,29 @@ jobs:
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Create environment file with local PostgreSQL configuration
+            # Create enhanced environment file with multi-source support
             cat > .env << EOF
+            NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
+            STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}
+            SESSION_SECRET=$(openssl rand -base64 32)
+            JWT_SECRET=$(openssl rand -base64 32)
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
+            TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
+            TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
+            TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+            FRONTEND_URL=https://www.neustream.app
             DB_HOST=localhost
             DB_PORT=5432
             DB_NAME=neustream
             DB_USER=neustream_user
             DB_PASSWORD=23k4j123k4ksdhfasiuhe
             PORT=3000
-            NODE_ENV=production
             MEDIA_SERVER_HOST=${{ secrets.MEDIA_SERVER_HOST }}
-            STREAM_DOMAIN=${{ secrets.STREAM_DOMAIN }}
-            JWT_SECRET=$(openssl rand -base64 32)
             EOF
 
             # Copy nginx configuration from project
@@ -111,9 +121,26 @@ jobs:
             sudo nginx -t
             sudo systemctl restart nginx
 
-            # Run database migrations with local PostgreSQL
-            echo "Running database migrations..."
-            npm run migrate || echo "Migrations failed - please check PostgreSQL logs"
+            # Run database migration for multi-source architecture
+            echo "🗄️ Running database migration for multi-source architecture..."
+            if node scripts/migrate-multi-source.js; then
+              echo "✅ Database migration completed successfully"
+            else
+              echo "❌ Database migration failed - checking if script exists..."
+              if [ -f scripts/migrate-multi-source.js ]; then
+                echo "Migration script exists but failed - rolling back..."
+                exit 1
+              else
+                echo "⚠️ Migration script not found - this might be first deployment with multi-source support"
+                echo "Running legacy migration instead..."
+                if node scripts/migrate.js; then
+                  echo "✅ Legacy migration completed"
+                else
+                  echo "❌ Legacy migration also failed"
+                  exit 1
+                fi
+              fi
+            fi
 
             # Stop existing service if running
             pm2 delete neustream-control-plane 2>/dev/null || echo "No existing service to delete"
@@ -122,19 +149,42 @@ jobs:
             pkill -f "node.*server.js" 2>/dev/null || echo "No orphaned processes found"
 
             # Start service with PM2
-            pm2 start server.js --name "neustream-control-plane"
+            pm2 start server.js --name "neustream-control-plane" --env production
             pm2 save
 
             # Setup PM2 startup (idempotent)
             sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.CONTROL_PLANE_USERNAME }} --hp /home/${{ secrets.CONTROL_PLANE_USERNAME }} 2>/dev/null || echo "PM2 startup already configured"
 
-            # Verify service is running
+            # Wait for service to be ready
             sleep 5
-            pm2 status
-            curl -f http://localhost:3000/health || echo "Health check failed but continuing..."
-            curl -f "http://localhost:3000/api/streams/info?userId=1" || echo "Streams info endpoint failed but continuing..."
 
-            echo "✅ Control Plane setup complete!"
+            # Verify deployment with enhanced tests
+            echo "🧪 Testing multi-source API endpoints..."
+            pm2 status
+            if curl -f http://localhost:3000/health; then
+              echo "✅ Control Plane health check passed"
+            else
+              echo "❌ Control Plane health check failed"
+              pm2 logs neustream-control-plane --lines 20
+              exit 1
+            fi
+
+            # Test sources endpoint (should respond with authentication required)
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/sources | grep -q "401"; then
+              echo "✅ Sources API endpoint is protected (401 as expected)"
+            else
+              echo "⚠️ Sources API endpoint might not be properly protected"
+            fi
+
+            # Test enhanced stream info endpoint
+            if curl -s http://localhost:3000/api/streams/info | grep -q "401"; then
+              echo "✅ Streams API endpoint is protected"
+            else
+              echo "⚠️ Streams API endpoint might not be properly protected"
+            fi
+
+            echo "🎯 API endpoint tests completed"
+            echo "✅ Control Plane setup with multi-source support complete!"
 
   setup-media-server:
     runs-on: ubuntu-latest
@@ -148,17 +198,18 @@ jobs:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
-          source: "media-server/"
+          source: "media-server/*"
           target: "/opt/neustream"
+          strip_components: 1
 
-      - name: Setup Media Server
+      - name: Setup Media Server with MediaMTX and Enhanced Scripts
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.MEDIA_SERVER_HOST }}
           username: ${{ secrets.MEDIA_SERVER_USERNAME }}
           key: ${{ secrets.MEDIA_SERVER_SSH_KEY }}
           script: |
-            echo "🚀 Running complete Media Server setup..."
+            echo "🚀 Running complete Media Server setup with MediaMTX..."
 
             # Update package list
             sudo apt update
@@ -166,9 +217,9 @@ jobs:
             # Install git (skip if already installed)
             sudo apt install -y git || echo "Git already installed"
 
-            # Install Node.js 18 (skip if already installed)
+            # Install Node.js 20 (matching ci-cd.yml)
             if ! command -v node &> /dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt install -y nodejs
             else
               echo "Node.js already installed"
@@ -177,7 +228,7 @@ jobs:
             # Install PM2 (skip if already installed)
             sudo npm install -g pm2 || echo "PM2 already installed"
 
-            # Install nginx for HTTPS reverse proxy (without RTMP module)
+            # Install nginx for HTTPS reverse proxy
             sudo apt install -y nginx
 
             # Configure firewall (use iptables instead of ufw)
@@ -190,12 +241,26 @@ jobs:
             sudo chown ${{ secrets.MEDIA_SERVER_USERNAME }}:${{ secrets.MEDIA_SERVER_USERNAME }} /opt/neustream
             cd /opt/neustream
 
+            # Install required dependencies
+            echo "Installing dependencies..."
+            sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+            sudo apt-get update && sudo apt-get install -y jq
+
+            # Install mediamtx
+            echo "Installing mediamtx..."
+            wget https://github.com/bluenviron/mediamtx/releases/download/v1.8.0/mediamtx_v1.8.0_linux_amd64.tar.gz
+            tar -xvf mediamtx_v1.8.0_linux_amd64.tar.gz
+            sudo mv mediamtx /usr/local/bin/
+            sudo cp /opt/neustream/mediamtx.yml /etc/mediamtx.yml
+
             # Install dependencies
             npm install --no-audit --no-fund
 
-            # Create environment file for media server
+            # Create enhanced environment file for media server
             cat > .env << EOF
             NODE_ENV=production
+            POSTHOG_API_KEY=${{ secrets.POSTHOG_API_KEY }}
+            POSTHOG_HOST=${{ secrets.POSTHOG_HOST }}
             CONTROL_PLANE_URL=https://api.neustream.app
             EOF
 
@@ -211,19 +276,99 @@ jobs:
             # Clean up any orphaned processes
             pkill -f "node.*media-server.js" 2>/dev/null || echo "No orphaned processes found"
 
-            # Start media server with PM2
-            pm2 start media-server.js --name "neustream-media-server"
+            # Start mediamtx with proper configuration
+            echo "Starting media server..."
+            pm2 start /usr/local/bin/mediamtx --name neustream-media-server -- /etc/mediamtx.yml
+
+            # Wait for service to be ready and ports to open
+            echo "Waiting for MediaMTX to initialize and open ports..."
+            sleep 15
+
+            # Verify deployment success
+            echo "Verifying deployment..."
+            pm2 status
+
+            # Check if media server process is running
+            if pm2 describe neustream-media-server | grep -q "online"; then
+              echo "✅ Media Server process is running"
+            else
+              echo "❌ Media Server process failed to start"
+              pm2 logs neustream-media-server --lines 30
+              exit 1
+            fi
+
+            # Check if ports are accessible using curl/fallback methods
+            echo "Testing port accessibility..."
+
+            # Test API port first (most reliable)
+            if curl -f http://localhost:9997/v3/config/global/get > /dev/null 2>&1; then
+              echo "✅ API port 9997 is accessible"
+            else
+              echo "❌ API port 9997 is not accessible"
+              pm2 logs neustream-media-server --lines 10
+              exit 1
+            fi
+
+            # Test RTMP port by attempting a connection check
+            if timeout 3 bash -c "</dev/tcp/localhost/1935" 2>/dev/null; then
+              echo "✅ RTMP port 1935 is accessible"
+            else
+              echo "⚠️  RTMP port 1935 test failed (this may be normal - checking with alternative method)"
+              # Fallback: check if process logs show RTMP listener is ready
+              if pm2 logs neustream-media-server --lines 20 | grep -q "RTMP.*listener opened on :1935"; then
+                echo "✅ RTMP port 1935 is confirmed in logs"
+              else
+                echo "❌ RTMP port 1935 verification failed"
+                pm2 logs neustream-media-server --lines 20
+                exit 1
+              fi
+            fi
+
+            echo "✅ All ports are accessible and MediaMTX API is responding"
+
+            # Test updated stream scripts
+            echo "🧪 Testing updated stream handling scripts..."
+
+            # Test if enhanced stream scripts exist and are executable
+            if [ -f /opt/neustream/on_stream_ready.sh ]; then
+              if [ -x /opt/neustream/on_stream_ready.sh ]; then
+                echo "✅ Stream ready script is executable"
+              else
+                echo "⚠️ Stream ready script exists but not executable - fixing permissions..."
+                chmod +x /opt/neustream/on_stream_ready.sh
+              fi
+            else
+              echo "❌ Stream ready script not found"
+              exit 1
+            fi
+
+            if [ -f /opt/neustream/on_stream_unpublish.sh ]; then
+              if [ -x /opt/neustream/on_stream_unpublish.sh ]; then
+                echo "✅ Stream unpublish script is executable"
+              else
+                echo "⚠️ Stream unpublish script exists but not executable - fixing permissions..."
+                chmod +x /opt/neustream/on_stream_unpublish.sh
+              fi
+            else
+              echo "❌ Stream unpublish script not found"
+              exit 1
+            fi
+
+            # Test jq availability (used by updated scripts)
+            if command -v jq >/dev/null 2>&1; then
+              echo "✅ jq is available for JSON parsing"
+            else
+              echo "❌ jq is not available - stream scripts may fail"
+              exit 1
+            fi
+
             pm2 save
 
             # Setup PM2 startup (idempotent)
             sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ${{ secrets.MEDIA_SERVER_USERNAME }} --hp /home/${{ secrets.MEDIA_SERVER_USERNAME }} 2>/dev/null || echo "PM2 startup already configured"
 
-            # Verify service is running
-            sleep 5
-            pm2 status
-            curl -f http://localhost:8000/api/stat || echo "Media server health check failed but continuing..."
-
-            echo "✅ Media Server setup complete!"
+            echo "🎯 Media server script verification completed"
+            echo "✅ Media Server setup with MediaMTX complete!"
             echo "📺 RTMP Streaming URL: rtmp://stream.neustream.app/live"
 
   deploy-frontend:
@@ -247,6 +392,8 @@ jobs:
         run: |
           cd frontend
           echo "VITE_API_BASE=https://api.neustream.app/api" > .env.production
+          echo "VITE_PUBLIC_POSTHOG_KEY=${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}" >> .env.production
+          echo "VITE_PUBLIC_POSTHOG_HOST=${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}" >> .env.production
           npm run build
 
       - name: Deploy to Cloudflare Pages
@@ -256,3 +403,35 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=neustream-frontend
           workingDirectory: frontend
+
+  deploy-admin:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd admin
+          npm ci
+
+      - name: Build admin
+        run: |
+          cd admin
+          echo "VITE_API_URL=https://api.neustream.app" > .env.production
+          echo "VITE_NODE_ENV=production" >> .env.production
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=neustream-admin
+          workingDirectory: admin
