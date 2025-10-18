@@ -217,11 +217,14 @@ jobs:
             # Install mediamtx
             echo "Installing mediamtx..."
             wget https://github.com/bluenviron/mediamtx/releases/download/v1.8.0/mediamtx_v1.8.0_linux_amd64.tar.gz
-            tar -xvf mediamtx_v1.8.0_linux_amd64.tar.gz
-            sudo mv mediamtx /usr/local/bin/
 
-            # Clean up extracted files to prevent overwriting our custom config
-            rm -f mediamtx_v1.8.0_linux_amd64.tar.gz
+            # Extract to temporary directory to avoid overwriting our custom config
+            mkdir -p /tmp/mediamtx-install
+            tar -xvf mediamtx_v1.8.0_linux_amd64.tar.gz -C /tmp/mediamtx-install
+            sudo mv /tmp/mediamtx-install/mediamtx /usr/local/bin/
+
+            # Clean up temporary files
+            rm -rf /tmp/mediamtx-install mediamtx_v1.8.0_linux_amd64.tar.gz
 
             # Ensure our custom MediaMTX configuration is used
             echo "Applying custom MediaMTX configuration with hook scripts..."
