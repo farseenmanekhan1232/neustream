@@ -219,7 +219,24 @@ jobs:
             wget https://github.com/bluenviron/mediamtx/releases/download/v1.8.0/mediamtx_v1.8.0_linux_amd64.tar.gz
             tar -xvf mediamtx_v1.8.0_linux_amd64.tar.gz
             sudo mv mediamtx /usr/local/bin/
+
+            # Clean up extracted files to prevent overwriting our custom config
+            rm -f mediamtx_v1.8.0_linux_amd64.tar.gz
+
+            # Ensure our custom MediaMTX configuration is used
+            echo "Applying custom MediaMTX configuration with hook scripts..."
             sudo cp /opt/neustream/mediamtx.yml /etc/mediamtx.yml
+
+            # Verify the correct configuration is deployed
+            echo "Verifying MediaMTX configuration..."
+            if grep -q "runOnReady.*on_stream_ready.sh" /etc/mediamtx.yml; then
+              echo "✅ Custom MediaMTX configuration with hook scripts is deployed"
+            else
+              echo "❌ Wrong MediaMTX configuration detected - hook scripts missing"
+              echo "Current configuration:"
+              head -20 /etc/mediamtx.yml
+              exit 1
+            fi
 
             # Create fresh environment file
             cat > .env << EOF
