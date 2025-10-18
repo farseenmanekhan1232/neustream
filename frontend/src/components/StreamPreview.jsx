@@ -12,8 +12,8 @@ const StreamPreview = ({ streamKey, isActive }) => {
   const [error, setError] = useState(null);
   const [showControls, setShowControls] = useState(false);
 
-  // Construct HLS URL - use your media server domain
-  const hlsUrl = `https://stream.neustream.app:8888/${streamKey}/index.m3u8`;
+  // Construct HLS URL - use nginx SSL proxy on port 443
+  const hlsUrl = `https://stream.neustream.app/hls/${streamKey}/index.m3u8`;
 
   // Manual retry function
   const handleRetry = () => {
@@ -111,7 +111,13 @@ const StreamPreview = ({ streamKey, isActive }) => {
 
               switch (data.details) {
                 case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
-                  errorMessage += 'Stream is not currently broadcasting. Please start your stream first.';
+                  if (data.response && data.response.code === 404) {
+                    errorMessage += 'Stream endpoint not found. The stream may not be configured yet.';
+                  } else if (data.response && data.response.code === 0) {
+                    errorMessage += 'Network error or CORS issue. The HLS endpoint may not be accessible.';
+                  } else {
+                    errorMessage += 'Stream is not currently broadcasting. Please start your stream first.';
+                  }
                   break;
                 case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
                   errorMessage += 'Stream connection timed out. The stream may not be active.';
