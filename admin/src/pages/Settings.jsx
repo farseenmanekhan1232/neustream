@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+"use client";
+
+import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import {
-  Settings,
   User,
   Shield,
   Database,
@@ -9,32 +10,31 @@ import {
   Eye,
   EyeOff,
   Save,
-  RefreshCw
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+  RefreshCw,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState("profile");
   const [showApiKeys, setShowApiKeys] = useState({});
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     streamNotifications: true,
     systemAlerts: false,
-    weeklyReports: true
+    weeklyReports: true,
   });
 
-  
   const handleNotificationChange = (key) => {
-    setNotifications(prev => ({
+    setNotifications((prev) => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
@@ -49,7 +49,7 @@ const SettingsPage = () => {
             {user?.avatar_url ? (
               <img
                 className="h-16 w-16 rounded-full"
-                src={user.avatar_url}
+                src={user.avatar_url || "/placeholder.svg"}
                 alt={user.displayName || user.email}
               />
             ) : (
@@ -61,10 +61,12 @@ const SettingsPage = () => {
             )}
             <div>
               <h4 className="text-lg font-medium">
-                {user?.displayName || 'Admin User'}
+                {user?.displayName || "Admin User"}
               </h4>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
-              <Badge className="bg-green-100 text-green-800">Administrator</Badge>
+              <Badge className="bg-success/10 text-success">
+                Administrator
+              </Badge>
             </div>
           </div>
 
@@ -74,7 +76,7 @@ const SettingsPage = () => {
               <Input
                 id="displayName"
                 type="text"
-                defaultValue={user?.displayName || ''}
+                defaultValue={user?.displayName || ""}
                 disabled
                 className="bg-muted"
               />
@@ -87,7 +89,7 @@ const SettingsPage = () => {
               <Input
                 id="email"
                 type="email"
-                defaultValue={user?.email || ''}
+                defaultValue={user?.email || ""}
                 disabled
                 className="bg-muted"
               />
@@ -106,19 +108,22 @@ const SettingsPage = () => {
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">
-                Authentication Method
-              </p>
+              <p className="text-sm font-medium">Authentication Method</p>
               <p className="text-sm text-muted-foreground">
-                You are authenticated via {user?.oauthProvider || 'email'}
+                You are authenticated via {user?.oauthProvider || "email"}
               </p>
             </div>
-            <Badge variant={
-              user?.oauthProvider === 'google' ? 'default' :
-              user?.oauthProvider === 'twitch' ? 'secondary' :
-              'outline'
-            }>
-              {user?.oauthProvider?.charAt(0).toUpperCase() + user?.oauthProvider?.slice(1) || 'Email'}
+            <Badge
+              variant={
+                user?.oauthProvider === "google"
+                  ? "default"
+                  : user?.oauthProvider === "twitch"
+                  ? "secondary"
+                  : "outline"
+              }
+            >
+              {user?.oauthProvider?.charAt(0).toUpperCase() +
+                user?.oauthProvider?.slice(1) || "Email"}
             </Badge>
           </div>
         </CardContent>
@@ -138,7 +143,9 @@ const SettingsPage = () => {
             <Input
               id="apiUrl"
               type="url"
-              defaultValue={import.meta.env.VITE_API_URL || 'http://localhost:3000'}
+              defaultValue={
+                import.meta.env.VITE_API_URL || "http://localhost:3000"
+              }
               placeholder="https://api.neustream.app"
             />
           </div>
@@ -157,7 +164,12 @@ const SettingsPage = () => {
                 variant="ghost"
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowApiKeys(prev => ({ ...prev, posthog: !prev.posthog }))}
+                onClick={() =>
+                  setShowApiKeys((prev) => ({
+                    ...prev,
+                    posthog: !prev.posthog,
+                  }))
+                }
               >
                 {showApiKeys.posthog ? (
                   <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -201,21 +213,29 @@ const SettingsPage = () => {
         <CardContent>
           <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
             <div>
-              <dt className="text-sm font-medium text-muted-foreground">Database Type</dt>
+              <dt className="text-sm font-medium text-muted-foreground">
+                Database Type
+              </dt>
               <dd className="mt-1 text-sm">PostgreSQL</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-muted-foreground">Environment</dt>
+              <dt className="text-sm font-medium text-muted-foreground">
+                Environment
+              </dt>
               <dd className="mt-1 text-sm">
-                {import.meta.env.MODE || 'development'}
+                {import.meta.env.MODE || "development"}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-muted-foreground">API Version</dt>
+              <dt className="text-sm font-medium text-muted-foreground">
+                API Version
+              </dt>
               <dd className="mt-1 text-sm">v1.0.0</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-muted-foreground">Last Deployment</dt>
+              <dt className="text-sm font-medium text-muted-foreground">
+                Last Deployment
+              </dt>
               <dd className="mt-1 text-sm">Unknown</dd>
             </div>
           </dl>
@@ -230,24 +250,30 @@ const SettingsPage = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                <div className="h-2 w-2 bg-success rounded-full"></div>
                 <span className="text-sm font-medium">API Server</span>
               </div>
-              <Badge variant="default" className="bg-green-100 text-green-800">Operational</Badge>
+              <Badge variant="default" className="bg-success/10 text-success">
+                Operational
+              </Badge>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                <div className="h-2 w-2 bg-success rounded-full"></div>
                 <span className="text-sm font-medium">Database</span>
               </div>
-              <Badge variant="default" className="bg-green-100 text-green-800">Connected</Badge>
+              <Badge variant="default" className="bg-success/10 text-success">
+                Connected
+              </Badge>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+                <div className="h-2 w-2 bg-warning rounded-full"></div>
                 <span className="text-sm font-medium">Analytics</span>
               </div>
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Limited Data</Badge>
+              <Badge variant="secondary" className="bg-warning/10 text-warning">
+                Limited Data
+              </Badge>
             </div>
           </div>
         </CardContent>
@@ -263,10 +289,27 @@ const SettingsPage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {[
-            { key: 'emailAlerts', label: 'Email Alerts', description: 'Receive email notifications for important system events' },
-            { key: 'streamNotifications', label: 'Stream Notifications', description: 'Get notified when users start/stop streaming' },
-            { key: 'systemAlerts', label: 'System Alerts', description: 'Critical system errors and downtime notifications' },
-            { key: 'weeklyReports', label: 'Weekly Reports', description: 'Receive weekly usage and performance summaries' }
+            {
+              key: "emailAlerts",
+              label: "Email Alerts",
+              description:
+                "Receive email notifications for important system events",
+            },
+            {
+              key: "streamNotifications",
+              label: "Stream Notifications",
+              description: "Get notified when users start/stop streaming",
+            },
+            {
+              key: "systemAlerts",
+              label: "System Alerts",
+              description: "Critical system errors and downtime notifications",
+            },
+            {
+              key: "weeklyReports",
+              label: "Weekly Reports",
+              description: "Receive weekly usage and performance summaries",
+            },
           ].map(({ key, label, description }) => (
             <div key={key} className="flex items-center justify-between">
               <div className="space-y-1">
@@ -279,12 +322,12 @@ const SettingsPage = () => {
                 onClick={() => handleNotificationChange(key)}
                 className={cn(
                   "relative inline-flex h-6 w-11 items-center rounded-full p-0",
-                  notifications[key] ? "bg-blue-600" : "bg-muted"
+                  notifications[key] ? "bg-primary" : "bg-muted"
                 )}
               >
                 <span
                   className={cn(
-                    "inline-block h-5 w-5 transform rounded-full bg-white transition-transform",
+                    "inline-block h-5 w-5 transform rounded-full bg-background transition-transform",
                     notifications[key] ? "translate-x-5" : "translate-x-0"
                   )}
                 />
@@ -303,11 +346,10 @@ const SettingsPage = () => {
     </div>
   );
 
-  
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage your account settings and preferences.
         </p>
@@ -327,7 +369,10 @@ const SettingsPage = () => {
             <Database className="h-4 w-4" />
             System
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger
+            value="notifications"
+            className="flex items-center gap-2"
+          >
             <Bell className="h-4 w-4" />
             Notifications
           </TabsTrigger>

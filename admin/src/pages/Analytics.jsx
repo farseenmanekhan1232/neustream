@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { adminApi } from "../services/api";
 import {
   TrendingUp,
   Users,
   Activity,
   Target,
-  Calendar,
   RefreshCw,
   BarChart3,
-  PieChart,
-  LineChart,
-  Download,
-  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -113,7 +110,7 @@ const AnalyticsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-foreground">
             Analytics Dashboard
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -165,62 +162,68 @@ const AnalyticsPage = () => {
             <>
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+                <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
                   <CardContent className="flex items-center justify-between p-6">
                     <div>
-                      <p className="text-blue-100 text-sm">Total Users</p>
+                      <p className="text-primary-foreground/80 text-sm">
+                        Total Users
+                      </p>
                       <p className="text-3xl font-bold">
                         {systemStats.users?.total_users || 0}
                       </p>
-                      <p className="text-blue-100 text-xs mt-1">
+                      <p className="text-primary-foreground/80 text-xs mt-1">
                         +{systemStats.users?.new_users_week || 0} this week
                       </p>
                     </div>
-                    <Users className="h-8 w-8 text-blue-200" />
+                    <Users className="h-8 w-8 text-primary-foreground/60" />
                   </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
+                <Card className="bg-gradient-to-r from-success to-success/80 text-success-foreground border-0">
                   <CardContent className="flex items-center justify-between p-6">
                     <div>
-                      <p className="text-green-100 text-sm">Active Streams</p>
+                      <p className="text-success-foreground/80 text-sm">
+                        Active Streams
+                      </p>
                       <p className="text-3xl font-bold">
                         {systemStats.streams?.activeStreams || 0}
                       </p>
-                      <p className="text-green-100 text-xs mt-1">
+                      <p className="text-success-foreground/80 text-xs mt-1">
                         {systemStats.streams?.total_sources || 0} total sources
                       </p>
                     </div>
-                    <Activity className="h-8 w-8 text-green-200" />
+                    <Activity className="h-8 w-8 text-success-foreground/60" />
                   </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
+                <Card className="bg-gradient-to-r from-primary/90 to-primary/70 text-primary-foreground border-0">
                   <CardContent className="flex items-center justify-between p-6">
                     <div>
-                      <p className="text-purple-100 text-sm">
+                      <p className="text-primary-foreground/80 text-sm">
                         Total Destinations
                       </p>
                       <p className="text-3xl font-bold">
                         {systemStats.destinations?.total_destinations || 0}
                       </p>
-                      <p className="text-purple-100 text-xs mt-1">
+                      <p className="text-primary-foreground/80 text-xs mt-1">
                         Across all platforms
                       </p>
                     </div>
-                    <Target className="h-8 w-8 text-purple-200" />
+                    <Target className="h-8 w-8 text-primary-foreground/60" />
                   </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
+                <Card className="bg-gradient-to-r from-warning to-warning/80 text-warning-foreground border-0">
                   <CardContent className="flex items-center justify-between p-6">
                     <div>
-                      <p className="text-orange-100 text-sm">Recent Activity</p>
+                      <p className="text-warning-foreground/80 text-sm">
+                        Recent Activity
+                      </p>
                       <p className="text-3xl font-bold">
                         {systemStats.activity?.streams_started_24h || 0}
                       </p>
-                      <p className="text-orange-100 text-xs mt-1">
+                      <p className="text-warning-foreground/80 text-xs mt-1">
                         Streams in last 24h
                       </p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-orange-200" />
+                    <TrendingUp className="h-8 w-8 text-warning-foreground/60" />
                   </CardContent>
                 </Card>
               </div>
@@ -277,7 +280,7 @@ const AnalyticsPage = () => {
                       <>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <div className="w-3 h-3 bg-primary rounded-full mr-3"></div>
                             <span className="text-sm font-medium">Google</span>
                           </div>
                           <Badge variant="secondary">
@@ -286,7 +289,7 @@ const AnalyticsPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                            <div className="w-3 h-3 bg-primary/70 rounded-full mr-3"></div>
                             <span className="text-sm font-medium">Twitch</span>
                           </div>
                           <Badge variant="secondary">
@@ -295,7 +298,7 @@ const AnalyticsPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className="w-3 h-3 bg-gray-500 rounded-full mr-3"></div>
+                            <div className="w-3 h-3 bg-muted-foreground rounded-full mr-3"></div>
                             <span className="text-sm font-medium">Email</span>
                           </div>
                           <Badge variant="secondary">
@@ -331,7 +334,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Active Users (Period)</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-success">
                       {userAnalytics.activityMetrics?.active_users || 0}
                     </p>
                   </CardContent>
@@ -341,7 +344,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Active Today</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-primary">
                       {userAnalytics.activityMetrics?.active_users_24h || 0}
                     </p>
                   </CardContent>
@@ -362,13 +365,13 @@ const AnalyticsPage = () => {
                           .map((trend, index) => (
                             <div
                               key={index}
-                              className="flex items-center justify-between py-2 border-b border-muted last:border-0"
+                              className="flex items-center justify-between py-2 border-b border-border last:border-0"
                             >
                               <div>
                                 <span className="text-sm text-muted-foreground">
                                   {formatDate(trend.date)}
                                 </span>
-                                <div className="flex items-center space-x-2 mt-1">
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   <Badge variant="outline">
                                     Total: {trend.registrations}
                                   </Badge>
@@ -413,7 +416,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Completed</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-success">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.streams_completed || 0),
                         0
@@ -426,7 +429,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Avg Duration</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-primary">
                       {formatDuration(
                         streamAnalytics.qualityMetrics?.avg_duration_seconds
                       )}
@@ -438,7 +441,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Unique Streamers</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-purple-600">
+                    <p className="text-2xl font-bold text-primary/70">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.unique_streamers || 0),
                         0
@@ -456,7 +459,7 @@ const AnalyticsPage = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">
+                      <div className="text-2xl font-bold text-destructive">
                         {streamAnalytics.qualityMetrics?.under_1min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -464,7 +467,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-600">
+                      <div className="text-2xl font-bold text-warning">
                         {streamAnalytics.qualityMetrics?.between_1_5min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -472,7 +475,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-primary">
                         {streamAnalytics.qualityMetrics?.between_5_30min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -480,7 +483,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-success">
                         {streamAnalytics.qualityMetrics?.over_30min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -510,7 +513,7 @@ const AnalyticsPage = () => {
                           (platform, index) => (
                             <div
                               key={index}
-                              className="border-b border-muted pb-4 last:border-0"
+                              className="border-b border-border pb-4 last:border-0"
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center">
@@ -530,7 +533,7 @@ const AnalyticsPage = () => {
                                   <span className="text-muted-foreground">
                                     Active:
                                   </span>
-                                  <span className="ml-2 font-medium text-green-600">
+                                  <span className="ml-2 font-medium text-success">
                                     {platform.active_destinations}
                                   </span>
                                 </div>
