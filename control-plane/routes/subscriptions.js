@@ -145,13 +145,11 @@ router.post("/webhook", async (req, res) => {
       bodyKeys: req.body ? Object.keys(req.body) : [],
     });
 
-    // Temporarily disable signature verification for testing
-    // TODO: Re-enable once webhooks are working
-    /*
+    // Verify webhook signature
     const razorpaySignature = req.headers['x-razorpay-signature'];
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-    if (webhookSecret) {
+    if (webhookSecret && razorpaySignature) {
       const crypto = require('crypto');
       const expectedSignature = crypto
         .createHmac('sha256', webhookSecret)
@@ -159,19 +157,21 @@ router.post("/webhook", async (req, res) => {
         .digest('hex');
 
       if (expectedSignature !== razorpaySignature) {
-        console.warn('Invalid webhook signature received');
+        console.warn('❌ Invalid webhook signature received');
         console.log('Expected:', expectedSignature);
         console.log('Received:', razorpaySignature);
         return res.status(401).json({ error: 'Invalid webhook signature' });
       }
+      console.log('✅ Webhook signature verified successfully');
+    } else if (!webhookSecret) {
+      console.warn('⚠️ Webhook secret not configured, skipping signature verification');
     }
-    */
 
     await subscriptionService.handleWebhook(req.body);
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Error processing webhook:", error);
+    console.error("❌ Error processing webhook:", error);
     res.status(500).json({ error: "Webhook processing failed" });
   }
 });

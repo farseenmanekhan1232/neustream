@@ -332,11 +332,14 @@ class SubscriptionService {
   async handleWebhook(event) {
     try {
       const { event: eventType, payload } = event;
+      const eventId = payload.subscription?.id || payload.payment?.id || 'unknown';
+
+      console.log(`🔔 Processing webhook: ${eventType} for ${eventId}`);
 
       // Store event for processing
-      await this.db.run(
-        "INSERT INTO subscription_events (event_type, razorpay_event_id, payload) VALUES ($1, $2, $3)",
-        [eventType, payload.subscription?.id || payload.payment?.id, payload]
+      const eventRecord = await this.db.run(
+        "INSERT INTO subscription_events (event_type, razorpay_event_id, payload) VALUES ($1, $2, $3) RETURNING id",
+        [eventType, eventId, payload]
       );
 
       // Process specific events
@@ -344,17 +347,32 @@ class SubscriptionService {
         case "subscription.charged":
           await this.handleSubscriptionCharged(payload);
           break;
+        case "subscription.activated":
+          await this.handleSubscriptionActivated(payload);
+          break;
         case "subscription.cancelled":
           await this.handleSubscriptionCancelled(payload);
+          break;
+        case "payment.authorized":
+          await this.handlePaymentAuthorized(payload);
           break;
         case "payment.failed":
           await this.handlePaymentFailed(payload);
           break;
+        default:
+          console.log(`ℹ️ Unhandled webhook event: ${eventType}`);
       }
 
+      // Mark event as processed
+      await this.db.run(
+        "UPDATE subscription_events SET processed = true WHERE id = $1",
+        [eventRecord.id]
+      );
+
+      console.log(`✅ Webhook processed successfully: ${eventType} for ${eventId}`);
       return { success: true };
     } catch (error) {
-      console.error("Error processing webhook:", error);
+      console.error("❌ Error processing webhook:", error);
       throw error;
     }
   }
@@ -364,6 +382,13 @@ class SubscriptionService {
    */
   async handleSubscriptionCharged(payload) {
     const { subscription, payment } = payload;
+
+    console.log('🔔 Processing subscription.charged webhook:', {
+      subscriptionId: subscription.id,
+      userId: subscription.notes?.user_id,
+      paymentId: payment.id,
+      amount: payment.amount
+    });
 
     // Update subscription status
     await this.db.run(
@@ -377,34 +402,103 @@ class SubscriptionService {
       ]
     );
 
-    // Record payment transaction
+    // Get the database subscription record to link payment
+    const dbSubscription = await this.db.query(
+      "SELECT id, user_id FROM user_subscriptions WHERE razorpay_subscription_id = $1",
+      [subscription.id]
+    );
+
+    if (dbSubscription.length > 0) {
+      // Record payment transaction with correct user_id and subscription_id
+      await this.db.run(
+        `INSERT INTO payment_transactions
+         (user_id, subscription_id, amount, currency, status,
+          razorpay_payment_id, razorpay_order_id, paid_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          dbSubscription[0].user_id,
+          dbSubscription[0].id,
+          payment.amount,
+          payment.currency,
+          "succeeded",
+          payment.id,
+          payment.order_id,
+          new Date(payment.created_at * 1000),
+        ]
+      );
+
+      // Track successful payment with correct user_id
+      posthogService.trackSubscriptionEvent(
+        dbSubscription[0].user_id,
+        "payment_succeeded",
+        {
+          amount: payment.amount,
+          currency: payment.currency,
+          razorpay_payment_id: payment.id,
+        }
+      );
+
+      console.log('✅ Subscription activated successfully:', {
+        subscriptionId: subscription.id,
+        userId: dbSubscription[0].user_id,
+        dbSubscriptionId: dbSubscription[0].id
+      });
+    } else {
+      console.error('❌ Subscription not found in database:', subscription.id);
+      throw new Error(`Subscription ${subscription.id} not found in database`);
+    }
+  }
+
+  /**
+   * Handle subscription activated event
+   */
+  async handleSubscriptionActivated(payload) {
+    const { subscription } = payload;
+
+    console.log('🔔 Processing subscription.activated webhook:', {
+      subscriptionId: subscription.id,
+      userId: subscription.notes?.user_id
+    });
+
+    // Update subscription status to active
     await this.db.run(
-      `INSERT INTO payment_transactions
-       (user_id, subscription_id, amount, currency, status,
-        razorpay_payment_id, razorpay_order_id, paid_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      `UPDATE user_subscriptions
+       SET status = 'active', current_period_start = $1, current_period_end = $2
+       WHERE razorpay_subscription_id = $3`,
       [
-        subscription.notes?.user_id,
-        null, // Will be linked after we get subscription ID
-        payment.amount,
-        payment.currency,
-        "succeeded",
-        payment.id,
-        payment.order_id,
-        new Date(payment.created_at * 1000),
+        new Date(subscription.current_start * 1000),
+        new Date(subscription.current_end * 1000),
+        subscription.id,
       ]
     );
 
-    // Track successful payment
-    posthogService.trackSubscriptionEvent(
-      subscription.notes?.user_id,
-      "payment_succeeded",
-      {
-        amount: payment.amount,
-        currency: payment.currency,
-        razorpay_payment_id: payment.id,
-      }
-    );
+    console.log('✅ Subscription activated successfully:', subscription.id);
+  }
+
+  /**
+   * Handle payment authorized event
+   */
+  async handlePaymentAuthorized(payload) {
+    const { payment } = payload;
+
+    console.log('🔔 Processing payment.authorized webhook:', {
+      paymentId: payment.id,
+      subscriptionId: payment.subscription_id,
+      amount: payment.amount
+    });
+
+    // This event indicates payment was authorized but not yet captured
+    // We can use this to update subscription status to 'active' if needed
+    if (payment.subscription_id) {
+      await this.db.run(
+        `UPDATE user_subscriptions
+         SET status = 'active'
+         WHERE razorpay_subscription_id = $1`,
+        [payment.subscription_id]
+      );
+    }
+
+    console.log('✅ Payment authorized processed successfully:', payment.id);
   }
 
   /**
@@ -412,6 +506,11 @@ class SubscriptionService {
    */
   async handleSubscriptionCancelled(payload) {
     const { subscription } = payload;
+
+    console.log('🔔 Processing subscription.cancelled webhook:', {
+      subscriptionId: subscription.id,
+      userId: subscription.notes?.user_id
+    });
 
     await this.db.run(
       `UPDATE user_subscriptions
@@ -425,6 +524,8 @@ class SubscriptionService {
       "subscription_canceled_webhook",
       { razorpay_subscription_id: subscription.id }
     );
+
+    console.log('✅ Subscription cancelled successfully:', subscription.id);
   }
 
   /**
