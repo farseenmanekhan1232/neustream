@@ -28,7 +28,7 @@ class SubscriptionService {
 
   /**
    * Get user's current subscription
-   */ a;
+   */
   async getUserSubscription(userId) {
     try {
       const subscriptions = await this.db.query(
@@ -115,6 +115,11 @@ class SubscriptionService {
       const planKey = `${plan.name.toLowerCase()}_${billingCycle}`;
       const razorpayPlanId =
         process.env[`RAZORPAY_PLAN_${planKey.toUpperCase()}`];
+
+      console.log(`Creating subscription for plan: ${plan.name}, billing: ${billingCycle}`);
+      console.log(`Plan key: ${planKey}`);
+      console.log(`Environment variable name: RAZORPAY_PLAN_${planKey.toUpperCase()}`);
+      console.log(`Razorpay plan ID: ${razorpayPlanId}`);
 
       if (!razorpayPlanId) {
         throw new Error(`Razorpay plan ID not configured for ${planKey}`);
