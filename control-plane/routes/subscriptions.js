@@ -1,6 +1,7 @@
 const express = require('express');
 const Database = require('../lib/database');
 const subscriptionService = require('../services/subscription');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -12,13 +13,6 @@ db.connect().catch(err => {
   console.error('Failed to pre-connect to database:', err);
 });
 
-// Middleware to require authentication
-const requireAuth = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  next();
-};
 
 // Get all available subscription plans
 router.get('/plans', async (req, res) => {
@@ -32,7 +26,7 @@ router.get('/plans', async (req, res) => {
 });
 
 // Get user's current subscription
-router.get('/my-subscription', requireAuth, async (req, res) => {
+router.get('/my-subscription', authenticateToken, async (req, res) => {
   try {
     const subscription = await subscriptionService.getUserSubscription(req.user.id);
     const usage = await subscriptionService.getUserUsage(req.user.id);
@@ -52,7 +46,7 @@ router.get('/my-subscription', requireAuth, async (req, res) => {
 });
 
 // Create a new subscription
-router.post('/subscribe', requireAuth, async (req, res) => {
+router.post('/subscribe', authenticateToken, async (req, res) => {
   const { planId, billingCycle = 'monthly' } = req.body;
 
   try {
@@ -80,7 +74,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
 });
 
 // Cancel subscription
-router.post('/cancel', requireAuth, async (req, res) => {
+router.post('/cancel', authenticateToken, async (req, res) => {
   try {
     const subscription = await subscriptionService.cancelSubscription(req.user.id);
 
@@ -95,7 +89,7 @@ router.post('/cancel', requireAuth, async (req, res) => {
 });
 
 // Get subscription usage
-router.get('/usage', requireAuth, async (req, res) => {
+router.get('/usage', authenticateToken, async (req, res) => {
   try {
     const usage = await subscriptionService.getUserUsage(req.user.id);
     res.json({ usage });
@@ -106,7 +100,7 @@ router.get('/usage', requireAuth, async (req, res) => {
 });
 
 // Check plan limits
-router.get('/limits', requireAuth, async (req, res) => {
+router.get('/limits', authenticateToken, async (req, res) => {
   try {
     const limits = {
       canCreateStreamSource: await subscriptionService.canCreateStreamSource(req.user.id),
@@ -148,7 +142,7 @@ router.post('/webhook', async (req, res) => {
 });
 
 // Get user's payment history
-router.get('/payments', requireAuth, async (req, res) => {
+router.get('/payments', authenticateToken, async (req, res) => {
   try {
     const payments = await db.query(
       `SELECT * FROM payment_transactions
