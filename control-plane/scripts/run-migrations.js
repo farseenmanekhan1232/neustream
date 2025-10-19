@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 const Database = require('../lib/database');
 
 // Migration tracking table

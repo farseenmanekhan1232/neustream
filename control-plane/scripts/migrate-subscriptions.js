@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 const Database = require('../lib/database');
 
 async function runMigration() {
@@ -61,7 +62,7 @@ async function runMigration() {
 
     for (const table of tables) {
       try {
-        const result = await db.query(`SELECT 1 FROM ${table} LIMIT 1`);
+        await db.query(`SELECT 1 FROM ${table} LIMIT 1`);
         console.log(`✅ ${table} table verified`);
       } catch (error) {
         console.error(`❌ ${table} table verification failed:`, error.message);
