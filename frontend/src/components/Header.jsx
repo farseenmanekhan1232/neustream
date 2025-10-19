@@ -39,6 +39,48 @@ function Header() {
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-4">
+          <div className="relative">
+            <button
+              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+              onClick={() => setIsLegalDropdownOpen(!isLegalDropdownOpen)}
+              onBlur={() =>
+                setTimeout(() => setIsLegalDropdownOpen(false), 200)
+              }
+            >
+              Legal
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+            {isLegalDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-50">
+                <div className="py-1">
+                  <a
+                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Terms and Conditions
+                  </a>
+                  <a
+                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/contact_us"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Contact Us
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
           {user ? (
             <>
               <Link
@@ -47,46 +89,6 @@ function Header() {
               >
                 Dashboard
               </Link>
-              <div className="relative">
-                <button
-                  className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                  onClick={() => setIsLegalDropdownOpen(!isLegalDropdownOpen)}
-                  onBlur={() => setTimeout(() => setIsLegalDropdownOpen(false), 200)}
-                >
-                  Legal
-                  <ChevronDownIcon className="h-4 w-4" />
-                </button>
-                {isLegalDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-50">
-                    <div className="py-1">
-                      <a
-                        href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                      >
-                        Terms and Conditions
-                      </a>
-                      <a
-                        href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                      >
-                        Privacy Policy
-                      </a>
-                      <a
-                        href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/contact_us"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                      >
-                        Contact Us
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
             </>
           ) : (
             <>
