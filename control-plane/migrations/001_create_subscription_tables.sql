@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
 CREATE TABLE IF NOT EXISTS user_subscriptions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
+    plan_id INTEGER NOT NULL,
 
     -- Subscription details
     status VARCHAR(20) NOT NULL DEFAULT 'active', -- active, canceled, expired, past_due
@@ -236,3 +236,12 @@ CREATE TRIGGER update_payment_transactions_updated_at
 CREATE TRIGGER update_usage_tracking_updated_at
     BEFORE UPDATE ON usage_tracking
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- ADD FOREIGN KEY CONSTRAINTS
+-- ============================================
+ALTER TABLE user_subscriptions ADD CONSTRAINT fk_user_subscriptions_plan_id
+    FOREIGN KEY (plan_id) REFERENCES subscription_plans(id);
+
+ALTER TABLE payment_transactions ADD CONSTRAINT fk_payment_transactions_subscription_id
+    FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE SET NULL;
