@@ -89,6 +89,10 @@ jobs:
             TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
             RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
             RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
+            RAZORPAY_PLAN_PRO_MONTHLY=${{ secrets.RAZORPAY_PLAN_PRO_MONTHLY }}
+            RAZORPAY_PLAN_PRO_YEARLY=${{ secrets.RAZORPAY_PLAN_PRO_YEARLY }}
+            RAZORPAY_PLAN_BUSINESS_MONTHLY=${{ secrets.RAZORPAY_PLAN_BUSINESS_MONTHLY }}
+            RAZORPAY_PLAN_BUSINESS_YEARLY=${{ secrets.RAZORPAY_PLAN_BUSINESS_YEARLY }}
             FRONTEND_URL=https://www.neustream.app
             DB_HOST=localhost
             DB_PORT=5432
