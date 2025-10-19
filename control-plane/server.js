@@ -37,18 +37,26 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(
-  cors({
-    origin: [
-      "https://www.neustream.app",
-      "https://neustream.app",
-      "https://admin.neustream.app",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// Configure CORS with separate handling for webhooks
+const corsOptions = {
+  origin: [
+    "https://www.neustream.app",
+    "https://neustream.app",
+    "https://admin.neustream.app",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-razorpay-signature"],
+};
+
+// Apply CORS to all routes except webhooks
+app.use((req, res, next) => {
+  // Skip CORS for webhook endpoints
+  if (req.path.includes('/webhook')) {
+    return next();
+  }
+  cors(corsOptions)(req, res, next);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

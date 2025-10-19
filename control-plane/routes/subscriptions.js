@@ -134,15 +134,32 @@ router.get("/limits", authenticateToken, async (req, res) => {
   }
 });
 
-// Razorpay webhook handler
+// Razorpay webhook OPTIONS handler for CORS preflight
+router.options("/webhook", (req, res) => {
+  console.log("🔔 Webhook OPTIONS request received");
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-razorpay-signature');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+
+  res.status(200).send();
+});
+
+// Razorpay webhook handler - Enhanced for CORS and debugging
 router.post("/webhook", async (req, res) => {
   try {
-    // Log incoming webhook for debugging
+    // Enhanced logging for webhook debugging
     console.log("🔔 Webhook received:", {
       event: req.body.event,
       signature: req.headers["x-razorpay-signature"] ? "present" : "missing",
       hasBody: !!req.body,
       bodyKeys: req.body ? Object.keys(req.body) : [],
+      origin: req.headers.origin,
+      userAgent: req.headers["user-agent"],
+      contentType: req.headers["content-type"],
+      path: req.path,
+      method: req.method,
     });
 
     // Verify webhook signature
@@ -169,9 +186,22 @@ router.post("/webhook", async (req, res) => {
 
     await subscriptionService.handleWebhook(req.body);
 
+    // Ensure proper response headers for webhooks - bypass CORS
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-razorpay-signature');
+
     res.json({ success: true });
   } catch (error) {
     console.error("❌ Error processing webhook:", error);
+
+    // Ensure proper response headers even for errors
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-razorpay-signature');
+
     res.status(500).json({ error: "Webhook processing failed" });
   }
 });
