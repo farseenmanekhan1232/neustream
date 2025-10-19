@@ -19,6 +19,14 @@ class SubscriptionService {
     });
   }
 
+  // Change subscription plan
+  async changePlan(planId, billingCycle = 'monthly') {
+    return await apiService.post('/subscriptions/change-plan', {
+      planId,
+      billingCycle
+    });
+  }
+
   // Cancel subscription
   async cancelSubscription() {
     return await apiService.post('/subscriptions/cancel');

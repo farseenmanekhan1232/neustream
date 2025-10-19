@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { subscriptionService } from "../services/subscription";
 import { usePostHog } from "../hooks/usePostHog";
+import { toast } from "sonner";
 
 const SubscriptionManagement = () => {
   const queryClient = useQueryClient();
@@ -58,6 +59,9 @@ const SubscriptionManagement = () => {
       // Redirect to Razorpay checkout
       if (data.checkout_url) {
         window.open(data.checkout_url, "_blank");
+        toast.success("Redirecting to payment gateway...", {
+          description: "You'll be redirected to complete your subscription payment."
+        });
         trackUIInteraction("subscription_checkout_started", "click", {
           plan_id: selectedPlan,
           billing_cycle: billingCycle,
@@ -67,6 +71,35 @@ const SubscriptionManagement = () => {
     },
     onError: (error) => {
       console.error("Failed to create subscription:", error);
+      toast.error("Failed to create subscription", {
+        description: error.response?.data?.error || "Please try again later."
+      });
+    },
+  });
+
+  // Change subscription plan mutation
+  const changePlanMutation = useMutation({
+    mutationFn: ({ planId, billingCycle }) =>
+      subscriptionService.changePlan(planId, billingCycle),
+    onSuccess: (data) => {
+      // Redirect to Razorpay checkout for plan change
+      if (data.checkout_url) {
+        window.open(data.checkout_url, "_blank");
+        toast.success("Redirecting to payment gateway...", {
+          description: "You'll be redirected to complete your plan change payment."
+        });
+        trackUIInteraction("subscription_plan_change_started", "click", {
+          plan_id: selectedPlan,
+          billing_cycle: billingCycle,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+    },
+    onError: (error) => {
+      console.error("Failed to change subscription plan:", error);
+      toast.error("Failed to change subscription plan", {
+        description: error.response?.data?.error || "Please try again later."
+      });
     },
   });
 
@@ -75,10 +108,16 @@ const SubscriptionManagement = () => {
     mutationFn: () => subscriptionService.cancelSubscription(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success("Subscription cancelled successfully", {
+        description: "Your subscription will remain active until the end of the current billing period."
+      });
       trackUIInteraction("subscription_cancelled", "click");
     },
     onError: (error) => {
       console.error("Failed to cancel subscription:", error);
+      toast.error("Failed to cancel subscription", {
+        description: error.response?.data?.error || "Please try again later."
+      });
     },
   });
 
@@ -86,10 +125,21 @@ const SubscriptionManagement = () => {
   const currentUsage = subscriptionData?.usage;
   const plans = plansData?.plans || [];
 
+  // Check if user is approaching plan limits
+  const isApproachingStreamSourceLimit = currentSubscription &&
+    currentUsage &&
+    currentUsage.active_stream_sources >= currentSubscription.max_stream_sources * 0.8;
+
+  const isApproachingDestinationLimit = currentSubscription &&
+    currentUsage &&
+    currentUsage.total_destinations >= currentSubscription.max_simultaneous_destinations * 0.8;
+
+  const isApproachingStreamingHoursLimit = currentSubscription &&
+    currentUsage &&
+    currentUsage.streaming_hours_used >= currentSubscription.max_streaming_hours_monthly * 0.8;
+
   const getPlanIcon = (planName) => {
     switch (planName?.toLowerCase()) {
-      case "free":
-        return <Star className="h-5 w-5" />;
       case "pro":
         return <Zap className="h-5 w-5" />;
       case "business":
@@ -137,6 +187,11 @@ const SubscriptionManagement = () => {
     createSubscriptionMutation.mutate({ planId, billingCycle });
   };
 
+  const handleChangePlan = (planId) => {
+    setSelectedPlan(planId);
+    changePlanMutation.mutate({ planId, billingCycle });
+  };
+
   const handleCancelSubscription = () => {
     if (
       window.confirm(
@@ -147,6 +202,22 @@ const SubscriptionManagement = () => {
     }
   };
 
+  // Determine if a plan is an upgrade or downgrade from current plan
+  const getPlanChangeType = (plan) => {
+    if (!currentSubscription) return 'upgrade';
+
+    const currentPlanName = currentSubscription.plan_name.toLowerCase();
+    const newPlanName = plan.name.toLowerCase();
+
+    const planOrder = { 'pro': 1, 'business': 2 };
+    const currentOrder = planOrder[currentPlanName] || 0;
+    const newOrder = planOrder[newPlanName] || 0;
+
+    if (newOrder > currentOrder) return 'upgrade';
+    if (newOrder < currentOrder) return 'downgrade';
+    return 'same';
+  };
+
   if (subscriptionLoading || plansLoading) {
     return (
       <div className="space-y-6">
@@ -154,8 +225,8 @@ const SubscriptionManagement = () => {
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2].map((i) => (
             <Card key={i}>
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
@@ -251,6 +322,69 @@ const SubscriptionManagement = () => {
         </Card>
       )}
 
+      {/* Subscription Status Alerts */}
+      {currentSubscription && (
+        <div className="space-y-4">
+          {currentSubscription.status === "past_due" && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Your subscription payment is past due. Please update your payment method to avoid service interruption.
+              </AlertDescription>
+            </Alert>
+          )}
+          {currentSubscription.status === "canceled" && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Your subscription has been canceled. You'll lose access to premium features at the end of your billing period.
+              </AlertDescription>
+            </Alert>
+          )}
+          {currentSubscription.cancel_at_period_end && (
+            <Alert variant="default">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Your subscription is scheduled to cancel at the end of the current billing period.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
+
+      {/* Usage Limit Alerts */}
+      {currentSubscription && (
+        <div className="space-y-4">
+          {isApproachingStreamSourceLimit && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You're approaching your stream source limit ({currentUsage.active_stream_sources}/{currentSubscription.max_stream_sources}).
+                Consider upgrading to a higher plan for more sources.
+              </AlertDescription>
+            </Alert>
+          )}
+          {isApproachingDestinationLimit && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You're approaching your destination limit ({currentUsage.total_destinations}/{currentSubscription.max_simultaneous_destinations}).
+                Consider upgrading to a higher plan for more simultaneous destinations.
+              </AlertDescription>
+            </Alert>
+          )}
+          {isApproachingStreamingHoursLimit && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You're approaching your monthly streaming hours limit ({currentUsage.streaming_hours_used.toFixed(1)}/{currentSubscription.max_streaming_hours_monthly} hours).
+                Consider upgrading to a higher plan for more streaming hours.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
+
       {/* Usage Overview */}
       {currentUsage && (
         <Card>
@@ -329,7 +463,7 @@ const SubscriptionManagement = () => {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {plans.map((plan) => {
             const { baseFeatures, premiumFeatures } = getPlanFeatures(plan);
             const price =
@@ -415,6 +549,25 @@ const SubscriptionManagement = () => {
                     <Button className="w-full" variant="outline" disabled>
                       Current Plan
                     </Button>
+                  ) : currentSubscription ? (
+                    <Button
+                      className="w-full"
+                      variant={
+                        getPlanChangeType(plan) === "upgrade"
+                          ? "default"
+                          : "outline"
+                      }
+                      onClick={() => handleChangePlan(plan.id)}
+                      disabled={changePlanMutation.isPending}
+                    >
+                      {changePlanMutation.isPending &&
+                      selectedPlan === plan.id ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-2" />
+                      )}
+                      {getPlanChangeType(plan) === "upgrade" ? "Upgrade" : "Downgrade"}
+                    </Button>
                   ) : (
                     <Button
                       className="w-full"
@@ -432,7 +585,7 @@ const SubscriptionManagement = () => {
                       ) : (
                         <CreditCard className="h-4 w-4 mr-2" />
                       )}
-                      {plan.price_monthly === 0 ? "Get Started" : "Subscribe"}
+                      Subscribe
                     </Button>
                   )}
                 </CardFooter>
@@ -463,6 +616,11 @@ const PaymentHistory = () => {
   const { data: paymentsData, isLoading } = useQuery({
     queryKey: ["payment-history"],
     queryFn: () => subscriptionService.getPaymentHistory(),
+    onError: (error) => {
+      toast.error("Failed to load payment history", {
+        description: "Please try again later."
+      });
+    },
   });
 
   const payments = paymentsData?.payments || [];
