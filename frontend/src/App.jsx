@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import StreamingConfiguration from "./components/StreamingConfiguration";
+import SubscriptionManagement from "./components/SubscriptionManagement";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 
@@ -76,6 +77,7 @@ function AppContent() {
         <Route index element={<DashboardOverview />} />
         <Route path="streaming" element={<StreamingConfiguration />} />
         <Route path="destinations" element={<StreamingConfiguration />} />
+        <Route path="subscription" element={<SubscriptionManagement />} />
         <Route
           path="analytics"
           element={

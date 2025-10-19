@@ -44,6 +44,13 @@ const navItems = [
     description: "Manage sources and destinations",
   },
   {
+    id: "subscription",
+    label: "Subscription",
+    icon: Crown,
+    path: "/dashboard/subscription",
+    description: "Manage your subscription plan",
+  },
+  {
     id: "analytics",
     label: "Analytics",
     icon: BarChart3,

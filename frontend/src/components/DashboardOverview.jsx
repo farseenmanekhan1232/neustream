@@ -19,6 +19,7 @@ import {
   MonitorSpeaker,
   ChevronLeft,
   ChevronRight,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
@@ -35,6 +36,7 @@ import StreamPreview from "./StreamPreview";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
+import { subscriptionService } from "../services/subscription";
 
 function DashboardOverview() {
   const { user } = useAuth();
@@ -77,6 +79,15 @@ function DashboardOverview() {
     },
     enabled: !!user,
     refetchInterval: 10000, // Refresh every 10 seconds for live status
+  });
+
+  // Fetch subscription data
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ["subscription", user.id],
+    queryFn: async () => {
+      return await subscriptionService.getMySubscription();
+    },
+    enabled: !!user,
   });
 
   const destinations = destinationsData?.destinations || [];
@@ -170,7 +181,7 @@ function DashboardOverview() {
     }
   }, [streamInfo?.isActive, streamInfo?.activeStream?.started_at]);
 
-  if (streamLoading || destinationsLoading || sourcesLoading) {
+  if (streamLoading || destinationsLoading || sourcesLoading || subscriptionLoading) {
     return <DashboardOverviewSkeleton />;
   }
 
@@ -274,6 +285,80 @@ function DashboardOverview() {
           )}
         </CardContent>
       </Card>
+
+      {/* Subscription Status */}
+      {subscriptionData?.subscription && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center justify-between">
+              <span className="flex items-center">
+                <Crown className="h-5 w-5 mr-2 text-primary" />
+                Subscription Status
+              </span>
+              <Badge
+                variant={
+                  subscriptionData.subscription.status === "active"
+                    ? "default"
+                    : "secondary"
+                }
+              >
+                {subscriptionData.subscription.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="font-medium">
+                  {subscriptionData.subscription.plan_name} Plan
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {subscriptionData.subscription.billing_cycle} billing
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {subscriptionData.subscription.current_period_end
+                    ? `Renews on ${new Date(
+                        subscriptionData.subscription.current_period_end
+                      ).toLocaleDateString()}`
+                    : "No active subscription"}
+                </p>
+              </div>
+            </div>
+            {subscriptionData?.usage && (
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {subscriptionData.usage.active_stream_sources}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Active Sources</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {subscriptionData.usage.total_destinations}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Destinations</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {subscriptionData.usage.streaming_hours_used.toFixed(1)}h
+                  </div>
+                  <div className="text-sm text-muted-foreground">Streaming Hours</div>
+                </div>
+              </div>
+            )}
+            <div className="mt-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard/subscription">
+                  Manage Subscription
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

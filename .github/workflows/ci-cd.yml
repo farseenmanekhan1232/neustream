@@ -92,6 +92,15 @@ jobs:
               fi
             fi
 
+            # Run subscription database migrations
+            echo "💰 Running subscription database migrations..."
+            if node scripts/run-migrations.js; then
+              echo "✅ Subscription migrations completed successfully"
+            else
+              echo "❌ Subscription migrations failed"
+              exit 1
+            fi
+
             # Create fresh environment file
             cat > .env << EOF
             NODE_ENV=production

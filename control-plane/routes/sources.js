@@ -1,6 +1,7 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
+const { canCreateStreamSource, updateUsageMetrics } = require("../middleware/usageTracking");
 const crypto = require("crypto");
 const posthogService = require("../services/posthog");
 
@@ -85,7 +86,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
 });
 
 // Create new stream source - requires authentication
-router.post("/", authenticateToken, async (req, res) => {
+router.post("/", authenticateToken, canCreateStreamSource, updateUsageMetrics, async (req, res) => {
   const { name, description } = req.body;
   const userId = req.user.id;
 
@@ -401,7 +402,7 @@ router.get("/:sourceId/destinations", authenticateToken, async (req, res) => {
 });
 
 // Add destination to a specific source - requires authentication
-router.post("/:sourceId/destinations", authenticateToken, async (req, res) => {
+router.post("/:sourceId/destinations", authenticateToken, canAddDestination, updateUsageMetrics, async (req, res) => {
   const { sourceId } = req.params;
   const { platform, rtmpUrl, streamKey } = req.body;
   const userId = req.user.id;

@@ -71,6 +71,14 @@ class PostHogService {
     });
   }
 
+  // Track subscription events
+  trackSubscriptionEvent(userId, event, properties = {}) {
+    this.trackUserEvent(userId, event, {
+      subscription_event: true,
+      ...properties,
+    });
+  }
+
   // Identify user properties
   identifyUser(userId, properties = {}) {
     if (!this.isEnabled || !this.client) return;

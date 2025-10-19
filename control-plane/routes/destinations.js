@@ -1,6 +1,7 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
+const { canAddDestination, updateUsageMetrics } = require("../middleware/usageTracking");
 
 const router = express.Router();
 const db = new Database();
@@ -24,7 +25,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // Add new destination - requires authentication
-router.post("/", authenticateToken, async (req, res) => {
+router.post("/", authenticateToken, canAddDestination, updateUsageMetrics, async (req, res) => {
   const { platform, rtmpUrl, streamKey } = req.body;
   // Use authenticated user ID instead of request body parameter
   const userId = req.user.id;
