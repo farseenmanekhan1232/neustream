@@ -1,13 +1,13 @@
-const Razorpay = require('razorpay');
-const Database = require('../lib/database');
-const posthogService = require('./posthog');
+const Razorpay = require("razorpay");
+const Database = require("../lib/database");
+const posthogService = require("./posthog");
 
 class SubscriptionService {
   constructor() {
     this.db = new Database();
     this.razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
   }
 
@@ -17,18 +17,18 @@ class SubscriptionService {
   async getPlans() {
     try {
       const plans = await this.db.query(
-        'SELECT * FROM subscription_plans WHERE is_active = true AND is_public = true ORDER BY sort_order'
+        "SELECT * FROM subscription_plans WHERE is_active = true AND is_public = true ORDER BY sort_order"
       );
       return plans;
     } catch (error) {
-      console.error('Error fetching subscription plans:', error);
+      console.error("Error fetching subscription plans:", error);
       throw error;
     }
   }
 
   /**
    * Get user's current subscription
-   */
+   */ a;
   async getUserSubscription(userId) {
     try {
       const subscriptions = await this.db.query(
@@ -56,7 +56,7 @@ class SubscriptionService {
 
       return subscriptions.length > 0 ? subscriptions[0] : null;
     } catch (error) {
-      console.error('Error fetching user subscription:', error);
+      console.error("Error fetching user subscription:", error);
       throw error;
     }
   }
@@ -74,54 +74,68 @@ class SubscriptionService {
         [userId, currentPeriod.start, currentPeriod.end]
       );
 
-      return usage.length > 0 ? usage[0] : {
-        user_id: userId,
-        streaming_hours_used: 0,
-        active_stream_sources: 0,
-        total_destinations: 0,
-        period_start: currentPeriod.start,
-        period_end: currentPeriod.end
-      };
+      return usage.length > 0
+        ? usage[0]
+        : {
+            user_id: userId,
+            streaming_hours_used: 0,
+            active_stream_sources: 0,
+            total_destinations: 0,
+            period_start: currentPeriod.start,
+            period_end: currentPeriod.end,
+          };
     } catch (error) {
-      console.error('Error fetching user usage:', error);
+      console.error("Error fetching user usage:", error);
       throw error;
     }
   }
 
   /**
-   * Create a Razorpay subscription for a user
+   * Create a subscription for a user
    */
-  async createSubscription(userId, planId, billingCycle = 'monthly') {
+  async createSubscription(userId, planId, billingCycle = "monthly") {
     try {
       // Get plan details
       const plans = await this.db.query(
-        'SELECT * FROM subscription_plans WHERE id = $1',
+        "SELECT * FROM subscription_plans WHERE id = $1",
         [planId]
       );
 
       if (plans.length === 0) {
-        throw new Error('Plan not found');
+        throw new Error("Plan not found");
       }
 
       const plan = plans[0];
-      const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+      const amount =
+        billingCycle === "yearly" ? plan.price_yearly : plan.price_monthly;
+
+
+      // Paid plans - use Razorpay
+      // Get Razorpay plan ID from environment variables
+      const planKey = `${plan.name.toLowerCase()}_${billingCycle}`;
+      const razorpayPlanId =
+        process.env[`RAZORPAY_PLAN_${planKey.toUpperCase()}`];
+
+      if (!razorpayPlanId) {
+        throw new Error(`Razorpay plan ID not configured for ${planKey}`);
+      }
 
       // Create Razorpay subscription
       const subscription = await this.razorpay.subscriptions.create({
-        plan_id: billingCycle === 'yearly' ? plan.stripe_yearly_price_id : plan.stripe_price_id,
+        plan_id: razorpayPlanId,
         customer_notify: 1,
-        total_count: billingCycle === 'yearly' ? 1 : 12, // 1 year or 12 months
+        total_count: billingCycle === "yearly" ? 1 : 12, // 1 year or 12 months
         quantity: 1,
         notes: {
           user_id: userId,
-          plan_name: plan.name
-        }
+          plan_name: plan.name,
+        },
       });
 
       // Calculate billing period
       const currentPeriodStart = new Date();
       const currentPeriodEnd = new Date();
-      if (billingCycle === 'yearly') {
+      if (billingCycle === "yearly") {
         currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
       } else {
         currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
@@ -137,30 +151,135 @@ class SubscriptionService {
         [
           userId,
           planId,
-          'pending', // Will be updated when payment succeeds
+          "pending", // Will be updated when payment succeeds
           billingCycle,
           subscription.id,
           currentPeriodStart,
-          currentPeriodEnd
+          currentPeriodEnd,
         ]
       );
 
       // Track subscription creation
-      posthogService.trackSubscriptionEvent(userId, 'subscription_created', {
+      posthogService.trackSubscriptionEvent(userId, "subscription_created", {
         plan_id: planId,
         plan_name: plan.name,
         billing_cycle: billingCycle,
         amount: amount,
-        razorpay_subscription_id: subscription.id
+        razorpay_subscription_id: subscription.id,
       });
 
       return {
         subscription: userSubscription,
         razorpay_subscription: subscription,
-        checkout_url: subscription.short_url
+        checkout_url: subscription.short_url,
       };
     } catch (error) {
-      console.error('Error creating subscription:', error);
+      console.error("Error creating subscription:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Change user subscription plan
+   */
+  async changeSubscriptionPlan(userId, newPlanId, billingCycle = "monthly") {
+    try {
+      const currentSubscription = await this.getUserSubscription(userId);
+      if (!currentSubscription) {
+        throw new Error("No active subscription found");
+      }
+
+      // Get new plan details
+      const newPlans = await this.db.query(
+        "SELECT * FROM subscription_plans WHERE id = $1",
+        [newPlanId]
+      );
+
+      if (newPlans.length === 0) {
+        throw new Error("New plan not found");
+      }
+
+      const newPlan = newPlans[0];
+
+      // Check if it's actually a plan change
+      if (currentSubscription.plan_id === newPlanId) {
+        throw new Error("User is already on this plan");
+      }
+
+      // Calculate prorated amount if needed
+      const currentPeriodStart = new Date(currentSubscription.current_period_start);
+      const currentPeriodEnd = new Date(currentSubscription.current_period_end);
+      const now = new Date();
+
+      // Calculate remaining time in current period
+      const totalPeriodMs = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
+      const remainingMs = currentPeriodEnd.getTime() - now.getTime();
+      const remainingPercentage = remainingMs / totalPeriodMs;
+
+      // Get Razorpay plan ID for new plan
+      const planKey = `${newPlan.name.toLowerCase()}_${billingCycle}`;
+      const razorpayPlanId = process.env[`RAZORPAY_PLAN_${planKey.toUpperCase()}`];
+
+      if (!razorpayPlanId) {
+        throw new Error(`Razorpay plan ID not configured for ${planKey}`);
+      }
+
+      // For Razorpay, we need to cancel the current subscription and create a new one
+      // This is a simplified approach - in production you might want to use Razorpay's update subscription API
+
+      // Cancel current subscription
+      await this.razorpay.subscriptions.cancel(
+        currentSubscription.razorpay_subscription_id
+      );
+
+      // Create new subscription
+      const newSubscription = await this.razorpay.subscriptions.create({
+        plan_id: razorpayPlanId,
+        customer_notify: 1,
+        total_count: billingCycle === "yearly" ? 1 : 12,
+        quantity: 1,
+        notes: {
+          user_id: userId,
+          plan_name: newPlan.name,
+          previous_plan: currentSubscription.plan_name,
+        },
+      });
+
+      // Update database
+      const updatedSubscription = await this.db.run(
+        `UPDATE user_subscriptions
+         SET plan_id = $1, razorpay_subscription_id = $2, billing_cycle = $3,
+             status = 'pending', current_period_start = $4, current_period_end = $5,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = $6 AND status = 'active'
+         RETURNING *`,
+        [
+          newPlanId,
+          newSubscription.id,
+          billingCycle,
+          now,
+          new Date(now.getTime() + (billingCycle === "yearly" ? 365 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000)),
+          userId
+        ]
+      );
+
+      // Track plan change
+      posthogService.trackSubscriptionEvent(userId, "subscription_plan_changed", {
+        previous_plan_id: currentSubscription.plan_id,
+        previous_plan_name: currentSubscription.plan_name,
+        new_plan_id: newPlanId,
+        new_plan_name: newPlan.name,
+        billing_cycle: billingCycle,
+        razorpay_subscription_id: newSubscription.id,
+      });
+
+      return {
+        subscription: updatedSubscription,
+        razorpay_subscription: newSubscription,
+        checkout_url: newSubscription.short_url,
+      };
+    } catch (error) {
+      console.error("Error changing subscription plan:", error);
       throw error;
     }
   }
@@ -172,11 +291,13 @@ class SubscriptionService {
     try {
       const subscription = await this.getUserSubscription(userId);
       if (!subscription) {
-        throw new Error('No active subscription found');
+        throw new Error("No active subscription found");
       }
 
       // Cancel in Razorpay
-      await this.razorpay.subscriptions.cancel(subscription.razorpay_subscription_id);
+      await this.razorpay.subscriptions.cancel(
+        subscription.razorpay_subscription_id
+      );
 
       // Update database
       const updatedSubscription = await this.db.run(
@@ -188,14 +309,14 @@ class SubscriptionService {
       );
 
       // Track cancellation
-      posthogService.trackSubscriptionEvent(userId, 'subscription_canceled', {
+      posthogService.trackSubscriptionEvent(userId, "subscription_canceled", {
         subscription_id: subscription.id,
-        razorpay_subscription_id: subscription.razorpay_subscription_id
+        razorpay_subscription_id: subscription.razorpay_subscription_id,
       });
 
       return updatedSubscription;
     } catch (error) {
-      console.error('Error canceling subscription:', error);
+      console.error("Error canceling subscription:", error);
       throw error;
     }
   }
@@ -209,26 +330,26 @@ class SubscriptionService {
 
       // Store event for processing
       await this.db.run(
-        'INSERT INTO subscription_events (event_type, razorpay_event_id, payload) VALUES ($1, $2, $3)',
+        "INSERT INTO subscription_events (event_type, razorpay_event_id, payload) VALUES ($1, $2, $3)",
         [eventType, payload.subscription?.id || payload.payment?.id, payload]
       );
 
       // Process specific events
       switch (eventType) {
-        case 'subscription.charged':
+        case "subscription.charged":
           await this.handleSubscriptionCharged(payload);
           break;
-        case 'subscription.cancelled':
+        case "subscription.cancelled":
           await this.handleSubscriptionCancelled(payload);
           break;
-        case 'payment.failed':
+        case "payment.failed":
           await this.handlePaymentFailed(payload);
           break;
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error processing webhook:', error);
+      console.error("Error processing webhook:", error);
       throw error;
     }
   }
@@ -247,7 +368,7 @@ class SubscriptionService {
       [
         new Date(subscription.current_start * 1000),
         new Date(subscription.current_end * 1000),
-        subscription.id
+        subscription.id,
       ]
     );
 
@@ -262,21 +383,21 @@ class SubscriptionService {
         null, // Will be linked after we get subscription ID
         payment.amount,
         payment.currency,
-        'succeeded',
+        "succeeded",
         payment.id,
         payment.order_id,
-        new Date(payment.created_at * 1000)
+        new Date(payment.created_at * 1000),
       ]
     );
 
     // Track successful payment
     posthogService.trackSubscriptionEvent(
       subscription.notes?.user_id,
-      'payment_succeeded',
+      "payment_succeeded",
       {
         amount: payment.amount,
         currency: payment.currency,
-        razorpay_payment_id: payment.id
+        razorpay_payment_id: payment.id,
       }
     );
   }
@@ -296,7 +417,7 @@ class SubscriptionService {
 
     posthogService.trackSubscriptionEvent(
       subscription.notes?.user_id,
-      'subscription_canceled_webhook',
+      "subscription_canceled_webhook",
       { razorpay_subscription_id: subscription.id }
     );
   }
@@ -325,22 +446,18 @@ class SubscriptionService {
         null,
         payment.amount,
         payment.currency,
-        'failed',
+        "failed",
         payment.id,
-        payment.order_id
+        payment.order_id,
       ]
     );
 
-    posthogService.trackSubscriptionEvent(
-      'anonymous',
-      'payment_failed',
-      {
-        amount: payment.amount,
-        currency: payment.currency,
-        razorpay_payment_id: payment.id,
-        error_description: payment.error_description
-      }
-    );
+    posthogService.trackSubscriptionEvent("anonymous", "payment_failed", {
+      amount: payment.amount,
+      currency: payment.currency,
+      razorpay_payment_id: payment.id,
+      error_description: payment.error_description,
+    });
   }
 
   /**
@@ -358,7 +475,7 @@ class SubscriptionService {
 
       return usage.active_stream_sources < subscription.max_stream_sources;
     } catch (error) {
-      console.error('Error checking stream source limit:', error);
+      console.error("Error checking stream source limit:", error);
       return false;
     }
   }
@@ -376,9 +493,11 @@ class SubscriptionService {
         return usage.total_destinations < 2;
       }
 
-      return usage.total_destinations < subscription.max_simultaneous_destinations;
+      return (
+        usage.total_destinations < subscription.max_simultaneous_destinations
+      );
     } catch (error) {
-      console.error('Error checking destination limit:', error);
+      console.error("Error checking destination limit:", error);
       return false;
     }
   }
@@ -417,11 +536,11 @@ class SubscriptionService {
           metrics.active_stream_sources || 0,
           metrics.total_destinations || 0,
           currentPeriod.start,
-          currentPeriod.end
+          currentPeriod.end,
         ]
       );
     } catch (error) {
-      console.error('Error updating usage metrics:', error);
+      console.error("Error updating usage metrics:", error);
       throw error;
     }
   }

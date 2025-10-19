@@ -141,6 +141,34 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// Change subscription plan
+router.post('/change-plan', authenticateToken, async (req, res) => {
+  const { planId, billingCycle = 'monthly' } = req.body;
+
+  try {
+    if (!planId) {
+      return res.status(400).json({ error: 'Plan ID is required' });
+    }
+
+    // Check if user has an active subscription
+    const existingSubscription = await subscriptionService.getUserSubscription(req.user.id);
+    if (!existingSubscription) {
+      return res.status(400).json({ error: 'No active subscription found' });
+    }
+
+    const result = await subscriptionService.changeSubscriptionPlan(req.user.id, planId, billingCycle);
+
+    res.json({
+      subscription: result.subscription,
+      checkout_url: result.checkout_url,
+      message: 'Subscription plan changed successfully. Please complete the payment to activate your new plan.'
+    });
+  } catch (error) {
+    console.error('Error changing subscription plan:', error);
+    res.status(500).json({ error: 'Failed to change subscription plan' });
+  }
+});
+
 // Get user's payment history
 router.get('/payments', authenticateToken, async (req, res) => {
   try {

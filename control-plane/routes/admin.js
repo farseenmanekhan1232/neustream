@@ -1,6 +1,7 @@
 const express = require('express');
 const Database = require('../lib/database');
 const { authenticateToken } = require('../middleware/auth');
+const subscriptionService = require('../services/subscription');
 
 const router = express.Router();
 const db = new Database();
@@ -962,6 +963,428 @@ router.get('/analytics/streams', async (req, res) => {
   } catch (error) {
     console.error('Get stream analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch stream analytics' });
+  }
+});
+
+// ============================================
+// SUBSCRIPTION MANAGEMENT
+// ============================================
+
+// Get all subscription plans
+router.get('/subscription-plans', async (req, res) => {
+  try {
+    const plans = await subscriptionService.getPlans();
+    res.json({ plans });
+  } catch (error) {
+    console.error('Get subscription plans error:', error);
+    res.status(500).json({ error: 'Failed to fetch subscription plans' });
+  }
+});
+
+// Create new subscription plan
+router.post('/subscription-plans', async (req, res) => {
+  const {
+    name,
+    description,
+    price_monthly,
+    price_yearly,
+    max_stream_sources,
+    max_simultaneous_destinations,
+    max_streaming_hours_monthly,
+    has_advanced_analytics,
+    has_priority_support,
+    has_custom_rtmp,
+    has_stream_preview,
+    has_team_access,
+    has_custom_branding,
+    has_api_access,
+    is_active,
+    is_public,
+    sort_order
+  } = req.body;
+
+  try {
+    const result = await db.run(
+      `INSERT INTO subscription_plans (
+        name, description, price_monthly, price_yearly,
+        max_stream_sources, max_simultaneous_destinations, max_streaming_hours_monthly,
+        has_advanced_analytics, has_priority_support, has_custom_rtmp,
+        has_stream_preview, has_team_access, has_custom_branding, has_api_access,
+        is_active, is_public, sort_order
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+      [
+        name, description, price_monthly, price_yearly,
+        max_stream_sources, max_simultaneous_destinations, max_streaming_hours_monthly,
+        has_advanced_analytics, has_priority_support, has_custom_rtmp,
+        has_stream_preview, has_team_access, has_custom_branding, has_api_access,
+        is_active || true, is_public || true, sort_order || 0
+      ]
+    );
+
+    res.json({ plan: result });
+  } catch (error) {
+    console.error('Create subscription plan error:', error);
+    res.status(500).json({ error: 'Failed to create subscription plan' });
+  }
+});
+
+// Update subscription plan
+router.put('/subscription-plans/:id', async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  try {
+    // Check if plan exists
+    const existingPlan = await db.query('SELECT * FROM subscription_plans WHERE id = $1', [id]);
+    if (existingPlan.length === 0) {
+      return res.status(404).json({ error: 'Subscription plan not found' });
+    }
+
+    // Build update query
+    const updateFields = [];
+    const params = [];
+    let paramIndex = 1;
+
+    const allowedFields = [
+      'name', 'description', 'price_monthly', 'price_yearly',
+      'max_stream_sources', 'max_simultaneous_destinations', 'max_streaming_hours_monthly',
+      'has_advanced_analytics', 'has_priority_support', 'has_custom_rtmp',
+      'has_stream_preview', 'has_team_access', 'has_custom_branding', 'has_api_access',
+      'is_active', 'is_public', 'sort_order'
+    ];
+
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        updateFields.push(`${field} = $${paramIndex++}`);
+        params.push(updates[field]);
+      }
+    });
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    params.push(id);
+
+    const result = await db.run(
+      `UPDATE subscription_plans SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex} RETURNING *`,
+      params
+    );
+
+    res.json({ plan: result });
+  } catch (error) {
+    console.error('Update subscription plan error:', error);
+    res.status(500).json({ error: 'Failed to update subscription plan' });
+  }
+});
+
+// Delete subscription plan
+router.delete('/subscription-plans/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if plan exists
+    const existingPlan = await db.query('SELECT * FROM subscription_plans WHERE id = $1', [id]);
+    if (existingPlan.length === 0) {
+      return res.status(404).json({ error: 'Subscription plan not found' });
+    }
+
+    // Check if plan has active subscriptions
+    const activeSubscriptions = await db.query(
+      'SELECT COUNT(*) as count FROM user_subscriptions WHERE plan_id = $1 AND status = $2',
+      [id, 'active']
+    );
+
+    if (parseInt(activeSubscriptions[0].count) > 0) {
+      return res.status(400).json({ error: 'Cannot delete plan with active subscriptions' });
+    }
+
+    // Delete the plan
+    await db.run('DELETE FROM subscription_plans WHERE id = $1', [id]);
+
+    res.json({ message: 'Subscription plan deleted successfully' });
+  } catch (error) {
+    console.error('Delete subscription plan error:', error);
+    res.status(500).json({ error: 'Failed to delete subscription plan' });
+  }
+});
+
+// Get all user subscriptions with user details
+router.get('/subscriptions', async (req, res) => {
+  try {
+    const subscriptions = await db.query(`
+      SELECT
+        us.*,
+        sp.name as plan_name,
+        sp.description as plan_description,
+        u.email,
+        u.display_name,
+        u.created_at as user_created_at
+      FROM user_subscriptions us
+      JOIN subscription_plans sp ON us.plan_id = sp.id
+      JOIN users u ON us.user_id = u.id
+      ORDER BY us.created_at DESC
+    `);
+
+    res.json({ subscriptions });
+  } catch (error) {
+    console.error('Get subscriptions error:', error);
+    res.status(500).json({ error: 'Failed to fetch subscriptions' });
+  }
+});
+
+// Get specific user subscription details
+router.get('/subscriptions/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const subscriptions = await db.query(`
+      SELECT
+        us.*,
+        sp.name as plan_name,
+        sp.description as plan_description,
+        sp.max_stream_sources,
+        sp.max_simultaneous_destinations,
+        sp.max_streaming_hours_monthly,
+        sp.has_advanced_analytics,
+        sp.has_priority_support,
+        sp.has_custom_rtmp,
+        sp.has_stream_preview,
+        sp.has_team_access,
+        sp.has_custom_branding,
+        sp.has_api_access,
+        u.email,
+        u.display_name,
+        u.created_at as user_created_at
+      FROM user_subscriptions us
+      JOIN subscription_plans sp ON us.plan_id = sp.id
+      JOIN users u ON us.user_id = u.id
+      WHERE us.id = $1
+    `, [id]);
+
+    if (subscriptions.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const subscription = subscriptions[0];
+
+    // Get usage data
+    const usage = await subscriptionService.getUserUsage(subscription.user_id);
+
+    // Get payment history
+    const payments = await db.query(`
+      SELECT * FROM payment_transactions
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+    `, [subscription.user_id]);
+
+    res.json({
+      subscription,
+      usage,
+      payments
+    });
+  } catch (error) {
+    console.error('Get subscription details error:', error);
+    res.status(500).json({ error: 'Failed to fetch subscription details' });
+  }
+});
+
+// Update user subscription (admin override)
+router.put('/subscriptions/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, current_period_start, current_period_end, billing_cycle } = req.body;
+
+  try {
+    // Check if subscription exists
+    const existingSub = await db.query('SELECT * FROM user_subscriptions WHERE id = $1', [id]);
+    if (existingSub.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const updates = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (status !== undefined) {
+      updates.push(`status = $${paramIndex++}`);
+      params.push(status);
+    }
+
+    if (current_period_start !== undefined) {
+      updates.push(`current_period_start = $${paramIndex++}`);
+      params.push(new Date(current_period_start));
+    }
+
+    if (current_period_end !== undefined) {
+      updates.push(`current_period_end = $${paramIndex++}`);
+      params.push(new Date(current_period_end));
+    }
+
+    if (billing_cycle !== undefined) {
+      updates.push(`billing_cycle = $${paramIndex++}`);
+      params.push(billing_cycle);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    params.push(id);
+
+    const result = await db.run(
+      `UPDATE user_subscriptions SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex} RETURNING *`,
+      params
+    );
+
+    res.json({ subscription: result });
+  } catch (error) {
+    console.error('Update subscription error:', error);
+    res.status(500).json({ error: 'Failed to update subscription' });
+  }
+});
+
+// Cancel user subscription (admin override)
+router.post('/subscriptions/:id/cancel', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if subscription exists
+    const existingSub = await db.query('SELECT * FROM user_subscriptions WHERE id = $1', [id]);
+    if (existingSub.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const subscription = existingSub[0];
+
+    // Cancel in Razorpay if we have the subscription ID
+    if (subscription.razorpay_subscription_id) {
+      try {
+        await subscriptionService.razorpay.subscriptions.cancel(
+          subscription.razorpay_subscription_id
+        );
+      } catch (razorpayError) {
+        console.warn('Failed to cancel Razorpay subscription:', razorpayError);
+        // Continue with database cancellation even if Razorpay fails
+      }
+    }
+
+    // Update database
+    const result = await db.run(
+      `UPDATE user_subscriptions
+       SET status = 'canceled', canceled_at = NOW(), cancel_at_period_end = true
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    res.json({ subscription: result });
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+});
+
+// Get subscription analytics
+router.get('/subscriptions/analytics', async (req, res) => {
+  try {
+    // Subscription distribution by plan
+    const planDistribution = await db.query(`
+      SELECT
+        sp.name as plan_name,
+        COUNT(*) as total_subscriptions,
+        COUNT(CASE WHEN us.status = 'active' THEN 1 END) as active_subscriptions,
+        COUNT(CASE WHEN us.status = 'canceled' THEN 1 END) as canceled_subscriptions
+      FROM user_subscriptions us
+      JOIN subscription_plans sp ON us.plan_id = sp.id
+      GROUP BY sp.name
+      ORDER BY total_subscriptions DESC
+    `);
+
+    // Monthly revenue
+    const monthlyRevenue = await db.query(`
+      SELECT
+        DATE_TRUNC('month', pt.paid_at) as month,
+        SUM(pt.amount) as total_revenue,
+        COUNT(*) as successful_payments
+      FROM payment_transactions pt
+      WHERE pt.status = 'succeeded' AND pt.paid_at IS NOT NULL
+      GROUP BY DATE_TRUNC('month', pt.paid_at)
+      ORDER BY month DESC
+      LIMIT 12
+    `);
+
+    // Subscription growth
+    const subscriptionGrowth = await db.query(`
+      SELECT
+        DATE_TRUNC('month', us.created_at) as month,
+        COUNT(*) as new_subscriptions,
+        COUNT(CASE WHEN us.status = 'active' THEN 1 END) as active_subscriptions
+      FROM user_subscriptions us
+      WHERE us.created_at > NOW() - INTERVAL '12 months'
+      GROUP BY DATE_TRUNC('month', us.created_at)
+      ORDER BY month ASC
+    `);
+
+    // Payment success rate
+    const paymentStats = await db.query(`
+      SELECT
+        COUNT(*) as total_payments,
+        COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+        ROUND(COUNT(CASE WHEN status = 'succeeded' THEN 1 END) * 100.0 / COUNT(*), 2) as success_rate
+      FROM payment_transactions
+      WHERE created_at > NOW() - INTERVAL '30 days'
+    `);
+
+    res.json({
+      planDistribution,
+      monthlyRevenue,
+      subscriptionGrowth,
+      paymentStats: paymentStats[0]
+    });
+  } catch (error) {
+    console.error('Get subscription analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch subscription analytics' });
+  }
+});
+
+// Get payment transactions
+router.get('/payments', async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const payments = await db.query(`
+      SELECT
+        pt.*,
+        u.email,
+        u.display_name,
+        sp.name as plan_name
+      FROM payment_transactions pt
+      LEFT JOIN users u ON pt.user_id = u.id
+      LEFT JOIN user_subscriptions us ON pt.subscription_id = us.id
+      LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
+      ORDER BY pt.created_at DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
+
+    const totalCount = await db.query(`
+      SELECT COUNT(*) as total FROM payment_transactions
+    `);
+
+    res.json({
+      payments,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: parseInt(totalCount[0].total),
+        totalPages: Math.ceil(totalCount[0].total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get payments error:', error);
+    res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
 
