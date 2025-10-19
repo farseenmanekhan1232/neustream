@@ -24,6 +24,7 @@ import {
   Bell,
   ChevronRight,
   MonitorSpeaker,
+  Crown,
 } from "lucide-react";
 import { usePostHog } from "../hooks/usePostHog";
 import { useAuth } from "../contexts/AuthContext";
