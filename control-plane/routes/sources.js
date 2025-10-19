@@ -1,7 +1,7 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
-const { canCreateStreamSource, updateUsageMetrics } = require("../middleware/usageTracking");
+const { canCreateStreamSource, canAddDestination, updateUsageMetrics } = require("../middleware/usageTracking");
 const crypto = require("crypto");
 const posthogService = require("../services/posthog");
 
