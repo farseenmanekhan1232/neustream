@@ -93,6 +93,7 @@ jobs:
             RAZORPAY_PLAN_PRO_YEARLY=${{ secrets.RAZORPAY_PLAN_PRO_YEARLY }}
             RAZORPAY_PLAN_BUSINESS_MONTHLY=${{ secrets.RAZORPAY_PLAN_BUSINESS_MONTHLY }}
             RAZORPAY_PLAN_BUSINESS_YEARLY=${{ secrets.RAZORPAY_PLAN_BUSINESS_YEARLY }}
+            RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
             FRONTEND_URL=https://www.neustream.app
             DB_HOST=localhost
             DB_PORT=5432

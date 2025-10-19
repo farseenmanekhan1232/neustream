@@ -117,20 +117,22 @@ router.get('/limits', authenticateToken, async (req, res) => {
 // Razorpay webhook handler
 router.post('/webhook', async (req, res) => {
   try {
-    // Verify webhook signature (implement proper signature verification in production)
+    // Verify webhook signature
     const razorpaySignature = req.headers['x-razorpay-signature'];
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-    // In production, verify the signature using Razorpay's utility
-    // const crypto = require('crypto');
-    // const expectedSignature = crypto
-    //   .createHmac('sha256', webhookSecret)
-    //   .update(JSON.stringify(req.body))
-    //   .digest('hex');
-    //
-    // if (expectedSignature !== razorpaySignature) {
-    //   return res.status(401).json({ error: 'Invalid webhook signature' });
-    // }
+    if (webhookSecret) {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+      if (expectedSignature !== razorpaySignature) {
+        console.warn('Invalid webhook signature received');
+        return res.status(401).json({ error: 'Invalid webhook signature' });
+      }
+    }
 
     await subscriptionService.handleWebhook(req.body);
 
