@@ -10,9 +10,7 @@ const streamRoutes = require("./routes/streams");
 const destinationRoutes = require("./routes/destinations");
 const sourceRoutes = require("./routes/sources");
 const adminRoutes = require("./routes/admin");
-const subscriptionRoutes = require("./routes/subscriptions");
 const posthogService = require("./services/posthog");
-const { updateUsageMetrics } = require("./middleware/usageTracking");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,7 +50,7 @@ const corsOptions = {
 // Apply CORS to all routes except webhooks
 app.use((req, res, next) => {
   // Skip CORS for webhook endpoints
-  if (req.path.includes('/webhook')) {
+  if (req.path.includes("/webhook")) {
     return next();
   }
   cors(corsOptions)(req, res, next);
@@ -60,16 +58,12 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Global usage tracking middleware
-app.use(updateUsageMetrics);
-
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/streams", streamRoutes);
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/sources", sourceRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/subscriptions", subscriptionRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {

@@ -1,7 +1,7 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
-const { canCreateStreamSource, canAddDestination, updateUsageMetrics } = require("../middleware/usageTracking");
+
 const crypto = require("crypto");
 const posthogService = require("../services/posthog");
 
@@ -86,7 +86,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
 });
 
 // Create new stream source - requires authentication
-router.post("/", authenticateToken, canCreateStreamSource, updateUsageMetrics, async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
   const { name, description } = req.body;
   const userId = req.user.id;
 
@@ -97,7 +97,9 @@ router.post("/", authenticateToken, canCreateStreamSource, updateUsageMetrics, a
     }
 
     if (name.length > 255) {
-      return res.status(400).json({ error: "Source name must be less than 255 characters" });
+      return res
+        .status(400)
+        .json({ error: "Source name must be less than 255 characters" });
     }
 
     // Generate unique stream key
@@ -126,7 +128,9 @@ router.post("/", authenticateToken, canCreateStreamSource, updateUsageMetrics, a
     }
 
     if (!isUnique) {
-      return res.status(500).json({ error: "Failed to generate unique stream key" });
+      return res
+        .status(500)
+        .json({ error: "Failed to generate unique stream key" });
     }
 
     // Create the stream source
@@ -169,7 +173,9 @@ router.put("/:id", authenticateToken, async (req, res) => {
   try {
     // Validate input
     if (name && (name.trim().length === 0 || name.length > 255)) {
-      return res.status(400).json({ error: "Source name must be between 1 and 255 characters" });
+      return res
+        .status(400)
+        .json({ error: "Source name must be between 1 and 255 characters" });
     }
 
     // Check if source belongs to user
@@ -190,7 +196,9 @@ router.put("/:id", authenticateToken, async (req, res) => {
       );
 
       if (activeStream.length > 0) {
-        return res.status(400).json({ error: "Cannot deactivate source while streaming" });
+        return res
+          .status(400)
+          .json({ error: "Cannot deactivate source while streaming" });
       }
     }
 
@@ -240,7 +248,9 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     );
 
     if (activeStream.length > 0) {
-      return res.status(400).json({ error: "Cannot delete source while streaming" });
+      return res
+        .status(400)
+        .json({ error: "Cannot delete source while streaming" });
     }
 
     // Delete the source (destinations will be deleted due to CASCADE)
@@ -311,7 +321,9 @@ router.post("/:id/regenerate-key", authenticateToken, async (req, res) => {
     );
 
     if (activeStream.length > 0) {
-      return res.status(400).json({ error: "Cannot regenerate stream key while streaming" });
+      return res
+        .status(400)
+        .json({ error: "Cannot regenerate stream key while streaming" });
     }
 
     // Generate unique stream key
@@ -340,7 +352,9 @@ router.post("/:id/regenerate-key", authenticateToken, async (req, res) => {
     }
 
     if (!isUnique) {
-      return res.status(500).json({ error: "Failed to generate unique stream key" });
+      return res
+        .status(500)
+        .json({ error: "Failed to generate unique stream key" });
     }
 
     // Update the stream key
@@ -362,7 +376,7 @@ router.post("/:id/regenerate-key", authenticateToken, async (req, res) => {
 
     res.json({
       message: "Stream key regenerated successfully",
-      streamKey: result.stream_key
+      streamKey: result.stream_key,
     });
   } catch (error) {
     console.error("Regenerate stream key error:", error);
@@ -402,7 +416,7 @@ router.get("/:sourceId/destinations", authenticateToken, async (req, res) => {
 });
 
 // Add destination to a specific source - requires authentication
-router.post("/:sourceId/destinations", authenticateToken, canAddDestination, updateUsageMetrics, async (req, res) => {
+router.post("/:sourceId/destinations", authenticateToken, async (req, res) => {
   const { sourceId } = req.params;
   const { platform, rtmpUrl, streamKey } = req.body;
   const userId = req.user.id;
@@ -420,7 +434,9 @@ router.post("/:sourceId/destinations", authenticateToken, canAddDestination, upd
 
     // Validate input
     if (!platform || !rtmpUrl || !streamKey) {
-      return res.status(400).json({ error: "Platform, RTMP URL, and stream key are required" });
+      return res
+        .status(400)
+        .json({ error: "Platform, RTMP URL, and stream key are required" });
     }
 
     // Create destination for this source
@@ -445,43 +461,47 @@ router.post("/:sourceId/destinations", authenticateToken, canAddDestination, upd
 });
 
 // Delete destination from a specific source - requires authentication
-router.delete("/:sourceId/destinations/:destinationId", authenticateToken, async (req, res) => {
-  const { sourceId, destinationId } = req.params;
-  const userId = req.user.id;
+router.delete(
+  "/:sourceId/destinations/:destinationId",
+  authenticateToken,
+  async (req, res) => {
+    const { sourceId, destinationId } = req.params;
+    const userId = req.user.id;
 
-  try {
-    // Verify source belongs to user
-    const sourceCheck = await db.query(
-      "SELECT id, name FROM stream_sources WHERE id = $1 AND user_id = $2",
-      [sourceId, userId]
-    );
+    try {
+      // Verify source belongs to user
+      const sourceCheck = await db.query(
+        "SELECT id, name FROM stream_sources WHERE id = $1 AND user_id = $2",
+        [sourceId, userId]
+      );
 
-    if (sourceCheck.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
+      if (sourceCheck.length === 0) {
+        return res.status(404).json({ error: "Stream source not found" });
+      }
+
+      // Delete destination from this source
+      const result = await db.run(
+        "DELETE FROM source_destinations WHERE id = $1 AND source_id = $2",
+        [destinationId, sourceId]
+      );
+
+      if (result.changes === 0) {
+        return res.status(404).json({ error: "Destination not found" });
+      }
+
+      // Track destination removal
+      posthogService.trackAuthEvent(userId, "source_destination_removed", {
+        source_id: parseInt(sourceId),
+        source_name: sourceCheck[0].name,
+        destination_id: parseInt(destinationId),
+      });
+
+      res.json({ message: "Destination removed successfully" });
+    } catch (error) {
+      console.error("Delete source destination error:", error);
+      res.status(500).json({ error: "Failed to remove destination" });
     }
-
-    // Delete destination from this source
-    const result = await db.run(
-      "DELETE FROM source_destinations WHERE id = $1 AND source_id = $2",
-      [destinationId, sourceId]
-    );
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: "Destination not found" });
-    }
-
-    // Track destination removal
-    posthogService.trackAuthEvent(userId, "source_destination_removed", {
-      source_id: parseInt(sourceId),
-      source_name: sourceCheck[0].name,
-      destination_id: parseInt(destinationId),
-    });
-
-    res.json({ message: "Destination removed successfully" });
-  } catch (error) {
-    console.error("Delete source destination error:", error);
-    res.status(500).json({ error: "Failed to remove destination" });
   }
-});
+);
 
 module.exports = router;

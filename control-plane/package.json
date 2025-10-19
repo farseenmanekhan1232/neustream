@@ -22,8 +22,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-twitch-strategy": "^2.2.0",
     "pg": "^8.11.3",
-    "posthog-node": "^5.9.5",
-    "razorpay": "^2.9.2"
+    "posthog-node": "^5.9.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

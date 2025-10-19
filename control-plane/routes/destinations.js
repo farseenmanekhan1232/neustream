@@ -1,7 +1,6 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
-const { canAddDestination, updateUsageMetrics } = require("../middleware/usageTracking");
 
 const router = express.Router();
 const db = new Database();
@@ -25,7 +24,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // Add new destination - requires authentication
-router.post("/", authenticateToken, canAddDestination, updateUsageMetrics, async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
   const { platform, rtmpUrl, streamKey } = req.body;
   // Use authenticated user ID instead of request body parameter
   const userId = req.user.id;
@@ -56,7 +55,9 @@ router.put("/:id", authenticateToken, async (req, res) => {
     );
 
     if (!result) {
-      return res.status(404).json({ error: "Destination not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ error: "Destination not found or unauthorized" });
     }
 
     res.json({ destination: result });
@@ -72,10 +73,15 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
   try {
     // Ensure the destination belongs to the authenticated user
-    const result = await db.run("DELETE FROM destinations WHERE id = $1 AND user_id = $2", [id, req.user.id]);
+    const result = await db.run(
+      "DELETE FROM destinations WHERE id = $1 AND user_id = $2",
+      [id, req.user.id]
+    );
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: "Destination not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ error: "Destination not found or unauthorized" });
     }
 
     res.json({ message: "Destination deleted successfully" });

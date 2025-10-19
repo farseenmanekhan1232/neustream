@@ -1,15 +1,14 @@
-const express = require('express');
-const Database = require('../lib/database');
-const { authenticateToken } = require('../middleware/auth');
-const subscriptionService = require('../services/subscription');
+const express = require("express");
+const Database = require("../lib/database");
+const { authenticateToken } = require("../middleware/auth");
 
 const router = express.Router();
 const db = new Database();
 
 // Admin middleware - check if user is admin
 const requireAdmin = (req, res, next) => {
-  if (req.user.email !== 'admin@neustream.app') {
-    return res.status(403).json({ error: 'Admin access required' });
+  if (req.user.email !== "admin@neustream.app") {
+    return res.status(403).json({ error: "Admin access required" });
   }
   next();
 };
@@ -18,7 +17,7 @@ const requireAdmin = (req, res, next) => {
 router.use(authenticateToken, requireAdmin);
 
 // Get all users with their streaming info
-router.get('/users', async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
     const users = await db.query(`
       SELECT
@@ -49,30 +48,34 @@ router.get('/users', async (req, res) => {
 
     res.json({ users });
   } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error("Get users error:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
 // Get specific user details with their sources and streams
-router.get('/users/:id', async (req, res) => {
+router.get("/users/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Get user basic info
-    const users = await db.query(`
+    const users = await db.query(
+      `
       SELECT id, email, display_name, avatar_url, oauth_provider, stream_key, created_at
       FROM users WHERE id = $1
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const user = users[0];
 
     // Get user's stream sources
-    const sources = await db.query(`
+    const sources = await db.query(
+      `
       SELECT
         ss.*,
         COUNT(sd.id) as destinations_count,
@@ -85,10 +88,13 @@ router.get('/users/:id', async (req, res) => {
       WHERE ss.user_id = $1
       GROUP BY ss.id
       ORDER BY ss.created_at DESC
-    `, [id]);
+    `,
+      [id]
+    );
 
     // Get user's active streams
-    const activeStreams = await db.query(`
+    const activeStreams = await db.query(
+      `
       SELECT
         as_.*,
         ss.name as source_name
@@ -96,16 +102,21 @@ router.get('/users/:id', async (req, res) => {
       LEFT JOIN stream_sources ss ON as_.source_id = ss.id
       WHERE as_.user_id = $1 AND as_.ended_at IS NULL
       ORDER BY as_.started_at DESC
-    `, [id]);
+    `,
+      [id]
+    );
 
     // Get stream statistics
-    const streamStats = await db.query(`
+    const streamStats = await db.query(
+      `
       SELECT
         COUNT(*) as total_streams,
         AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
       FROM active_streams
       WHERE user_id = $1 AND ended_at IS NOT NULL
-    `, [id]);
+    `,
+      [id]
+    );
 
     res.json({
       user: {
@@ -114,18 +125,18 @@ router.get('/users/:id', async (req, res) => {
         activeStreams,
         stats: {
           totalStreams: parseInt(streamStats[0]?.total_streams) || 0,
-          avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0
-        }
-      }
+          avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0,
+        },
+      },
     });
   } catch (error) {
-    console.error('Get user details error:', error);
-    res.status(500).json({ error: 'Failed to fetch user details' });
+    console.error("Get user details error:", error);
+    res.status(500).json({ error: "Failed to fetch user details" });
   }
 });
 
 // Get system statistics
-router.get('/stats', async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
     // Get user statistics
     const userStats = await db.query(`
@@ -179,7 +190,7 @@ router.get('/stats', async (req, res) => {
       users: userStats[0],
       streams: {
         ...streamStats[0],
-        activeStreams: parseInt(activeStreamsCount[0]?.active_streams) || 0
+        activeStreams: parseInt(activeStreamsCount[0]?.active_streams) || 0,
       },
       destinations: destStats[0],
       activity: recentActivity[0],
@@ -187,27 +198,27 @@ router.get('/stats', async (req, res) => {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         nodeVersion: process.version,
-        platform: process.platform
-      }
+        platform: process.platform,
+      },
     });
   } catch (error) {
-    console.error('Get stats error:', error);
-    res.status(500).json({ error: 'Failed to fetch system statistics' });
+    console.error("Get stats error:", error);
+    res.status(500).json({ error: "Failed to fetch system statistics" });
   }
 });
 
 // Get analytics data for charts
-router.get('/analytics', async (req, res) => {
+router.get("/analytics", async (req, res) => {
   try {
-    const { period = '7d' } = req.query;
+    const { period = "7d" } = req.query;
 
-    let interval = 'day';
+    let interval = "day";
     let periodFilter = "NOW() - INTERVAL '7 days'";
 
-    if (period === '30d') {
+    if (period === "30d") {
       periodFilter = "NOW() - INTERVAL '30 days'";
-    } else if (period === '24h') {
-      interval = 'hour';
+    } else if (period === "24h") {
+      interval = "hour";
       periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
@@ -259,24 +270,26 @@ router.get('/analytics', async (req, res) => {
       userTrends,
       streamTrends,
       platformDistribution,
-      oauthDistribution
+      oauthDistribution,
     });
   } catch (error) {
-    console.error('Get analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch analytics data' });
+    console.error("Get analytics error:", error);
+    res.status(500).json({ error: "Failed to fetch analytics data" });
   }
 });
 
 // Update user (basic info)
-router.put('/users/:id', async (req, res) => {
+router.put("/users/:id", async (req, res) => {
   const { id } = req.params;
   const { displayName, isActive } = req.body;
 
   try {
     // Check if user exists
-    const userCheck = await db.query('SELECT id FROM users WHERE id = $1', [id]);
+    const userCheck = await db.query("SELECT id FROM users WHERE id = $1", [
+      id,
+    ]);
     if (userCheck.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Update user (limited fields for admin)
@@ -290,62 +303,69 @@ router.put('/users/:id', async (req, res) => {
     }
 
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'No valid fields to update' });
+      return res.status(400).json({ error: "No valid fields to update" });
     }
 
     params.push(id);
 
     const result = await db.query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      `UPDATE users SET ${updates.join(
+        ", "
+      )} WHERE id = $${paramIndex} RETURNING *`,
       params
     );
 
     res.json({ user: result[0] });
   } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Failed to update user' });
+    console.error("Update user error:", error);
+    res.status(500).json({ error: "Failed to update user" });
   }
 });
 
 // Delete user (with cascading deletes)
-router.delete('/users/:id', async (req, res) => {
+router.delete("/users/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Check if user exists
-    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const userCheck = await db.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [id]
+    );
     if (userCheck.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Check if user has active streams
     const activeStreams = await db.query(
-      'SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL',
+      "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
       [id]
     );
 
     if (parseInt(activeStreams[0].count) > 0) {
-      return res.status(400).json({ error: 'Cannot delete user with active streams' });
+      return res
+        .status(400)
+        .json({ error: "Cannot delete user with active streams" });
     }
 
     // Delete user (cascades to sources, destinations, etc.)
-    await db.query('DELETE FROM users WHERE id = $1', [id]);
+    await db.query("DELETE FROM users WHERE id = $1", [id]);
 
     res.json({
-      message: 'User deleted successfully',
-      userEmail: userCheck[0].email
+      message: "User deleted successfully",
+      userEmail: userCheck[0].email,
     });
   } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
 // Get system health
-router.get('/health', async (req, res) => {
+router.get("/health", async (req, res) => {
   try {
     // Check database connection
-    const dbTest = await db.query('SELECT 1 as test');
+    const dbTest = await db.query("SELECT 1 as test");
 
     // Check recent stream activity
     const recentActivity = await db.query(`
@@ -355,19 +375,19 @@ router.get('/health', async (req, res) => {
     `);
 
     res.json({
-      status: 'healthy',
-      database: dbTest.length > 0 ? 'connected' : 'disconnected',
+      status: "healthy",
+      database: dbTest.length > 0 ? "connected" : "disconnected",
       recentActivity: parseInt(recentActivity[0].count),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    console.error("Health check error:", error);
     res.status(500).json({
-      status: 'unhealthy',
+      status: "unhealthy",
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -377,7 +397,7 @@ router.get('/health', async (req, res) => {
 // ============================================
 
 // Get all stream sources with user info
-router.get('/sources', async (req, res) => {
+router.get("/sources", async (req, res) => {
   try {
     const sources = await db.query(`
       SELECT
@@ -398,52 +418,64 @@ router.get('/sources', async (req, res) => {
 
     res.json({ sources });
   } catch (error) {
-    console.error('Get sources error:', error);
-    res.status(500).json({ error: 'Failed to fetch stream sources' });
+    console.error("Get sources error:", error);
+    res.status(500).json({ error: "Failed to fetch stream sources" });
   }
 });
 
 // Get specific stream source with destinations
-router.get('/sources/:id', async (req, res) => {
+router.get("/sources/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Get the stream source
-    const sources = await db.query(`
+    const sources = await db.query(
+      `
       SELECT ss.*, u.email, u.display_name
       FROM stream_sources ss
       LEFT JOIN users u ON ss.user_id = u.id
       WHERE ss.id = $1
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (sources.length === 0) {
-      return res.status(404).json({ error: 'Stream source not found' });
+      return res.status(404).json({ error: "Stream source not found" });
     }
 
     const source = sources[0];
 
     // Get destinations for this source
-    const destinations = await db.query(`
+    const destinations = await db.query(
+      `
       SELECT * FROM source_destinations
       WHERE source_id = $1
       ORDER BY created_at DESC
-    `, [id]);
+    `,
+      [id]
+    );
 
     // Check if currently active
-    const activeStream = await db.query(`
+    const activeStream = await db.query(
+      `
       SELECT * FROM active_streams
       WHERE source_id = $1 AND ended_at IS NULL
       ORDER BY started_at DESC LIMIT 1
-    `, [id]);
+    `,
+      [id]
+    );
 
     // Get stream statistics
-    const streamStats = await db.query(`
+    const streamStats = await db.query(
+      `
       SELECT
         COUNT(*) as total_streams,
         AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
       FROM active_streams
       WHERE source_id = $1 AND ended_at IS NOT NULL
-    `, [id]);
+    `,
+      [id]
+    );
 
     res.json({
       source: {
@@ -452,109 +484,126 @@ router.get('/sources/:id', async (req, res) => {
         active_stream: activeStream[0] || null,
         stats: {
           totalStreams: parseInt(streamStats[0]?.total_streams) || 0,
-          avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0
-        }
+          avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0,
+        },
       },
-      destinations
+      destinations,
     });
   } catch (error) {
-    console.error('Get source error:', error);
-    res.status(500).json({ error: 'Failed to fetch stream source' });
+    console.error("Get source error:", error);
+    res.status(500).json({ error: "Failed to fetch stream source" });
   }
 });
 
 // Update stream source
-router.put('/sources/:id', async (req, res) => {
+router.put("/sources/:id", async (req, res) => {
   const { id } = req.params;
   const { name, description, is_active } = req.body;
 
   try {
     // Check if source exists
-    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    const existingSource = await db.query(
+      "SELECT * FROM stream_sources WHERE id = $1",
+      [id]
+    );
     if (existingSource.length === 0) {
-      return res.status(404).json({ error: 'Stream source not found' });
+      return res.status(404).json({ error: "Stream source not found" });
     }
 
     // Check if source is currently active before deactivating
     if (is_active === false) {
       const activeStream = await db.query(
-        'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+        "SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL",
         [id]
       );
 
       if (activeStream.length > 0) {
-        return res.status(400).json({ error: 'Cannot deactivate source while streaming' });
+        return res
+          .status(400)
+          .json({ error: "Cannot deactivate source while streaming" });
       }
     }
 
     // Update the source
     const result = await db.run(
-      'UPDATE stream_sources SET name = COALESCE($1, name), description = COALESCE($2, description), is_active = COALESCE($3, is_active) WHERE id = $4 RETURNING *',
+      "UPDATE stream_sources SET name = COALESCE($1, name), description = COALESCE($2, description), is_active = COALESCE($3, is_active) WHERE id = $4 RETURNING *",
       [name?.trim(), description?.trim(), is_active, id]
     );
 
     res.json({ source: result });
   } catch (error) {
-    console.error('Update source error:', error);
-    res.status(500).json({ error: 'Failed to update stream source' });
+    console.error("Update source error:", error);
+    res.status(500).json({ error: "Failed to update stream source" });
   }
 });
 
 // Delete stream source
-router.delete('/sources/:id', async (req, res) => {
+router.delete("/sources/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Check if source exists
-    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    const existingSource = await db.query(
+      "SELECT * FROM stream_sources WHERE id = $1",
+      [id]
+    );
     if (existingSource.length === 0) {
-      return res.status(404).json({ error: 'Stream source not found' });
+      return res.status(404).json({ error: "Stream source not found" });
     }
 
     // Check if source is currently active
     const activeStream = await db.query(
-      'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+      "SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL",
       [id]
     );
 
     if (activeStream.length > 0) {
-      return res.status(400).json({ error: 'Cannot delete source while streaming' });
+      return res
+        .status(400)
+        .json({ error: "Cannot delete source while streaming" });
     }
 
     // Delete the source (destinations will be deleted due to CASCADE)
-    const result = await db.run('DELETE FROM stream_sources WHERE id = $1', [id]);
+    const result = await db.run("DELETE FROM stream_sources WHERE id = $1", [
+      id,
+    ]);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Stream source not found' });
+      return res.status(404).json({ error: "Stream source not found" });
     }
 
-    res.json({ message: 'Stream source deleted successfully' });
+    res.json({ message: "Stream source deleted successfully" });
   } catch (error) {
-    console.error('Delete source error:', error);
-    res.status(500).json({ error: 'Failed to delete stream source' });
+    console.error("Delete source error:", error);
+    res.status(500).json({ error: "Failed to delete stream source" });
   }
 });
 
 // Regenerate stream key for source
-router.post('/sources/:id/regenerate-key', async (req, res) => {
+router.post("/sources/:id/regenerate-key", async (req, res) => {
   const { id } = req.params;
-  const crypto = require('crypto');
+  const crypto = require("crypto");
 
   try {
     // Check if source exists
-    const existingSource = await db.query('SELECT * FROM stream_sources WHERE id = $1', [id]);
+    const existingSource = await db.query(
+      "SELECT * FROM stream_sources WHERE id = $1",
+      [id]
+    );
     if (existingSource.length === 0) {
-      return res.status(404).json({ error: 'Stream source not found' });
+      return res.status(404).json({ error: "Stream source not found" });
     }
 
     // Check if source is currently active
     const activeStream = await db.query(
-      'SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL',
+      "SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL",
       [id]
     );
 
     if (activeStream.length > 0) {
-      return res.status(400).json({ error: 'Cannot regenerate stream key while streaming' });
+      return res
+        .status(400)
+        .json({ error: "Cannot regenerate stream key while streaming" });
     }
 
     // Generate unique stream key
@@ -563,16 +612,16 @@ router.post('/sources/:id/regenerate-key', async (req, res) => {
     let attempts = 0;
 
     while (!isUnique && attempts < 10) {
-      streamKey = crypto.randomBytes(24).toString('hex');
+      streamKey = crypto.randomBytes(24).toString("hex");
 
       // Check uniqueness in both stream_sources and users table
       const existingInSources = await db.query(
-        'SELECT id FROM stream_sources WHERE stream_key = $1 AND id != $2',
+        "SELECT id FROM stream_sources WHERE stream_key = $1 AND id != $2",
         [streamKey, id]
       );
 
       const existingInUsers = await db.query(
-        'SELECT id FROM users WHERE stream_key = $1',
+        "SELECT id FROM users WHERE stream_key = $1",
         [streamKey]
       );
 
@@ -583,22 +632,24 @@ router.post('/sources/:id/regenerate-key', async (req, res) => {
     }
 
     if (!isUnique) {
-      return res.status(500).json({ error: 'Failed to generate unique stream key' });
+      return res
+        .status(500)
+        .json({ error: "Failed to generate unique stream key" });
     }
 
     // Update the stream key
     const result = await db.run(
-      'UPDATE stream_sources SET stream_key = $1 WHERE id = $2 RETURNING *',
+      "UPDATE stream_sources SET stream_key = $1 WHERE id = $2 RETURNING *",
       [streamKey, id]
     );
 
     res.json({
-      message: 'Stream key regenerated successfully',
-      source: result
+      message: "Stream key regenerated successfully",
+      source: result,
     });
   } catch (error) {
-    console.error('Regenerate stream key error:', error);
-    res.status(500).json({ error: 'Failed to regenerate stream key' });
+    console.error("Regenerate stream key error:", error);
+    res.status(500).json({ error: "Failed to regenerate stream key" });
   }
 });
 
@@ -607,7 +658,7 @@ router.post('/sources/:id/regenerate-key', async (req, res) => {
 // ============================================
 
 // Get all destinations with source info
-router.get('/destinations', async (req, res) => {
+router.get("/destinations", async (req, res) => {
   try {
     const destinations = await db.query(`
       SELECT
@@ -623,17 +674,18 @@ router.get('/destinations', async (req, res) => {
 
     res.json({ destinations });
   } catch (error) {
-    console.error('Get destinations error:', error);
-    res.status(500).json({ error: 'Failed to fetch destinations' });
+    console.error("Get destinations error:", error);
+    res.status(500).json({ error: "Failed to fetch destinations" });
   }
 });
 
 // Get specific destination
-router.get('/destinations/:id', async (req, res) => {
+router.get("/destinations/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const destinations = await db.query(`
+    const destinations = await db.query(
+      `
       SELECT
         sd.*,
         ss.name as source_name,
@@ -643,59 +695,67 @@ router.get('/destinations/:id', async (req, res) => {
       LEFT JOIN stream_sources ss ON sd.source_id = ss.id
       LEFT JOIN users u ON ss.user_id = u.id
       WHERE sd.id = $1
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (destinations.length === 0) {
-      return res.status(404).json({ error: 'Destination not found' });
+      return res.status(404).json({ error: "Destination not found" });
     }
 
     res.json({ destination: destinations[0] });
   } catch (error) {
-    console.error('Get destination error:', error);
-    res.status(500).json({ error: 'Failed to fetch destination' });
+    console.error("Get destination error:", error);
+    res.status(500).json({ error: "Failed to fetch destination" });
   }
 });
 
 // Update destination
-router.put('/destinations/:id', async (req, res) => {
+router.put("/destinations/:id", async (req, res) => {
   const { id } = req.params;
   const { platform, rtmp_url, stream_key, is_active } = req.body;
 
   try {
     // Check if destination exists
-    const existingDest = await db.query('SELECT * FROM source_destinations WHERE id = $1', [id]);
+    const existingDest = await db.query(
+      "SELECT * FROM source_destinations WHERE id = $1",
+      [id]
+    );
     if (existingDest.length === 0) {
-      return res.status(404).json({ error: 'Destination not found' });
+      return res.status(404).json({ error: "Destination not found" });
     }
 
     // Update the destination
     const result = await db.run(
-      'UPDATE source_destinations SET platform = COALESCE($1, platform), rtmp_url = COALESCE($2, rtmp_url), stream_key = COALESCE($3, stream_key), is_active = COALESCE($4, is_active) WHERE id = $5 RETURNING *',
+      "UPDATE source_destinations SET platform = COALESCE($1, platform), rtmp_url = COALESCE($2, rtmp_url), stream_key = COALESCE($3, stream_key), is_active = COALESCE($4, is_active) WHERE id = $5 RETURNING *",
       [platform, rtmp_url, stream_key, is_active, id]
     );
 
     res.json({ destination: result });
   } catch (error) {
-    console.error('Update destination error:', error);
-    res.status(500).json({ error: 'Failed to update destination' });
+    console.error("Update destination error:", error);
+    res.status(500).json({ error: "Failed to update destination" });
   }
 });
 
 // Delete destination
-router.delete('/destinations/:id', async (req, res) => {
+router.delete("/destinations/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await db.run('DELETE FROM source_destinations WHERE id = $1', [id]);
+    const result = await db.run(
+      "DELETE FROM source_destinations WHERE id = $1",
+      [id]
+    );
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Destination not found' });
+      return res.status(404).json({ error: "Destination not found" });
     }
 
-    res.json({ message: 'Destination deleted successfully' });
+    res.json({ message: "Destination deleted successfully" });
   } catch (error) {
-    console.error('Delete destination error:', error);
-    res.status(500).json({ error: 'Failed to delete destination' });
+    console.error("Delete destination error:", error);
+    res.status(500).json({ error: "Failed to delete destination" });
   }
 });
 
@@ -704,29 +764,34 @@ router.delete('/destinations/:id', async (req, res) => {
 // ============================================
 
 // Suspend user
-router.post('/users/:id/suspend', async (req, res) => {
+router.post("/users/:id/suspend", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Check if user exists
-    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const userCheck = await db.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [id]
+    );
     if (userCheck.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Check if user has active streams
     const activeStreams = await db.query(
-      'SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL',
+      "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
       [id]
     );
 
     if (parseInt(activeStreams[0].count) > 0) {
-      return res.status(400).json({ error: 'Cannot suspend user with active streams' });
+      return res
+        .status(400)
+        .json({ error: "Cannot suspend user with active streams" });
     }
 
     // Deactivate all user's stream sources
     await db.run(
-      'UPDATE stream_sources SET is_active = false WHERE user_id = $1',
+      "UPDATE stream_sources SET is_active = false WHERE user_id = $1",
       [id]
     );
 
@@ -736,22 +801,25 @@ router.post('/users/:id/suspend', async (req, res) => {
       [id]
     );
 
-    res.json({ message: 'User suspended successfully' });
+    res.json({ message: "User suspended successfully" });
   } catch (error) {
-    console.error('Suspend user error:', error);
-    res.status(500).json({ error: 'Failed to suspend user' });
+    console.error("Suspend user error:", error);
+    res.status(500).json({ error: "Failed to suspend user" });
   }
 });
 
 // Unsuspend user
-router.post('/users/:id/unsuspend', async (req, res) => {
+router.post("/users/:id/unsuspend", async (req, res) => {
   const { id } = req.params;
 
   try {
     // Check if user exists
-    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const userCheck = await db.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [id]
+    );
     if (userCheck.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Remove suspension prefix from display_name
@@ -760,33 +828,40 @@ router.post('/users/:id/unsuspend', async (req, res) => {
       [id]
     );
 
-    res.json({ message: 'User unsuspended successfully' });
+    res.json({ message: "User unsuspended successfully" });
   } catch (error) {
-    console.error('Unsuspend user error:', error);
-    res.status(500).json({ error: 'Failed to unsuspend user' });
+    console.error("Unsuspend user error:", error);
+    res.status(500).json({ error: "Failed to unsuspend user" });
   }
 });
 
 // Reset user stream key
-router.post('/users/:id/reset-stream-key', async (req, res) => {
+router.post("/users/:id/reset-stream-key", async (req, res) => {
   const { id } = req.params;
-  const crypto = require('crypto');
+  const crypto = require("crypto");
 
   try {
     // Check if user exists
-    const userCheck = await db.query('SELECT id, email FROM users WHERE id = $1', [id]);
+    const userCheck = await db.query(
+      "SELECT id, email FROM users WHERE id = $1",
+      [id]
+    );
     if (userCheck.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Check if user has active streams
     const activeStreams = await db.query(
-      'SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL',
+      "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
       [id]
     );
 
     if (parseInt(activeStreams[0].count) > 0) {
-      return res.status(400).json({ error: 'Cannot reset stream key while user has active streams' });
+      return res
+        .status(400)
+        .json({
+          error: "Cannot reset stream key while user has active streams",
+        });
     }
 
     // Generate unique stream key
@@ -795,15 +870,15 @@ router.post('/users/:id/reset-stream-key', async (req, res) => {
     let attempts = 0;
 
     while (!isUnique && attempts < 10) {
-      streamKey = crypto.randomBytes(24).toString('hex');
+      streamKey = crypto.randomBytes(24).toString("hex");
 
       const existingInSources = await db.query(
-        'SELECT id FROM stream_sources WHERE stream_key = $1',
+        "SELECT id FROM stream_sources WHERE stream_key = $1",
         [streamKey]
       );
 
       const existingInUsers = await db.query(
-        'SELECT id FROM users WHERE stream_key = $1 AND id != $2',
+        "SELECT id FROM users WHERE stream_key = $1 AND id != $2",
         [streamKey, id]
       );
 
@@ -814,22 +889,24 @@ router.post('/users/:id/reset-stream-key', async (req, res) => {
     }
 
     if (!isUnique) {
-      return res.status(500).json({ error: 'Failed to generate unique stream key' });
+      return res
+        .status(500)
+        .json({ error: "Failed to generate unique stream key" });
     }
 
     // Update user stream key
-    await db.run(
-      'UPDATE users SET stream_key = $1 WHERE id = $2',
-      [streamKey, id]
-    );
+    await db.run("UPDATE users SET stream_key = $1 WHERE id = $2", [
+      streamKey,
+      id,
+    ]);
 
     res.json({
-      message: 'Stream key reset successfully',
-      streamKey: streamKey
+      message: "Stream key reset successfully",
+      streamKey: streamKey,
     });
   } catch (error) {
-    console.error('Reset stream key error:', error);
-    res.status(500).json({ error: 'Failed to reset stream key' });
+    console.error("Reset stream key error:", error);
+    res.status(500).json({ error: "Failed to reset stream key" });
   }
 });
 
@@ -838,14 +915,14 @@ router.post('/users/:id/reset-stream-key', async (req, res) => {
 // ============================================
 
 // Get detailed user analytics
-router.get('/analytics/users', async (req, res) => {
+router.get("/analytics/users", async (req, res) => {
   try {
-    const { period = '30d' } = req.query;
+    const { period = "30d" } = req.query;
     let periodFilter = "NOW() - INTERVAL '30 days'";
 
-    if (period === '7d') {
+    if (period === "7d") {
       periodFilter = "NOW() - INTERVAL '7 days'";
-    } else if (period === '24h') {
+    } else if (period === "24h") {
       periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
@@ -894,23 +971,23 @@ router.get('/analytics/users', async (req, res) => {
     res.json({
       registrationTrends,
       activityMetrics: activityMetrics[0],
-      retentionMetrics
+      retentionMetrics,
     });
   } catch (error) {
-    console.error('Get user analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch user analytics' });
+    console.error("Get user analytics error:", error);
+    res.status(500).json({ error: "Failed to fetch user analytics" });
   }
 });
 
 // Get detailed stream analytics
-router.get('/analytics/streams', async (req, res) => {
+router.get("/analytics/streams", async (req, res) => {
   try {
-    const { period = '30d' } = req.query;
+    const { period = "30d" } = req.query;
     let periodFilter = "NOW() - INTERVAL '30 days'";
 
-    if (period === '7d') {
+    if (period === "7d") {
       periodFilter = "NOW() - INTERVAL '7 days'";
-    } else if (period === '24h') {
+    } else if (period === "24h") {
       periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
@@ -958,433 +1035,11 @@ router.get('/analytics/streams', async (req, res) => {
     res.json({
       streamTrends,
       platformAnalytics,
-      qualityMetrics: qualityMetrics[0]
+      qualityMetrics: qualityMetrics[0],
     });
   } catch (error) {
-    console.error('Get stream analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch stream analytics' });
-  }
-});
-
-// ============================================
-// SUBSCRIPTION MANAGEMENT
-// ============================================
-
-// Get all subscription plans
-router.get('/subscription-plans', async (req, res) => {
-  try {
-    const plans = await subscriptionService.getPlans();
-    res.json({ plans });
-  } catch (error) {
-    console.error('Get subscription plans error:', error);
-    res.status(500).json({ error: 'Failed to fetch subscription plans' });
-  }
-});
-
-// Create new subscription plan
-router.post('/subscription-plans', async (req, res) => {
-  const {
-    name,
-    description,
-    price_monthly,
-    price_yearly,
-    max_stream_sources,
-    max_simultaneous_destinations,
-    max_streaming_hours_monthly,
-    has_advanced_analytics,
-    has_priority_support,
-    has_custom_rtmp,
-    has_stream_preview,
-    has_team_access,
-    has_custom_branding,
-    has_api_access,
-    is_active,
-    is_public,
-    sort_order
-  } = req.body;
-
-  try {
-    const result = await db.run(
-      `INSERT INTO subscription_plans (
-        name, description, price_monthly, price_yearly,
-        max_stream_sources, max_simultaneous_destinations, max_streaming_hours_monthly,
-        has_advanced_analytics, has_priority_support, has_custom_rtmp,
-        has_stream_preview, has_team_access, has_custom_branding, has_api_access,
-        is_active, is_public, sort_order
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
-      [
-        name, description, price_monthly, price_yearly,
-        max_stream_sources, max_simultaneous_destinations, max_streaming_hours_monthly,
-        has_advanced_analytics, has_priority_support, has_custom_rtmp,
-        has_stream_preview, has_team_access, has_custom_branding, has_api_access,
-        is_active || true, is_public || true, sort_order || 0
-      ]
-    );
-
-    res.json({ plan: result });
-  } catch (error) {
-    console.error('Create subscription plan error:', error);
-    res.status(500).json({ error: 'Failed to create subscription plan' });
-  }
-});
-
-// Update subscription plan
-router.put('/subscription-plans/:id', async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-
-  try {
-    // Check if plan exists
-    const existingPlan = await db.query('SELECT * FROM subscription_plans WHERE id = $1', [id]);
-    if (existingPlan.length === 0) {
-      return res.status(404).json({ error: 'Subscription plan not found' });
-    }
-
-    // Build update query
-    const updateFields = [];
-    const params = [];
-    let paramIndex = 1;
-
-    const allowedFields = [
-      'name', 'description', 'price_monthly', 'price_yearly',
-      'max_stream_sources', 'max_simultaneous_destinations', 'max_streaming_hours_monthly',
-      'has_advanced_analytics', 'has_priority_support', 'has_custom_rtmp',
-      'has_stream_preview', 'has_team_access', 'has_custom_branding', 'has_api_access',
-      'is_active', 'is_public', 'sort_order'
-    ];
-
-    allowedFields.forEach(field => {
-      if (updates[field] !== undefined) {
-        updateFields.push(`${field} = $${paramIndex++}`);
-        params.push(updates[field]);
-      }
-    });
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ error: 'No valid fields to update' });
-    }
-
-    params.push(id);
-
-    const result = await db.run(
-      `UPDATE subscription_plans SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex} RETURNING *`,
-      params
-    );
-
-    res.json({ plan: result });
-  } catch (error) {
-    console.error('Update subscription plan error:', error);
-    res.status(500).json({ error: 'Failed to update subscription plan' });
-  }
-});
-
-// Delete subscription plan
-router.delete('/subscription-plans/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Check if plan exists
-    const existingPlan = await db.query('SELECT * FROM subscription_plans WHERE id = $1', [id]);
-    if (existingPlan.length === 0) {
-      return res.status(404).json({ error: 'Subscription plan not found' });
-    }
-
-    // Check if plan has active subscriptions
-    const activeSubscriptions = await db.query(
-      'SELECT COUNT(*) as count FROM user_subscriptions WHERE plan_id = $1 AND status = $2',
-      [id, 'active']
-    );
-
-    if (parseInt(activeSubscriptions[0].count) > 0) {
-      return res.status(400).json({ error: 'Cannot delete plan with active subscriptions' });
-    }
-
-    // Delete the plan
-    await db.run('DELETE FROM subscription_plans WHERE id = $1', [id]);
-
-    res.json({ message: 'Subscription plan deleted successfully' });
-  } catch (error) {
-    console.error('Delete subscription plan error:', error);
-    res.status(500).json({ error: 'Failed to delete subscription plan' });
-  }
-});
-
-// Get all user subscriptions with user details
-router.get('/subscriptions', async (req, res) => {
-  try {
-    const subscriptions = await db.query(`
-      SELECT
-        us.*,
-        sp.name as plan_name,
-        sp.description as plan_description,
-        u.email,
-        u.display_name,
-        u.created_at as user_created_at
-      FROM user_subscriptions us
-      JOIN subscription_plans sp ON us.plan_id = sp.id
-      JOIN users u ON us.user_id = u.id
-      ORDER BY us.created_at DESC
-    `);
-
-    res.json({ subscriptions });
-  } catch (error) {
-    console.error('Get subscriptions error:', error);
-    res.status(500).json({ error: 'Failed to fetch subscriptions' });
-  }
-});
-
-// Get specific user subscription details
-router.get('/subscriptions/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const subscriptions = await db.query(`
-      SELECT
-        us.*,
-        sp.name as plan_name,
-        sp.description as plan_description,
-        sp.max_stream_sources,
-        sp.max_simultaneous_destinations,
-        sp.max_streaming_hours_monthly,
-        sp.has_advanced_analytics,
-        sp.has_priority_support,
-        sp.has_custom_rtmp,
-        sp.has_stream_preview,
-        sp.has_team_access,
-        sp.has_custom_branding,
-        sp.has_api_access,
-        u.email,
-        u.display_name,
-        u.created_at as user_created_at
-      FROM user_subscriptions us
-      JOIN subscription_plans sp ON us.plan_id = sp.id
-      JOIN users u ON us.user_id = u.id
-      WHERE us.id = $1
-    `, [id]);
-
-    if (subscriptions.length === 0) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    const subscription = subscriptions[0];
-
-    // Get usage data
-    const usage = await subscriptionService.getUserUsage(subscription.user_id);
-
-    // Get payment history
-    const payments = await db.query(`
-      SELECT * FROM payment_transactions
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-      LIMIT 10
-    `, [subscription.user_id]);
-
-    res.json({
-      subscription,
-      usage,
-      payments
-    });
-  } catch (error) {
-    console.error('Get subscription details error:', error);
-    res.status(500).json({ error: 'Failed to fetch subscription details' });
-  }
-});
-
-// Update user subscription (admin override)
-router.put('/subscriptions/:id', async (req, res) => {
-  const { id } = req.params;
-  const { status, current_period_start, current_period_end, billing_cycle } = req.body;
-
-  try {
-    // Check if subscription exists
-    const existingSub = await db.query('SELECT * FROM user_subscriptions WHERE id = $1', [id]);
-    if (existingSub.length === 0) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    const updates = [];
-    const params = [];
-    let paramIndex = 1;
-
-    if (status !== undefined) {
-      updates.push(`status = $${paramIndex++}`);
-      params.push(status);
-    }
-
-    if (current_period_start !== undefined) {
-      updates.push(`current_period_start = $${paramIndex++}`);
-      params.push(new Date(current_period_start));
-    }
-
-    if (current_period_end !== undefined) {
-      updates.push(`current_period_end = $${paramIndex++}`);
-      params.push(new Date(current_period_end));
-    }
-
-    if (billing_cycle !== undefined) {
-      updates.push(`billing_cycle = $${paramIndex++}`);
-      params.push(billing_cycle);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No valid fields to update' });
-    }
-
-    params.push(id);
-
-    const result = await db.run(
-      `UPDATE user_subscriptions SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramIndex} RETURNING *`,
-      params
-    );
-
-    res.json({ subscription: result });
-  } catch (error) {
-    console.error('Update subscription error:', error);
-    res.status(500).json({ error: 'Failed to update subscription' });
-  }
-});
-
-// Cancel user subscription (admin override)
-router.post('/subscriptions/:id/cancel', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Check if subscription exists
-    const existingSub = await db.query('SELECT * FROM user_subscriptions WHERE id = $1', [id]);
-    if (existingSub.length === 0) {
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    const subscription = existingSub[0];
-
-    // Cancel in Razorpay if we have the subscription ID
-    if (subscription.razorpay_subscription_id) {
-      try {
-        await subscriptionService.razorpay.subscriptions.cancel(
-          subscription.razorpay_subscription_id
-        );
-      } catch (razorpayError) {
-        console.warn('Failed to cancel Razorpay subscription:', razorpayError);
-        // Continue with database cancellation even if Razorpay fails
-      }
-    }
-
-    // Update database
-    const result = await db.run(
-      `UPDATE user_subscriptions
-       SET status = 'canceled', canceled_at = NOW(), cancel_at_period_end = true
-       WHERE id = $1
-       RETURNING *`,
-      [id]
-    );
-
-    res.json({ subscription: result });
-  } catch (error) {
-    console.error('Cancel subscription error:', error);
-    res.status(500).json({ error: 'Failed to cancel subscription' });
-  }
-});
-
-// Get subscription analytics
-router.get('/subscriptions/analytics', async (req, res) => {
-  try {
-    // Subscription distribution by plan
-    const planDistribution = await db.query(`
-      SELECT
-        sp.name as plan_name,
-        COUNT(*) as total_subscriptions,
-        COUNT(CASE WHEN us.status = 'active' THEN 1 END) as active_subscriptions,
-        COUNT(CASE WHEN us.status = 'canceled' THEN 1 END) as canceled_subscriptions
-      FROM user_subscriptions us
-      JOIN subscription_plans sp ON us.plan_id = sp.id
-      GROUP BY sp.name
-      ORDER BY total_subscriptions DESC
-    `);
-
-    // Monthly revenue
-    const monthlyRevenue = await db.query(`
-      SELECT
-        DATE_TRUNC('month', pt.paid_at) as month,
-        SUM(pt.amount) as total_revenue,
-        COUNT(*) as successful_payments
-      FROM payment_transactions pt
-      WHERE pt.status = 'succeeded' AND pt.paid_at IS NOT NULL
-      GROUP BY DATE_TRUNC('month', pt.paid_at)
-      ORDER BY month DESC
-      LIMIT 12
-    `);
-
-    // Subscription growth
-    const subscriptionGrowth = await db.query(`
-      SELECT
-        DATE_TRUNC('month', us.created_at) as month,
-        COUNT(*) as new_subscriptions,
-        COUNT(CASE WHEN us.status = 'active' THEN 1 END) as active_subscriptions
-      FROM user_subscriptions us
-      WHERE us.created_at > NOW() - INTERVAL '12 months'
-      GROUP BY DATE_TRUNC('month', us.created_at)
-      ORDER BY month ASC
-    `);
-
-    // Payment success rate
-    const paymentStats = await db.query(`
-      SELECT
-        COUNT(*) as total_payments,
-        COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
-        ROUND(COUNT(CASE WHEN status = 'succeeded' THEN 1 END) * 100.0 / COUNT(*), 2) as success_rate
-      FROM payment_transactions
-      WHERE created_at > NOW() - INTERVAL '30 days'
-    `);
-
-    res.json({
-      planDistribution,
-      monthlyRevenue,
-      subscriptionGrowth,
-      paymentStats: paymentStats[0]
-    });
-  } catch (error) {
-    console.error('Get subscription analytics error:', error);
-    res.status(500).json({ error: 'Failed to fetch subscription analytics' });
-  }
-});
-
-// Get payment transactions
-router.get('/payments', async (req, res) => {
-  try {
-    const { page = 1, limit = 50 } = req.query;
-    const offset = (page - 1) * limit;
-
-    const payments = await db.query(`
-      SELECT
-        pt.*,
-        u.email,
-        u.display_name,
-        sp.name as plan_name
-      FROM payment_transactions pt
-      LEFT JOIN users u ON pt.user_id = u.id
-      LEFT JOIN user_subscriptions us ON pt.subscription_id = us.id
-      LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
-      ORDER BY pt.created_at DESC
-      LIMIT $1 OFFSET $2
-    `, [limit, offset]);
-
-    const totalCount = await db.query(`
-      SELECT COUNT(*) as total FROM payment_transactions
-    `);
-
-    res.json({
-      payments,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: parseInt(totalCount[0].total),
-        totalPages: Math.ceil(totalCount[0].total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Get payments error:', error);
-    res.status(500).json({ error: 'Failed to fetch payments' });
+    console.error("Get stream analytics error:", error);
+    res.status(500).json({ error: "Failed to fetch stream analytics" });
   }
 });
 

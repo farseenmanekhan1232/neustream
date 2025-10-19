@@ -54,15 +54,7 @@ function Header() {
               <div className="absolute right-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-50">
                 <div className="py-1">
                   <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Terms and Conditions
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/privacy"
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -70,7 +62,15 @@ function Header() {
                     Privacy Policy
                   </a>
                   <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/contact_us"
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    Cancellations and Refunds
+                  </a>
+                  <a
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -173,16 +173,7 @@ function Header() {
                     Legal
                   </span>
                   <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Terms and Conditions
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/privacy"
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
@@ -191,7 +182,16 @@ function Header() {
                     Privacy Policy
                   </a>
                   <a
-                    href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/contact_us"
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Cancellations and Refunds
+                  </a>
+                  <a
+                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"

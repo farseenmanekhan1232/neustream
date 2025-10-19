@@ -6,7 +6,7 @@ function Footer() {
   return (
     <footer className="border-t py-12 md:py-16">
       <div className="container-custom">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
           <div>
             <h3 className="text-lg font-bold mb-4">NeuStream</h3>
             <p className="text-muted-foreground">
@@ -37,47 +37,11 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
             <h3 className="text-lg font-bold mb-4">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <a
-                  href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Terms and Conditions
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/privacy"
+                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -87,7 +51,17 @@ function Footer() {
               </li>
               <li>
                 <a
-                  href="https://merchant.razorpay.com/policy/Q0JnH0nzHjv8ab/contact_us"
+                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cancellations and Refunds
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -96,6 +70,9 @@ function Footer() {
                 </a>
               </li>
             </ul>
+            <p className="text-xs text-muted-foreground mt-4">
+              Created by Razorpay
+            </p>
           </div>
         </div>
 

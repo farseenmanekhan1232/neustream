@@ -211,6 +211,83 @@ function Landing() {
         </div>
       </section>
 
+      {/* Legal Links Section */}
+      <section className="section-padding bg-muted/10">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto">
+            <h3 className="text-lg font-semibold mb-6">Legal Information</h3>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <a
+                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancellations and Refunds
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Contact Us
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Created by Razorpay
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="section-padding">
         <div className="container-custom">
