@@ -69,7 +69,7 @@ function SubscriptionManagement() {
     enabled: !!user,
   });
 
-  // Update subscription mutation
+  // Update subscription mutation (for free plan)
   const updateSubscriptionMutation = useMutation({
     mutationFn: async ({ planId, billingCycle }) => {
       return await subscriptionService.updateSubscription(planId, billingCycle);
@@ -81,6 +81,66 @@ function SubscriptionManagement() {
     },
     onError: (error) => {
       toast.error("Failed to update subscription: " + error.message);
+    },
+  });
+
+  // Payment mutation
+  const processPaymentMutation = useMutation({
+    mutationFn: async ({ planId, billingCycle }) => {
+      // Create payment order
+      const orderResponse = await subscriptionService.createPaymentOrder(planId, billingCycle);
+      const orderData = orderResponse.data;
+
+      // Initialize Razorpay
+      const options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: orderData.name,
+        description: orderData.description,
+        order_id: orderData.id,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await subscriptionService.verifyPayment(
+              response.razorpay_order_id,
+              response.razorpay_payment_id,
+              response.razorpay_signature
+            );
+
+            if (verifyResponse.success) {
+              toast.success("Payment successful! Your subscription has been upgraded.");
+              queryClient.invalidateQueries(["subscription", user.id]);
+              setSelectedPlan(null);
+            } else {
+              toast.error("Payment verification failed. Please contact support.");
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast.error("Payment verification failed. Please contact support.");
+          }
+        },
+        prefill: {
+          name: user.displayName || '',
+          email: user.email || '',
+        },
+        theme: {
+          color: orderData.theme?.color || '#2563eb'
+        },
+        modal: {
+          ondismiss: function() {
+            toast.info("Payment cancelled");
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+      return orderData;
+    },
+    onError: (error) => {
+      toast.error("Failed to process payment: " + error.message);
     },
   });
 
@@ -345,33 +405,53 @@ function SubscriptionManagement() {
                       </span>
                     </div>
                   </div>
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
-                      Your subscription will be updated immediately. Any unused portion of your
-                      current plan will be prorated.
-                    </p>
-                  </div>
+
+                  {selectedPlan.name.toLowerCase() === 'free' ? (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        This is a free plan. Your subscription will be updated immediately.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        You will be redirected to a secure payment page to complete your purchase.
+                        Your subscription will be activated immediately after successful payment.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter className="flex space-x-2">
                   <Button
                     variant="outline"
                     className="flex-1"
                     onClick={() => setSelectedPlan(null)}
-                    disabled={updateSubscriptionMutation.isLoading}
+                    disabled={updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading}
                   >
                     Cancel
                   </Button>
                   <Button
                     className="flex-1"
-                    onClick={() =>
-                      updateSubscriptionMutation.mutate({
-                        planId: selectedPlan.id,
-                        billingCycle: "monthly",
-                      })
-                    }
-                    disabled={updateSubscriptionMutation.isLoading}
+                    onClick={() => {
+                      if (selectedPlan.name.toLowerCase() === 'free') {
+                        updateSubscriptionMutation.mutate({
+                          planId: selectedPlan.id,
+                          billingCycle: "monthly",
+                        });
+                      } else {
+                        processPaymentMutation.mutate({
+                          planId: selectedPlan.id,
+                          billingCycle: "monthly",
+                        });
+                      }
+                    }}
+                    disabled={updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading}
                   >
-                    {updateSubscriptionMutation.isLoading ? "Upgrading..." : "Confirm Upgrade"}
+                    {updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading
+                      ? "Processing..."
+                      : selectedPlan.name.toLowerCase() === 'free'
+                        ? "Switch to Free"
+                        : "Proceed to Payment"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -489,18 +569,18 @@ function SubscriptionManagement() {
             <CardHeader>
               <CardTitle className="text-lg">Billing Information</CardTitle>
               <CardDescription>
-                Manage your payment methods and billing details
+                Manage your subscription and view payment history
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <CreditCard className="h-5 w-5 text-blue-500" />
+                  <CreditCard className="h-5 w-5 text-green-500" />
                   <div>
-                    <p className="font-medium text-blue-800">Payment Processing</p>
-                    <p className="text-sm text-blue-600">
-                      We're working on integrating secure payment processing. In the meantime,
-                      you can test subscription changes that will be processed manually.
+                    <p className="font-medium text-green-800">Secure Payment Processing</p>
+                    <p className="text-sm text-green-600">
+                      All payments are processed securely through Razorpay. Your payment information
+                      is never stored on our servers.
                     </p>
                   </div>
                 </div>
@@ -528,12 +608,25 @@ function SubscriptionManagement() {
                 )}
               </div>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" disabled>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Manage Payment Methods (Coming Soon)
-              </Button>
-            </CardFooter>
+          </Card>
+
+          {/* Payment History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Payment History</CardTitle>
+              <CardDescription>
+                Your recent subscription payments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No payment history yet</p>
+                <p className="text-sm mt-2">
+                  Your payment history will appear here after you make your first payment
+                </p>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

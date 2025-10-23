@@ -128,5 +128,51 @@ export const subscriptionService = {
       console.error('Error updating subscription:', error);
       throw error;
     }
+  },
+
+  /**
+   * Create payment order for subscription
+   */
+  async createPaymentOrder(planId, billingCycle = 'monthly') {
+    try {
+      const response = await apiService.post('/payments/create-order', {
+        plan_id: planId,
+        billing_cycle: billingCycle
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating payment order:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Verify payment
+   */
+  async verifyPayment(orderId, paymentId, signature) {
+    try {
+      const response = await apiService.post('/payments/verify-payment', {
+        order_id: orderId,
+        payment_id: paymentId,
+        signature: signature
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get payment history
+   */
+  async getPaymentHistory() {
+    try {
+      const response = await apiService.get('/payments/history');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      return [];
+    }
   }
 };
