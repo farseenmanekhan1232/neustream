@@ -34,7 +34,7 @@ class PaymentService {
 
       // Create Razorpay order
       const orderOptions = {
-        amount: Math.round(amount) * 100, // Amount in paise
+        amount: Math.round(amount), // Amount in paise
         currency: "USD",
         receipt: `sub_${userId}_${planId}_${Date.now()}`,
         notes: {
