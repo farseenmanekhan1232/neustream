@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  Play,
   MonitorSpeaker,
   ChevronLeft,
   ChevronRight,
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import StreamPreview from "./StreamPreview";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";

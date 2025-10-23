@@ -444,7 +444,11 @@ const StreamPreview = ({ streamKey, isActive }) => {
   }
 
   return (
-    <div className="relative group aspect-video bg-black rounded-lg overflow-hidden">
+    <div
+      className="relative group aspect-video bg-black rounded-lg overflow-hidden"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
       {/* Video Element */}
       <video
         ref={videoRef}
@@ -452,8 +456,6 @@ const StreamPreview = ({ streamKey, isActive }) => {
         playsInline
         muted={isMuted}
         onClick={togglePlay}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
       />
 
       {/* Loading Indicator */}
