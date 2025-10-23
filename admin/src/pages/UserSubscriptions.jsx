@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { adminApi } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,14 +56,13 @@ function UserSubscriptions() {
   const { data: subscriptionsData, isLoading } = useQuery({
     queryKey: ["admin-user-subscriptions", page, search],
     queryFn: async () => {
-      const params = new URLSearchParams({
+      const params = {
         page: page.toString(),
         limit: "20",
         search: search,
-      });
-      const response = await fetch(`/api/admin/user-subscriptions?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch subscriptions");
-      return response.json();
+      };
+      const response = await adminApi.getUserSubscriptions(params);
+      return response;
     },
   });
 
@@ -70,22 +70,16 @@ function UserSubscriptions() {
   const { data: plansData } = useQuery({
     queryKey: ["admin-subscription-plans"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/subscription-plans");
-      if (!response.ok) throw new Error("Failed to fetch plans");
-      return response.json();
+      const response = await adminApi.getSubscriptionPlans();
+      return response;
     },
   });
 
   // Update subscription mutation
   const updateSubscriptionMutation = useMutation({
     mutationFn: async ({ userId, subscriptionData }) => {
-      const response = await fetch(`/api/admin/user-subscriptions/${userId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscriptionData),
-      });
-      if (!response.ok) throw new Error("Failed to update subscription");
-      return response.json();
+      const response = await adminApi.updateUserSubscription(userId, subscriptionData);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-user-subscriptions"]);

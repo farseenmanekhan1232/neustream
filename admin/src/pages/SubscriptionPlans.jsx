@@ -16,6 +16,7 @@ import {
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
+import { adminApi } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,22 +50,16 @@ function SubscriptionPlans() {
   const { data: plansData, isLoading } = useQuery({
     queryKey: ["admin-subscription-plans"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/subscription-plans");
-      if (!response.ok) throw new Error("Failed to fetch plans");
-      return response.json();
+      const response = await adminApi.getSubscriptionPlans();
+      return response;
     },
   });
 
   // Create plan mutation
   const createPlanMutation = useMutation({
     mutationFn: async (planData) => {
-      const response = await fetch("/api/admin/subscription-plans", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(planData),
-      });
-      if (!response.ok) throw new Error("Failed to create plan");
-      return response.json();
+      const response = await adminApi.createSubscriptionPlan(planData);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-subscription-plans"]);
@@ -79,13 +74,8 @@ function SubscriptionPlans() {
   // Update plan mutation
   const updatePlanMutation = useMutation({
     mutationFn: async ({ id, planData }) => {
-      const response = await fetch(`/api/admin/subscription-plans/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(planData),
-      });
-      if (!response.ok) throw new Error("Failed to update plan");
-      return response.json();
+      const response = await adminApi.updateSubscriptionPlan(id, planData);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-subscription-plans"]);
@@ -100,11 +90,8 @@ function SubscriptionPlans() {
   // Delete plan mutation
   const deletePlanMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await fetch(`/api/admin/subscription-plans/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete plan");
-      return response.json();
+      const response = await adminApi.deleteSubscriptionPlan(id);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-subscription-plans"]);
