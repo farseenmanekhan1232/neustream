@@ -716,36 +716,6 @@ function StreamingConfiguration() {
         </Card>
       )}
 
-      {/* Legacy Warning */}
-      {!isUsingSources && (
-        <Card className="border-orange-200 bg-orange-50/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              <div>
-                <h3 className="font-medium text-orange-700">
-                  Legacy Destination Management
-                </h3>
-                <p className="text-sm text-orange-600 mt-1">
-                  You're using the legacy destination system. Consider creating
-                  stream sources for better organization and multi-source
-                  streaming capabilities.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setShowAddSourceDialog(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Stream Sources
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Destinations Section */}
       <Card>
         <CardHeader>
