@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
@@ -17,6 +18,16 @@ import Analytics from "./pages/Analytics";
 import SettingsPage from "./pages/Settings";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import UserSubscriptions from "./pages/UserSubscriptions";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -59,8 +70,9 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <div className="App">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <div className="App">
           <Routes>
             <Route
               path="/login"
@@ -144,8 +156,9 @@ function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
-      </AuthProvider>
+          </div>
+        </AuthProvider>
+      </QueryClientProvider>
     </Router>
   );
 }
