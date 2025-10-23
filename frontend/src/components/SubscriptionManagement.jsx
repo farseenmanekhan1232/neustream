@@ -88,8 +88,7 @@ function SubscriptionManagement() {
   const processPaymentMutation = useMutation({
     mutationFn: async ({ planId, billingCycle }) => {
       // Create payment order
-      const orderResponse = await subscriptionService.createPaymentOrder(planId, billingCycle);
-      const orderData = orderResponse.data;
+      const orderData = await subscriptionService.createPaymentOrder(planId, billingCycle);
 
       // Initialize Razorpay
       const options = {
