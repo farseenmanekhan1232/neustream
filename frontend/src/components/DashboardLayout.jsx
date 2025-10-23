@@ -45,11 +45,11 @@ const navItems = [
     description: "Manage sources and destinations",
   },
   {
-    id: "subscription",
-    label: "Subscription",
-    icon: Crown,
-    path: "/dashboard/subscription",
-    description: "Manage your subscription plan",
+    id: "preview",
+    label: "Stream Preview",
+    icon: Radio,
+    path: "/dashboard/preview",
+    description: "Monitor live streams and chat",
   },
   {
     id: "analytics",
