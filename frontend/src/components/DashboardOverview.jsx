@@ -33,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import UsageMeter from "./UsageMeter";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
@@ -149,7 +150,12 @@ function DashboardOverview() {
     }
   }, [streamInfo?.isActive, streamInfo?.activeStream?.started_at]);
 
-  if (streamLoading || destinationsLoading || sourcesLoading || subscriptionLoading) {
+  if (
+    streamLoading ||
+    destinationsLoading ||
+    sourcesLoading ||
+    subscriptionLoading
+  ) {
     return <DashboardOverviewSkeleton />;
   }
 
@@ -282,19 +288,25 @@ function DashboardOverview() {
                   <div className="text-2xl font-bold text-primary">
                     {subscriptionData.limits.max_sources}
                   </div>
-                  <div className="text-sm text-muted-foreground">Max Sources</div>
+                  <div className="text-sm text-muted-foreground">
+                    Max Sources
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-primary">
                     {subscriptionData.limits.max_destinations}
                   </div>
-                  <div className="text-sm text-muted-foreground">Max Destinations</div>
+                  <div className="text-sm text-muted-foreground">
+                    Max Destinations
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-primary">
                     {subscriptionData.limits.max_streaming_hours_monthly}h
                   </div>
-                  <div className="text-sm text-muted-foreground">Monthly Hours</div>
+                  <div className="text-sm text-muted-foreground">
+                    Monthly Hours
+                  </div>
                 </div>
               </div>
 
@@ -325,11 +337,13 @@ function DashboardOverview() {
                 <div className="border-t pt-4">
                   <p className="text-sm font-medium mb-2">Plan Features:</p>
                   <div className="flex flex-wrap gap-2">
-                    {Object.entries(subscriptionData.features).map(([key, value]) => (
-                      <Badge key={key} variant="outline" className="text-xs">
-                        {key}: {value}
-                      </Badge>
-                    ))}
+                    {Object.entries(subscriptionData.features).map(
+                      ([key, value]) => (
+                        <Badge key={key} variant="outline" className="text-xs">
+                          {key}: {value}
+                        </Badge>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -409,8 +423,8 @@ function DashboardOverview() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Get your RTMP URL and stream key for OBS Studio or other streaming
-                software.
+                Get your RTMP URL and stream key for OBS Studio or other
+                streaming software.
               </CardDescription>
             </CardContent>
           </Card>
@@ -451,12 +465,14 @@ function DashboardOverview() {
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span>
-                    {activeSources.length} active source{activeSources.length !== 1 ? "s" : ""}
+                    {activeSources.length} active source
+                    {activeSources.length !== 1 ? "s" : ""}
                   </span>
                 </div>
               </CardTitle>
               <CardDescription>
-                Monitor your live streams and engage with your audience in real-time
+                Monitor your live streams and engage with your audience in
+                real-time
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -472,12 +488,17 @@ function DashboardOverview() {
                           <MonitorSpeaker className="h-4 w-4 text-green-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">{source.name}</h4>
+                          <h4 className="font-medium truncate">
+                            {source.name}
+                          </h4>
                           <p className="text-sm text-muted-foreground truncate">
                             {source.description || "Stream source"}
                           </p>
                         </div>
-                        <Badge variant="default" className="bg-green-500 text-xs">
+                        <Badge
+                          variant="default"
+                          className="bg-green-500 text-xs"
+                        >
                           LIVE
                         </Badge>
                       </div>
@@ -635,7 +656,6 @@ function DashboardOverview() {
         </Card>
       )}
 
-      
       {/* Legacy Stream Configuration (for backward compatibility) */}
       {streamInfo && sources.length === 0 && (
         <Card>
@@ -753,10 +773,7 @@ function DashboardOverview() {
             <CardTitle className="text-xl flex items-center justify-between">
               <span>Active Destinations</span>
               <Button variant="ghost" size="sm" asChild>
-                <Link
-                  to="/dashboard/streaming"
-                  className="flex items-center"
-                >
+                <Link to="/dashboard/streaming" className="flex items-center">
                   Manage All
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
