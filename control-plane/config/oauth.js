@@ -106,6 +106,33 @@ async (accessToken, refreshToken, profile, done) => {
       [profile.emails[0]?.value, 'google', profile.id, profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, streamKey]
     );
 
+    // Assign free plan to new OAuth user
+    try {
+      // Get the free plan ID (assuming it's the first plan with name 'Free')
+      const freePlan = await db.query(
+        'SELECT id FROM subscription_plans WHERE name = $1 ORDER BY id LIMIT 1',
+        ['Free']
+      );
+
+      if (freePlan.length > 0) {
+        const freePlanId = freePlan[0].id;
+
+        // Create subscription for the new user
+        await db.run(
+          `INSERT INTO user_subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
+           VALUES ($1, $2, 'active', NOW(), NOW() + INTERVAL '30 days')`,
+          [result.id, freePlanId]
+        );
+
+        console.log(`Assigned free plan to new Google OAuth user: ${profile.emails[0]?.value} (ID: ${result.id})`);
+      } else {
+        console.warn('Free plan not found in database, Google OAuth user created without subscription');
+      }
+    } catch (subscriptionError) {
+      console.error('Failed to assign free plan to new Google OAuth user:', subscriptionError);
+      // Continue with user creation even if subscription assignment fails
+    }
+
     // Track new user registration
     posthogService.trackAuthEvent(result.id, 'google_user_registered');
     posthogService.identifyUser(result.id, {
@@ -228,6 +255,33 @@ async (accessToken, refreshToken, profile, done) => {
       'INSERT INTO users (email, oauth_provider, oauth_id, display_name, avatar_url, oauth_email, stream_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, stream_key',
       [profile.email, 'twitch', profile.id, profile.display_name, profile.profile_image_url, profile.email, streamKey]
     );
+
+    // Assign free plan to new OAuth user
+    try {
+      // Get the free plan ID (assuming it's the first plan with name 'Free')
+      const freePlan = await db.query(
+        'SELECT id FROM subscription_plans WHERE name = $1 ORDER BY id LIMIT 1',
+        ['Free']
+      );
+
+      if (freePlan.length > 0) {
+        const freePlanId = freePlan[0].id;
+
+        // Create subscription for the new user
+        await db.run(
+          `INSERT INTO user_subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
+           VALUES ($1, $2, 'active', NOW(), NOW() + INTERVAL '30 days')`,
+          [result.id, freePlanId]
+        );
+
+        console.log(`Assigned free plan to new Twitch OAuth user: ${profile.email} (ID: ${result.id})`);
+      } else {
+        console.warn('Free plan not found in database, Twitch OAuth user created without subscription');
+      }
+    } catch (subscriptionError) {
+      console.error('Failed to assign free plan to new Twitch OAuth user:', subscriptionError);
+      // Continue with user creation even if subscription assignment fails
+    }
 
     // Track new user registration
     posthogService.trackAuthEvent(result.id, 'twitch_user_registered');

@@ -242,6 +242,33 @@ router.post('/register', async (req, res) => {
 
     const userId = result.id;
 
+    // Assign free plan to new user
+    try {
+      // Get the free plan ID (assuming it's the first plan with name 'Free')
+      const freePlan = await db.query(
+        'SELECT id FROM subscription_plans WHERE name = $1 ORDER BY id LIMIT 1',
+        ['Free']
+      );
+
+      if (freePlan.length > 0) {
+        const freePlanId = freePlan[0].id;
+
+        // Create subscription for the new user
+        await db.run(
+          `INSERT INTO user_subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
+           VALUES ($1, $2, 'active', NOW(), NOW() + INTERVAL '30 days')`,
+          [userId, freePlanId]
+        );
+
+        console.log(`Assigned free plan to new user: ${email} (ID: ${userId})`);
+      } else {
+        console.warn('Free plan not found in database, user created without subscription');
+      }
+    } catch (subscriptionError) {
+      console.error('Failed to assign free plan to new user:', subscriptionError);
+      // Continue with user creation even if subscription assignment fails
+    }
+
     // Track successful registration
     posthogService.trackAuthEvent(userId, 'user_registered');
     posthogService.identifyUser(userId, {

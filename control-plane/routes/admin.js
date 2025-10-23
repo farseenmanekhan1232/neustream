@@ -1043,4 +1043,316 @@ router.get("/analytics/streams", async (req, res) => {
   }
 });
 
+// ============================================
+// SUBSCRIPTION MANAGEMENT
+// ============================================
+
+// Get all subscription plans
+router.get("/subscription-plans", async (req, res) => {
+  try {
+    const plans = await db.query(
+      `SELECT
+         sp.*,
+         COUNT(us.id) as active_subscriptions
+       FROM subscription_plans sp
+       LEFT JOIN user_subscriptions us ON sp.id = us.plan_id AND us.status = 'active'
+       GROUP BY sp.id
+       ORDER BY sp.price_monthly ASC`
+    );
+
+    res.json(plans);
+  } catch (error) {
+    console.error("Get subscription plans error:", error);
+    res.status(500).json({ error: "Failed to fetch subscription plans" });
+  }
+});
+
+// Create new subscription plan
+router.post("/subscription-plans", async (req, res) => {
+  const {
+    name,
+    description,
+    price_monthly,
+    price_yearly,
+    max_sources,
+    max_destinations,
+    max_streaming_hours_monthly,
+    features
+  } = req.body;
+
+  try {
+    const result = await db.run(
+      `INSERT INTO subscription_plans (
+        name, description, price_monthly, price_yearly,
+        max_sources, max_destinations, max_streaming_hours_monthly, features
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [
+        name,
+        description,
+        price_monthly,
+        price_yearly,
+        max_sources,
+        max_destinations,
+        max_streaming_hours_monthly,
+        JSON.stringify(features || [])
+      ]
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error("Create subscription plan error:", error);
+    res.status(500).json({ error: "Failed to create subscription plan" });
+  }
+});
+
+// Update subscription plan
+router.put("/subscription-plans/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    price_monthly,
+    price_yearly,
+    max_sources,
+    max_destinations,
+    max_streaming_hours_monthly,
+    features
+  } = req.body;
+
+  try {
+    const result = await db.run(
+      `UPDATE subscription_plans SET
+        name = $1,
+        description = $2,
+        price_monthly = $3,
+        price_yearly = $4,
+        max_sources = $5,
+        max_destinations = $6,
+        max_streaming_hours_monthly = $7,
+        features = $8,
+        updated_at = NOW()
+      WHERE id = $9 RETURNING *`,
+      [
+        name,
+        description,
+        price_monthly,
+        price_yearly,
+        max_sources,
+        max_destinations,
+        max_streaming_hours_monthly,
+        JSON.stringify(features || []),
+        id
+      ]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Subscription plan not found" });
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Update subscription plan error:", error);
+    res.status(500).json({ error: "Failed to update subscription plan" });
+  }
+});
+
+// Delete subscription plan
+router.delete("/subscription-plans/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if plan has active subscriptions
+    const activeSubscriptions = await db.query(
+      "SELECT COUNT(*) as count FROM user_subscriptions WHERE plan_id = $1 AND status = 'active'",
+      [id]
+    );
+
+    if (parseInt(activeSubscriptions[0].count) > 0) {
+      return res.status(400).json({
+        error: "Cannot delete plan with active subscriptions. Please migrate users to other plans first."
+      });
+    }
+
+    const result = await db.run(
+      "DELETE FROM subscription_plans WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Subscription plan not found" });
+    }
+
+    res.json({ message: "Subscription plan deleted successfully" });
+  } catch (error) {
+    console.error("Delete subscription plan error:", error);
+    res.status(500).json({ error: "Failed to delete subscription plan" });
+  }
+});
+
+// Get user subscriptions with usage data
+router.get("/user-subscriptions", async (req, res) => {
+  const { page = 1, limit = 20, search = "" } = req.query;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get subscriptions with user and plan details
+    const subscriptions = await db.query(
+      `SELECT
+         us.*,
+         u.email,
+         u.display_name,
+         u.avatar_url,
+         u.oauth_provider,
+         sp.name as plan_name,
+         sp.price_monthly,
+         sp.price_yearly,
+         ut.sources_count,
+         ut.destinations_count,
+         ut.streaming_hours
+       FROM user_subscriptions us
+       JOIN users u ON us.user_id = u.id
+       JOIN subscription_plans sp ON us.plan_id = sp.id
+       LEFT JOIN usage_tracking ut ON us.user_id = ut.user_id
+       WHERE u.email ILIKE $1 OR u.display_name ILIKE $1 OR sp.name ILIKE $1
+       ORDER BY us.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [`%${search}%`, limit, offset]
+    );
+
+    // Get total count for pagination
+    const totalCount = await db.query(
+      `SELECT COUNT(*) as count
+       FROM user_subscriptions us
+       JOIN users u ON us.user_id = u.id
+       JOIN subscription_plans sp ON us.plan_id = sp.id
+       WHERE u.email ILIKE $1 OR u.display_name ILIKE $1 OR sp.name ILIKE $1`,
+      [`%${search}%`]
+    );
+
+    res.json({
+      subscriptions,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: parseInt(totalCount[0].count),
+        totalPages: Math.ceil(totalCount[0].count / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Get user subscriptions error:", error);
+    res.status(500).json({ error: "Failed to fetch user subscriptions" });
+  }
+});
+
+// Update user subscription
+router.put("/user-subscriptions/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const { plan_id, status, current_period_end } = req.body;
+
+  try {
+    // Check if user exists
+    const userCheck = await db.query(
+      "SELECT id FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (userCheck.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if plan exists
+    const planCheck = await db.query(
+      "SELECT id FROM subscription_plans WHERE id = $1",
+      [plan_id]
+    );
+
+    if (planCheck.length === 0) {
+      return res.status(404).json({ error: "Subscription plan not found" });
+    }
+
+    // Update or create subscription
+    const existingSubscription = await db.query(
+      "SELECT id FROM user_subscriptions WHERE user_id = $1",
+      [userId]
+    );
+
+    let result;
+    if (existingSubscription.length > 0) {
+      // Update existing subscription
+      result = await db.run(
+        `UPDATE user_subscriptions SET
+          plan_id = $1,
+          status = $2,
+          current_period_end = $3,
+          updated_at = NOW()
+        WHERE user_id = $4 RETURNING *`,
+        [plan_id, status, current_period_end, userId]
+      );
+    } else {
+      // Create new subscription
+      result = await db.run(
+        `INSERT INTO user_subscriptions (
+          user_id, plan_id, status, current_period_start, current_period_end
+        ) VALUES ($1, $2, $3, NOW(), $4) RETURNING *`,
+        [userId, plan_id, status, current_period_end]
+      );
+    }
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error("Update user subscription error:", error);
+    res.status(500).json({ error: "Failed to update user subscription" });
+  }
+});
+
+// Get subscription analytics
+router.get("/subscription-analytics", async (req, res) => {
+  try {
+    // Plan distribution
+    const planDistribution = await db.query(
+      `SELECT
+         sp.name,
+         COUNT(us.id) as user_count,
+         COUNT(us.id) * 100.0 / (SELECT COUNT(*) FROM user_subscriptions WHERE status = 'active') as percentage
+       FROM subscription_plans sp
+       LEFT JOIN user_subscriptions us ON sp.id = us.plan_id AND us.status = 'active'
+       GROUP BY sp.id, sp.name
+       ORDER BY user_count DESC`
+    );
+
+    // Monthly revenue projection
+    const revenueProjection = await db.query(
+      `SELECT
+         sp.name,
+         COUNT(us.id) as active_users,
+         SUM(sp.price_monthly) as monthly_revenue
+       FROM subscription_plans sp
+       JOIN user_subscriptions us ON sp.id = us.plan_id AND us.status = 'active'
+       GROUP BY sp.id, sp.name
+       ORDER BY monthly_revenue DESC`
+    );
+
+    // Subscription growth over time
+    const growthData = await db.query(
+      `SELECT
+         DATE_TRUNC('month', created_at) as month,
+         COUNT(*) as new_subscriptions,
+         SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', created_at)) as total_subscriptions
+       FROM user_subscriptions
+       GROUP BY DATE_TRUNC('month', created_at)
+       ORDER BY month DESC
+       LIMIT 12`
+    );
+
+    res.json({
+      planDistribution,
+      revenueProjection,
+      growthData
+    });
+  } catch (error) {
+    console.error("Get subscription analytics error:", error);
+    res.status(500).json({ error: "Failed to fetch subscription analytics" });
+  }
+});
+
 module.exports = router;

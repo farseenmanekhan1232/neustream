@@ -15,6 +15,8 @@ import Sources from "./pages/Sources";
 import Destinations from "./pages/Destinations";
 import Analytics from "./pages/Analytics";
 import SettingsPage from "./pages/Settings";
+import SubscriptionPlans from "./pages/SubscriptionPlans";
+import UserSubscriptions from "./pages/UserSubscriptions";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +83,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/subscription-plans"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionPlans />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-subscriptions"
+              element={
+                <ProtectedRoute>
+                  <UserSubscriptions />
                 </ProtectedRoute>
               }
             />

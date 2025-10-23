@@ -11,6 +11,8 @@ import {
   Radio,
   Target,
   TrendingUp,
+  Crown,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,8 @@ const Layout = ({ children }) => {
   const navigation = [
     { name: "Dashboard", href: "/", icon: BarChart3 },
     { name: "Users", href: "/users", icon: Users },
+    { name: "Subscription Plans", href: "/subscription-plans", icon: Crown },
+    { name: "User Subscriptions", href: "/user-subscriptions", icon: CreditCard },
     { name: "Sources", href: "/sources", icon: Radio },
     { name: "Destinations", href: "/destinations", icon: Target },
     { name: "Streams", href: "/streams", icon: Activity },
