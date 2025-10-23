@@ -144,22 +144,8 @@ function StreamingConfiguration() {
     refetchInterval: 5000, // Refresh destinations more frequently
   });
 
-  // Fetch legacy destinations (backward compatibility)
-  const { data: legacyDestinationsData, isLoading: legacyDestinationsLoading } =
-    useQuery({
-      queryKey: ["legacyDestinations", user?.id],
-      queryFn: async () => {
-        const response = await apiService.get("/destinations");
-        return response;
-      },
-      enabled:
-        !!user &&
-        (!sourcesData?.sources?.length || sourcesData?.sources?.length === 0),
-    });
-
   const sources = sourcesData?.sources || [];
   const destinations = destinationsData?.destinations || [];
-  const legacyDestinations = legacyDestinationsData?.destinations || [];
   const currentSource = sources.find((s) => s.id === selectedSourceId);
   const isUsingSources = sources.length > 0;
 
@@ -283,17 +269,10 @@ function StreamingConfiguration() {
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
-      let response;
-
-      if (selectedSourceId) {
-        response = await apiService.post(
-          `/sources/${selectedSourceId}/destinations`,
-          destination
-        );
-      } else {
-        response = await apiService.post("/destinations", destination);
-      }
-
+      const response = await apiService.post(
+        `/sources/${selectedSourceId}/destinations`,
+        destination
+      );
       return response;
     },
     onSuccess: (data) => {
@@ -311,12 +290,8 @@ function StreamingConfiguration() {
       });
       setShowAddDestinationDialog(false);
 
-      // Invalidate appropriate queries
-      if (selectedSourceId) {
-        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-      } else {
-        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
-      }
+      // Invalidate destinations query
+      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
 
       toast.success("Destination added successfully!");
     },
@@ -333,16 +308,9 @@ function StreamingConfiguration() {
   // Delete destination mutation
   const deleteDestinationMutation = useMutation({
     mutationFn: async (id) => {
-      let response;
-
-      if (selectedSourceId) {
-        response = await apiService.delete(
-          `/sources/${selectedSourceId}/destinations/${id}`
-        );
-      } else {
-        response = await apiService.delete(`/destinations/${id}`);
-      }
-
+      const response = await apiService.delete(
+        `/sources/${selectedSourceId}/destinations/${id}`
+      );
       return response;
     },
     onSuccess: (_, id) => {
@@ -351,12 +319,8 @@ function StreamingConfiguration() {
         source_name: currentSource?.name,
       });
 
-      // Invalidate appropriate queries
-      if (selectedSourceId) {
-        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-      } else {
-        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
-      }
+      // Invalidate destinations query
+      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
 
       toast.success("Destination removed successfully!");
     },
@@ -512,7 +476,7 @@ function StreamingConfiguration() {
   // };
 
   const isLoading =
-    sourcesLoading || destinationsLoading || legacyDestinationsLoading;
+    sourcesLoading || destinationsLoading;
 
   if (isLoading) {
     return (
@@ -727,38 +691,65 @@ function StreamingConfiguration() {
                   ? `Configure platforms for "${
                       currentSource?.name || "selected source"
                     }"`
-                  : "Manage your connected streaming platforms"}
+                  : "Create a stream source first to configure destinations"}
               </CardDescription>
             </div>
-            <Button onClick={() => setShowAddDestinationDialog(true)}>
+            <Button
+              onClick={() => {
+                if (!isUsingSources || !currentSource) {
+                  toast.error("Create a stream source first before adding destinations");
+                  return;
+                }
+                setShowAddDestinationDialog(true);
+              }}
+              disabled={!isUsingSources || !currentSource}
+              title={!isUsingSources || !currentSource ? "Create a stream source first" : "Add destination"}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Destination
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {(isUsingSources ? destinations : legacyDestinations).length === 0 ? (
+          {!isUsingSources || !currentSource ? (
+            <div className="text-center py-12">
+              <MonitorSpeaker className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">
+                No Stream Source Available
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Create a stream source first before you can configure destinations for multi-platform broadcasting.
+              </p>
+              <Button onClick={() => setShowAddSourceDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Source
+              </Button>
+            </div>
+          ) : destinations.length === 0 ? (
             <div className="text-center py-12">
               <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">
                 No Destinations Configured
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                {isUsingSources
-                  ? `Add streaming platforms to ${
-                      currentSource?.name || "this source"
-                    } to start broadcasting to multiple destinations.`
-                  : "Add your first streaming platform to start broadcasting to multiple destinations simultaneously."}
+                Add streaming platforms to {currentSource.name} to start broadcasting to multiple destinations.
               </p>
-              <Button onClick={() => setShowAddDestinationDialog(true)}>
+              <Button
+                onClick={() => {
+                  if (!isUsingSources || !currentSource) {
+                    toast.error("Create a stream source first before adding destinations");
+                    return;
+                  }
+                  setShowAddDestinationDialog(true);
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Destination
               </Button>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {(isUsingSources ? destinations : legacyDestinations).map(
-                (destination) => {
+              {destinations.map((destination) => {
                   const config =
                     platformConfig[destination.platform] ||
                     platformConfig.custom;
@@ -1151,7 +1142,7 @@ function StreamingConfiguration() {
           <DialogHeader>
             <DialogTitle>Add New Destination</DialogTitle>
             <DialogDescription>
-              Connect a new streaming platform to broadcast your content
+              Connect a new streaming platform to broadcast "{currentSource?.name || "your stream"}" to multiple platforms
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddDestination} className="space-y-6">
