@@ -221,7 +221,7 @@ const Dashboard = () => {
               title={plan.name}
               value={plan.user_count || 0}
               icon={Crown}
-              change={`${plan.percentage ? plan.percentage.toFixed(1) : 0}%`}
+              change={`${plan.percentage ? parseFloat(plan.percentage).toFixed(1) : 0}%`}
               changeType="positive"
             />
           ))}

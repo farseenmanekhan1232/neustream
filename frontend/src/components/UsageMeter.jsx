@@ -25,7 +25,7 @@ function UsageMeter({ label, current, max, unit, className = "" }) {
       </div>
       <Progress value={percentage} className="h-2" indicatorClassName={getColor()} />
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{percentage.toFixed(0)}% used</span>
+        <span>{parseFloat(percentage).toFixed(0)}% used</span>
         <span>{remaining.toFixed(1)} {unit} remaining</span>
       </div>
     </div>

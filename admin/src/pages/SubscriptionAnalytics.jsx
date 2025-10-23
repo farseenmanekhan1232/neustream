@@ -199,7 +199,7 @@ function SubscriptionAnalytics() {
                     <div className="text-right">
                       <div className="font-medium">{plan.user_count || 0}</div>
                       <div className="text-xs text-muted-foreground">
-                        {plan.percentage ? plan.percentage.toFixed(1) : 0}%
+                        {plan.percentage ? parseFloat(plan.percentage).toFixed(1) : 0}%
                       </div>
                     </div>
                   </div>
