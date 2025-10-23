@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const posthogService = require('../services/posthog');
+const subscriptionService = require('../services/subscriptionService');
 const { passport, generateToken, JWT_SECRET } = require('../config/oauth');
 
 const router = express.Router();
@@ -90,6 +91,24 @@ router.post('/stream', async (req, res) => {
       return res.status(200).send('OK');
     }
 
+    // Check subscription limits for streaming
+    if (sourceInfo) {
+      const canStream = await subscriptionService.canStream(userId);
+      if (!canStream.allowed) {
+        console.log(`Stream denied for user ${userId}: streaming hour limit exceeded (${canStream.current}/${canStream.max} hours)`);
+
+        // Track subscription limit exceeded
+        posthogService.trackStreamEvent(userId, streamKey, 'stream_denied_subscription_limit', {
+          source_id: sourceInfo.id,
+          source_name: sourceInfo.name,
+          current_hours: canStream.current,
+          max_hours: canStream.max
+        });
+
+        return res.status(403).send('Streaming hour limit exceeded');
+      }
+    }
+
     // Start tracking the active stream with source_id if available
     const insertQuery = sourceInfo
       ? 'INSERT INTO active_streams (source_id, user_id, stream_key) VALUES ($1, $2, $3) RETURNING id'
@@ -107,6 +126,11 @@ router.post('/stream', async (req, res) => {
         'UPDATE stream_sources SET last_used_at = NOW() WHERE id = $1',
         [sourceInfo.id]
       );
+    }
+
+    // Track stream start in usage tracking (only for new architecture with source_id)
+    if (sourceInfo) {
+      await subscriptionService.trackStreamStart(userId, sourceInfo.id);
     }
 
     // Track successful stream authentication
@@ -174,6 +198,11 @@ router.post('/stream-end', async (req, res) => {
        WHERE stream_key = $3 AND ended_at IS NULL`,
       [activeStream.source_id, activeStream.user_id, streamKey]
     );
+
+    // Track stream end in usage tracking (only for new architecture with source_id)
+    if (activeStream.source_id) {
+      await subscriptionService.trackStreamEnd(activeStream.user_id, activeStream.source_id);
+    }
 
     // Track stream end with detailed information
     posthogService.trackStreamEvent(activeStream.user_id, streamKey, 'stream_ended', {

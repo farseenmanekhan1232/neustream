@@ -14,6 +14,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import StreamingConfiguration from "./components/StreamingConfiguration";
 import StreamPreviewPage from "./components/StreamPreviewPage";
+import SubscriptionManagement from "./components/SubscriptionManagement";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 
@@ -78,6 +79,7 @@ function AppContent() {
         <Route path="streaming" element={<StreamingConfiguration />} />
         <Route path="destinations" element={<StreamingConfiguration />} />
         <Route path="preview" element={<StreamPreviewPage />} />
+        <Route path="subscription" element={<SubscriptionManagement />} />
         <Route
           path="analytics"
           element={

@@ -52,6 +52,13 @@ const navItems = [
     description: "Monitor live streams and chat",
   },
   {
+    id: "subscription",
+    label: "Subscription",
+    icon: Crown,
+    path: "/dashboard/subscription",
+    description: "Manage your subscription plan",
+  },
+  {
     id: "analytics",
     label: "Analytics",
     icon: BarChart3,

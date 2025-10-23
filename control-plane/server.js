@@ -10,6 +10,7 @@ const streamRoutes = require("./routes/streams");
 const destinationRoutes = require("./routes/destinations");
 const sourceRoutes = require("./routes/sources");
 const adminRoutes = require("./routes/admin");
+const subscriptionRoutes = require("./routes/subscriptions");
 const posthogService = require("./services/posthog");
 
 const app = express();
@@ -64,6 +65,7 @@ app.use("/api/streams", streamRoutes);
 app.use("/api/destinations", destinationRoutes);
 app.use("/api/sources", sourceRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {
