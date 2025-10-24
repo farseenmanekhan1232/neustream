@@ -53,18 +53,10 @@ const AnalyticsPage = () => {
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline">
-            Total: {trend.registrations}
-          </Badge>
-          <Badge variant="outline">
-            Google: {trend.google_registrations}
-          </Badge>
-          <Badge variant="outline">
-            Twitch: {trend.twitch_registrations}
-          </Badge>
-          <Badge variant="outline">
-            Email: {trend.email_registrations}
-          </Badge>
+          <Badge variant="outline">Total: {trend.registrations}</Badge>
+          <Badge variant="outline">Google: {trend.google_registrations}</Badge>
+          <Badge variant="outline">Twitch: {trend.twitch_registrations}</Badge>
+          <Badge variant="outline">Email: {trend.email_registrations}</Badge>
         </div>
       </TableCell>
     </TableRow>
@@ -77,9 +69,7 @@ const AnalyticsPage = () => {
           <span className="text-xl mr-3">
             {getPlatformIcon(platform.platform)}
           </span>
-          <span className="font-medium capitalize">
-            {platform.platform}
-          </span>
+          <span className="font-medium capitalize">{platform.platform}</span>
         </div>
       </TableCell>
       <TableCell>
@@ -93,14 +83,10 @@ const AnalyticsPage = () => {
         </span>
       </TableCell>
       <TableCell>
-        <span className="font-medium">
-          {platform.unique_sources}
-        </span>
+        <span className="font-medium">{platform.unique_sources}</span>
       </TableCell>
       <TableCell>
-        <span className="font-medium">
-          {platform.unique_users}
-        </span>
+        <span className="font-medium">{platform.unique_users}</span>
       </TableCell>
     </TableRow>
   );
@@ -148,34 +134,34 @@ const AnalyticsPage = () => {
   };
 
   const getPlatformIcon = (platform) => {
-  switch (platform.toLowerCase()) {
-    case "youtube":
-      return "🎥";
-    case "twitch":
-      return "📺";
-    case "facebook":
-      return "📘";
-    case "instagram":
-      return "📷";
-    case "linkedin":
-      return "💼";
-    case "twitter":
-      return "🐦";
-    default:
-      return "📡";
-  }
-};
+    switch (platform.toLowerCase()) {
+      case "youtube":
+        return "🎥";
+      case "twitch":
+        return "📺";
+      case "facebook":
+        return "📘";
+      case "instagram":
+        return "📷";
+      case "linkedin":
+        return "💼";
+      case "twitter":
+        return "🐦";
+      default:
+        return "📡";
+    }
+  };
 
-// const getGrowthRate = (current, previous) => {
-//   if (!previous || previous === 0) return 0;
-//   return ((current - previous) / previous * 100).toFixed(1);
-// };
+  // const getGrowthRate = (current, previous) => {
+  //   if (!previous || previous === 0) return 0;
+  //   return ((current - previous) / previous * 100).toFixed(1);
+  // };
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <div className="text-2xl font-bold text-gray-900">Analytics</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -198,9 +184,9 @@ const AnalyticsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-bold text-foreground">
             Analytics Dashboard
-          </h1>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Comprehensive insights into your streaming platform performance.
           </p>
@@ -458,7 +444,10 @@ const AnalyticsPage = () => {
                           {userAnalytics.registrationTrends
                             .slice(-7)
                             .map((trend, index) => (
-                              <UserRegistrationTrendRow key={index} trend={trend} />
+                              <UserRegistrationTrendRow
+                                key={index}
+                                trend={trend}
+                              />
                             ))}
                         </TableBody>
                       </Table>
@@ -594,7 +583,10 @@ const AnalyticsPage = () => {
                         <TableBody>
                           {streamAnalytics.platformAnalytics.map(
                             (platform, index) => (
-                              <PlatformAnalyticsRow key={index} platform={platform} />
+                              <PlatformAnalyticsRow
+                                key={index}
+                                platform={platform}
+                              />
                             )
                           )}
                         </TableBody>

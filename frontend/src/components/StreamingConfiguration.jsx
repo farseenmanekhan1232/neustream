@@ -476,8 +476,7 @@ function StreamingConfiguration() {
   //   return icons[platform] || icons.custom;
   // };
 
-  const isLoading =
-    sourcesLoading || destinationsLoading;
+  const isLoading = sourcesLoading || destinationsLoading;
 
   if (isLoading) {
     return (
@@ -505,7 +504,9 @@ function StreamingConfiguration() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold mb-2">Streaming Configuration</h1>
+          <div className="text-2xl font-semibold mb-2">
+            Streaming Configuration
+          </div>
           <p className="text-muted-foreground">
             Manage your stream sources and configure destinations for
             multi-platform broadcasting
@@ -701,13 +702,19 @@ function StreamingConfiguration() {
             <Button
               onClick={() => {
                 if (!isUsingSources || !currentSource) {
-                  toast.error("Create a stream source first before adding destinations");
+                  toast.error(
+                    "Create a stream source first before adding destinations"
+                  );
                   return;
                 }
                 setShowAddDestinationDialog(true);
               }}
               disabled={!isUsingSources || !currentSource}
-              title={!isUsingSources || !currentSource ? "Create a stream source first" : "Add destination"}
+              title={
+                !isUsingSources || !currentSource
+                  ? "Create a stream source first"
+                  : "Add destination"
+              }
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Destination
@@ -722,7 +729,8 @@ function StreamingConfiguration() {
                 No Stream Source Available
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create a stream source first before you can configure destinations for multi-platform broadcasting.
+                Create a stream source first before you can configure
+                destinations for multi-platform broadcasting.
               </p>
               <Button onClick={() => setShowAddSourceDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -736,12 +744,15 @@ function StreamingConfiguration() {
                 No Destinations Configured
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Add streaming platforms to {currentSource.name} to start broadcasting to multiple destinations.
+                Add streaming platforms to {currentSource.name} to start
+                broadcasting to multiple destinations.
               </p>
               <Button
                 onClick={() => {
                   if (!isUsingSources || !currentSource) {
-                    toast.error("Create a stream source first before adding destinations");
+                    toast.error(
+                      "Create a stream source first before adding destinations"
+                    );
                     return;
                   }
                   setShowAddDestinationDialog(true);
@@ -754,101 +765,99 @@ function StreamingConfiguration() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {destinations.map((destination) => {
-                  const config =
-                    platformConfig[destination.platform] ||
-                    platformConfig.custom;
-                  const Icon = config.icon;
+                const config =
+                  platformConfig[destination.platform] || platformConfig.custom;
+                const Icon = config.icon;
 
-                  return (
-                    <Card
-                      key={destination.id}
-                      className="group hover:border-primary/50 transition-colors"
-                    >
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`p-2 rounded-lg ${config.color} text-white`}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">
-                              {config.name}
-                            </CardTitle>
-                            <CardDescription>
-                              {config.description}
-                            </CardDescription>
-                          </div>
-                        </div>
-                        <Badge
-                          variant={
-                            destination.is_active ? "default" : "secondary"
-                          }
+                return (
+                  <Card
+                    key={destination.id}
+                    className="group hover:border-primary/50 transition-colors"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`p-2 rounded-lg ${config.color} text-white`}
                         >
-                          {destination.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium text-muted-foreground">
-                            RTMP URL
-                          </label>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex-1 p-2 bg-muted rounded-md font-mono text-xs border truncate">
-                              {destination.rtmp_url}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                copyToClipboard(
-                                  destination.rtmp_url,
-                                  `${config.name} RTMP URL`
-                                )
-                              }
-                              className="h-8 w-8"
-                            >
-                              {copiedField === `${config.name} RTMP URL` ? (
-                                <Check className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
+                          <Icon className="h-5 w-5" />
                         </div>
-
-                        <div className="flex justify-between">
+                        <div>
+                          <CardTitle className="text-lg">
+                            {config.name}
+                          </CardTitle>
+                          <CardDescription>
+                            {config.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge
+                        variant={
+                          destination.is_active ? "default" : "secondary"
+                        }
+                      >
+                        {destination.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">
+                          RTMP URL
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-1 p-2 bg-muted rounded-md font-mono text-xs border truncate">
+                            {destination.rtmp_url}
+                          </div>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={() =>
-                              deleteDestinationMutation.mutate(destination.id)
+                              copyToClipboard(
+                                destination.rtmp_url,
+                                `${config.name} RTMP URL`
+                              )
                             }
-                            disabled={deleteDestinationMutation.isPending}
-                            className="text-destructive hover:text-destructive"
+                            className="h-8 w-8"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove
+                            {copiedField === `${config.name} RTMP URL` ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
                           </Button>
-                          {config.helpUrl && (
-                            <Button variant="ghost" size="sm" asChild>
-                              <a
-                                href={config.helpUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center"
-                              >
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Help
-                              </a>
-                            </Button>
-                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                }
-              )}
+                      </div>
+
+                      <div className="flex justify-between">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            deleteDestinationMutation.mutate(destination.id)
+                          }
+                          disabled={deleteDestinationMutation.isPending}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                        {config.helpUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a
+                              href={config.helpUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Help
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -1146,7 +1155,8 @@ function StreamingConfiguration() {
           <DialogHeader>
             <DialogTitle>Add New Destination</DialogTitle>
             <DialogDescription>
-              Connect a new streaming platform to broadcast "{currentSource?.name || "your stream"}" to multiple platforms
+              Connect a new streaming platform to broadcast "
+              {currentSource?.name || "your stream"}" to multiple platforms
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddDestination} className="space-y-6">

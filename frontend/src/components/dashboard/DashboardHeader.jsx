@@ -13,14 +13,14 @@ const DashboardHeader = memo(function DashboardHeader() {
   const { user } = useAuth();
   const location = useLocation();
   const { trackUIInteraction } = usePostHog();
-  const { state, isMobile } = useSidebar();
+  const { _, isMobile } = useSidebar();
 
   const pageTitle = getPageTitle(location.pathname);
   const pageDescription = getPageDescription(location.pathname);
 
   const handleNotificationClick = () => {
     trackUIInteraction("notifications_click", "click", {
-      page: location.pathname
+      page: location.pathname,
     });
   };
 
@@ -35,8 +35,7 @@ const DashboardHeader = memo(function DashboardHeader() {
   return (
     <header
       className={cn(
-        "flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-        "sticky top-0 z-10"
+        "flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       )}
     >
       <div className="flex items-center gap-3 md:gap-4">
@@ -49,12 +48,14 @@ const DashboardHeader = memo(function DashboardHeader() {
         </SidebarTrigger>
 
         <div className="min-w-0 flex-1">
-          <h1 className={cn(
-            "font-semibold truncate",
-            isMobile ? "text-lg" : "text-2xl"
-          )}>
+          <div
+            className={cn(
+              "font-semibold truncate",
+              isMobile ? "text-lg" : "text-2xl"
+            )}
+          >
             {pageTitle}
-          </h1>
+          </div>
           {!isMobile && (
             <p className="text-sm text-muted-foreground truncate">
               {pageDescription}
@@ -69,18 +70,12 @@ const DashboardHeader = memo(function DashboardHeader() {
           size="icon"
           onClick={handleNotificationClick}
           aria-label="Notifications"
-          className={cn(
-            "h-8 w-8 md:h-10 md:w-10"
-          )}
+          className={cn("h-8 w-8 md:h-10 md:w-10")}
         >
-          <Bell className={cn(
-            "h-4 w-4 md:h-5 md:w-5"
-          )} />
+          <Bell className={cn("h-4 w-4 md:h-5 md:w-5")} />
         </Button>
 
-        <Avatar className={cn(
-          "h-8 w-8 md:h-10 md:w-10"
-        )}>
+        <Avatar className={cn("h-8 w-8 md:h-10 md:w-10")}>
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
@@ -88,10 +83,12 @@ const DashboardHeader = memo(function DashboardHeader() {
               className="rounded-full"
             />
           ) : (
-            <AvatarFallback className={cn(
-              "bg-primary/10 text-primary",
-              isMobile ? "text-xs" : "text-sm"
-            )}>
+            <AvatarFallback
+              className={cn(
+                "bg-primary/10 text-primary",
+                isMobile ? "text-xs" : "text-sm"
+              )}
+            >
               {getUserInitials()}
             </AvatarFallback>
           )}

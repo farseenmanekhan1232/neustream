@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { adminApi } from "../services/api";
-import { Users, Activity, Wifi, Clock, TrendingUp, DollarSign, Crown, CreditCard } from "lucide-react";
+import {
+  Users,
+  Activity,
+  Wifi,
+  Clock,
+  TrendingUp,
+  DollarSign,
+  Crown,
+  CreditCard,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -53,7 +62,11 @@ const Dashboard = () => {
 
       // Get subscription analytics
       console.log("💰 Fetching subscription analytics...");
-      let subscriptionData = { activeSubscriptions: 0, monthlyRevenue: 0, planDistribution: [] };
+      let subscriptionData = {
+        activeSubscriptions: 0,
+        monthlyRevenue: 0,
+        planDistribution: [],
+      };
       try {
         const subscriptionResponse = await adminApi.getSubscriptionAnalytics();
         console.log("💰 Subscription response:", subscriptionResponse);
@@ -62,8 +75,14 @@ const Dashboard = () => {
         const revenueProjection = subscriptionResponse.revenueProjection || [];
         const planDistribution = subscriptionResponse.planDistribution || [];
 
-        const totalActiveUsers = revenueProjection.reduce((sum, plan) => sum + (plan.active_users || 0), 0);
-        const totalMonthlyRevenue = revenueProjection.reduce((sum, plan) => sum + (parseFloat(plan.monthly_revenue) || 0), 0);
+        const totalActiveUsers = revenueProjection.reduce(
+          (sum, plan) => sum + (plan.active_users || 0),
+          0
+        );
+        const totalMonthlyRevenue = revenueProjection.reduce(
+          (sum, plan) => sum + (parseFloat(plan.monthly_revenue) || 0),
+          0
+        );
 
         subscriptionData = {
           activeSubscriptions: totalActiveUsers,
@@ -71,7 +90,10 @@ const Dashboard = () => {
           planDistribution: planDistribution,
         };
       } catch (subscriptionError) {
-        console.warn("⚠️ Could not load subscription analytics:", subscriptionError);
+        console.warn(
+          "⚠️ Could not load subscription analytics:",
+          subscriptionError
+        );
       }
 
       // Update dashboard stats
@@ -174,7 +196,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <div className="text-2xl font-bold text-foreground">Dashboard</div>
         <p className="mt-1 text-sm text-muted-foreground">
           Welcome back! Here's what's happening on Neustream today.
         </p>
@@ -200,7 +222,9 @@ const Dashboard = () => {
           title="Active Subscriptions"
           value={stats.activeSubscriptions}
           icon={CreditCard}
-          change={`${Math.round((stats.activeSubscriptions / Math.max(stats.totalUsers, 1)) * 100)}% of users`}
+          change={`${Math.round(
+            (stats.activeSubscriptions / Math.max(stats.totalUsers, 1)) * 100
+          )}% of users`}
           changeType="positive"
         />
         <StatCard
@@ -221,7 +245,9 @@ const Dashboard = () => {
               title={plan.name}
               value={plan.user_count || 0}
               icon={Crown}
-              change={`${plan.percentage ? parseFloat(plan.percentage).toFixed(1) : 0}%`}
+              change={`${
+                plan.percentage ? parseFloat(plan.percentage).toFixed(1) : 0
+              }%`}
               changeType="positive"
             />
           ))}

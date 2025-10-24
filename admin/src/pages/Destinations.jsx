@@ -327,7 +327,7 @@ const DestinationsPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Destinations</h1>
+          <div className="text-2xl font-bold text-foreground">Destinations</div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -413,9 +413,9 @@ const DestinationsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-bold text-foreground">
             Stream Destinations
-          </h1>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage and monitor all streaming destinations across platforms.
           </p>

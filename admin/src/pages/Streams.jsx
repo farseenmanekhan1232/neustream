@@ -97,9 +97,7 @@ const Streams = () => {
             </div>
           </div>
           <div>
-            <p className="font-medium">
-              {stream.email || "Unknown User"}
-            </p>
+            <p className="font-medium">{stream.email || "Unknown User"}</p>
             <p className="text-sm text-muted-foreground">
               {stream.stream_key.substring(0, 8)}...
             </p>
@@ -117,9 +115,7 @@ const Streams = () => {
         </div>
       </TableCell>
       <TableCell>
-        <div className="text-sm">
-          {formatDuration(stream.started_at)}
-        </div>
+        <div className="text-sm">{formatDuration(stream.started_at)}</div>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -144,7 +140,9 @@ const Streams = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Active Streams</h1>
+          <div className="text-2xl font-bold text-foreground">
+            Active Streams
+          </div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -201,7 +199,9 @@ const Streams = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Active Streams</h1>
+          <div className="text-2xl font-bold text-foreground">
+            Active Streams
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Monitor all currently active streaming sessions.
           </p>

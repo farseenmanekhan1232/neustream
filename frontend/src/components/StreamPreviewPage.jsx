@@ -100,41 +100,41 @@ function StreamPreviewPage() {
       <DashboardContainer>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Stream Preview</h1>
-            <p className="text-muted-foreground">
-              Monitor your live streams and engage with your audience
-            </p>
-          </div>
-          <Button variant="outline" asChild>
-            <Link to="/dashboard/streaming">
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
-
-        <Card className="p-12 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <MonitorSpeaker className="h-8 w-8 text-muted-foreground" />
+            <div>
+              <div className="text-3xl font-bold">Stream Preview</div>
+              <p className="text-muted-foreground">
+                Monitor your live streams and engage with your audience
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-2">No Active Streams</h3>
-            <p className="text-muted-foreground mb-6">
-              Start streaming from your broadcasting software to see the preview
-              here.
-            </p>
-            <Button asChild>
+            <Button variant="outline" asChild>
               <Link to="/dashboard/streaming">
-                <Settings className="h-4 w-4 mr-2" />
-                Configure Stream Sources
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
               </Link>
             </Button>
           </div>
-        </Card>
-      </div>
-    </DashboardContainer>
-  );
+
+          <Card className="p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <MonitorSpeaker className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Active Streams</h3>
+              <p className="text-muted-foreground mb-6">
+                Start streaming from your broadcasting software to see the
+                preview here.
+              </p>
+              <Button asChild>
+                <Link to="/dashboard/streaming">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure Stream Sources
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </DashboardContainer>
+    );
   }
 
   return (
@@ -142,7 +142,7 @@ function StreamPreviewPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Stream Preview</h1>
+          <div className="text-3xl font-bold">Stream Preview</div>
           <p className="text-muted-foreground">
             Monitor your live streams and engage with your audience
           </p>

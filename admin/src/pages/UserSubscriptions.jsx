@@ -18,7 +18,13 @@ import {
 import { toast } from "sonner";
 import { adminApi } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,7 +84,10 @@ function UserSubscriptions() {
   // Update subscription mutation
   const updateSubscriptionMutation = useMutation({
     mutationFn: async ({ userId, subscriptionData }) => {
-      const response = await adminApi.updateUserSubscription(userId, subscriptionData);
+      const response = await adminApi.updateUserSubscription(
+        userId,
+        subscriptionData
+      );
       return response;
     },
     onSuccess: () => {
@@ -114,11 +123,23 @@ function UserSubscriptions() {
   const getStatusBadge = (status) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            Active
+          </Badge>
+        );
       case "canceled":
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Canceled</Badge>;
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200">
+            Canceled
+          </Badge>
+        );
       case "past_due":
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Past Due</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            Past Due
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -135,14 +156,17 @@ function UserSubscriptions() {
     );
   }
 
-  const { subscriptions, pagination } = subscriptionsData || { subscriptions: [], pagination: {} };
+  const { subscriptions, pagination } = subscriptionsData || {
+    subscriptions: [],
+    pagination: {},
+  };
   const plans = plansData || [];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">User Subscriptions</h1>
+        <div className="text-3xl font-bold">User Subscriptions</div>
         <p className="text-muted-foreground mt-2">
           Manage user subscriptions and billing information
         </p>
@@ -193,7 +217,9 @@ function UserSubscriptions() {
             </TableHeader>
             <TableBody>
               {subscriptions.map((subscription) => (
-                <TableRow key={`${subscription.user_id}-${subscription.plan_id}`}>
+                <TableRow
+                  key={`${subscription.user_id}-${subscription.plan_id}`}
+                >
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -214,15 +240,15 @@ function UserSubscriptions() {
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {getPlanIcon(subscription.plan_name)}
-                      <span className="font-medium">{subscription.plan_name}</span>
+                      <span className="font-medium">
+                        {subscription.plan_name}
+                      </span>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       ${subscription.price_monthly}/month
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {getStatusBadge(subscription.status)}
-                  </TableCell>
+                  <TableCell>{getStatusBadge(subscription.status)}</TableCell>
                   <TableCell>
                     <div className="space-y-1 text-sm">
                       <div className="flex items-center space-x-2">
@@ -231,7 +257,9 @@ function UserSubscriptions() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Target className="h-3 w-3 text-muted-foreground" />
-                        <span>{subscription.destinations_count || 0} destinations</span>
+                        <span>
+                          {subscription.destinations_count || 0} destinations
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Clock className="h-3 w-3 text-muted-foreground" />
@@ -244,7 +272,9 @@ function UserSubscriptions() {
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {new Date(subscription.current_period_end).toLocaleDateString()}
+                          {new Date(
+                            subscription.current_period_end
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     ) : (
@@ -269,13 +299,14 @@ function UserSubscriptions() {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {subscriptions.length} of {pagination.total} subscriptions
+                Showing {subscriptions.length} of {pagination.total}{" "}
+                subscriptions
               </div>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
                   Previous
@@ -283,7 +314,9 @@ function UserSubscriptions() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                  onClick={() =>
+                    setPage((p) => Math.min(pagination.totalPages, p + 1))
+                  }
                   disabled={page === pagination.totalPages}
                 >
                   Next
@@ -295,7 +328,10 @@ function UserSubscriptions() {
       </Card>
 
       {/* Edit Subscription Dialog */}
-      <Dialog open={!!editingSubscription} onOpenChange={() => setEditingSubscription(null)}>
+      <Dialog
+        open={!!editingSubscription}
+        onOpenChange={() => setEditingSubscription(null)}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User Subscription</DialogTitle>
@@ -319,12 +355,18 @@ function UserSubscriptions() {
 }
 
 // Edit Subscription Form Component
-function EditSubscriptionForm({ subscription, plans, onSubmit, isLoading, onCancel }) {
+function EditSubscriptionForm({
+  subscription,
+  plans,
+  onSubmit,
+  isLoading,
+  onCancel,
+}) {
   const [formData, setFormData] = useState({
     plan_id: subscription.plan_id,
     status: subscription.status,
     current_period_end: subscription.current_period_end
-      ? new Date(subscription.current_period_end).toISOString().split('T')[0]
+      ? new Date(subscription.current_period_end).toISOString().split("T")[0]
       : "",
   });
 
@@ -339,7 +381,7 @@ function EditSubscriptionForm({ subscription, plans, onSubmit, isLoading, onCanc
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -416,7 +458,12 @@ function EditSubscriptionForm({ subscription, plans, onSubmit, isLoading, onCanc
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button type="submit" disabled={isLoading}>

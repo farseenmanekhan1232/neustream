@@ -18,7 +18,13 @@ import {
 import { toast } from "sonner";
 import { adminApi } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,8 +116,12 @@ function SubscriptionPlans() {
       price_yearly: parseFloat(formData.price_yearly),
       max_sources: parseInt(formData.max_sources),
       max_destinations: parseInt(formData.max_destinations),
-      max_streaming_hours_monthly: parseInt(formData.max_streaming_hours_monthly),
-      features: formData.features ? formData.features.split("\n").filter(f => f.trim()) : [],
+      max_streaming_hours_monthly: parseInt(
+        formData.max_streaming_hours_monthly
+      ),
+      features: formData.features
+        ? formData.features.split("\n").filter((f) => f.trim())
+        : [],
     });
   };
 
@@ -125,8 +135,12 @@ function SubscriptionPlans() {
         price_yearly: parseFloat(formData.price_yearly),
         max_sources: parseInt(formData.max_sources),
         max_destinations: parseInt(formData.max_destinations),
-        max_streaming_hours_monthly: parseInt(formData.max_streaming_hours_monthly),
-        features: formData.features ? formData.features.split("\n").filter(f => f.trim()) : [],
+        max_streaming_hours_monthly: parseInt(
+          formData.max_streaming_hours_monthly
+        ),
+        features: formData.features
+          ? formData.features.split("\n").filter((f) => f.trim())
+          : [],
       },
     });
   };
@@ -162,7 +176,7 @@ function SubscriptionPlans() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Subscription Plans</h1>
+          <div className="text-3xl font-bold">Subscription Plans</div>
           <p className="text-muted-foreground mt-2">
             Manage subscription plans and pricing tiers
           </p>
@@ -212,7 +226,11 @@ function SubscriptionPlans() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      if (confirm(`Are you sure you want to delete the "${plan.name}" plan?`)) {
+                      if (
+                        confirm(
+                          `Are you sure you want to delete the "${plan.name}" plan?`
+                        )
+                      ) {
                         deletePlanMutation.mutate(plan.id);
                       }
                     }}
@@ -227,7 +245,9 @@ function SubscriptionPlans() {
             <CardContent className="space-y-4">
               {/* Pricing */}
               <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-bold">${plan.price_monthly}</span>
+                <span className="text-3xl font-bold">
+                  ${plan.price_monthly}
+                </span>
                 <span className="text-muted-foreground">/month</span>
               </div>
               <div className="text-sm text-muted-foreground">
@@ -255,7 +275,9 @@ function SubscriptionPlans() {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span>Streaming Hours</span>
                   </div>
-                  <span className="font-medium">{plan.max_streaming_hours_monthly}h</span>
+                  <span className="font-medium">
+                    {plan.max_streaming_hours_monthly}h
+                  </span>
                 </div>
               </div>
 
@@ -280,7 +302,9 @@ function SubscriptionPlans() {
                   <Users className="h-4 w-4" />
                   <span>Active Subscriptions</span>
                 </div>
-                <Badge variant="outline">{plan.active_subscriptions || 0}</Badge>
+                <Badge variant="outline">
+                  {plan.active_subscriptions || 0}
+                </Badge>
               </div>
             </CardContent>
           </Card>
@@ -299,7 +323,9 @@ function SubscriptionPlans() {
           {editingPlan && (
             <PlanForm
               plan={editingPlan}
-              onSubmit={(formData) => handleUpdatePlan(editingPlan.id, formData)}
+              onSubmit={(formData) =>
+                handleUpdatePlan(editingPlan.id, formData)
+              }
               isLoading={updatePlanMutation.isLoading}
               onCancel={() => setEditingPlan(null)}
             />
@@ -329,7 +355,7 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -417,7 +443,9 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
               type="number"
               min="0"
               value={formData.max_streaming_hours_monthly}
-              onChange={(e) => handleChange("max_streaming_hours_monthly", e.target.value)}
+              onChange={(e) =>
+                handleChange("max_streaming_hours_monthly", e.target.value)
+              }
               required
             />
           </div>
@@ -436,7 +464,12 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
           Cancel
         </Button>
         <Button type="submit" disabled={isLoading}>

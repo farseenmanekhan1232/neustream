@@ -241,7 +241,8 @@ const UsersPage = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {user.display_name?.replace("[SUSPENDED] ", "") || "No Display Name"}
+                  {user.display_name?.replace("[SUSPENDED] ", "") ||
+                    "No Display Name"}
                 </span>
                 {suspended && <Badge variant="destructive">Suspended</Badge>}
               </div>
@@ -269,7 +270,9 @@ const UsersPage = () => {
         </TableCell>
         <TableCell>
           <div className="text-center">
-            <p className="font-medium text-success">{user.active_streams || 0}</p>
+            <p className="font-medium text-success">
+              {user.active_streams || 0}
+            </p>
           </div>
         </TableCell>
         <TableCell>
@@ -358,7 +361,7 @@ const UsersPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Users</h1>
+          <div className="text-2xl font-bold text-foreground">Users</div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -408,7 +411,10 @@ const UsersPage = () => {
                     <TableCell>
                       <div className="flex gap-1 justify-center">
                         {[1, 2, 3, 4, 5].map((j) => (
-                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                          <div
+                            key={j}
+                            className="h-8 w-8 bg-muted rounded"
+                          ></div>
                         ))}
                       </div>
                     </TableCell>
@@ -446,9 +452,9 @@ const UsersPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-bold text-foreground">
             User Management
-          </h1>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage and monitor all registered users with full CRUD operations.
           </p>

@@ -218,9 +218,7 @@ const SourcesPage = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium">{source.name}</span>
-              {!source.is_active && (
-                <Badge variant="secondary">Inactive</Badge>
-              )}
+              {!source.is_active && <Badge variant="secondary">Inactive</Badge>}
             </div>
             <p className="text-sm text-muted-foreground">
               {source.display_name || source.email}
@@ -253,7 +251,11 @@ const SourcesPage = () => {
       </TableCell>
       <TableCell>
         <div className="text-center">
-          <p className={`font-medium ${source.is_active ? "text-success" : "text-muted-foreground"}`}>
+          <p
+            className={`font-medium ${
+              source.is_active ? "text-success" : "text-muted-foreground"
+            }`}
+          >
             {source.is_active ? "Live" : "Offline"}
           </p>
         </div>
@@ -330,7 +332,9 @@ const SourcesPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Stream Sources</h1>
+          <div className="text-2xl font-bold text-foreground">
+            Stream Sources
+          </div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -380,7 +384,10 @@ const SourcesPage = () => {
                     <TableCell>
                       <div className="flex gap-1 justify-center">
                         {[1, 2, 3, 4].map((j) => (
-                          <div key={j} className="h-8 w-8 bg-muted rounded"></div>
+                          <div
+                            key={j}
+                            className="h-8 w-8 bg-muted rounded"
+                          ></div>
                         ))}
                       </div>
                     </TableCell>
@@ -418,7 +425,9 @@ const SourcesPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Stream Sources</h1>
+          <div className="text-2xl font-bold text-foreground">
+            Stream Sources
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage and monitor all stream sources with full CRUD operations.
           </p>

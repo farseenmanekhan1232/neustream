@@ -89,7 +89,9 @@ const Login = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-12 w-12 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Neustream</h1>
+              <div className="text-2xl font-bold text-foreground">
+                Neustream
+              </div>
               <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
           </div>

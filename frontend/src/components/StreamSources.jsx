@@ -286,7 +286,7 @@ function StreamSources() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Stream Sources</h1>
+          <div className="text-3xl font-bold">Stream Sources</div>
           <p className="text-muted-foreground">
             Manage multiple streaming sources, each with their own destinations
           </p>

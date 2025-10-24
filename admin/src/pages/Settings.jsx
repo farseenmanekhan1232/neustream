@@ -73,9 +73,7 @@ const SettingsPage = () => {
       <TableCell className="font-medium text-muted-foreground">
         {label}
       </TableCell>
-      <TableCell>
-        {value}
-      </TableCell>
+      <TableCell>{value}</TableCell>
     </TableRow>
   );
 
@@ -89,8 +87,11 @@ const SettingsPage = () => {
       </TableCell>
       <TableCell className="text-right">
         <Badge variant={badgeVariant} className={badgeClass}>
-          {service === "API Server" ? "Operational" :
-           service === "Database" ? "Connected" : "Limited Data"}
+          {service === "API Server"
+            ? "Operational"
+            : service === "Database"
+            ? "Connected"
+            : "Limited Data"}
         </Badge>
       </TableCell>
     </TableRow>
@@ -284,22 +285,13 @@ const SettingsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <SystemInfoRow
-                label="Database Type"
-                value="PostgreSQL"
-              />
+              <SystemInfoRow label="Database Type" value="PostgreSQL" />
               <SystemInfoRow
                 label="Environment"
                 value={import.meta.env.MODE || "development"}
               />
-              <SystemInfoRow
-                label="API Version"
-                value="v1.0.0"
-              />
-              <SystemInfoRow
-                label="Last Deployment"
-                value="Unknown"
-              />
+              <SystemInfoRow label="API Version" value="v1.0.0" />
+              <SystemInfoRow label="Last Deployment" value="Unknown" />
             </TableBody>
           </Table>
         </CardContent>
@@ -399,7 +391,7 @@ const SettingsPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <div className="text-2xl font-bold text-foreground">Settings</div>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage your account settings and preferences.
         </p>
