@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { api } from "../services/api";
+import apiService from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -19,11 +19,7 @@ import {
   SidebarMenuBadge,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -131,7 +127,7 @@ function DashboardSidebar() {
   const { data: streamInfo, isLoading: isStreamLoading } = useQuery({
     queryKey: ["stream-info"],
     queryFn: async () => {
-      const response = await api.get("/streams/info");
+      const response = await apiService.get("/streams/info");
       return response.data;
     },
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -155,7 +151,7 @@ function DashboardSidebar() {
       if ((e.metaKey || e.ctrlKey) && e.key >= "1" && e.key <= "6") {
         e.preventDefault();
         const shortcutIndex = parseInt(e.key) - 1;
-        const allItems = navigationGroups.flatMap(group => group.items);
+        const allItems = navigationGroups.flatMap((group) => group.items);
         const targetItem = allItems[shortcutIndex];
         if (targetItem) {
           handleNavigation(targetItem);
@@ -185,48 +181,63 @@ function DashboardSidebar() {
     if (!searchQuery.trim()) return navigationGroups;
 
     const query = searchQuery.toLowerCase();
-    return navigationGroups.map(group => ({
-      ...group,
-      items: group.items.filter(item =>
-        item.label.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.keywords.some(keyword => keyword.toLowerCase().includes(query))
-      )
-    })).filter(group => group.items.length > 0);
+    return navigationGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) =>
+            item.label.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query) ||
+            item.keywords.some((keyword) =>
+              keyword.toLowerCase().includes(query)
+            )
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
   }, [searchQuery]);
 
   const isActive = (path) => location.pathname === path;
 
-  const isStreaming = useMemo(() =>
-    streamInfo?.sources?.some(source => source.isActive),
+  const isStreaming = useMemo(
+    () => streamInfo?.sources?.some((source) => source.isActive),
     [streamInfo]
   );
 
-  const viewerCount = useMemo(() =>
-    streamInfo?.totalViewers || 0,
+  const viewerCount = useMemo(
+    () => streamInfo?.totalViewers || 0,
     [streamInfo]
   );
 
-  const handleNavigation = useCallback((item) => {
-    trackUIInteraction(`nav_${item.id}`, "click", {
-      from_page: location.pathname,
-      to_page: item.path,
-      item_label: item.label,
-    });
-  }, [trackUIInteraction, location.pathname]);
+  const handleNavigation = useCallback(
+    (item) => {
+      trackUIInteraction(`nav_${item.id}`, "click", {
+        from_page: location.pathname,
+        to_page: item.path,
+        item_label: item.label,
+      });
+    },
+    [trackUIInteraction, location.pathname]
+  );
 
   const getUserInitials = useCallback(() => {
     if (user?.displayName) {
-      return user.displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+      return user.displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
     }
-    return user?.email?.charAt(0).toUpperCase() || 'U';
+    return user?.email?.charAt(0).toUpperCase() || "U";
   }, [user]);
 
   const getSubscriptionTier = useCallback(() => {
     if (user?.subscription?.plan) {
-      return user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1);
+      return (
+        user.subscription.plan.charAt(0).toUpperCase() +
+        user.subscription.plan.slice(1)
+      );
     }
-    return 'Free';
+    return "Free";
   }, [user]);
 
   const clearSearch = () => {
@@ -244,7 +255,10 @@ function DashboardSidebar() {
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 relative">
               {user?.avatarUrl ? (
-                <AvatarImage src={user.avatarUrl} alt={user.displayName || user.email} />
+                <AvatarImage
+                  src={user.avatarUrl}
+                  alt={user.displayName || user.email}
+                />
               ) : (
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {getUserInitials()}
@@ -259,7 +273,7 @@ function DashboardSidebar() {
             {state !== "collapsed" && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {user?.displayName || user?.email?.split('@')[0]}
+                  {user?.displayName || user?.email?.split("@")[0]}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary" className="text-xs">
@@ -305,8 +319,7 @@ function DashboardSidebar() {
                 </Button>
               )}
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-                <Command className="h-3 w-3 inline mr-1" />
-                K
+                <Command className="h-3 w-3 inline mr-1" />K
               </div>
             </div>
           )}
@@ -350,7 +363,9 @@ function DashboardSidebar() {
 
                                 {/* Regular badges */}
                                 {item.badge && !item.showLiveIndicator && (
-                                  <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                                  <SidebarMenuBadge>
+                                    {item.badge}
+                                  </SidebarMenuBadge>
                                 )}
 
                                 {/* Keyboard shortcut hint */}
@@ -392,7 +407,11 @@ function DashboardSidebar() {
                       href="/help"
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => trackUIInteraction("help_click", "click", { page: location.pathname })}
+                      onClick={() =>
+                        trackUIInteraction("help_click", "click", {
+                          page: location.pathname,
+                        })
+                      }
                     >
                       <HelpCircle className="h-4 w-4" />
                       <span>Help & Support</span>
@@ -400,9 +419,7 @@ function DashboardSidebar() {
                   </SidebarMenuButton>
                 </TooltipTrigger>
                 {state === "collapsed" && (
-                  <TooltipContent side="right">
-                    Help & Support
-                  </TooltipContent>
+                  <TooltipContent side="right">Help & Support</TooltipContent>
                 )}
               </Tooltip>
             </SidebarMenuItem>
@@ -438,9 +455,7 @@ function DashboardSidebar() {
                   </SidebarMenuButton>
                 </TooltipTrigger>
                 {state === "collapsed" && (
-                  <TooltipContent side="right">
-                    Logout
-                  </TooltipContent>
+                  <TooltipContent side="right">Logout</TooltipContent>
                 )}
               </Tooltip>
             </SidebarMenuItem>
@@ -474,15 +489,22 @@ function DashboardSidebar() {
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium">Navigation</p>
-                {navigationGroups.flatMap(group => group.items).map((item, index) => (
-                  <div key={item.id} className="flex items-center justify-between text-sm">
-                    <span>{item.label}</span>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <kbd className="px-2 py-1 bg-muted rounded">⌘</kbd>
-                      <kbd className="px-2 py-1 bg-muted rounded">{index + 1}</kbd>
+                {navigationGroups
+                  .flatMap((group) => group.items)
+                  .map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span>{item.label}</span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <kbd className="px-2 py-1 bg-muted rounded">⌘</kbd>
+                        <kbd className="px-2 py-1 bg-muted rounded">
+                          {index + 1}
+                        </kbd>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Show shortcuts</span>
