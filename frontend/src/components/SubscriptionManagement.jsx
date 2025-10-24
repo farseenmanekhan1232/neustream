@@ -88,7 +88,10 @@ function SubscriptionManagement() {
   const processPaymentMutation = useMutation({
     mutationFn: async ({ planId, billingCycle }) => {
       // Create payment order
-      const orderData = await subscriptionService.createPaymentOrder(planId, billingCycle);
+      const orderData = await subscriptionService.createPaymentOrder(
+        planId,
+        billingCycle
+      );
 
       // Initialize Razorpay
       const options = {
@@ -108,29 +111,33 @@ function SubscriptionManagement() {
             );
 
             if (verifyResponse.success) {
-              toast.success("Payment successful! Your subscription has been upgraded.");
+              toast.success(
+                "Payment successful! Your subscription has been upgraded."
+              );
               queryClient.invalidateQueries(["subscription", user.id]);
               setSelectedPlan(null);
             } else {
-              toast.error("Payment verification failed. Please contact support.");
+              toast.error(
+                "Payment verification failed. Please contact support."
+              );
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
+            console.error("Payment verification error:", error);
             toast.error("Payment verification failed. Please contact support.");
           }
         },
         prefill: {
-          name: user.displayName || '',
-          email: user.email || '',
+          name: user.displayName || "",
+          email: user.email || "",
         },
         theme: {
-          color: orderData.theme?.color || '#2563eb'
+          color: orderData.theme?.color || "#2563eb",
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             toast.info("Payment cancelled");
-          }
-        }
+          },
+        },
       };
 
       const razorpay = new window.Razorpay(options);
@@ -176,19 +183,6 @@ function SubscriptionManagement() {
     return planFeatures[planKey] || planFeatures.free;
   };
 
-  const getPlanColor = (planName) => {
-    switch (planName.toLowerCase()) {
-      case "free":
-        return "border-gray-300 bg-gray-50";
-      case "pro":
-        return "border-primary/30 bg-primary/5";
-      case "business":
-        return "border-purple-300 bg-purple-50";
-      default:
-        return "border-gray-300 bg-gray-50";
-    }
-  };
-
   const getPlanPrice = (planName) => {
     switch (planName.toLowerCase()) {
       case "free":
@@ -228,7 +222,9 @@ function SubscriptionManagement() {
               {currentPlan?.plan_name} Plan
             </span>
             <Badge
-              variant={currentPlan?.status === "active" ? "default" : "secondary"}
+              variant={
+                currentPlan?.status === "active" ? "default" : "secondary"
+              }
             >
               {currentPlan?.status}
             </Badge>
@@ -252,7 +248,9 @@ function SubscriptionManagement() {
               <div className="text-2xl font-bold text-primary">
                 {currentLimits?.max_destinations}
               </div>
-              <div className="text-sm text-muted-foreground">Max Destinations</div>
+              <div className="text-sm text-muted-foreground">
+                Max Destinations
+              </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {currentUsage?.destinations_count} used
               </div>
@@ -271,7 +269,8 @@ function SubscriptionManagement() {
           {currentPlan?.current_period_end && (
             <div className="mt-4 flex items-center justify-center text-sm text-muted-foreground">
               <Calendar className="h-4 w-4 mr-2" />
-              Renews on {new Date(currentPlan.current_period_end).toLocaleDateString()}
+              Renews on{" "}
+              {new Date(currentPlan.current_period_end).toLocaleDateString()}
             </div>
           )}
         </CardContent>
@@ -289,14 +288,16 @@ function SubscriptionManagement() {
         <TabsContent value="plans" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
             {plans.map((plan) => {
-              const isCurrentPlan = currentPlan?.plan_name?.toLowerCase() === plan.name.toLowerCase();
+              const isCurrentPlan =
+                currentPlan?.plan_name?.toLowerCase() ===
+                plan.name.toLowerCase();
               const price = getPlanPrice(plan.name);
               const features = getPlanFeatures(plan.name);
 
               return (
                 <Card
                   key={plan.id}
-                  className={`relative ${getPlanColor(plan.name)} ${
+                  className={`relative border-primary/30 bg-primary/5 ${
                     isCurrentPlan ? "ring-2 ring-primary" : ""
                   }`}
                 >
@@ -321,7 +322,9 @@ function SubscriptionManagement() {
                     <div className="space-y-2">
                       <div className="text-3xl font-bold">
                         {price.monthly}
-                        <span className="text-sm font-normal text-muted-foreground">/month</span>
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /month
+                        </span>
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {price.yearly} billed annually
@@ -337,11 +340,15 @@ function SubscriptionManagement() {
                       </div>
                       <div className="flex justify-between">
                         <span>Destinations:</span>
-                        <span className="font-medium">{plan.max_destinations}</span>
+                        <span className="font-medium">
+                          {plan.max_destinations}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Streaming Hours:</span>
-                        <span className="font-medium">{plan.max_streaming_hours_monthly}h</span>
+                        <span className="font-medium">
+                          {plan.max_streaming_hours_monthly}h
+                        </span>
                       </div>
                     </div>
 
@@ -350,7 +357,10 @@ function SubscriptionManagement() {
                       {features.map((feature, index) => {
                         const FeatureIcon = feature.icon;
                         return (
-                          <div key={index} className="flex items-center space-x-2 text-sm">
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 text-sm"
+                          >
                             <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                             <FeatureIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span>{feature.name}</span>
@@ -370,7 +380,8 @@ function SubscriptionManagement() {
                         onClick={() => setSelectedPlan(plan)}
                         disabled={updateSubscriptionMutation.isLoading}
                       >
-                        {updateSubscriptionMutation.isLoading && selectedPlan?.id === plan.id
+                        {updateSubscriptionMutation.isLoading &&
+                        selectedPlan?.id === plan.id
                           ? "Upgrading..."
                           : "Upgrade Plan"}
                       </Button>
@@ -405,17 +416,19 @@ function SubscriptionManagement() {
                     </div>
                   </div>
 
-                  {selectedPlan.name.toLowerCase() === 'free' ? (
+                  {selectedPlan.name.toLowerCase() === "free" ? (
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
-                        This is a free plan. Your subscription will be updated immediately.
+                        This is a free plan. Your subscription will be updated
+                        immediately.
                       </p>
                     </div>
                   ) : (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800">
-                        You will be redirected to a secure payment page to complete your purchase.
-                        Your subscription will be activated immediately after successful payment.
+                        You will be redirected to a secure payment page to
+                        complete your purchase. Your subscription will be
+                        activated immediately after successful payment.
                       </p>
                     </div>
                   )}
@@ -425,14 +438,17 @@ function SubscriptionManagement() {
                     variant="outline"
                     className="flex-1"
                     onClick={() => setSelectedPlan(null)}
-                    disabled={updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading}
+                    disabled={
+                      updateSubscriptionMutation.isLoading ||
+                      processPaymentMutation.isLoading
+                    }
                   >
                     Cancel
                   </Button>
                   <Button
                     className="flex-1"
                     onClick={() => {
-                      if (selectedPlan.name.toLowerCase() === 'free') {
+                      if (selectedPlan.name.toLowerCase() === "free") {
                         updateSubscriptionMutation.mutate({
                           planId: selectedPlan.id,
                           billingCycle: "monthly",
@@ -444,13 +460,17 @@ function SubscriptionManagement() {
                         });
                       }
                     }}
-                    disabled={updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading}
+                    disabled={
+                      updateSubscriptionMutation.isLoading ||
+                      processPaymentMutation.isLoading
+                    }
                   >
-                    {updateSubscriptionMutation.isLoading || processPaymentMutation.isLoading
+                    {updateSubscriptionMutation.isLoading ||
+                    processPaymentMutation.isLoading
                       ? "Processing..."
-                      : selectedPlan.name.toLowerCase() === 'free'
-                        ? "Switch to Free"
-                        : "Proceed to Payment"}
+                      : selectedPlan.name.toLowerCase() === "free"
+                      ? "Switch to Free"
+                      : "Proceed to Payment"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -464,7 +484,9 @@ function SubscriptionManagement() {
             {/* Recent Streaming Sessions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Recent Streaming Sessions</CardTitle>
+                <CardTitle className="text-lg">
+                  Recent Streaming Sessions
+                </CardTitle>
                 <CardDescription>
                   Your last 10 streaming sessions
                 </CardDescription>
@@ -473,7 +495,10 @@ function SubscriptionManagement() {
                 {historyLoading ? (
                   <div className="space-y-2">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                      <div
+                        key={i}
+                        className="h-12 bg-gray-200 rounded animate-pulse"
+                      ></div>
                     ))}
                   </div>
                 ) : streamingHistory && streamingHistory.length > 0 ? (
@@ -493,7 +518,9 @@ function SubscriptionManagement() {
                         </div>
                         <div className="text-right">
                           <p className="font-medium">
-                            {Math.floor(session.duration_seconds / 3600)}h {Math.floor((session.duration_seconds % 3600) / 60)}m
+                            {Math.floor(session.duration_seconds / 3600)}h{" "}
+                            {Math.floor((session.duration_seconds % 3600) / 60)}
+                            m
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {session.destinations_count} destinations
@@ -518,15 +545,16 @@ function SubscriptionManagement() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Monthly Usage</CardTitle>
-                <CardDescription>
-                  Streaming hours per month
-                </CardDescription>
+                <CardDescription>Streaming hours per month</CardDescription>
               </CardHeader>
               <CardContent>
                 {breakdownLoading ? (
                   <div className="space-y-2">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="h-8 bg-gray-200 rounded animate-pulse"></div>
+                      <div
+                        key={i}
+                        className="h-8 bg-gray-200 rounded animate-pulse"
+                      ></div>
                     ))}
                   </div>
                 ) : usageBreakdown && usageBreakdown.length > 0 ? (
@@ -535,13 +563,20 @@ function SubscriptionManagement() {
                       <div key={index} className="space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>{month.month}</span>
-                          <span className="font-medium">{month.hours} hours</span>
+                          <span className="font-medium">
+                            {month.hours} hours
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-primary h-2 rounded-full"
                             style={{
-                              width: `${Math.min((month.hours / currentLimits?.max_streaming_hours_monthly) * 100, 100)}%`,
+                              width: `${Math.min(
+                                (month.hours /
+                                  currentLimits?.max_streaming_hours_monthly) *
+                                  100,
+                                100
+                              )}%`,
                             }}
                           ></div>
                         </div>
@@ -576,10 +611,12 @@ function SubscriptionManagement() {
                 <div className="flex items-center space-x-3">
                   <CreditCard className="h-5 w-5 text-green-500" />
                   <div>
-                    <p className="font-medium text-green-800">Secure Payment Processing</p>
+                    <p className="font-medium text-green-800">
+                      Secure Payment Processing
+                    </p>
                     <p className="text-sm text-green-600">
-                      All payments are processed securely through Razorpay. Your payment information
-                      is never stored on our servers.
+                      All payments are processed securely through Razorpay. Your
+                      payment information is never stored on our servers.
                     </p>
                   </div>
                 </div>
@@ -589,7 +626,9 @@ function SubscriptionManagement() {
                 <div className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">Current Plan</p>
-                    <p className="text-sm text-muted-foreground">{currentPlan?.plan_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {currentPlan?.plan_name}
+                    </p>
                   </div>
                   <Badge variant="outline">Active</Badge>
                 </div>
@@ -599,7 +638,9 @@ function SubscriptionManagement() {
                     <div>
                       <p className="font-medium">Next Billing Date</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(currentPlan.current_period_end).toLocaleDateString()}
+                        {new Date(
+                          currentPlan.current_period_end
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                     <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -622,7 +663,8 @@ function SubscriptionManagement() {
                 <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No payment history yet</p>
                 <p className="text-sm mt-2">
-                  Your payment history will appear here after you make your first payment
+                  Your payment history will appear here after you make your
+                  first payment
                 </p>
               </div>
             </CardContent>
