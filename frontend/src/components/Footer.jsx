@@ -41,12 +41,22 @@ function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
+                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Terms and Conditions ~ Created by Razorpay
+                </a>
+              </li>
+              <li>
+                <a
                   href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Privacy Policy
+                  Privacy Policy ~ Created by Razorpay
                 </a>
               </li>
               <li>
@@ -56,7 +66,17 @@ function Footer() {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Cancellations and Refunds
+                  Cancellations and Refunds ~ Created by Razorpay
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/shipping"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Shipping Policy ~ Created by Razorpay
                 </a>
               </li>
               <li>
@@ -66,13 +86,10 @@ function Footer() {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Contact Us
+                  Contact Us ~ Created by Razorpay
                 </a>
               </li>
             </ul>
-            <p className="text-xs text-muted-foreground mt-4">
-              Created by Razorpay
-            </p>
           </div>
         </div>
 
