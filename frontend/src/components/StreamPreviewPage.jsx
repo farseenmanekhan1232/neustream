@@ -31,7 +31,6 @@ import StreamPreview from "./StreamPreview";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
-import DashboardContainer from "@/components/dashboard/DashboardContainer";
 
 function StreamPreviewPage() {
   const { user } = useAuth();
@@ -85,19 +84,19 @@ function StreamPreviewPage() {
 
   if (sourcesLoading) {
     return (
-      <DashboardContainer>
+      <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
           <div className="aspect-video bg-muted rounded-lg mb-4"></div>
         </div>
-      </DashboardContainer>
+      </div>
     );
   }
 
   // No active streams
   if (activeSources.length === 0) {
     return (
-      <DashboardContainer>
+      <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -133,12 +132,12 @@ function StreamPreviewPage() {
             </div>
           </Card>
         </div>
-      </DashboardContainer>
+      </div>
     );
   }
 
   return (
-    <DashboardContainer>
+    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -437,7 +436,7 @@ function StreamPreviewPage() {
           </CardContent>
         </Card>
       )}
-    </DashboardContainer>
+    </div>
   );
 }
 

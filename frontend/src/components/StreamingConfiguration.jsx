@@ -56,7 +56,6 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
-import DashboardContainer from "@/components/dashboard/DashboardContainer";
 
 // Platform configuration
 const platformConfig = {
@@ -480,7 +479,7 @@ function StreamingConfiguration() {
 
   if (isLoading) {
     return (
-      <DashboardContainer>
+      <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -495,12 +494,12 @@ function StreamingConfiguration() {
             <div className="h-64 bg-muted rounded animate-pulse"></div>
           </div>
         </div>
-      </DashboardContainer>
+      </div>
     );
   }
 
   return (
-    <DashboardContainer>
+    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -1321,7 +1320,7 @@ function StreamingConfiguration() {
           </form>
         </DialogContent>
       </Dialog>
-    </DashboardContainer>
+    </div>
   );
 }
 

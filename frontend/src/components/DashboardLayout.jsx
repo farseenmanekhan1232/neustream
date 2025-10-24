@@ -15,12 +15,12 @@ function DashboardLayout() {
           "--sidebar-width-icon": "3rem",
         }}
       >
-        <div className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar">
+        <div className="flex h-screen overflow-hidden bg-background">
           {/* Enhanced Sidebar */}
           <DashboardSidebar />
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Header */}
             <DashboardHeader />
 

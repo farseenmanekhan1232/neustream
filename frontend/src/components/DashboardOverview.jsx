@@ -94,7 +94,7 @@ function DashboardOverview() {
   }
 
   return (
-    <>
+    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
       {/* Welcome Section */}
       <WelcomeSection
         user={user}
@@ -110,7 +110,7 @@ function DashboardOverview() {
       <QuickActions />
 
       {/* Additional sections can be added here as separate components */}
-    </>
+    </div>
   );
 }
 

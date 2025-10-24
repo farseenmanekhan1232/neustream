@@ -20,7 +20,7 @@ function DashboardContainer({
   return (
     <div
       className={cn(
-        "w-full px-6 py-6 space-y-6 overflow-y-scroll",
+        "w-full px-6 py-6 space-y-6",
         sizeClasses[size],
         className
       )}

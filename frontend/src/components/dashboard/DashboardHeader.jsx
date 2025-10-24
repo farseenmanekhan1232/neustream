@@ -35,7 +35,8 @@ const DashboardHeader = memo(function DashboardHeader() {
   return (
     <header
       className={cn(
-        "flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        "flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+        "relative z-10" // Ensure proper stacking context
       )}
     >
       <div className="flex items-center gap-3 md:gap-4">

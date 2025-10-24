@@ -28,7 +28,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "../contexts/AuthContext";
 import { subscriptionService } from "../services/subscription";
-import DashboardContainer from "@/components/dashboard/DashboardContainer";
 
 function SubscriptionManagement() {
   const { user } = useAuth();
@@ -219,7 +218,7 @@ function SubscriptionManagement() {
   }
 
   return (
-    <DashboardContainer>
+    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
       {/* Current Plan Header */}
       <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
         <CardHeader>
@@ -656,7 +655,7 @@ function SubscriptionManagement() {
           </div>
         </CardContent>
       </Card>
-    </DashboardContainer>
+    </div>
   );
 }
 
