@@ -1,12 +1,15 @@
 import { Suspense, memo } from "react";
 import { Outlet } from "react-router-dom";
 import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
+import DashboardContainer from "./DashboardContainer";
 
 const DashboardContent = memo(function DashboardContent() {
   return (
-    <main className="flex-1 overflow-y-auto p-6">
+    <main className="flex-1 overflow-y-auto">
       <Suspense fallback={<DashboardOverviewSkeleton />}>
-        <Outlet />
+        <DashboardContainer>
+          <Outlet />
+        </DashboardContainer>
       </Suspense>
     </main>
   );

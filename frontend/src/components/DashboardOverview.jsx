@@ -94,7 +94,7 @@ function DashboardOverview() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Welcome Section */}
       <WelcomeSection
         user={user}
@@ -110,7 +110,7 @@ function DashboardOverview() {
       <QuickActions />
 
       {/* Additional sections can be added here as separate components */}
-    </div>
+    </>
   );
 }
 

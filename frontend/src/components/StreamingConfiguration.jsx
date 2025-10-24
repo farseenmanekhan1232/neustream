@@ -56,6 +56,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
+import DashboardContainer from "@/components/dashboard/DashboardContainer";
 
 // Platform configuration
 const platformConfig = {
@@ -480,28 +481,31 @@ function StreamingConfiguration() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-64 animate-pulse mt-2"></div>
+      <DashboardContainer>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-64 animate-pulse mt-2"></div>
+            </div>
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
           </div>
-          <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+          <div className="space-y-4">
+            <div className="h-32 bg-muted rounded animate-pulse"></div>
+            <div className="h-64 bg-muted rounded animate-pulse"></div>
+          </div>
         </div>
-      </div>
+      </DashboardContainer>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <DashboardContainer>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
+          <h1 className="text-2xl font-semibold mb-2">Streaming Configuration</h1>
           <p className="text-muted-foreground">
             Manage your stream sources and configure destinations for
             multi-platform broadcasting
@@ -1307,7 +1311,7 @@ function StreamingConfiguration() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardContainer>
   );
 }
 

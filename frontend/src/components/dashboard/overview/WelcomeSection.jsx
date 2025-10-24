@@ -23,7 +23,7 @@ const WelcomeSection = memo(function WelcomeSection({
   };
 
   return (
-    <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+    <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 w-full">
       <CardHeader>
         <CardTitle className="text-2xl max-sm:text-xl">
           {isNewUser
