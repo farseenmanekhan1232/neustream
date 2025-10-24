@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePostHog } from "@/hooks/usePostHog";
 import { getPageTitle, getPageDescription } from "@/constants/navigation";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const DashboardHeader = memo(function DashboardHeader() {
   const { user } = useAuth();
@@ -66,6 +67,8 @@ const DashboardHeader = memo(function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <ThemeToggle />
+
         <Button
           variant="ghost"
           size="icon"
