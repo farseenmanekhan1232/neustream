@@ -1,10 +1,268 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { subscriptionService } from "../services/subscription";
 
 function Landing() {
+  // Fetch subscription plans from API
+  const {
+    data: plansData,
+    isLoading: plansLoading,
+    error: plansError,
+  } = useQuery({
+    queryKey: ["subscription-plans"],
+    queryFn: async () => {
+      return await subscriptionService.getPlans();
+    },
+  });
+
+  const plans = plansData || [];
+
+  // Helper function to format plan features based on plan data
+  const getPlanFeatures = (plan) => {
+    const features = [];
+
+    // Add streaming platforms feature
+    if (plan.max_destinations) {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: `Stream to ${plan.max_destinations} platform${
+          plan.max_destinations > 1 ? "s" : ""
+        } simultaneously`,
+      });
+    }
+
+    // Add streaming quality based on plan name
+    if (plan.name.toLowerCase() === "free") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "720p HD streaming quality",
+      });
+    } else if (plan.name.toLowerCase() === "pro") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "1080p Full HD streaming quality",
+      });
+    } else if (plan.name.toLowerCase() === "business") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "4K Ultra HD streaming quality",
+      });
+    }
+
+    // Add analytics feature
+    if (plan.name.toLowerCase() === "free") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "Basic analytics dashboard",
+      });
+    } else {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "Advanced analytics & insights",
+      });
+    }
+
+    // Add support feature
+    if (plan.name.toLowerCase() === "free") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "Community support",
+      });
+    } else if (plan.name.toLowerCase() === "pro") {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "Priority support",
+      });
+    } else {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: "24/7 dedicated support",
+      });
+    }
+
+    // Add sources feature
+    if (plan.max_sources > 1) {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: `Up to ${plan.max_sources} streaming sources`,
+      });
+    }
+
+    // Add monthly hours
+    if (plan.max_streaming_hours_monthly) {
+      features.push({
+        icon: (
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        ),
+        text: `${plan.max_streaming_hours_monthly} hours monthly`,
+      });
+    }
+
+    return features;
+  };
+
+  // Helper function to format price
+  const formatPrice = (price) => {
+    if (!price) return "$0";
+    return `$${price}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -211,79 +469,169 @@ function Landing() {
         </div>
       </section>
 
-      {/* Legal Links Section */}
-      <section className="section-padding bg-muted/10">
+      {/* Subscription Plans Section */}
+      <section className="section-padding bg-muted/30">
         <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto">
-            <h3 className="text-lg font-semibold mb-6">Legal Information</h3>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <a
-                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Privacy Policy
-                <svg
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cancellations and Refunds
-                <svg
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Contact Us
-                <svg
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              Created by Razorpay
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Choose Your <span className="gradient-text">Perfect Plan</span>
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Start streaming to multiple platforms with our flexible pricing
+              options. Scale as you grow with no hidden fees.
             </p>
+          </div>
+
+          {plansLoading ? (
+            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="feature-card animate-pulse">
+                  <div className="text-center space-y-4">
+                    <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                    <div className="h-6 bg-gray-200 rounded w-1/3 mx-auto"></div>
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4].map((j) => (
+                        <div
+                          key={j}
+                          className="h-4 bg-gray-200 rounded w-full"
+                        ></div>
+                      ))}
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : plansError ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                Unable to load pricing plans. Please try again later.
+              </p>
+            </div>
+          ) : plans.length > 0 ? (
+            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+              {plans.map((plan) => {
+                const features = getPlanFeatures(plan);
+                const isProPlan = plan.name.toLowerCase() === "pro";
+
+                return (
+                  <div
+                    key={plan.id}
+                    className={`feature-card relative ${
+                      isProPlan ? "border-2 border-primary" : ""
+                    }`}
+                  >
+                    {isProPlan && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-center space-y-4">
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-bold">{plan.name}</h3>
+                        <p className="text-muted-foreground">
+                          {plan.description ||
+                            `Perfect for ${plan.name.toLowerCase()} users`}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-3xl font-bold">
+                          {formatPrice(plan.price_monthly)}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            /month
+                          </span>
+                        </div>
+                        {plan.price_yearly && (
+                          <p className="text-sm text-muted-foreground">
+                            ₹{plan.price_yearly} billed annually
+                          </p>
+                        )}
+                      </div>
+                      <ul className="space-y-3 text-sm">
+                        {features.map((feature, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            {feature.icon}
+                            {feature.text}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        variant={isProPlan ? "default" : "outline"}
+                        className="w-full"
+                        asChild
+                      >
+                        <Link to="/auth">Start Free Trial</Link>
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No pricing plans available at the moment.
+              </p>
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <p className="text-muted-foreground mb-4">
+              All plans include a 14-day free trial. No credit card required.
+            </p>
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Cancel anytime
+              </span>
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Secure payment processing
+              </span>
+              <span className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                30-day money-back guarantee
+              </span>
+            </div>
           </div>
         </div>
       </section>

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ExternalLinkIcon, ChevronDownIcon } from "lucide-react";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLegalDropdownOpen, setIsLegalDropdownOpen] = useState(false);
 
   const isActivePath = (path) => location.pathname === path;
 
@@ -39,48 +37,6 @@ function Header() {
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-4">
-          <div className="relative">
-            <button
-              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-              onClick={() => setIsLegalDropdownOpen(!isLegalDropdownOpen)}
-              onBlur={() =>
-                setTimeout(() => setIsLegalDropdownOpen(false), 200)
-              }
-            >
-              Legal
-              <ChevronDownIcon className="h-4 w-4" />
-            </button>
-            {isLegalDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-50">
-                <div className="py-1">
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Privacy Policy
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Cancellations and Refunds
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent"
-                  >
-                    Contact Us
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
           {user ? (
             <>
               <Link
@@ -168,38 +124,6 @@ function Header() {
                     Dashboard
                   </Link>
                 </Button>
-                <div className="flex flex-col gap-2 pt-2 border-t">
-                  <span className="text-xs text-muted-foreground px-2 py-1 font-semibold">
-                    Legal
-                  </span>
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Privacy Policy
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Cancellations and Refunds
-                  </a>
-                  <a
-                    href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 text-sm text-muted-foreground hover:text-primary"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Contact Us
-                  </a>
-                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-2 pt-2 border-t">
