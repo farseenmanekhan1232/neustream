@@ -4,11 +4,11 @@ import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
 
 const DashboardContent = memo(function DashboardContent() {
   return (
-    <main className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto">
       <Suspense fallback={<DashboardOverviewSkeleton />}>
         <Outlet />
       </Suspense>
-    </main>
+    </div>
   );
 });
 
