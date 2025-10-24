@@ -1,24 +1,24 @@
-const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
-const { getUserPlanInfo } = require('../middleware/planValidation');
-const subscriptionService = require('../services/subscriptionService');
+const express = require("express");
+const { authenticateToken } = require("../middleware/auth");
+const { getUserPlanInfo } = require("../middleware/planValidation");
+const subscriptionService = require("../services/subscriptionService");
 
 const router = express.Router();
 
 /**
  * Get user's current subscription and usage
  */
-router.get('/usage', authenticateToken, getUserPlanInfo, async (req, res) => {
+router.get("/usage", authenticateToken, getUserPlanInfo, async (req, res) => {
   try {
     res.json({
       success: true,
-      data: req.userPlan
+      data: req.userPlan,
     });
   } catch (error) {
-    console.error('Error getting subscription usage:', error);
+    console.error("Error getting subscription usage:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get subscription usage'
+      error: "Failed to get subscription usage",
     });
   }
 });
@@ -26,18 +26,18 @@ router.get('/usage', authenticateToken, getUserPlanInfo, async (req, res) => {
 /**
  * Get available subscription plans
  */
-router.get('/plans', authenticateToken, async (req, res) => {
+router.get("/plans", async (req, res) => {
   try {
     const plans = await subscriptionService.getAvailablePlans();
     res.json({
       success: true,
-      data: plans
+      data: plans,
     });
   } catch (error) {
-    console.error('Error getting subscription plans:', error);
+    console.error("Error getting subscription plans:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get subscription plans'
+      error: "Failed to get subscription plans",
     });
   }
 });
@@ -45,20 +45,23 @@ router.get('/plans', authenticateToken, async (req, res) => {
 /**
  * Get user's streaming history
  */
-router.get('/history', authenticateToken, async (req, res) => {
+router.get("/history", authenticateToken, async (req, res) => {
   try {
     const { limit = 50 } = req.query;
-    const history = await subscriptionService.getStreamingHistory(req.user.id, parseInt(limit));
+    const history = await subscriptionService.getStreamingHistory(
+      req.user.id,
+      parseInt(limit)
+    );
 
     res.json({
       success: true,
-      data: history
+      data: history,
     });
   } catch (error) {
-    console.error('Error getting streaming history:', error);
+    console.error("Error getting streaming history:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get streaming history'
+      error: "Failed to get streaming history",
     });
   }
 });
@@ -66,20 +69,23 @@ router.get('/history', authenticateToken, async (req, res) => {
 /**
  * Get monthly usage breakdown
  */
-router.get('/usage/breakdown', authenticateToken, async (req, res) => {
+router.get("/usage/breakdown", authenticateToken, async (req, res) => {
   try {
     const { months = 6 } = req.query;
-    const breakdown = await subscriptionService.getMonthlyUsageBreakdown(req.user.id, parseInt(months));
+    const breakdown = await subscriptionService.getMonthlyUsageBreakdown(
+      req.user.id,
+      parseInt(months)
+    );
 
     res.json({
       success: true,
-      data: breakdown
+      data: breakdown,
     });
   } catch (error) {
-    console.error('Error getting usage breakdown:', error);
+    console.error("Error getting usage breakdown:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get usage breakdown'
+      error: "Failed to get usage breakdown",
     });
   }
 });
@@ -87,19 +93,19 @@ router.get('/usage/breakdown', authenticateToken, async (req, res) => {
 /**
  * Check if user can create a source
  */
-router.get('/limits/sources', authenticateToken, async (req, res) => {
+router.get("/limits/sources", authenticateToken, async (req, res) => {
   try {
     const canCreate = await subscriptionService.canCreateSource(req.user.id);
 
     res.json({
       success: true,
-      data: canCreate
+      data: canCreate,
     });
   } catch (error) {
-    console.error('Error checking source limits:', error);
+    console.error("Error checking source limits:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to check source limits'
+      error: "Failed to check source limits",
     });
   }
 });
@@ -107,19 +113,21 @@ router.get('/limits/sources', authenticateToken, async (req, res) => {
 /**
  * Check if user can create a destination
  */
-router.get('/limits/destinations', authenticateToken, async (req, res) => {
+router.get("/limits/destinations", authenticateToken, async (req, res) => {
   try {
-    const canCreate = await subscriptionService.canCreateDestination(req.user.id);
+    const canCreate = await subscriptionService.canCreateDestination(
+      req.user.id
+    );
 
     res.json({
       success: true,
-      data: canCreate
+      data: canCreate,
     });
   } catch (error) {
-    console.error('Error checking destination limits:', error);
+    console.error("Error checking destination limits:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to check destination limits'
+      error: "Failed to check destination limits",
     });
   }
 });
@@ -127,19 +135,19 @@ router.get('/limits/destinations', authenticateToken, async (req, res) => {
 /**
  * Check if user can stream
  */
-router.get('/limits/streaming', authenticateToken, async (req, res) => {
+router.get("/limits/streaming", authenticateToken, async (req, res) => {
   try {
     const canStream = await subscriptionService.canStream(req.user.id);
 
     res.json({
       success: true,
-      data: canStream
+      data: canStream,
     });
   } catch (error) {
-    console.error('Error checking streaming limits:', error);
+    console.error("Error checking streaming limits:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to check streaming limits'
+      error: "Failed to check streaming limits",
     });
   }
 });
@@ -148,28 +156,32 @@ router.get('/limits/streaming', authenticateToken, async (req, res) => {
  * Update user's subscription (for testing/admin purposes)
  * In production, this would be handled by webhooks from payment provider
  */
-router.post('/update', authenticateToken, async (req, res) => {
+router.post("/update", authenticateToken, async (req, res) => {
   try {
-    const { plan_id, billing_cycle = 'monthly' } = req.body;
+    const { plan_id, billing_cycle = "monthly" } = req.body;
 
     if (!plan_id) {
       return res.status(400).json({
         success: false,
-        error: 'Plan ID is required'
+        error: "Plan ID is required",
       });
     }
 
-    await subscriptionService.updateUserSubscription(req.user.id, plan_id, billing_cycle);
+    await subscriptionService.updateUserSubscription(
+      req.user.id,
+      plan_id,
+      billing_cycle
+    );
 
     res.json({
       success: true,
-      message: 'Subscription updated successfully'
+      message: "Subscription updated successfully",
     });
   } catch (error) {
-    console.error('Error updating subscription:', error);
+    console.error("Error updating subscription:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update subscription'
+      error: "Failed to update subscription",
     });
   }
 });
