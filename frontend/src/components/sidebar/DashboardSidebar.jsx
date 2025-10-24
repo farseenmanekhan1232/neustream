@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { apiService } from "@/services/api";
+import apiService from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePostHog } from "@/hooks/usePostHog";
 import {
@@ -10,11 +10,11 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import SidebarUserProfile from "./sidebar/SidebarUserProfile";
-import SidebarSearch from "./sidebar/SidebarSearch";
-import SidebarNavigation from "./sidebar/SidebarNavigation";
-import SidebarFooter from "./sidebar/SidebarFooter";
-import SidebarKeyboardShortcuts from "./sidebar/SidebarKeyboardShortcuts";
+import SidebarUserProfile from "./SidebarUserProfile";
+import SidebarSearch from "./SidebarSearch";
+import SidebarNavigation from "./SidebarNavigation";
+import SidebarFooter from "./SidebarFooter";
+import SidebarKeyboardShortcuts from "./SidebarKeyboardShortcuts";
 
 function DashboardSidebar() {
   const { user } = useAuth();
