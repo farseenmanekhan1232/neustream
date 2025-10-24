@@ -546,7 +546,7 @@ function Landing() {
                         </div>
                         {plan.price_yearly && (
                           <p className="text-sm text-muted-foreground">
-                            ₹{plan.price_yearly} billed annually
+                            ${plan.price_yearly} billed annually
                           </p>
                         )}
                       </div>
