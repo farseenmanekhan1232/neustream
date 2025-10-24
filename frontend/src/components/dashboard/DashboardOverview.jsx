@@ -5,9 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePostHog } from "@/hooks/usePostHog";
 import { apiService } from "@/services/api";
 import { subscriptionService } from "@/services/subscription";
-import WelcomeSection from "@/components/dashboard/overview/WelcomeSection";
-import SubscriptionStatus from "@/components/dashboard/overview/SubscriptionStatus";
-import QuickActions from "@/components/dashboard/overview/QuickActions";
+import WelcomeSection from "./overview/WelcomeSection";
+import SubscriptionStatus from "./overview/SubscriptionStatus";
+import QuickActions from "./overview/QuickActions";
 
 function DashboardOverview() {
   const { user } = useAuth();

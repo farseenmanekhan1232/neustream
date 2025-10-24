@@ -1,0 +1,15 @@
+import { Suspense, memo } from "react";
+import { Outlet } from "react-router-dom";
+import { DashboardOverviewSkeleton } from "@/components/LoadingSkeletons";
+
+const DashboardContent = memo(function DashboardContent() {
+  return (
+    <main className="flex-1 overflow-y-auto p-6">
+      <Suspense fallback={<DashboardOverviewSkeleton />}>
+        <Outlet />
+      </Suspense>
+    </main>
+  );
+});
+
+export default DashboardContent;
