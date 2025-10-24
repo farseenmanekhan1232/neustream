@@ -9,9 +9,7 @@ const DashboardContent = memo(function DashboardContent() {
     <main className="flex-1 overflow-y-auto">
       <Suspense fallback={<DashboardOverviewSkeleton />}>
         <DashboardContainer>
-          <ScrollArea>
-            <Outlet />
-          </ScrollArea>
+          <Outlet />
         </DashboardContainer>
       </Suspense>
     </main>
