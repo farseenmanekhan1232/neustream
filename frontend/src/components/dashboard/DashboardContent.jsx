@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DashboardContent = memo(function DashboardContent() {
   return (
-    <main className="flex-1 overflow-y-auto">
+    <main className="flex-1 overflow-y-scroll">
       <Suspense fallback={<DashboardOverviewSkeleton />}>
         <DashboardContainer>
           <Outlet />
