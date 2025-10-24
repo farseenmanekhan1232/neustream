@@ -97,7 +97,7 @@ function DashboardSidebar() {
 
   return (
     <>
-      <Sidebar className="border-r">
+      <Sidebar className="relative border-r">
         <SidebarHeader className="border-b p-4">
           <SidebarUserProfile streamInfo={streamInfo} />
           <SidebarSearch
