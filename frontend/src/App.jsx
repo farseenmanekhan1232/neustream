@@ -17,6 +17,7 @@ import StreamPreviewPage from "./components/StreamPreviewPage";
 import SubscriptionManagement from "./components/SubscriptionManagement";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
+import { ThemeProvider } from "./components/theme-provider";
 
 const queryClient = new QueryClient();
 
@@ -119,9 +120,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <ThemeProvider defaultTheme="dark">
+          <Router>
+            <AppContent />
+          </Router>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
