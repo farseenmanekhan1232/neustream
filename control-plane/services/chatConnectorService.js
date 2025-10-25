@@ -159,6 +159,7 @@ class ChatConnectorService {
             platform: 'twitch',
             messageType: 'text',
             metadata: {
+              id: tags.id, // Use actual Twitch message ID
               color: tags.color,
               emotes: tags.emotes,
               badges: tags.badges,
@@ -336,6 +337,7 @@ class ChatConnectorService {
             platform: 'youtube',
             messageType: message.snippet.type === 'superChatEvent' ? 'superchat' : 'text',
             metadata: {
+              messageId: message.id, // Use actual YouTube message ID
               channelId: message.authorDetails.channelId,
               profileImageUrl: message.authorDetails.profileImageUrl,
               isChatModerator: message.authorDetails.isChatModerator,
@@ -353,8 +355,8 @@ class ChatConnectorService {
       }
     };
 
-    // Start polling every 5 seconds
-    pollingInterval = setInterval(pollChatMessages, 5000);
+    // Start polling every 30 seconds to avoid quota issues
+    pollingInterval = setInterval(pollChatMessages, 30000);
     connector.youtubePollingInterval = pollingInterval;
 
     // Initial poll
@@ -367,23 +369,31 @@ class ChatConnectorService {
       const { source_id } = connector;
       const { authorName, messageText, platform, messageType = 'text', metadata = {} } = messageData;
 
-      // Save message to database
-      const savedMessage = await this.wsServer.saveMessage(source_id, {
+      // Generate platform message ID based on actual platform data
+      let platformMessageId;
+      if (platform === 'youtube' && metadata.messageId) {
+        platformMessageId = metadata.messageId;
+      } else if (platform === 'twitch' && metadata.id) {
+        platformMessageId = metadata.id;
+      } else {
+        // Fallback to timestamp-based ID
+        platformMessageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      }
+
+      // Broadcast message directly to WebSocket clients (no database storage)
+      await this.wsServer.broadcastMessage(source_id, {
         connectorId: connector.id,
-        platformMessageId: `sim_${Date.now()}`,
+        platformMessageId,
         authorName,
-        authorId: `sim_${authorName.toLowerCase()}`,
+        authorId: metadata.authorId || `user_${authorName.toLowerCase()}`,
         messageText,
         messageType,
+        platform,
         metadata: {
           ...metadata,
-          platform,
-          simulated: true
+          platform
         }
       });
-
-      // Broadcast to WebSocket clients
-      await this.wsServer.broadcastMessage(source_id, savedMessage);
 
       console.log(`Processed message from ${platform}: ${authorName}: ${messageText}`);
     } catch (error) {

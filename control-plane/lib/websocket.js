@@ -186,50 +186,33 @@ class WebSocketServer {
   // Method to broadcast new chat message from platform connectors
   async broadcastMessage(sourceId, messageData) {
     try {
-      // Save message to database
-      const savedMessage = await this.saveMessage(sourceId, messageData);
+      // Generate unique ID for the message
+      const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
+      // Create message object with timestamp
+      const message = {
+        id: messageId,
+        sourceId,
+        connectorId: messageData.connectorId,
+        platformMessageId: messageData.platformMessageId,
+        authorName: messageData.authorName,
+        authorId: messageData.authorId,
+        messageText: messageData.messageText,
+        messageType: messageData.messageType || 'text',
+        metadata: messageData.metadata || {},
+        createdAt: new Date().toISOString()
+      };
 
       // Broadcast to all connected clients in the source room
-      this.io.to(`source_${sourceId}`).emit('new_message', savedMessage);
+      this.io.to(`source_${sourceId}`).emit('new_message', message);
 
-      return savedMessage;
+      console.log(`Broadcasted message from ${messageData.platform || 'unknown'}: ${messageData.authorName}: ${messageData.messageText}`);
+
+      return message;
     } catch (error) {
       console.error('Broadcast message error:', error);
       throw error;
     }
-  }
-
-  async saveMessage(sourceId, messageData) {
-    const {
-      connectorId,
-      platformMessageId,
-      authorName,
-      authorId,
-      messageText,
-      messageType = 'text',
-      metadata = {}
-    } = messageData;
-
-    const result = await this.db.run(
-      `INSERT INTO chat_messages (
-        source_id, connector_id, platform_message_id,
-        author_name, author_id, message_text, message_type, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [sourceId, connectorId, platformMessageId, authorName, authorId, messageText, messageType, metadata]
-    );
-
-    return {
-      id: result.id,
-      sourceId: result.source_id,
-      connectorId: result.connector_id,
-      platformMessageId: result.platform_message_id,
-      authorName: result.author_name,
-      authorId: result.author_id,
-      messageText: result.message_text,
-      messageType: result.message_type,
-      metadata: result.metadata,
-      createdAt: result.created_at
-    };
   }
 
   // Get active connections count for a source
