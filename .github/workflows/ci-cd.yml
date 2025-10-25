@@ -87,10 +87,14 @@ jobs:
             TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
             TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
             TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+
+            TWITCH_CHAT_CALLBACK_URL=${{secrets.TWITCH_CHAT_CALLBACK_URL}}
+            YOUTUBE_CHAT_CALLBACK_URL=${{secrets.YOUTUBE_CHAT_CALLBACK_URL}}
             RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
             RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
             RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
             FRONTEND_URL=https://www.neustream.app
+            BACKEND_URL=https://api.neustream.app
             DB_HOST=localhost
             DB_PORT=5432
             DB_NAME=neustream

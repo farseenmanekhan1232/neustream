@@ -1,6 +1,7 @@
 const Database = require("../lib/database");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
 async function runMigrations() {
   const db = new Database();
