@@ -1,4 +1,5 @@
 const express = require("express");
+const axios = require("axios");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
 const posthogService = require("../services/posthog");
@@ -360,32 +361,91 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
   }
 });
 
-// Placeholder function for token exchange
+// Real OAuth token exchange implementation
 async function exchangeCodeForTokens(platform, code) {
-  // This is a placeholder - actual implementation will vary by platform
-  // In production, you'd make actual API calls to exchange the code for tokens
-
   switch (platform.toLowerCase()) {
     case 'twitch':
-      // Implement Twitch token exchange
-      return {
-        accessToken: 'placeholder_access_token',
-        refreshToken: 'placeholder_refresh_token',
-        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
-        platformUserId: 'placeholder_user_id',
-        platformUsername: 'placeholder_username'
-      };
+      return await exchangeTwitchCodeForTokens(code);
     case 'youtube':
-      // Implement YouTube token exchange
-      return {
-        accessToken: 'placeholder_access_token',
-        refreshToken: 'placeholder_refresh_token',
-        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
-        platformUserId: 'placeholder_user_id',
-        platformUsername: 'placeholder_username'
-      };
+      return await exchangeYouTubeCodeForTokens(code);
     default:
       throw new Error(`Unsupported platform: ${platform}`);
+  }
+}
+
+// Twitch OAuth token exchange
+async function exchangeTwitchCodeForTokens(code) {
+  try {
+    const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: process.env.TWITCH_CLIENT_ID,
+        client_secret: process.env.TWITCH_CLIENT_SECRET,
+        code: code,
+        grant_type: 'authorization_code',
+        redirect_uri: process.env.TWITCH_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`
+      }
+    });
+
+    const { access_token, refresh_token, expires_in } = response.data;
+
+    // Get user info with the access token
+    const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Client-Id': process.env.TWITCH_CLIENT_ID
+      }
+    });
+
+    const userData = userResponse.data.data[0];
+
+    return {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+      platformUserId: userData.id,
+      platformUsername: userData.login,
+      displayName: userData.display_name
+    };
+  } catch (error) {
+    console.error('Twitch token exchange error:', error.response?.data || error.message);
+    throw new Error('Failed to exchange Twitch authorization code');
+  }
+}
+
+// YouTube OAuth token exchange
+async function exchangeYouTubeCodeForTokens(code) {
+  try {
+    const response = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: process.env.YOUTUBE_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`
+    });
+
+    const { access_token, refresh_token, expires_in } = response.data;
+
+    // Get user info with the access token
+    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${access_token}`
+      }
+    });
+
+    const userData = userResponse.data;
+
+    return {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+      platformUserId: userData.id,
+      platformUsername: userData.email.split('@')[0], // Use email prefix as username
+      displayName: userData.name,
+      email: userData.email
+    };
+  } catch (error) {
+    console.error('YouTube token exchange error:', error.response?.data || error.message);
+    throw new Error('Failed to exchange YouTube authorization code');
   }
 }
 

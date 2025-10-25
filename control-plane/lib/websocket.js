@@ -18,8 +18,14 @@ class WebSocketServer {
     });
 
     this.db = new Database();
+    this.chatConnectorService = null;
     this.setupMiddleware();
     this.setupEventHandlers();
+  }
+
+  // Set chat connector service reference
+  setChatConnectorService(chatConnectorService) {
+    this.chatConnectorService = chatConnectorService;
   }
 
   setupMiddleware() {
@@ -88,6 +94,11 @@ class WebSocketServer {
           // Send recent messages
           const recentMessages = await this.getRecentMessages(sourceId);
           socket.emit('chat_history', { messages: recentMessages });
+
+          // Initialize chat connectors for this source
+          if (this.chatConnectorService) {
+            await this.chatConnectorService.initializeForSourceConnection(sourceId);
+          }
 
           socket.emit('joined_chat', { sourceId });
         } catch (error) {

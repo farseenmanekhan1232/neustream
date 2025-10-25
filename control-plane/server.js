@@ -109,6 +109,9 @@ console.log('WebSocket server initialized');
 // Initialize Chat Connector Service
 const ChatConnectorService = require('./services/chatConnectorService');
 const chatConnectorService = new ChatConnectorService(wsServer);
+
+// Connect WebSocket server to Chat Connector Service
+wsServer.setChatConnectorService(chatConnectorService);
 console.log('Chat connector service initialized');
 
 // Graceful shutdown
