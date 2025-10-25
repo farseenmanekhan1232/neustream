@@ -1,0 +1,155 @@
+syntax = "proto2";
+
+package youtube.api.v3;
+
+service V3DataLiveChatMessageService {
+  // Allows a user to load live chat through a server-streamed RPC.
+  rpc StreamList(LiveChatMessageListRequest)
+      returns (stream LiveChatMessageListResponse) {}
+}
+
+message LiveChatMessageListRequest {
+  // The ID of the live chat for which comments should be returned.
+  optional string live_chat_id = 1;
+
+  // Specifies the localization language in which the system messages
+  // should be returned.
+  optional string hl = 2;
+
+  // Specifies the size of the profile image that should be
+  // returned for each user.
+  optional uint32 profile_image_size = 3;
+
+  // The <code><strong>maxResults</strong></code> parameter specifies the
+  // maximum number of items that should be returned in the result set.
+  // Not used in the streaming RPC.
+  optional uint32 max_results = 98;
+
+  // The <code><strong>pageToken</strong></code> parameter identifies a specific
+  // page in the result set that should be returned. In an API response, the
+  // <code>nextPageToken</code> property identify other pages that could be
+  // retrieved.
+  optional string page_token = 99;
+
+  // The <code><strong>part</strong></code> parameter specifies the
+  // <code>liveChatComment</code> resource parts that the API response will
+  // include. Supported values are <code>id</code>, <code>snippet</code>, and
+  // <code>authorDetails</code>.
+  repeated string part = 100;
+}
+
+message LiveChatMessageListResponse {
+  // Identifies what kind of resource this is. Value: the fixed string
+  // <code>"youtube#liveChatMessageListResponse"</code>.
+  optional string kind = 200;
+
+  // Etag of this resource.
+  optional string etag = 201;
+
+  // The date and time when the underlying stream went offline. The value is
+  // specified in <a href="//www.w3.org/TR/NOTE-datetime">ISO 8601</a>
+  // format.
+  optional string offline_at = 2;
+
+  // General pagination information.
+  optional PageInfo page_info = 1004;
+
+  optional string next_page_token = 100602;
+
+  repeated LiveChatMessage items = 1007;
+
+  // Set when there is an active poll.
+  optional LiveChatMessage active_poll_item = 1008;
+}
+
+message LiveChatMessage {
+  // Identifies what kind of resource this is. Value: the fixed string
+  // <code>"youtube#liveChatMessage"</code>.
+  optional string kind = 200;
+
+  // Etag of this resource.
+  optional string etag = 201;
+
+  // The ID that YouTube assigns to uniquely identify the message.
+  optional string id = 101;
+
+  // The <code>snippet</code> object contains basic details about the message.
+  optional LiveChatMessageSnippet snippet = 2;
+
+  // The <code>authorDetails</code> object contains basic details about the
+  // user that posted this message.
+  optional LiveChatMessageAuthorDetails author_details = 3;
+}
+
+message LiveChatMessageAuthorDetails {
+  // The YouTube channel ID.
+  optional string channel_id = 10101;
+  // The channel's URL.
+  optional string channel_url = 102;
+  // The channel's display name.
+  optional string display_name = 103;
+  // The channels's avatar URL.
+  optional string profile_image_url = 104;
+  // Whether the author's identity has been verified by YouTube.
+  optional bool is_verified = 4;
+  // Whether the author is the owner of the live chat.
+  optional bool is_chat_owner = 5;
+  // Whether the author is a sponsor of the live chat.
+  optional bool is_chat_sponsor = 6;
+  // Whether the author is a moderator of the live chat.
+  optional bool is_chat_moderator = 7;
+}
+
+message LiveChatMessageSnippet {
+  message TypeWrapper {
+    enum Type {
+      INVALID_TYPE = 0;
+      TEXT_MESSAGE_EVENT = 1;
+      TOMBSTONE = 2;
+      FAN_FUNDING_EVENT = 3;
+      CHAT_ENDED_EVENT = 4;
+      SPONSOR_ONLY_MODE_STARTED_EVENT = 5;
+      SPONSOR_ONLY_MODE_ENDED_EVENT = 6;
+      NEW_SPONSOR_EVENT = 7;
+      MEMBER_MILESTONE_CHAT_EVENT = 17;
+      MEMBERSHIP_GIFTING_EVENT = 18;
+      GIFT_MEMBERSHIP_RECEIVED_EVENT = 19;
+      MESSAGE_DELETED_EVENT = 8;
+      MESSAGE_RETRACTED_EVENT = 9;
+      USER_BANNED_EVENT = 10;
+      SUPER_CHAT_EVENT = 15;
+      SUPER_STICKER_EVENT = 16;
+      POLL_EVENT = 20;
+    }
+  }
+  // The type of message, this will always be present, it determines the
+  // contents of the message as well as which fields will be present.
+  optional TypeWrapper.Type type = 1;
+
+  optional string live_chat_id = 201;
+
+  // The ID of the user that authored this message, this field is not always
+  // filled.
+  optional string author_channel_id = 301;
+
+  // The date and time when the message was orignally published. The value is
+  // specified in <a href="//www.w3.org/TR/NOTE-datetime">ISO 8601</a>
+  // format.
+  optional string published_at = 4;
+
+  // Whether the message has display content that should be displayed to users.
+  optional bool has_display_content = 17;
+
+  // Contains a string that can be displayed to the user.
+  // If this field is not present the message is silent, at the moment only
+  // messages of type TOMBSTONE and CHAT_ENDED_EVENT are silent.
+  optional string display_message = 16;
+}
+
+message PageInfo {
+  // The total number of results in the result set.
+  optional int32 total_results = 1;
+
+  // The number of results included in the API response.
+  optional int32 results_per_page = 2;
+}

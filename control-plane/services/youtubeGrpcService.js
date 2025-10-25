@@ -1,6 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
+const fs = require('fs');
 const { google } = require('googleapis');
 
 class YouTubeGrpcService {
@@ -16,9 +17,10 @@ class YouTubeGrpcService {
   // Load gRPC proto definitions for YouTube Live Streaming API
   loadProtoDefinitions() {
     try {
-      // YouTube Live Streaming API proto definition
-      const protoPath = path.join(__dirname, '..', 'protos', 'youtube_live_streaming.proto');
+      // Load the proto file directly
+      const protoPath = path.join(__dirname, '../protos/stream_list.proto');
 
+      // Parse the proto content from the file
       const packageDefinition = protoLoader.loadSync(protoPath, {
         keepCase: true,
         longs: String,
@@ -36,9 +38,10 @@ class YouTubeGrpcService {
     }
   }
 
+
   // Start gRPC streaming for a YouTube connector
   async startGrpcStreaming(connector) {
-    const { id, config, source_id } = connector;
+    const { id, config } = connector;
 
     if (!config || !config.accessToken) {
       console.error('YouTube connector config or access token missing for gRPC streaming');
@@ -48,45 +51,17 @@ class YouTubeGrpcService {
     console.log(`Starting YouTube gRPC streaming for connector ${id}`);
 
     try {
-      // Initialize OAuth2 client
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials({ access_token: config.accessToken });
-
-      // Get channel information
-      const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
-      // Find active live broadcast
-      const liveResponse = await youtube.search.list({
-        part: 'id',
-        channelId: config.platformUserId,
-        type: 'video',
-        eventType: 'live',
-        maxResults: 1
-      });
-
-      if (liveResponse.data.items.length === 0) {
-        console.log('No active live stream found for YouTube channel');
-        return;
-      }
-
-      const videoId = liveResponse.data.items[0].id.videoId;
-
-      // Get live chat details
-      const videoResponse = await youtube.videos.list({
-        part: 'liveStreamingDetails',
-        id: videoId
-      });
-
-      const liveChatId = videoResponse.data.items[0].liveStreamingDetails.activeLiveChatId;
+      // Get live chat ID using REST API (this is the only REST call needed)
+      const liveChatId = await this.getLiveChatId(config);
       if (!liveChatId) {
-        console.log('No active live chat found for YouTube video');
+        console.log('No active live chat found for YouTube channel');
         return;
       }
 
-      console.log(`Found live chat ID: ${liveChatId} for video: ${videoId}`);
+      console.log(`Found live chat ID: ${liveChatId}`);
 
-      // Start gRPC streaming connection
-      await this.startGrpcConnection(connector, liveChatId, oauth2Client);
+      // Start real gRPC streaming connection
+      await this.startRealGrpcConnection(connector, liveChatId, config.accessToken);
 
     } catch (error) {
       console.error('Failed to start YouTube gRPC streaming:', error);
@@ -103,21 +78,87 @@ class YouTubeGrpcService {
     }
   }
 
-  // Start gRPC connection for real-time chat streaming
-  async startGrpcConnection(connector, liveChatId, oauth2Client) {
+  // Get live chat ID using REST API (minimal quota usage)
+  async getLiveChatId(config) {
     try {
-      // Create gRPC client credentials with OAuth2 token
-      const credentials = grpc.credentials.createFromMetadataGenerator((params, callback) => {
-        const metadata = new grpc.Metadata();
-        metadata.add('authorization', `Bearer ${oauth2Client.credentials.access_token}`);
-        callback(null, metadata);
+      const oauth2Client = new google.auth.OAuth2();
+      oauth2Client.setCredentials({ access_token: config.accessToken });
+
+      const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+
+      // Find active live broadcast
+      const liveResponse = await youtube.search.list({
+        part: 'id',
+        channelId: config.platformUserId,
+        type: 'video',
+        eventType: 'live',
+        maxResults: 1
       });
 
-      // Create gRPC client (using mock implementation for now)
-      // In production, this would connect to the actual YouTube gRPC endpoint
-      const client = this.createMockGrpcClient(connector, liveChatId);
+      if (liveResponse.data.items.length === 0) {
+        console.log('No active live stream found for YouTube channel');
+        return null;
+      }
 
-      this.clients.set(connector.id, client);
+      const videoId = liveResponse.data.items[0].id.videoId;
+
+      // Get live chat details
+      const videoResponse = await youtube.videos.list({
+        part: 'liveStreamingDetails',
+        id: videoId
+      });
+
+      return videoResponse.data.items[0].liveStreamingDetails.activeLiveChatId;
+    } catch (error) {
+      console.error('Failed to get live chat ID:', error);
+      throw error;
+    }
+  }
+
+  // Start real gRPC streaming connection
+  async startRealGrpcConnection(connector, liveChatId, accessToken) {
+    try {
+      // Create gRPC channel
+      const credentials = grpc.credentials.createSsl();
+      const channel = new grpc.Client('dns:///youtube.googleapis.com:443', credentials);
+
+      // Create stub for the service
+      const stub = new this.youtubeProto.youtube.api.v3.V3DataLiveChatMessageService(
+        'dns:///youtube.googleapis.com:443',
+        credentials
+      );
+
+      // Create metadata with OAuth token
+      const metadata = new grpc.Metadata();
+      metadata.add('authorization', `Bearer ${accessToken}`);
+
+      // Create request
+      const request = {
+        live_chat_id: liveChatId,
+        part: ['snippet', 'authorDetails'],
+        max_results: 20
+      };
+
+      // Start streaming
+      const stream = stub.StreamList(request, metadata);
+
+      // Store the stream for cleanup
+      this.streams.set(connector.id, stream);
+
+      // Handle incoming messages
+      stream.on('data', (response) => {
+        this.handleGrpcResponse(connector, response);
+      });
+
+      stream.on('error', (error) => {
+        console.error('YouTube gRPC stream error:', error);
+        this.handleGrpcError(connector, error);
+      });
+
+      stream.on('end', () => {
+        console.log(`YouTube gRPC stream ended for connector ${connector.id}`);
+        this.streams.delete(connector.id);
+      });
 
       console.log(`YouTube gRPC streaming started for connector ${connector.id}`);
 
@@ -125,10 +166,10 @@ class YouTubeGrpcService {
       await this.chatConnectorService.handleIncomingMessage(connector, {
         authorName: 'System',
         authorId: 'system',
-        messageText: 'Connected to YouTube chat via real-time streaming',
+        messageText: 'Connected to YouTube chat via real-time gRPC streaming',
         platform: 'youtube',
         messageType: 'system',
-        metadata: { connection: true, streaming: true }
+        metadata: { connection: true, streaming: true, grpc: true }
       });
 
     } catch (error) {
@@ -137,150 +178,115 @@ class YouTubeGrpcService {
     }
   }
 
-  // Mock gRPC client implementation (to be replaced with actual gRPC client)
-  createMockGrpcClient(connector, liveChatId) {
-    console.log(`Creating mock gRPC client for live chat: ${liveChatId}`);
+  // Handle gRPC response with chat messages
+  handleGrpcResponse(connector, response) {
+    try {
+      if (response.items && response.items.length > 0) {
+        console.log(`YouTube gRPC: Received ${response.items.length} messages`);
 
-    // Simulate real-time message streaming using WebSocket-like polling
-    // This is a temporary solution until we implement the actual gRPC client
-    const mockClient = {
-      liveChatId,
-      pollingInterval: null,
-      lastPollTime: Date.now(),
-      messageCount: 0
-    };
-
-    // Start simulated real-time polling (much more efficient than REST API)
-    mockClient.pollingInterval = setInterval(async () => {
-      try {
-        await this.pollLiveChatMessages(connector, liveChatId, mockClient);
-      } catch (error) {
-        console.error('Error in mock gRPC polling:', error);
+        for (const message of response.items) {
+          this.processGrpcMessage(connector, message);
+        }
       }
-    }, 2000); // Poll every 2 seconds for real-time feel
-
-    return mockClient;
+    } catch (error) {
+      console.error('Error handling gRPC response:', error);
+    }
   }
 
-  // Poll live chat messages with real-time optimization
-  async pollLiveChatMessages(connector, liveChatId, mockClient) {
+  // Process individual gRPC message
+  async processGrpcMessage(connector, message) {
     try {
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials({ access_token: connector.config.accessToken });
+      const snippet = message.snippet;
+      const authorDetails = message.author_details;
 
-      const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
-      // Use a very short timeout and minimal data to reduce quota usage
-      const chatResponse = await youtube.liveChatMessages.list({
-        liveChatId,
-        part: 'id,snippet,authorDetails',
-        maxResults: 20, // Reduced from 50 to save quota
-        pageToken: mockClient.lastPageToken
-      });
-
-      const messages = chatResponse.data.items || [];
-      mockClient.lastPageToken = chatResponse.data.nextPageToken;
-
-      // Process messages in real-time
-      for (const message of messages) {
-        // Skip if we've already processed this message
-        if (mockClient.processedMessages && mockClient.processedMessages.has(message.id)) {
-          continue;
-        }
-
-        const messageData = {
-          authorName: message.authorDetails.displayName,
-          authorId: message.authorDetails.channelId,
-          messageText: message.snippet.displayMessage,
-          platform: 'youtube',
-          messageType: message.snippet.type === 'superChatEvent' ? 'superchat' : 'text',
-          metadata: {
-            messageId: message.id, // Use actual YouTube message ID
-            channelId: message.authorDetails.channelId,
-            profileImageUrl: message.authorDetails.profileImageUrl,
-            isChatModerator: message.authorDetails.isChatModerator,
-            isChatOwner: message.authorDetails.isChatOwner,
-            isChatSponsor: message.authorDetails.isChatSponsor,
-            superChatDetails: message.snippet.superChatDetails,
-            publishedAt: message.snippet.publishedAt
-          }
-        };
-
-        await this.chatConnectorService.handleIncomingMessage(connector, messageData);
-        mockClient.messageCount++;
-
-        // Track processed messages to avoid duplicates
-        if (!mockClient.processedMessages) {
-          mockClient.processedMessages = new Set();
-        }
-        mockClient.processedMessages.add(message.id);
-
-        // Limit processed messages cache to prevent memory issues
-        if (mockClient.processedMessages.size > 1000) {
-          const firstMessage = Array.from(mockClient.processedMessages)[0];
-          mockClient.processedMessages.delete(firstMessage);
-        }
+      if (!snippet || !authorDetails || !snippet.display_message) {
+        return; // Skip silent or invalid messages
       }
 
-      // Update last poll time
-      mockClient.lastPollTime = Date.now();
+      const messageData = {
+        authorName: authorDetails.display_name,
+        authorId: authorDetails.channel_id,
+        messageText: snippet.display_message,
+        platform: 'youtube',
+        messageType: this.getMessageType(snippet.type),
+        metadata: {
+          messageId: message.id,
+          channelId: authorDetails.channel_id,
+          profileImageUrl: authorDetails.profile_image_url,
+          isChatModerator: authorDetails.is_chat_moderator,
+          isChatOwner: authorDetails.is_chat_owner,
+          isChatSponsor: authorDetails.is_chat_sponsor,
+          publishedAt: snippet.published_at,
+          messageType: snippet.type
+        }
+      };
 
-      // Adaptive polling based on message activity
-      if (messages.length > 0) {
-        // Active chat - maintain fast polling
-        console.log(`YouTube gRPC: Processed ${messages.length} messages from live chat ${liveChatId}`);
-      }
-
+      await this.chatConnectorService.handleIncomingMessage(connector, messageData);
     } catch (error) {
-      if (error.message.includes('quotaExceeded')) {
-        console.warn('YouTube API quota exceeded in gRPC simulation, implementing backoff...');
-
-        // Implement exponential backoff
-        const backoffTime = Math.min(60000, 5000 * Math.pow(2, mockClient.errorCount || 0));
-        mockClient.errorCount = (mockClient.errorCount || 0) + 1;
-
-        // Adjust polling interval
-        clearInterval(mockClient.pollingInterval);
-        mockClient.pollingInterval = setInterval(async () => {
-          await this.pollLiveChatMessages(connector, liveChatId, mockClient);
-        }, backoffTime);
-
-        console.log(`YouTube gRPC polling backed off to ${backoffTime}ms`);
-      } else {
-        console.error('Error polling YouTube live chat in gRPC simulation:', error.message);
-      }
+      console.error('Error processing gRPC message:', error);
     }
+  }
+
+  // Map gRPC message type to our message type
+  getMessageType(grpcType) {
+    const typeMap = {
+      TEXT_MESSAGE_EVENT: 'text',
+      SUPER_CHAT_EVENT: 'superchat',
+      SUPER_STICKER_EVENT: 'supersticker',
+      NEW_SPONSOR_EVENT: 'subscription',
+      MEMBER_MILESTONE_CHAT_EVENT: 'milestone',
+      MEMBERSHIP_GIFTING_EVENT: 'gifting',
+      GIFT_MEMBERSHIP_RECEIVED_EVENT: 'gift_received'
+    };
+
+    return typeMap[grpcType] || 'text';
+  }
+
+  // Handle gRPC stream errors
+  async handleGrpcError(connector, error) {
+    console.error(`YouTube gRPC error for connector ${connector.id}:`, error);
+
+    // Send error message to chat
+    await this.chatConnectorService.handleIncomingMessage(connector, {
+      authorName: 'System',
+      authorId: 'system',
+      messageText: `YouTube chat streaming error: ${error.message}`,
+      platform: 'youtube',
+      messageType: 'error',
+      metadata: { error: true }
+    });
+
+    // Try to restart the stream after a delay
+    setTimeout(() => {
+      console.log(`Attempting to restart gRPC stream for connector ${connector.id}`);
+      this.startGrpcStreaming(connector).catch(console.error);
+    }, 5000);
   }
 
   // Stop gRPC streaming for a connector
   async stopGrpcStreaming(connectorId) {
-    const client = this.clients.get(connectorId);
-    if (client) {
-      if (client.pollingInterval) {
-        clearInterval(client.pollingInterval);
-        console.log(`Stopped YouTube gRPC streaming for connector ${connectorId}`);
-      }
-      this.clients.delete(connectorId);
-    }
-
     const stream = this.streams.get(connectorId);
     if (stream) {
       stream.cancel();
       this.streams.delete(connectorId);
+      console.log(`Stopped YouTube gRPC streaming for connector ${connectorId}`);
+    }
+
+    const client = this.clients.get(connectorId);
+    if (client) {
+      this.clients.delete(connectorId);
     }
   }
 
   // Get active gRPC connections
   getActiveConnections() {
-    return Array.from(this.clients.keys());
+    return Array.from(this.streams.keys());
   }
 
   // Cleanup all gRPC connections
   cleanup() {
-    for (const [connectorId, client] of this.clients) {
-      if (client.pollingInterval) {
-        clearInterval(client.pollingInterval);
-      }
+    for (const [connectorId, stream] of this.streams) {
+      stream.cancel();
     }
     this.clients.clear();
     this.streams.clear();
