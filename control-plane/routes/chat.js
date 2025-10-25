@@ -427,12 +427,17 @@ async function exchangeTwitchCodeForTokens(code) {
 // YouTube OAuth token exchange
 async function exchangeYouTubeCodeForTokens(code) {
   try {
+    const redirectUri = process.env.YOUTUBE_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`;
+    console.log('YouTube OAuth redirect URI:', redirectUri);
+    console.log('YouTube OAuth client ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
+    console.log('YouTube OAuth client secret:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+
     const response = await axios.post('https://oauth2.googleapis.com/token',
       `client_id=${encodeURIComponent(process.env.GOOGLE_CLIENT_ID)}&` +
       `client_secret=${encodeURIComponent(process.env.GOOGLE_CLIENT_SECRET)}&` +
       `code=${encodeURIComponent(code)}&` +
       `grant_type=authorization_code&` +
-      `redirect_uri=${encodeURIComponent(process.env.YOUTUBE_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`)}`,
+      `redirect_uri=${encodeURIComponent(redirectUri)}`,
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
