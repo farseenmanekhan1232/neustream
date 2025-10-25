@@ -112,6 +112,9 @@ const chatConnectorService = new ChatConnectorService(wsServer);
 
 // Connect WebSocket server to Chat Connector Service
 wsServer.setChatConnectorService(chatConnectorService);
+
+// Make chat connector service available to routes
+app.set('chatConnectorService', chatConnectorService);
 console.log('Chat connector service initialized');
 
 // Graceful shutdown

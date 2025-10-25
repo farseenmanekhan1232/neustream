@@ -157,13 +157,19 @@ router.delete("/connectors/:connectorId", authenticateToken, async (req, res) =>
       return res.status(404).json({ error: "Chat connector not found" });
     }
 
+    // Stop the active connector (if running)
+    const chatConnectorService = req.app.chatConnectorService;
+    if (chatConnectorService) {
+      await chatConnectorService.stopConnector(connectorId);
+    }
+
     // Delete the connector
     const result = await db.run(
       "DELETE FROM chat_connectors WHERE id = $1",
       [connectorId]
     );
 
-    if (result.changes === 0) {
+    if (!result.changes || result.changes === 0) {
       return res.status(404).json({ error: "Chat connector not found" });
     }
 
