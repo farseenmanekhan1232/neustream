@@ -2,13 +2,14 @@ const Database = require('../lib/database');
 const WebSocketServer = require('../lib/websocket');
 const axios = require('axios');
 const tmi = require('tmi.js');
-const { google } = require('googleapis');
+const YouTubeGrpcService = require('./youtubeGrpcService');
 
 class ChatConnectorService {
   constructor(wsServer) {
     this.db = new Database();
     this.wsServer = wsServer;
     this.connectors = new Map();
+    this.youtubeGrpcService = new YouTubeGrpcService(this);
   }
 
   // Initialize chat connectors for a source
@@ -40,7 +41,7 @@ class ChatConnectorService {
           await this.startTwitchConnector(connector);
           break;
         case 'youtube':
-          await this.startYouTubeConnector(connector);
+          await this.startYouTubeGrpcConnector(connector);
           break;
         case 'facebook':
           await this.startFacebookConnector(connector);
@@ -81,6 +82,8 @@ class ChatConnectorService {
               connector.youtubePollingInterval = null;
               console.log(`Stopped YouTube chat polling`);
             }
+            // Stop gRPC streaming
+            await this.youtubeGrpcService.stopGrpcStreaming(connectorId);
             break;
         }
 
@@ -203,7 +206,7 @@ class ChatConnectorService {
     }
   }
 
-  async startYouTubeConnector(connector) {
+  async startYouTubeGrpcConnector(connector) {
     const { config } = connector;
 
     if (!config || !config.accessToken) {
@@ -220,36 +223,30 @@ class ChatConnectorService {
     }
 
     const displayName = config.displayName || config.platformUsername || 'YouTube User';
-    console.log(`Starting YouTube connector for user: ${displayName}`);
+    console.log(`Starting YouTube gRPC connector for user: ${displayName}`);
 
     try {
-      // Initialize YouTube API client
-      const oauth2Client = new google.auth.OAuth2();
-      oauth2Client.setCredentials({ access_token: config.accessToken });
-
-      const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
-      // Start polling for live chat messages
-      this.startYouTubeChatPolling(connector, youtube);
+      // Start gRPC streaming for real-time chat
+      await this.youtubeGrpcService.startGrpcStreaming(connector);
 
       // Send connection message
       await this.handleIncomingMessage(connector, {
         authorName: 'System',
         authorId: 'system',
-        messageText: `Connected to ${displayName}'s YouTube chat`,
+        messageText: `Connected to ${displayName}'s YouTube chat via real-time streaming`,
         platform: 'youtube',
         messageType: 'system',
-        metadata: { connection: true }
+        metadata: { connection: true, streaming: true }
       });
 
     } catch (error) {
-      console.error('Failed to start YouTube connector:', error);
+      console.error('Failed to start YouTube gRPC connector:', error);
 
       // Send error message
       await this.handleIncomingMessage(connector, {
         authorName: 'System',
         authorId: 'system',
-        messageText: `Failed to connect to YouTube chat: ${error.message}`,
+        messageText: `Failed to connect to YouTube chat via gRPC: ${error.message}`,
         platform: 'youtube',
         messageType: 'error',
         metadata: { error: true }
@@ -277,91 +274,8 @@ class ChatConnectorService {
     // 3. Forward messages to WebSocket server
   }
 
-  // YouTube Live Chat polling implementation
-  async startYouTubeChatPolling(connector, youtube) {
-    let liveChatId = null;
-    let nextPageToken = null;
-    let pollingInterval = null;
-
-    const pollChatMessages = async () => {
-      try {
-        if (!liveChatId) {
-          // Find active live broadcast
-          const liveResponse = await youtube.search.list({
-            part: 'id',
-            channelId: connector.config.platformUserId,
-            type: 'video',
-            eventType: 'live',
-            maxResults: 1
-          });
-
-          if (liveResponse.data.items.length === 0) {
-            console.log('No active live stream found for YouTube channel');
-            return;
-          }
-
-          const videoId = liveResponse.data.items[0].id.videoId;
-
-          // Get live chat details
-          const videoResponse = await youtube.videos.list({
-            part: 'liveStreamingDetails',
-            id: videoId
-          });
-
-          const liveChatId = videoResponse.data.items[0].liveStreamingDetails.activeLiveChatId;
-          if (!liveChatId) {
-            console.log('No active live chat found for YouTube video');
-            return;
-          }
-
-          connector.youtubeLiveChatId = liveChatId;
-        }
-
-        // Poll for live chat messages
-        const chatResponse = await youtube.liveChatMessages.list({
-          liveChatId: connector.youtubeLiveChatId,
-          part: 'id,snippet,authorDetails',
-          maxResults: 50,
-          pageToken: nextPageToken
-        });
-
-        const messages = chatResponse.data.items;
-        nextPageToken = chatResponse.data.nextPageToken;
-
-        // Process each message
-        for (const message of messages) {
-          const messageData = {
-            authorName: message.authorDetails.displayName,
-            authorId: message.authorDetails.channelId,
-            messageText: message.snippet.displayMessage,
-            platform: 'youtube',
-            messageType: message.snippet.type === 'superChatEvent' ? 'superchat' : 'text',
-            metadata: {
-              messageId: message.id, // Use actual YouTube message ID
-              channelId: message.authorDetails.channelId,
-              profileImageUrl: message.authorDetails.profileImageUrl,
-              isChatModerator: message.authorDetails.isChatModerator,
-              isChatOwner: message.authorDetails.isChatOwner,
-              isChatSponsor: message.authorDetails.isChatSponsor,
-              superChatDetails: message.snippet.superChatDetails
-            }
-          };
-
-          await this.handleIncomingMessage(connector, messageData);
-        }
-
-      } catch (error) {
-        console.error('Error polling YouTube chat:', error);
-      }
-    };
-
-    // Start polling every 30 seconds to avoid quota issues
-    pollingInterval = setInterval(pollChatMessages, 30000);
-    connector.youtubePollingInterval = pollingInterval;
-
-    // Initial poll
-    pollChatMessages();
-  }
+  // YouTube Live Chat smart polling implementation (kept for reference)
+  // This method has been replaced by gRPC streaming in startYouTubeGrpcConnector
 
   // Handle incoming message from platform connector
   async handleIncomingMessage(connector, messageData) {
