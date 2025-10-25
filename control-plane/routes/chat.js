@@ -8,90 +8,98 @@ const router = express.Router();
 const db = new Database();
 
 // Get chat connectors for a source
-router.get("/sources/:sourceId/connectors", authenticateToken, async (req, res) => {
-  const { sourceId } = req.params;
-  const userId = req.user.id;
+router.get(
+  "/sources/:sourceId/connectors",
+  authenticateToken,
+  async (req, res) => {
+    const { sourceId } = req.params;
+    const userId = req.user.id;
 
-  try {
-    // Verify source belongs to user
-    const sourceCheck = await db.query(
-      "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-      [sourceId, userId]
-    );
+    try {
+      // Verify source belongs to user
+      const sourceCheck = await db.query(
+        "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
+        [sourceId, userId]
+      );
 
-    if (sourceCheck.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
+      if (sourceCheck.length === 0) {
+        return res.status(404).json({ error: "Stream source not found" });
+      }
+
+      // Get chat connectors for this source
+      const connectors = await db.query(
+        "SELECT * FROM chat_connectors WHERE source_id = $1 ORDER BY created_at DESC",
+        [sourceId]
+      );
+
+      res.json({ connectors });
+    } catch (error) {
+      console.error("Get chat connectors error:", error);
+      res.status(500).json({ error: "Failed to fetch chat connectors" });
     }
-
-    // Get chat connectors for this source
-    const connectors = await db.query(
-      "SELECT * FROM chat_connectors WHERE source_id = $1 ORDER BY created_at DESC",
-      [sourceId]
-    );
-
-    res.json({ connectors });
-  } catch (error) {
-    console.error("Get chat connectors error:", error);
-    res.status(500).json({ error: "Failed to fetch chat connectors" });
   }
-});
+);
 
 // Create new chat connector
-router.post("/sources/:sourceId/connectors", authenticateToken, async (req, res) => {
-  const { sourceId } = req.params;
-  const { platform, connectorType, config } = req.body;
-  const userId = req.user.id;
+router.post(
+  "/sources/:sourceId/connectors",
+  authenticateToken,
+  async (req, res) => {
+    const { sourceId } = req.params;
+    const { platform, connectorType, config } = req.body;
+    const userId = req.user.id;
 
-  try {
-    // Verify source belongs to user
-    const sourceCheck = await db.query(
-      "SELECT id, name FROM stream_sources WHERE id = $1 AND user_id = $2",
-      [sourceId, userId]
-    );
+    try {
+      // Verify source belongs to user
+      const sourceCheck = await db.query(
+        "SELECT id, name FROM stream_sources WHERE id = $1 AND user_id = $2",
+        [sourceId, userId]
+      );
 
-    if (sourceCheck.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
+      if (sourceCheck.length === 0) {
+        return res.status(404).json({ error: "Stream source not found" });
+      }
 
-    // Validate input
-    if (!platform || !connectorType || !config) {
-      return res.status(400).json({
-        error: "Platform, connector type, and config are required"
+      // Validate input
+      if (!platform || !connectorType || !config) {
+        return res.status(400).json({
+          error: "Platform, connector type, and config are required",
+        });
+      }
+
+      // Check if connector already exists for this platform and source
+      const existingConnectors = await db.query(
+        "SELECT id FROM chat_connectors WHERE source_id = $1 AND platform = $2",
+        [sourceId, platform]
+      );
+
+      if (existingConnectors.length > 0) {
+        return res.status(400).json({
+          error: `A ${platform} chat connector already exists for this source`,
+        });
+      }
+
+      // Create the chat connector
+      const result = await db.run(
+        "INSERT INTO chat_connectors (source_id, platform, connector_type, config) VALUES ($1, $2, $3, $4) RETURNING *",
+        [sourceId, platform, connectorType, config]
+      );
+
+      // Track connector creation
+      posthogService.trackAuthEvent(userId, "chat_connector_created", {
+        source_id: parseInt(sourceId),
+        source_name: sourceCheck[0].name,
+        platform,
+        connector_type: connectorType,
       });
+
+      res.status(201).json({ connector: result });
+    } catch (error) {
+      console.error("Create chat connector error:", error);
+      res.status(500).json({ error: "Failed to create chat connector" });
     }
-
-    // Check if connector already exists for this platform and source
-    const existingConnectors = await db.query(
-      "SELECT id FROM chat_connectors WHERE source_id = $1 AND platform = $2",
-      [sourceId, platform]
-    );
-
-    if (existingConnectors.length > 0) {
-      return res.status(400).json({
-        error: `A ${platform} chat connector already exists for this source`
-      });
-    }
-
-    // Create the chat connector
-    const result = await db.run(
-      "INSERT INTO chat_connectors (source_id, platform, connector_type, config) VALUES ($1, $2, $3, $4) RETURNING *",
-      [sourceId, platform, connectorType, config]
-    );
-
-    // Track connector creation
-    posthogService.trackAuthEvent(userId, "chat_connector_created", {
-      source_id: parseInt(sourceId),
-      source_name: sourceCheck[0].name,
-      platform,
-      connector_type: connectorType,
-    });
-
-    res.status(201).json({ connector: result });
-  } catch (error) {
-    console.error("Create chat connector error:", error);
-    res.status(500).json({ error: "Failed to create chat connector" });
   }
-});
+);
 
 // Update chat connector
 router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
@@ -139,81 +147,86 @@ router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
 });
 
 // Delete chat connector
-router.delete("/connectors/:connectorId", authenticateToken, async (req, res) => {
-  const { connectorId } = req.params;
-  const userId = req.user.id;
+router.delete(
+  "/connectors/:connectorId",
+  authenticateToken,
+  async (req, res) => {
+    const { connectorId } = req.params;
+    const userId = req.user.id;
 
-  try {
-    // Verify connector belongs to user's source
-    const connectorCheck = await db.query(
-      `SELECT cc.*, ss.name as source_name
+    try {
+      // Verify connector belongs to user's source
+      const connectorCheck = await db.query(
+        `SELECT cc.*, ss.name as source_name
        FROM chat_connectors cc
        JOIN stream_sources ss ON cc.source_id = ss.id
        WHERE cc.id = $1 AND ss.user_id = $2`,
-      [connectorId, userId]
-    );
+        [connectorId, userId]
+      );
 
-    if (connectorCheck.length === 0) {
-      return res.status(404).json({ error: "Chat connector not found" });
+      if (connectorCheck.length === 0) {
+        return res.status(404).json({ error: "Chat connector not found" });
+      }
+
+      // Stop the active connector (if running)
+      const chatConnectorService = req.app.chatConnectorService;
+      if (chatConnectorService) {
+        await chatConnectorService.stopConnector(connectorId);
+      }
+
+      // Delete related chat messages first (to satisfy foreign key constraint)
+      await db.run("DELETE FROM chat_messages WHERE connector_id = $1", [
+        connectorId,
+      ]);
+
+      // Then delete the connector
+      const result = await db.run("DELETE FROM chat_connectors WHERE id = $1", [
+        connectorId,
+      ]);
+
+      if (!result.changes || result.changes === 0) {
+        return res.status(404).json({ error: "Chat connector not found" });
+      }
+
+      // Track connector deletion
+      posthogService.trackAuthEvent(userId, "chat_connector_deleted", {
+        connector_id: parseInt(connectorId),
+        source_id: connectorCheck[0].source_id,
+        platform: connectorCheck[0].platform,
+        source_name: connectorCheck[0].source_name,
+      });
+
+      res.json({ message: "Chat connector deleted successfully" });
+    } catch (error) {
+      console.error("Delete chat connector error:", error);
+      res.status(500).json({ error: "Failed to delete chat connector" });
     }
-
-    // Stop the active connector (if running)
-    const chatConnectorService = req.app.chatConnectorService;
-    if (chatConnectorService) {
-      await chatConnectorService.stopConnector(connectorId);
-    }
-
-    // Delete related chat messages first (to satisfy foreign key constraint)
-    await db.run(
-      "DELETE FROM chat_messages WHERE connector_id = $1",
-      [connectorId]
-    );
-
-    // Then delete the connector
-    const result = await db.run(
-      "DELETE FROM chat_connectors WHERE id = $1",
-      [connectorId]
-    );
-
-    if (!result.changes || result.changes === 0) {
-      return res.status(404).json({ error: "Chat connector not found" });
-    }
-
-    // Track connector deletion
-    posthogService.trackAuthEvent(userId, "chat_connector_deleted", {
-      connector_id: parseInt(connectorId),
-      source_id: connectorCheck[0].source_id,
-      platform: connectorCheck[0].platform,
-      source_name: connectorCheck[0].source_name,
-    });
-
-    res.json({ message: "Chat connector deleted successfully" });
-  } catch (error) {
-    console.error("Delete chat connector error:", error);
-    res.status(500).json({ error: "Failed to delete chat connector" });
   }
-});
+);
 
 // Get chat messages for a source
-router.get("/sources/:sourceId/messages", authenticateToken, async (req, res) => {
-  const { sourceId } = req.params;
-  const userId = req.user.id;
-  const { limit = 50, offset = 0 } = req.query;
+router.get(
+  "/sources/:sourceId/messages",
+  authenticateToken,
+  async (req, res) => {
+    const { sourceId } = req.params;
+    const userId = req.user.id;
+    const { limit = 50, offset = 0 } = req.query;
 
-  try {
-    // Verify source belongs to user
-    const sourceCheck = await db.query(
-      "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-      [sourceId, userId]
-    );
+    try {
+      // Verify source belongs to user
+      const sourceCheck = await db.query(
+        "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
+        [sourceId, userId]
+      );
 
-    if (sourceCheck.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
+      if (sourceCheck.length === 0) {
+        return res.status(404).json({ error: "Stream source not found" });
+      }
 
-    // Get chat messages for this source
-    const messages = await db.query(
-      `SELECT
+      // Get chat messages for this source
+      const messages = await db.query(
+        `SELECT
         cm.id,
         cm.source_id as "sourceId",
         cm.connector_id as "connectorId",
@@ -230,81 +243,115 @@ router.get("/sources/:sourceId/messages", authenticateToken, async (req, res) =>
       WHERE cm.source_id = $1
       ORDER BY cm.created_at DESC
       LIMIT $2 OFFSET $3`,
-      [sourceId, parseInt(limit), parseInt(offset)]
-    );
-
-    // Get total count
-    const countResult = await db.query(
-      "SELECT COUNT(*) as total FROM chat_messages WHERE source_id = $1",
-      [sourceId]
-    );
-
-    res.json({
-      messages: messages.reverse(), // Return in chronological order
-      total: parseInt(countResult[0].total),
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
-  } catch (error) {
-    console.error("Get chat messages error:", error);
-    res.status(500).json({ error: "Failed to fetch chat messages" });
-  }
-});
-
-// OAuth flow for chat connectors
-router.get("/connectors/:platform/oauth/start", authenticateToken, async (req, res) => {
-  const { platform } = req.params;
-  const { sourceId, redirectUrl } = req.query;
-  const userId = req.user.id;
-
-  try {
-    // Verify source belongs to user
-    if (sourceId) {
-      const sourceCheck = await db.query(
-        "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-        [sourceId, userId]
+        [sourceId, parseInt(limit), parseInt(offset)]
       );
 
-      if (sourceCheck.length === 0) {
-        return res.status(404).json({ error: "Stream source not found" });
-      }
+      // Get total count
+      const countResult = await db.query(
+        "SELECT COUNT(*) as total FROM chat_messages WHERE source_id = $1",
+        [sourceId]
+      );
+
+      res.json({
+        messages: messages.reverse(), // Return in chronological order
+        total: parseInt(countResult[0].total),
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+    } catch (error) {
+      console.error("Get chat messages error:", error);
+      res.status(500).json({ error: "Failed to fetch chat messages" });
     }
-
-    // Generate OAuth URL based on platform
-    let oauthUrl;
-    const state = Buffer.from(JSON.stringify({
-      userId,
-      sourceId,
-      redirectUrl: redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`
-    })).toString('base64');
-
-    switch (platform.toLowerCase()) {
-      case 'twitch':
-        oauthUrl = `https://id.twitch.tv/oauth2/authorize?` +
-          `client_id=${process.env.TWITCH_CLIENT_ID}` +
-          `&redirect_uri=${encodeURIComponent(process.env.TWITCH_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`)}` +
-          `&response_type=code` +
-          `&scope=${encodeURIComponent('chat:read chat:edit')}` +
-          `&state=${state}`;
-        break;
-      case 'youtube':
-        oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-          `client_id=${process.env.GOOGLE_CLIENT_ID}` +
-          `&redirect_uri=${encodeURIComponent(process.env.YOUTUBE_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`)}` +
-          `&response_type=code` +
-          `&scope=${encodeURIComponent('https://www.googleapis.com/auth/youtube.readonly')}` +
-          `&state=${state}`;
-        break;
-      default:
-        return res.status(400).json({ error: `Unsupported platform: ${platform}` });
-    }
-
-    res.json({ oauthUrl });
-  } catch (error) {
-    console.error("OAuth start error:", error);
-    res.status(500).json({ error: "Failed to start OAuth flow" });
   }
-});
+);
+
+// OAuth flow for chat connectors
+router.get(
+  "/connectors/:platform/oauth/start",
+  authenticateToken,
+  async (req, res) => {
+    const { platform } = req.params;
+    const { sourceId, redirectUrl } = req.query;
+    const userId = req.user.id;
+
+    try {
+      // Verify source belongs to user
+      if (sourceId) {
+        const sourceCheck = await db.query(
+          "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
+          [sourceId, userId]
+        );
+
+        if (sourceCheck.length === 0) {
+          return res.status(404).json({ error: "Stream source not found" });
+        }
+      }
+
+      // Generate OAuth URL based on platform
+      let oauthUrl;
+      const state = Buffer.from(
+        JSON.stringify({
+          userId,
+          sourceId,
+          redirectUrl:
+            redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`,
+        })
+      ).toString("base64");
+
+      switch (platform.toLowerCase()) {
+        case "twitch":
+          oauthUrl =
+            `https://id.twitch.tv/oauth2/authorize?` +
+            `client_id=${process.env.TWITCH_CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(
+              process.env.TWITCH_CHAT_CALLBACK_URL ||
+                `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`
+            )}` +
+            `&response_type=code` +
+            `&scope=${encodeURIComponent("chat:read chat:edit")}` +
+            `&state=${state}`;
+          break;
+        case "youtube":
+          oauthUrl =
+            `https://accounts.google.com/o/oauth2/v2/auth?` +
+            `client_id=${process.env.GOOGLE_CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(
+              process.env.YOUTUBE_CHAT_CALLBACK_URL ||
+                `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`
+            )}` +
+            `&response_type=code` +
+            `&scope=${encodeURIComponent(
+              "https://www.googleapis.com/auth/youtube.readonly"
+            )}` +
+            `&access_type=offline` +
+            `&prompt=consent` +
+            `&include_granted_scopes=true` +
+            `&state=${state}`;
+          break;
+        default:
+          return res
+            .status(400)
+            .json({ error: `Unsupported platform: ${platform}` });
+      }
+
+      console.log(
+        `OAuth start successful for ${platform}, redirecting to:`,
+        oauthUrl
+      );
+      console.log(`OAuth start request details:`, {
+        platform,
+        sourceId,
+        userId,
+        redirectUrl: redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`,
+        oauthUrlLength: oauthUrl.length
+      });
+      res.json({ oauthUrl });
+    } catch (error) {
+      console.error("OAuth start error:", error);
+      res.status(500).json({ error: "Failed to start OAuth flow" });
+    }
+  }
+);
 
 // OAuth callback endpoint (placeholder - will be implemented per platform)
 router.get("/connectors/:platform/oauth/callback", async (req, res) => {
@@ -313,15 +360,21 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
 
   try {
     if (error) {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=${encodeURIComponent(error)}`);
+      return res.redirect(
+        `${
+          process.env.FRONTEND_URL
+        }/dashboard/streaming?oauth_error=${encodeURIComponent(error)}`
+      );
     }
 
     if (!code || !state) {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=invalid_callback`);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=invalid_callback`
+      );
     }
 
     // Parse state
-    const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    const stateData = JSON.parse(Buffer.from(state, "base64").toString());
     const { userId, sourceId, redirectUrl } = stateData;
 
     // Exchange code for tokens (platform-specific implementation)
@@ -334,7 +387,7 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt,
       platformUserId: tokens.platformUserId,
-      platformUsername: tokens.platformUsername
+      platformUsername: tokens.platformUsername,
     };
 
     // Check if connector already exists
@@ -354,7 +407,7 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
       // Create new connector
       connector = await db.run(
         "INSERT INTO chat_connectors (source_id, platform, connector_type, config) VALUES ($1, $2, $3, $4) RETURNING *",
-        [sourceId, platform, 'oauth', connectorConfig]
+        [sourceId, platform, "oauth", connectorConfig]
       );
     }
 
@@ -369,16 +422,18 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
     res.redirect(`${redirectUrl}?oauth_success=true&platform=${platform}`);
   } catch (error) {
     console.error("OAuth callback error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=callback_failed`);
+    res.redirect(
+      `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=callback_failed`
+    );
   }
 });
 
 // Real OAuth token exchange implementation
 async function exchangeCodeForTokens(platform, code) {
   switch (platform.toLowerCase()) {
-    case 'twitch':
+    case "twitch":
       return await exchangeTwitchCodeForTokens(code);
-    case 'youtube':
+    case "youtube":
       return await exchangeYouTubeCodeForTokens(code);
     default:
       throw new Error(`Unsupported platform: ${platform}`);
@@ -388,24 +443,30 @@ async function exchangeCodeForTokens(platform, code) {
 // Twitch OAuth token exchange
 async function exchangeTwitchCodeForTokens(code) {
   try {
-    const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-      params: {
-        client_id: process.env.TWITCH_CLIENT_ID,
-        client_secret: process.env.TWITCH_CLIENT_SECRET,
-        code: code,
-        grant_type: 'authorization_code',
-        redirect_uri: process.env.TWITCH_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`
+    const response = await axios.post(
+      "https://id.twitch.tv/oauth2/token",
+      null,
+      {
+        params: {
+          client_id: process.env.TWITCH_CLIENT_ID,
+          client_secret: process.env.TWITCH_CLIENT_SECRET,
+          code: code,
+          grant_type: "authorization_code",
+          redirect_uri:
+            process.env.TWITCH_CHAT_CALLBACK_URL ||
+            `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`,
+        },
       }
-    });
+    );
 
     const { access_token, refresh_token, expires_in } = response.data;
 
     // Get user info with the access token
-    const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+    const userResponse = await axios.get("https://api.twitch.tv/helix/users", {
       headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Client-Id': process.env.TWITCH_CLIENT_ID
-      }
+        Authorization: `Bearer ${access_token}`,
+        "Client-Id": process.env.TWITCH_CLIENT_ID,
+      },
     });
 
     const userData = userResponse.data.data[0];
@@ -416,43 +477,60 @@ async function exchangeTwitchCodeForTokens(code) {
       expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
       platformUserId: userData.id,
       platformUsername: userData.login,
-      displayName: userData.display_name
+      displayName: userData.display_name,
     };
   } catch (error) {
-    console.error('Twitch token exchange error:', error.response?.data || error.message);
-    throw new Error('Failed to exchange Twitch authorization code');
+    console.error(
+      "Twitch token exchange error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to exchange Twitch authorization code");
   }
 }
 
 // YouTube OAuth token exchange
 async function exchangeYouTubeCodeForTokens(code) {
   try {
-    const redirectUri = process.env.YOUTUBE_CHAT_CALLBACK_URL || `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`;
-    console.log('YouTube OAuth redirect URI:', redirectUri);
-    console.log('YouTube OAuth client ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-    console.log('YouTube OAuth client secret:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+    const redirectUri =
+      process.env.YOUTUBE_CHAT_CALLBACK_URL ||
+      `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`;
+    console.log("YouTube OAuth redirect URI:", redirectUri);
+    console.log(
+      "YouTube OAuth client ID:",
+      process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET"
+    );
+    console.log(
+      "YouTube OAuth client secret:",
+      process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET"
+    );
 
-    const response = await axios.post('https://oauth2.googleapis.com/token',
+    const response = await axios.post(
+      "https://oauth2.googleapis.com/token",
       `client_id=${encodeURIComponent(process.env.GOOGLE_CLIENT_ID)}&` +
-      `client_secret=${encodeURIComponent(process.env.GOOGLE_CLIENT_SECRET)}&` +
-      `code=${encodeURIComponent(code)}&` +
-      `grant_type=authorization_code&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}`,
+        `client_secret=${encodeURIComponent(
+          process.env.GOOGLE_CLIENT_SECRET
+        )}&` +
+        `code=${encodeURIComponent(code)}&` +
+        `grant_type=authorization_code&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}`,
       {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }
     );
 
     const { access_token, refresh_token, expires_in } = response.data;
 
     // Get user info with the access token
-    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: {
-        'Authorization': `Bearer ${access_token}`
+    const userResponse = await axios.get(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
       }
-    });
+    );
 
     const userData = userResponse.data;
 
@@ -461,13 +539,16 @@ async function exchangeYouTubeCodeForTokens(code) {
       refreshToken: refresh_token,
       expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
       platformUserId: userData.id,
-      platformUsername: userData.email.split('@')[0], // Use email prefix as username
+      platformUsername: userData.email.split("@")[0], // Use email prefix as username
       displayName: userData.name,
-      email: userData.email
+      email: userData.email,
     };
   } catch (error) {
-    console.error('YouTube token exchange error:', error.response?.data || error.message);
-    throw new Error('Failed to exchange YouTube authorization code');
+    console.error(
+      "YouTube token exchange error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to exchange YouTube authorization code");
   }
 }
 

@@ -74,13 +74,16 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   // Mutation for starting OAuth flow
   const startOAuthMutation = useMutation({
     mutationFn: async (platform) => {
+      console.log("Starting OAuth for platform:", platform, "sourceId:", sourceId);
       const response = await apiService.get(`/chat/connectors/${platform}/oauth/start`, {
         sourceId,
         redirectUrl: `${window.location.origin}/dashboard/streaming`,
       });
+      console.log("OAuth start response:", response);
       return response;
     },
     onSuccess: (data) => {
+      console.log("OAuth start success, redirecting to:", data.oauthUrl);
       // Redirect to OAuth URL
       window.location.href = data.oauthUrl;
     },
