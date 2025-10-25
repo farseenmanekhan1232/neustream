@@ -4,8 +4,14 @@ const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 class ApiService {
   // Authenticated GET request
-  async get(endpoint, options = {}) {
-    return this.request(endpoint, { method: 'GET', ...options });
+  async get(endpoint, params = {}, options = {}) {
+    // Build URL with query parameters
+    let url = endpoint;
+    if (params && Object.keys(params).length > 0) {
+      const queryParams = new URLSearchParams(params);
+      url += `?${queryParams.toString()}`;
+    }
+    return this.request(url, { method: 'GET', ...options });
   }
 
   // Authenticated POST request
