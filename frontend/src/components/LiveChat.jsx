@@ -16,6 +16,9 @@ import { MessageCircle, Send, Smile, Users } from "lucide-react";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://api.neustream.app";
+
 function LiveChat({ sourceId }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -29,7 +32,9 @@ function LiveChat({ sourceId }) {
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
     queryKey: ["chatMessages", sourceId],
     queryFn: async () => {
-      const response = await apiService.get(`/chat/sources/${sourceId}/messages`);
+      const response = await apiService.get(
+        `/chat/sources/${sourceId}/messages`
+      );
       return response;
     },
     enabled: !!sourceId,
@@ -40,7 +45,7 @@ function LiveChat({ sourceId }) {
     if (!sourceId || !user) return;
 
     // Initialize socket connection
-    const socket = io(process.env.VITE_BACKEND_URL || "http://localhost:3000", {
+    const socket = io(API_BASE_URL || "https://api.neustream.app", {
       auth: {
         token: JSON.stringify({
           id: user.id,
@@ -225,7 +230,9 @@ function LiveChat({ sourceId }) {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm font-medium">{message.authorName}</span>
+                    <span className="text-sm font-medium">
+                      {message.authorName}
+                    </span>
                     {message.platform && (
                       <Badge
                         variant="outline"
@@ -258,7 +265,10 @@ function LiveChat({ sourceId }) {
 
         {/* Chat Input */}
         <div className="p-4 border-t">
-          <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+          <form
+            onSubmit={handleSendMessage}
+            className="flex items-center space-x-2"
+          >
             <Input
               placeholder="Type your message..."
               value={newMessage}
