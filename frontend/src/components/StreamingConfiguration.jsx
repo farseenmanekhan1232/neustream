@@ -56,6 +56,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
+import ChatConnectorSetup from "./ChatConnectorSetup";
 
 // Platform configuration
 const platformConfig = {
@@ -861,6 +862,14 @@ function StreamingConfiguration() {
           )}
         </CardContent>
       </Card>
+
+      {/* Chat Connectors Section */}
+      {isUsingSources && currentSource && (
+        <ChatConnectorSetup
+          sourceId={currentSource.id}
+          sourceName={currentSource.name}
+        />
+      )}
 
       {/* Add Source Dialog */}
       <Dialog open={showAddSourceDialog} onOpenChange={setShowAddSourceDialog}>

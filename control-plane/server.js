@@ -12,6 +12,7 @@ const sourceRoutes = require("./routes/sources");
 const adminRoutes = require("./routes/admin");
 const subscriptionRoutes = require("./routes/subscriptions");
 const paymentRoutes = require("./routes/payments");
+const chatRoutes = require("./routes/chat");
 const posthogService = require("./services/posthog");
 
 const app = express();
@@ -68,6 +69,7 @@ app.use("/api/sources", sourceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {
@@ -98,6 +100,16 @@ app.get("/health", (req, res) => {
 const server = app.listen(PORT, () => {
   console.log(`Control plane server running on port ${PORT}`);
 });
+
+// Initialize WebSocket server
+const WebSocketServer = require('./lib/websocket');
+const wsServer = new WebSocketServer(server);
+console.log('WebSocket server initialized');
+
+// Initialize Chat Connector Service
+const ChatConnectorService = require('./services/chatConnectorService');
+const chatConnectorService = new ChatConnectorService(wsServer);
+console.log('Chat connector service initialized');
 
 // Graceful shutdown
 const gracefulShutdown = async () => {

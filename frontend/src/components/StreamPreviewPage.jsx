@@ -28,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import StreamPreview from "./StreamPreview";
+import LiveChat from "./LiveChat";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
@@ -306,77 +307,9 @@ function StreamPreviewPage() {
 
         {/* Live Chat Section */}
         <div className="lg:col-span-1">
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-                  Live Chat
-                </span>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </CardTitle>
-              <CardDescription>
-                Engage with your audience in real-time
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="flex-1 flex flex-col p-0">
-              {/* Chat Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {/* "Coming Soon" Overlay */}
-                <div className="flex items-center justify-center h-full min-h-[400px]">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageCircle className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Live Chat Coming Soon
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      We're working on a real-time chat system to help you
-                      connect with your audience.
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                        <Crown className="h-4 w-4 text-primary" />
-                        <span>Real-time messaging</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span>User moderation tools</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                        <Smile className="h-4 w-4 text-primary" />
-                        <span>Emojis & reactions</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chat Input (Disabled) */}
-              <div className="p-4 border-t">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    placeholder="Type your message... (Coming soon)"
-                    disabled
-                    className="flex-1"
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                  />
-                  <Button disabled size="icon">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                  <Button disabled variant="ghost" size="icon">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Chat features will be available in a future update
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {selectedSource && (
+            <LiveChat sourceId={selectedSource.id} />
+          )}
         </div>
       </div>
 
