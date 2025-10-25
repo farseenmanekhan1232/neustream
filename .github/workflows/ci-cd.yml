@@ -117,9 +117,6 @@ jobs:
 
             cd /opt/neustream
 
-            echo "Running Migrations"
-            node scripts/run-migrations.js
-
             pm2 start server.js --name neustream-control-plane --env production
 
             # Wait for service to be ready
