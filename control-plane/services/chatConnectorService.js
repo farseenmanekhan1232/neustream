@@ -1,7 +1,7 @@
 const Database = require('../lib/database');
 const WebSocketServer = require('../lib/websocket');
 const axios = require('axios');
-const { TwitchJs } = require('twitch-js');
+const tmi = require('tmi.js');
 const { google } = require('googleapis');
 
 class ChatConnectorService {
@@ -70,7 +70,7 @@ class ChatConnectorService {
         switch (platform) {
           case 'twitch':
             if (connector.twitchClient) {
-              await connector.twitchClient.chat.disconnect();
+              connector.twitchClient.disconnect();
               connector.twitchClient = null;
               console.log(`Disconnected from Twitch IRC`);
             }
@@ -95,38 +95,76 @@ class ChatConnectorService {
   // Platform-specific connector implementations
   async startTwitchConnector(connector) {
     const { config } = connector;
-    console.log(`Starting Twitch connector for user: ${config.platformUsername}`);
+
+    if (!config || !config.accessToken) {
+      console.error('Twitch connector config or access token missing');
+      await this.handleIncomingMessage(connector, {
+        authorName: 'System',
+        authorId: 'system',
+        messageText: 'Twitch connector configuration is incomplete. Please reconnect your Twitch account.',
+        platform: 'twitch',
+        messageType: 'error',
+        metadata: { error: true, config: !!config, accessToken: !!config?.accessToken }
+      });
+      return;
+    }
+
+    console.log(`Starting Twitch connector for user: ${config.platformUsername || 'Unknown'}`);
 
     try {
-      // Initialize Twitch.js client
-      const twitchClient = new TwitchJs({
-        username: config.platformUsername,
-        token: config.accessToken,
-        log: { level: 'warn' } // Reduce log noise
+      // Initialize tmi.js client
+      const options = {
+        connection: {
+          secure: true,
+          reconnect: true,
+          maxReconnectAttempts: 5,
+          reconnectDecay: 1.5,
+          reconnectInterval: 1000,
+        },
+        identity: {
+          username: config.platformUsername,
+          password: `oauth:${config.accessToken}`
+        },
+        channels: [config.platformUsername]
+      };
+
+      const client = new tmi.client(options);
+
+      // Connect to Twitch
+      client.connect().catch(console.error);
+      console.log(`Connecting to Twitch IRC as ${config.platformUsername}`);
+
+      // Listen for connection events
+      client.on('connected', (addr, port) => {
+        console.log(`Connected to Twitch IRC at ${addr}:${port}`);
       });
 
-      // Connect to IRC
-      await twitchClient.chat.connect();
-      console.log(`Connected to Twitch IRC as ${config.platformUsername}`);
-
-      // Join the user's channel
-      await twitchClient.chat.join(config.platformUsername);
-      console.log(`Joined Twitch channel #${config.platformUsername}`);
+      client.on('join', (channel, username, self) => {
+        if (!self) {
+          console.log(`${username} joined ${channel}`);
+        } else {
+          console.log(`Joined Twitch channel ${channel}`);
+        }
+      });
 
       // Listen for chat messages
-      twitchClient.chat.on('PRIVMSG', async (message) => {
+      client.on('message', async (channel, tags, message, self) => {
+        if (self) return; // Ignore messages from the bot itself
+
         try {
           const messageData = {
-            authorName: message.displayName || message.username,
-            authorId: message.userId,
-            messageText: message.message,
+            authorName: tags['display-name'] || tags.username,
+            authorId: tags['user-id'],
+            messageText: message,
             platform: 'twitch',
             messageType: 'text',
             metadata: {
-              color: message.color,
-              emotes: message.emotes,
-              badges: message.badges,
-              timestamp: message.timestamp
+              color: tags.color,
+              emotes: tags.emotes,
+              badges: tags.badges,
+              mod: tags.mod,
+              subscriber: tags.subscriber,
+              timestamp: tags['tmi-sent-ts']
             }
           };
 
@@ -137,7 +175,7 @@ class ChatConnectorService {
       });
 
       // Store the client for cleanup
-      connector.twitchClient = twitchClient;
+      connector.twitchClient = client;
 
       // Send welcome message
       await this.handleIncomingMessage(connector, {
@@ -166,7 +204,22 @@ class ChatConnectorService {
 
   async startYouTubeConnector(connector) {
     const { config } = connector;
-    console.log(`Starting YouTube connector for user: ${config.displayName}`);
+
+    if (!config || !config.accessToken) {
+      console.error('YouTube connector config or access token missing');
+      await this.handleIncomingMessage(connector, {
+        authorName: 'System',
+        authorId: 'system',
+        messageText: 'YouTube connector configuration is incomplete. Please reconnect your YouTube account.',
+        platform: 'youtube',
+        messageType: 'error',
+        metadata: { error: true, config: !!config, accessToken: !!config?.accessToken }
+      });
+      return;
+    }
+
+    const displayName = config.displayName || config.platformUsername || 'YouTube User';
+    console.log(`Starting YouTube connector for user: ${displayName}`);
 
     try {
       // Initialize YouTube API client
@@ -182,7 +235,7 @@ class ChatConnectorService {
       await this.handleIncomingMessage(connector, {
         authorName: 'System',
         authorId: 'system',
-        messageText: `Connected to ${config.displayName}'s YouTube chat`,
+        messageText: `Connected to ${displayName}'s YouTube chat`,
         platform: 'youtube',
         messageType: 'system',
         metadata: { connection: true }
