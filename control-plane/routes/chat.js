@@ -520,28 +520,29 @@ async function exchangeYouTubeCodeForTokens(code) {
       }
     );
 
+    console.log("YouTube token exchange response:", {
+      status: response.status,
+      hasAccessToken: !!response.data.access_token,
+      hasRefreshToken: !!response.data.refresh_token,
+      expiresIn: response.data.expires_in
+    });
+
     const { access_token, refresh_token, expires_in } = response.data;
 
-    // Get user info with the access token
-    const userResponse = await axios.get(
-      "https://www.googleapis.com/oauth2/v2/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
+    // For YouTube Live Chat, we don't need user info - we just need the access token
+    // The YouTube Live Chat API will provide the channel info when we connect
+    console.log("YouTube token exchange successful, skipping userinfo call for Live Chat API");
 
-    const userData = userResponse.data;
+    // Generate a temporary username for the connector
+    const tempUsername = `youtube_chat_${Date.now()}`;
 
     return {
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
-      platformUserId: userData.id,
-      platformUsername: userData.email.split("@")[0], // Use email prefix as username
-      displayName: userData.name,
-      email: userData.email,
+      platformUserId: tempUsername, // Will be updated when we connect to YouTube Live Chat
+      platformUsername: tempUsername,
+      displayName: "YouTube Live Chat",
     };
   } catch (error) {
     console.error(
