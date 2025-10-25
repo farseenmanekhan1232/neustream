@@ -163,7 +163,13 @@ router.delete("/connectors/:connectorId", authenticateToken, async (req, res) =>
       await chatConnectorService.stopConnector(connectorId);
     }
 
-    // Delete the connector
+    // Delete related chat messages first (to satisfy foreign key constraint)
+    await db.run(
+      "DELETE FROM chat_messages WHERE connector_id = $1",
+      [connectorId]
+    );
+
+    // Then delete the connector
     const result = await db.run(
       "DELETE FROM chat_connectors WHERE id = $1",
       [connectorId]
