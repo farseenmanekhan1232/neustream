@@ -167,6 +167,26 @@ function StreamingConfiguration() {
     }
   }, [searchParams, sources]);
 
+  // Handle OAuth success redirect
+  useEffect(() => {
+    const oauthSuccess = searchParams.get("oauth_success");
+    const platform = searchParams.get("platform");
+
+    if (oauthSuccess === "true" && platform && selectedSourceId) {
+      // Show success message
+      toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} account connected successfully!`);
+
+      // Clear the OAuth parameters from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("oauth_success");
+      newSearchParams.delete("platform");
+      window.history.replaceState({}, "", `${window.location.pathname}?${newSearchParams.toString()}`);
+
+      // Refresh the chat connectors query
+      queryClient.invalidateQueries(["chatConnectors", selectedSourceId]);
+    }
+  }, [searchParams, selectedSourceId, queryClient]);
+
   // Create source mutation
   const createSourceMutation = useMutation({
     mutationFn: async (data) => {
