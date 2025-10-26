@@ -1129,8 +1129,7 @@ router.put("/subscription-plans/:id", async (req, res) => {
         max_sources = $5,
         max_destinations = $6,
         max_streaming_hours_monthly = $7,
-        features = $8,
-        updated_at = NOW()
+        features = $8
       WHERE id = $9 RETURNING *`,
       [
         name,
