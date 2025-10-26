@@ -136,15 +136,15 @@ function LiveChat({ sourceId }) {
 
   if (messagesLoading) {
     return (
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader className="pb-3">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0">
           <CardTitle className="flex items-center">
             <MessageCircle className="h-5 w-5 mr-2 text-primary" />
             Live Chat
           </CardTitle>
           <CardDescription>Loading chat messages...</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex space-x-3 animate-pulse">
@@ -162,8 +162,8 @@ function LiveChat({ sourceId }) {
   }
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center">
             <MessageCircle className="h-5 w-5 mr-2 text-primary" />
@@ -187,9 +187,9 @@ function LiveChat({ sourceId }) {
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">

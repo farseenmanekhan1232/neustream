@@ -138,7 +138,7 @@ function StreamPreviewPage() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6  mx-auto">
+    <div className="w-full px-6 py-6 space-y-6 mx-auto min-h-0 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -244,10 +244,10 @@ function StreamPreviewPage() {
       )}
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 items-start flex-1 min-h-0">
         {/* Stream Preview - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
@@ -268,7 +268,7 @@ function StreamPreviewPage() {
                 High-quality preview of your live stream
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-4">
               <StreamPreview
                 streamKey={selectedSource.stream_key}
                 isActive={selectedSource.is_active}
@@ -306,7 +306,7 @@ function StreamPreviewPage() {
         </div>
 
         {/* Live Chat Section */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 self-stretch h-full">
           {selectedSource && <LiveChat sourceId={selectedSource.id} />}
         </div>
       </div>
