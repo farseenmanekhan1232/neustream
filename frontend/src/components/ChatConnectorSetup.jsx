@@ -121,16 +121,16 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
 
   const getPlatformStatus = (platformId) => {
     const connector = connectors.find((c) => c.platform === platformId);
-    if (connector) {
-      return {
-        status: "connected",
-        connector,
-      };
-    }
     const platform = PLATFORMS.find((p) => p.id === platformId);
+
+    if (connector) {
+      return { status: "connected", connector, platform };
+    }
+
     return {
       status: platform?.status || "unavailable",
       connector: null,
+      platform
     };
   };
 
@@ -157,117 +157,58 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Chat Connectors</span>
-          <Badge variant="outline">
-            {connectors.length} / {PLATFORMS.filter(p => p.status === "available").length} Connected
-          </Badge>
-        </CardTitle>
+        <CardTitle>Chat Connectors</CardTitle>
         <CardDescription>
           Connect your streaming platform chats to aggregate messages in your stream preview
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Current Connections */}
-        {connectors.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Active Connections</h4>
-            {connectors.map((connector) => (
-              <div
-                key={connector.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-lg">
-                      {PLATFORMS.find((p) => p.id === connector.platform)?.icon || "🔗"}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="font-medium capitalize">
-                      {connector.platform}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {connector.is_active ? (
-                        <Badge variant="default" className="bg-green-500 text-xs">
-                          Connected
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          Disabled
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDisconnectPlatform(connector.id)}
-                  disabled={deleteConnectorMutation.isLoading}
-                >
-                  Disconnect
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Available Platforms */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Available Platforms</h4>
+        {/* Platform Grid */}
+        <div className="grid gap-3">
           {PLATFORMS.map((platform) => {
             const { status, connector } = getPlatformStatus(platform.id);
+            const isConnected = status === "connected";
+            const isAvailable = status === "available";
+            const isComingSoon = status === "coming-soon";
 
             return (
               <div
                 key={platform.id}
-                className={`p-4 border rounded-lg ${
-                  status === "connected"
+                className={`p-4 border rounded-lg transition-colors ${
+                  isConnected
                     ? "bg-green-50 border-green-200"
-                    : status === "coming-soon"
+                    : isComingSoon
                     ? "bg-muted/50 border-muted"
-                    : "bg-background border-border"
+                    : "bg-background border-border hover:border-primary/50"
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <span className="text-2xl">{platform.icon}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <span className="text-xl">{platform.icon}</span>
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex items-center space-x-2">
                         <h4 className="font-semibold">{platform.name}</h4>
-                        {status === "connected" && (
+                        {isConnected && (
                           <Badge variant="default" className="bg-green-500 text-xs">
                             Connected
                           </Badge>
                         )}
-                        {status === "coming-soon" && (
+                        {isComingSoon && (
                           <Badge variant="secondary" className="text-xs">
                             Coming Soon
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-sm text-muted-foreground">
                         {platform.description}
                       </p>
-                      <div className="space-y-1">
-                        {platform.features.map((feature, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-2 text-xs text-muted-foreground"
-                          >
-                            <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                            <span>{feature}</span>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col space-y-2">
-                    {status === "available" && !connector && (
+                  <div className="flex items-center space-x-2">
+                    {isAvailable && !isConnected && (
                       <Button
                         size="sm"
                         onClick={() => handleConnectPlatform(platform.id)}
@@ -276,7 +217,7 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
                         {isConnecting ? "Connecting..." : "Connect"}
                       </Button>
                     )}
-                    {status === "connected" && connector && (
+                    {isConnected && connector && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -286,7 +227,7 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
                         Disconnect
                       </Button>
                     )}
-                    {status === "coming-soon" && (
+                    {isComingSoon && (
                       <Button variant="outline" size="sm" disabled>
                         Coming Soon
                       </Button>
@@ -301,9 +242,7 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
         {/* Help Text */}
         <div className="text-xs text-muted-foreground border-t pt-4">
           <p>
-            <strong>How it works:</strong> Connect your streaming platform accounts to aggregate
-            all chat messages in your stream preview. Messages will appear in real-time as they
-            come in from each platform.
+            Connect your streaming platform accounts to aggregate chat messages in your stream preview.
           </p>
         </div>
       </CardContent>

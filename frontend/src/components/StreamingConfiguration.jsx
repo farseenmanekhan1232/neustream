@@ -57,6 +57,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
 import ChatConnectorSetup from "./ChatConnectorSetup";
+import StreamConfig from "./StreamConfig";
+import PlatformSelector from "./PlatformSelector";
+import DestinationConfig from "./DestinationConfig";
 
 // Platform configuration
 const platformConfig = {
@@ -107,8 +110,8 @@ function StreamingConfiguration() {
   const [showManageSourceDialog, setShowManageSourceDialog] = useState(false);
   const [showAddDestinationDialog, setShowAddDestinationDialog] =
     useState(false);
+  const [addDestinationStep, setAddDestinationStep] = useState(1); // Step 1: Platform, Step 2: Configuration
   const [copiedField, setCopiedField] = useState(null);
-  const [showStreamKey, setShowStreamKey] = useState(false);
 
   // Form state
   const [sourceFormData, setSourceFormData] = useState({
@@ -386,6 +389,18 @@ function StreamingConfiguration() {
     }
   };
 
+  // Handle copy from StreamConfig component
+  const handleStreamConfigCopy = (field, text) => {
+    trackUIInteraction(
+      `copy_${field.toLowerCase().replace(/\s+/g, "_")}`,
+      "click",
+      {
+        field_type: field,
+        content_length: text.length,
+      },
+    );
+  };
+
   // Handle platform selection change
   const handlePlatformChange = (platform) => {
     const config = platformConfig[platform];
@@ -396,6 +411,29 @@ function StreamingConfiguration() {
     });
     trackUIInteraction("platform_selection", "change", {
       selected_platform: platform,
+    });
+  };
+
+  // Handle step navigation for Add Destination dialog
+  const handleNextStep = () => {
+    if (addDestinationStep === 1) {
+      setAddDestinationStep(2);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (addDestinationStep === 2) {
+      setAddDestinationStep(1);
+    }
+  };
+
+  const handleCloseAddDestinationDialog = () => {
+    setShowAddDestinationDialog(false);
+    setAddDestinationStep(1);
+    setDestinationFormData({
+      platform: "youtube",
+      rtmpUrl: platformConfig.youtube.rtmpUrl,
+      streamKey: "",
     });
   };
 
@@ -625,72 +663,12 @@ function StreamingConfiguration() {
                   </div>
                 </div>
 
-                {/* Stream Key Section */}
+                {/* Stream Configuration */}
                 <div className="border-t pt-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Stream Configuration
-                    </Label>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                        <span className="text-sm font-medium">RTMP URL:</span>
-                        <code className="flex-1 text-sm">
-                          rtmp://stream.neustream.app/live
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            copyToClipboard(
-                              "rtmp://stream.neustream.app/live",
-                              "RTMP URL",
-                            )
-                          }
-                        >
-                          {copiedField === "RTMP URL" ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                        <span className="text-sm font-medium">Stream Key:</span>
-                        <code className="flex-1 text-sm">
-                          {showStreamKey
-                            ? currentSource.stream_key
-                            : "•".repeat(24)}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowStreamKey(!showStreamKey)}
-                        >
-                          {showStreamKey ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            copyToClipboard(
-                              currentSource.stream_key,
-                              "Stream Key",
-                            )
-                          }
-                        >
-                          {copiedField === "Stream Key" ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <StreamConfig
+                    streamKey={currentSource.stream_key}
+                    onCopy={handleStreamConfigCopy}
+                  />
                 </div>
               </div>
             ) : (
@@ -791,7 +769,7 @@ function StreamingConfiguration() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {destinations.map((destination) => {
                 const config =
                   platformConfig[destination.platform] || platformConfig.custom;
@@ -802,39 +780,37 @@ function StreamingConfiguration() {
                     key={destination.id}
                     className="group hover:border-primary/50 transition-colors"
                   >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                       <div className="flex items-center space-x-3">
                         <div
                           className={`p-2 rounded-lg ${config.color} text-white`}
                         >
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-4 w-4" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-base">
                             {config.name}
                           </CardTitle>
-                          <CardDescription>
-                            {config.description}
-                          </CardDescription>
                         </div>
                       </div>
                       <Badge
                         variant={
                           destination.is_active ? "default" : "secondary"
                         }
+                        className="text-xs"
                       >
                         {destination.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">
                           RTMP URL
                         </label>
                         <div className="flex items-center space-x-2">
-                          <div className="flex-1 p-2 bg-muted rounded-md font-mono text-xs border truncate">
+                          <code className="flex-1 text-xs font-mono bg-muted px-2 py-1 rounded truncate">
                             {destination.rtmp_url}
-                          </div>
+                          </code>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -844,18 +820,31 @@ function StreamingConfiguration() {
                                 `${config.name} RTMP URL`,
                               )
                             }
-                            className="h-8 w-8"
+                            className="h-6 w-6"
                           >
                             {copiedField === `${config.name} RTMP URL` ? (
-                              <Check className="h-4 w-4 text-green-500" />
+                              <Check className="h-3 w-3 text-green-500" />
                             ) : (
-                              <Copy className="h-4 w-4" />
+                              <Copy className="h-3 w-3" />
                             )}
                           </Button>
                         </div>
                       </div>
 
-                      <div className="flex justify-between">
+                      <div className="flex justify-end space-x-2">
+                        {config.helpUrl && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a
+                              href={config.helpUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Help
+                            </a>
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -863,24 +852,11 @@ function StreamingConfiguration() {
                             deleteDestinationMutation.mutate(destination.id)
                           }
                           disabled={deleteDestinationMutation.isPending}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive text-xs"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-3 w-3 mr-1" />
                           Remove
                         </Button>
-                        {config.helpUrl && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a
-                              href={config.helpUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Help
-                            </a>
-                          </Button>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -1078,54 +1054,17 @@ function StreamingConfiguration() {
                 </Badge>
               </div>
 
-              {/* Stream Key Section */}
+              {/* Stream Configuration */}
               <div className="border-t pt-4">
-                <Label className="text-sm font-medium">
-                  Stream Configuration
-                </Label>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                    <span className="text-sm font-medium">RTMP URL:</span>
-                    <code className="flex-1 text-sm">
-                      rtmp://stream.neustream.app/live
-                    </code>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        copyToClipboard(
-                          "rtmp://stream.neustream.app/live",
-                          "RTMP URL",
-                        )
-                      }
-                    >
-                      {copiedField === "RTMP URL" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                    <span className="text-sm font-medium">Stream Key:</span>
-                    <code className="flex-1 text-sm">
-                      {currentSource.stream_key}
-                    </code>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        copyToClipboard(currentSource.stream_key, "Stream Key")
-                      }
-                    >
-                      {copiedField === "Stream Key" ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                <StreamConfig
+                  streamKey={currentSource.stream_key}
+                  showRegenerateButton={true}
+                  onRegenerate={() => regenerateKeyMutation.mutate(selectedSourceId)}
+                  isRegenerating={regenerateKeyMutation.isPending}
+                  canRegenerate={!currentSource.is_active}
+                  size="compact"
+                  onCopy={handleStreamConfigCopy}
+                />
               </div>
 
               {/* Danger Zone */}
@@ -1185,173 +1124,63 @@ function StreamingConfiguration() {
       {/* Add Destination Dialog */}
       <Dialog
         open={showAddDestinationDialog}
-        onOpenChange={setShowAddDestinationDialog}
+        onOpenChange={handleCloseAddDestinationDialog}
       >
-        <DialogContent className="max-w-4xl">
+        <DialogContent className={addDestinationStep === 1 ? "max-w-2xl" : "max-w-md"}>
           <DialogHeader>
             <DialogTitle>Add New Destination</DialogTitle>
             <DialogDescription>
-              Connect a new streaming platform to broadcast "
-              {currentSource?.name || "your stream"}" to multiple platforms
+              {addDestinationStep === 1
+                ? `Select a platform to broadcast "${currentSource?.name || "your stream"}"`
+                : `Configure your ${platformConfig[destinationFormData.platform]?.name} destination`
+              }
             </DialogDescription>
           </DialogHeader>
+
           <form onSubmit={handleAddDestination} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Platform Selection */}
-              <div className="space-y-4">
-                <Label>Select Platform</Label>
-                <div className="grid lg:grid-cols-2 gap-3">
-                  {Object.entries(platformConfig).map(([key, config]) => {
-                    const Icon = config.icon;
-                    const isSelected = destinationFormData.platform === key;
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => handlePlatformChange(key)}
-                        className={`relative p-4 border rounded-lg text-left transition-all group ${
-                          isSelected
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                            : "border-border hover:border-primary/50 hover:bg-accent/50"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`p-2 rounded-lg ${config.color} text-white group-hover:scale-105 transition-transform`}
-                          >
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{config.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {config.description}
-                            </div>
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <div className="absolute text-sm font-medium right-1 top-1 text-green-700">
-                            ✓ Selected
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Configuration */}
-              <div className="space-y-4">
-                <Label>Configuration</Label>
-
-                {/* RTMP URL */}
-                <div className="space-y-2">
-                  <Label htmlFor="rtmp-url" className="text-sm">
-                    RTMP URL
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="rtmp-url"
-                      type="text"
-                      value={destinationFormData.rtmpUrl}
-                      onChange={(e) =>
-                        setDestinationFormData({
-                          ...destinationFormData,
-                          rtmpUrl: e.target.value,
-                        })
-                      }
-                      placeholder="rtmp://..."
-                      required
-                      className="font-mono text-sm pr-10"
-                      disabled={destinationFormData.platform !== "custom"}
-                    />
-                    {destinationFormData.rtmpUrl && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          copyToClipboard(
-                            destinationFormData.rtmpUrl,
-                            "RTMP URL",
-                          )
-                        }
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  {destinationFormData.platform !== "custom" && (
-                    <p className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full inline-block">
-                      Auto-filled for{" "}
-                      {platformConfig[destinationFormData.platform].name}
-                    </p>
-                  )}
-                </div>
-
-                {/* Stream Key */}
-                <div className="space-y-2">
-                  <Label htmlFor="stream-key" className="text-sm">
-                    Stream Key
-                  </Label>
-                  <Input
-                    id="stream-key"
-                    type="text"
-                    value={destinationFormData.streamKey}
-                    onChange={(e) =>
-                      setDestinationFormData({
-                        ...destinationFormData,
-                        streamKey: e.target.value,
-                      })
-                    }
-                    placeholder="Paste your stream key here"
-                    required
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Get this from your{" "}
-                    {platformConfig[destinationFormData.platform].name}{" "}
-                    streaming dashboard
-                    {platformConfig[destinationFormData.platform].helpUrl && (
-                      <a
-                        href={
-                          platformConfig[destinationFormData.platform].helpUrl
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline ml-1"
-                      >
-                        <ExternalLink className="h-3 w-3 inline mr-1" />
-                        Learn how
-                      </a>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
+            {addDestinationStep === 1 ? (
+              <PlatformSelector
+                platformConfig={platformConfig}
+                selectedPlatform={destinationFormData.platform}
+                onPlatformChange={handlePlatformChange}
+              />
+            ) : (
+              <DestinationConfig
+                platform={destinationFormData.platform}
+                rtmpUrl={destinationFormData.rtmpUrl}
+                streamKey={destinationFormData.streamKey}
+                onRtmpUrlChange={(value) => setDestinationFormData({...destinationFormData, rtmpUrl: value})}
+                onStreamKeyChange={(value) => setDestinationFormData({...destinationFormData, streamKey: value})}
+                onCopy={copyToClipboard}
+                platformConfig={platformConfig}
+                copiedField={copiedField}
+              />
+            )}
 
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowAddDestinationDialog(false)}
+                onClick={addDestinationStep === 1 ? handleCloseAddDestinationDialog : handlePreviousStep}
               >
-                Cancel
+                {addDestinationStep === 1 ? "Cancel" : "Back"}
               </Button>
               <Button
-                type="submit"
-                disabled={
-                  addDestinationMutation.isPending ||
-                  !destinationFormData.streamKey
-                }
+                type={addDestinationStep === 2 ? "submit" : "button"}
+                onClick={addDestinationStep === 1 ? handleNextStep : undefined}
+                disabled={addDestinationStep === 2 && (addDestinationMutation.isPending || !destinationFormData.streamKey)}
               >
-                {addDestinationMutation.isPending ? (
-                  <>
-                    <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                    Adding...
-                  </>
-                ) : (
-                  "Add Destination"
-                )}
+                {addDestinationStep === 1
+                  ? "Next"
+                  : addDestinationMutation.isPending
+                    ? (
+                      <>
+                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                        Adding...
+                      </>
+                    )
+                    : "Add Destination"
+                }
               </Button>
             </DialogFooter>
           </form>
