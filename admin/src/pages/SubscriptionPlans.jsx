@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -282,11 +282,11 @@ function SubscriptionPlans() {
               </div>
 
               {/* Features */}
-              {plan.features && plan.features.length > 0 && (
+              {plan.features && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Features</h4>
                   <ul className="space-y-1 text-sm text-muted-foreground">
-                    {plan.features.map((feature, index) => (
+                    {featuresObjectToArray(plan.features).map((feature, index) => (
                       <li key={index} className="flex items-center space-x-2">
                         <Check className="h-3 w-3 text-green-500" />
                         <span>{feature}</span>
@@ -336,6 +336,21 @@ function SubscriptionPlans() {
   );
 }
 
+// Helper function to convert features object to array format
+const featuresObjectToArray = (features) => {
+  if (!features) return [];
+  if (Array.isArray(features)) return features;
+  if (typeof features === 'object') {
+    return Object.entries(features).map(([key, value]) => {
+      if (typeof value === 'boolean') {
+        return `${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+      }
+      return `${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${value}`;
+    });
+  }
+  return [features];
+};
+
 // Plan Form Component
 function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
   const [formData, setFormData] = useState({
@@ -347,7 +362,7 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
     max_destinations: plan?.max_destinations || "",
     max_streaming_hours_monthly: plan?.max_streaming_hours_monthly || "",
     features: plan?.features
-      ? (Array.isArray(plan.features) ? plan.features.join("\n") : plan.features)
+      ? featuresObjectToArray(plan.features).join("\n")
       : "",
   });
 
