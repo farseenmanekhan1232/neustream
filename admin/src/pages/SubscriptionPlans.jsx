@@ -346,7 +346,9 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
     max_sources: plan?.max_sources || "",
     max_destinations: plan?.max_destinations || "",
     max_streaming_hours_monthly: plan?.max_streaming_hours_monthly || "",
-    features: plan?.features ? plan.features.join("\n") : "",
+    features: plan?.features
+      ? (Array.isArray(plan.features) ? plan.features.join("\n") : plan.features)
+      : "",
   });
 
   const handleSubmit = (e) => {
