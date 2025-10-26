@@ -529,20 +529,40 @@ async function exchangeYouTubeCodeForTokens(code) {
 
     const { access_token, refresh_token, expires_in } = response.data;
 
-    // For YouTube Live Chat, we don't need user info - we just need the access token
-    // The YouTube Live Chat API will provide the channel info when we connect
-    console.log("YouTube token exchange successful, skipping userinfo call for Live Chat API");
+    console.log("YouTube token exchange successful, fetching user channel info...");
 
-    // Generate a temporary username for the connector
-    const tempUsername = `youtube_chat_${Date.now()}`;
+    // Get the user's actual YouTube channel ID using the Channels API
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: access_token });
+
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+
+    // Get the authenticated user's channel info
+    const channelResponse = await youtube.channels.list({
+      part: 'snippet',
+      mine: true
+    });
+
+    if (!channelResponse.data.items || channelResponse.data.items.length === 0) {
+      throw new Error('No YouTube channel found for authenticated user');
+    }
+
+    const channel = channelResponse.data.items[0];
+    const channelId = channel.id;
+    const channelTitle = channel.snippet.title;
+
+    console.log("YouTube channel info retrieved:", {
+      channelId,
+      channelTitle
+    });
 
     return {
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
-      platformUserId: tempUsername, // Will be updated when we connect to YouTube Live Chat
-      platformUsername: tempUsername,
-      displayName: "YouTube Live Chat",
+      platformUserId: channelId, // Store the actual YouTube channel ID
+      platformUsername: channelTitle,
+      displayName: channelTitle,
     };
   } catch (error) {
     console.error(

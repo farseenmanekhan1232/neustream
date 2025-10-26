@@ -78,7 +78,7 @@ class YouTubeGrpcService {
     }
   }
 
-  // Get live chat ID using REST API (minimal quota usage)
+  // Get live chat ID using REST API (optimized for quota usage)
   async getLiveChatId(config) {
     try {
       const oauth2Client = new google.auth.OAuth2();
@@ -86,29 +86,28 @@ class YouTubeGrpcService {
 
       const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
-      // Find active live broadcast
-      const liveResponse = await youtube.search.list({
-        part: 'id',
-        channelId: config.platformUserId,
-        type: 'video',
-        eventType: 'live',
-        maxResults: 1
+      // Find active live broadcast using LiveBroadcasts API (more efficient than Search API)
+      const broadcastsResponse = await youtube.liveBroadcasts.list({
+        part: 'snippet',
+        broadcastStatus: 'active',
+        mine: true
       });
 
-      if (liveResponse.data.items.length === 0) {
-        console.log('No active live stream found for YouTube channel');
+      if (broadcastsResponse.data.items.length === 0) {
+        console.log('No active live broadcast found for YouTube channel');
         return null;
       }
 
-      const videoId = liveResponse.data.items[0].id.videoId;
+      const broadcast = broadcastsResponse.data.items[0];
+      const liveChatId = broadcast.snippet.liveChatId;
 
-      // Get live chat details
-      const videoResponse = await youtube.videos.list({
-        part: 'liveStreamingDetails',
-        id: videoId
-      });
+      if (!liveChatId) {
+        console.log('No live chat ID found for active broadcast');
+        return null;
+      }
 
-      return videoResponse.data.items[0].liveStreamingDetails.activeLiveChatId;
+      console.log(`Found live chat ID: ${liveChatId} for broadcast: ${broadcast.snippet.title}`);
+      return liveChatId;
     } catch (error) {
       console.error('Failed to get live chat ID:', error);
       throw error;
