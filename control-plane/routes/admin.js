@@ -1145,11 +1145,11 @@ router.put("/subscription-plans/:id", async (req, res) => {
       ]
     );
 
-    if (result.length === 0) {
+    if (!result || (result.changes === 0 && !result.id)) {
       return res.status(404).json({ error: "Subscription plan not found" });
     }
 
-    res.json(result[0]);
+    res.json(result);
   } catch (error) {
     console.error("Update subscription plan error:", {
       error: error.message,

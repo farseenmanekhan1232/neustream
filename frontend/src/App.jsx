@@ -10,6 +10,9 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import AboutUs from "./pages/AboutUs";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import DashboardLayout from "./components/DashboardLayout";
@@ -56,6 +59,11 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+
+      {/* Public pages */}
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/faq" element={<FAQ />} />
 
       {/* Public legal pages */}
       <Route path="/privacy" element={<PrivacyPolicy />} />

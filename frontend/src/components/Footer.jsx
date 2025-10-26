@@ -6,7 +6,7 @@ function Footer() {
   return (
     <footer className="border-t py-12 md:py-16">
       <div className="container-custom">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <div>
             <h3 className="text-lg font-bold mb-4">NeuStream</h3>
             <p className="text-muted-foreground">
@@ -37,57 +37,38 @@ function Footer() {
           </div>
 
           <div>
+            <h3 className="text-lg font-bold mb-4">Company</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
+                  FAQ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
             <h3 className="text-lg font-bold mb-4">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Terms and Conditions ~ Created by Razorpay
-                </a>
+                <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
               </li>
               <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Privacy Policy ~ Created by Razorpay
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/refund"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Cancellations and Refunds ~ Created by Razorpay
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/shipping"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Shipping Policy ~ Created by Razorpay
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://merchant.razorpay.com/policy/QOJnHOnzHjv8ab/contact_us"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Contact Us ~ Created by Razorpay
-                </a>
+                <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
               </li>
             </ul>
           </div>
