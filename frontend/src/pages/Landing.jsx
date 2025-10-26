@@ -298,19 +298,18 @@ function Landing() {
 
             <div className="space-y-4 max-w-3xl">
               <div className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight lg:leading-tight">
-                Stream Without{" "}
-                <span className="gradient-text">Hardware Limitations</span>
+                Streaming Without{" "}
+                <span className="gradient-text">Performance Compromises</span>
               </div>
               <div className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                <strong>NeuStream is a cloud-based multistreaming platform</strong> that enables content creators
-                to broadcast live video simultaneously to multiple platforms (YouTube, Twitch, Facebook, LinkedIn)
-                while offloading the computational processing to our servers.
+                <strong>Best performance by default, not as a hidden option.</strong> Cloud-powered multistreaming that eliminates hardware bottlenecks,
+                protects your privacy, and respects your workflow. No CPU spikes, no dropped frames, no intrusive interruptions.
               </div>
             </div>
 
             <div className="flex flex-col gap-4 w-full max-w-md">
               <Button asChild className="w-full">
-                <Link to="/auth">Get Started</Link>
+                <Link to="/auth">Start Streaming Free</Link>
               </Button>
               <Button variant="outline" className="w-full">
                 <span>Watch Demo</span>
@@ -336,56 +335,53 @@ function Landing() {
         </div>
       </section>
 
-      {/* App Purpose Section */}
+      {/* Performance & Privacy Section */}
       <section className="section-padding bg-muted/30">
         <div className="container-custom">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              What is NeuStream?
-            </h2>
-            <div className="space-y-6 text-lg text-muted-foreground">
-              <div className="bg-card p-6 rounded-lg border text-left">
-                <h3 className="text-xl font-semibold text-foreground mb-3">
-                  🎯 Our Purpose
-                </h3>
-                <p>
-                  NeuStream is designed to solve the biggest challenge content creators face:
-                  <strong>multistreaming without expensive hardware upgrades</strong>. We enable you to
-                  broadcast your live content to multiple platforms simultaneously while maintaining
-                  high performance on your local machine.
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  Best performance by default, not as a hidden option
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  NeuStream eliminates hardware bottlenecks by offloading video encoding to our cloud infrastructure.
+                  Your local machine stays fast and responsive, whether you're gaming, creating, or working on
+                  resource-intensive projects. No CPU spikes, no dropped frames, no performance compromises.
+                  <br/><br/>
+                  Our distributed infrastructure ensures your streams stay live even if individual servers
+                  experience issues. You get 99.9% uptime guarantee without thinking about it.
+                  <br/><br/>
+                  Not enough? Fine-tune your streaming settings with advanced controls for bitrate, resolution,
+                  and platform-specific optimizations. You're finally in full control of your streaming performance
+                  without hardware limitations.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Respectful by design</h3>
+                <p className="text-muted-foreground">
+                  NeuStream doesn't interrupt your workflow or annoy you with anything. It doesn't do anything
+                  without your consent: no unexpected tabs about updates, no persistent popups telling you about
+                  features you don't care about, no weird restarts.
+                  <br/><br/>
+                  Nothing interrupts your stream, jumps in your face, or breaks your creative flow. Everything
+                  just makes sense. You're in full control.
                 </p>
               </div>
 
-              <div className="bg-card p-6 rounded-lg border text-left">
-                <h3 className="text-xl font-semibold text-foreground mb-3">
-                  💡 How It Works
-                </h3>
-                <p>
-                  Our cloud servers handle the heavy lifting of video encoding and distribution,
-                  so you can game, create, or work on resource-intensive projects while streaming.
-                  Simply connect your streaming software (OBS, Streamlabs, etc.) to NeuStream, and we'll
-                  deliver your content to YouTube, Twitch, Facebook, and LinkedIn simultaneously.
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Fast, efficient, and reliable</h3>
+                <p className="text-muted-foreground">
+                  NeuStream's cloud architecture is optimized for streaming performance and energy efficiency.
+                  You will notice the difference after streaming with NeuStream for just one session. It doesn't
+                  slow down over time or during long streams.
+                  <br/><br/>
+                  All unnecessary bloat is removed: NeuStream is one of the most efficient multistreaming
+                  solutions available, delivering maximum performance with minimal resource usage.
                 </p>
-              </div>
-
-              <div className="bg-card p-6 rounded-lg border text-left">
-                <h3 className="text-xl font-semibold text-foreground mb-3">
-                  🚀 Who It's For
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4 mt-4">
-                  <div>
-                    <strong>Gamers</strong>
-                    <p className="text-base mt-1">Stream without FPS drops or system performance impact</p>
-                  </div>
-                  <div>
-                    <strong>Content Creators</strong>
-                    <p className="text-base mt-1">Reach audiences across multiple platforms with one stream</p>
-                  </div>
-                  <div>
-                    <strong>Businesses</strong>
-                    <p className="text-base mt-1">Professional live streaming with minimal technical setup</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -393,149 +389,81 @@ function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="section-padding bg-muted/30">
+      <section id="features" className="section-padding">
         <div className="container-custom">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Powerful Features for{" "}
-              <span className="gradient-text">Professional Streamers</span>
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Our cloud-based computational offloading technology transforms
-              your streaming workflow, giving you the power to do more with your
-              existing hardware.
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                    />
-                  </svg>
-                ),
-                title: "Cloud-Powered Processing",
-                description:
-                  "Our servers handle the heavy computational load of multi-streaming, reducing CPU usage on your machine by up to 60%.",
-              },
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                ),
-                title: "Zero-Lag Performance",
-                description:
-                  "Maintain high frame rates in your games or creative applications while streaming to multiple platforms simultaneously.",
-              },
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                ),
-                title: "Creative Freedom",
-                description:
-                  "Run resource-intensive applications alongside your streams without compromising quality or performance.",
-              },
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                ),
-                title: "Unified Analytics Dashboard",
-                description:
-                  "Track viewer engagement, growth metrics, and performance statistics across all platforms in one place.",
-              },
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                ),
-                title: "99.9% Uptime Guarantee",
-                description:
-                  "Our distributed infrastructure ensures your streams stay live even if individual servers experience issues.",
-              },
-              {
-                icon: (
-                  <svg
-                    className="h-10 w-10 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                ),
-                title: "Global CDN Integration",
-                description:
-                  "Deliver high-quality streams to viewers worldwide with minimal latency through our optimized content delivery network.",
-              },
-            ].map((feature, index) => (
-              <div key={index} className="feature-card">
-                <div className="mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Powerful when you need it</h3>
+                <p className="text-muted-foreground">
+                  Stream to multiple platforms simultaneously with our advanced multistreaming technology.
+                  Connect your OBS, Streamlabs, or any RTMP-compatible software and reach audiences across
+                  YouTube, Twitch, Facebook, and more with one stream.
+                  <br/><br/>
+                  Monitor all your streams in real-time with our unified dashboard. Track performance metrics,
+                  viewer engagement, and platform-specific analytics without switching between tabs.
+                </p>
               </div>
-            ))}
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Designed to get out of your way</h3>
+                <p className="text-muted-foreground">
+                  NeuStream's interface is clean and minimalistic, but doesn't compromise on functionality.
+                  More screen space for your content, less clutter from the interface. Customize your
+                  dashboard to show only what matters to you.
+                  <br/><br/>
+                  NeuStream is built with attention to detail. Your streams don't stutter or drop frames
+                  abnormally. Your creative workflow isn't interrupted by lag or technical issues.
+                  Everything's smooth, reliable, and simple. Comfort and performance are our top priorities.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Works with all streaming software</h3>
+                <p className="text-muted-foreground">
+                  All major streaming applications are supported and work right away, by default, including
+                  OBS Studio, Streamlabs, XSplit, and any RTMP-compatible software. We'll keep support for
+                  emerging platforms as they become available.
+                  <br/><br/>
+                  NeuStream provides secure, encrypted connections to all platforms. Your stream keys and
+                  credentials are protected with enterprise-grade security.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Transparent and honest pricing</h3>
+                <p className="text-muted-foreground">
+                  All NeuStream plans are clearly priced with no hidden fees. You get exactly what you pay for,
+                  with straightforward upgrade paths as your streaming needs grow.
+                  <br/><br/>
+                  Everything is available with transparent billing. No exceptions, no surprise charges.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Always reliable and up-to-date</h3>
+                <p className="text-muted-foreground">
+                  We maintain our infrastructure with the latest security and performance updates. Your
+                  streaming service will always be safe, fast, and current.
+                  <br/><br/>
+                  NeuStream updates its services automatically, with new features and optimizations
+                  delivered seamlessly. All improvements are available to you without manual intervention.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-2xl font-bold">Best practices for everyone, by default</h3>
+                <p className="text-muted-foreground">
+                  NeuStream enforces secure connections to all platforms and warns you when a platform
+                  connection needs attention. Your stream data is protected end-to-end.
+                  <br/><br/>
+                  There's no unnecessary data collection. We only process what's needed to deliver your
+                  streams reliably. Your privacy and control over your content are fundamental principles.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -707,19 +635,60 @@ function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Target Audience Section */}
+      <section className="section-padding bg-muted/30">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              The streaming platform made for creators, with purpose
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              We're building a streaming platform that we would want to use ourselves. NeuStream's main goal is to
+              provide an honest, reliable, performance-focused, and non-invasive streaming experience.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-bold">Perfect for gamers</h3>
+              <p className="text-muted-foreground">
+                Stream without FPS drops or system performance impact. Maintain competitive edge while
+                broadcasting to multiple platforms simultaneously.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-bold">Perfect for content creators</h3>
+              <p className="text-muted-foreground">
+                Reach audiences across multiple platforms with one stream. Focus on creating amazing content
+                while we handle the technical complexity.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-bold">Perfect for everyone on the go</h3>
+              <p className="text-muted-foreground">
+                NeuStream's efficiency makes it perfect for mobile creators and professionals. Stream from
+                anywhere with reliable cloud infrastructure backing you up.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
       <section className="section-padding">
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to Transform Your Streaming?
+              Ready to try NeuStream?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Join thousands of content creators who have already upgraded their
-              streaming setup with NeuStream.
+              It's never too late to get your streaming setup on the right track. NeuStream can help you
+              reach more viewers across platforms while keeping your local performance intact. We hope you'll love it!
             </p>
             <Button asChild size="lg" className="px-8">
-              <Link to="/auth">Get Started Free</Link>
+              <Link to="/auth">Start Streaming Free</Link>
             </Button>
           </div>
         </div>
