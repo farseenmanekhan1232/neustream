@@ -302,9 +302,9 @@ function Landing() {
                 <span className="gradient-text">Hardware Limitations</span>
               </div>
               <div className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                NeuStream offloads computational burden from your system,
-                letting you stream to multiple platforms simultaneously without
-                sacrificing performance or creative quality.
+                <strong>NeuStream is a cloud-based multistreaming platform</strong> that enables content creators
+                to broadcast live video simultaneously to multiple platforms (YouTube, Twitch, Facebook, LinkedIn)
+                while offloading the computational processing to our servers.
               </div>
             </div>
 
@@ -330,6 +330,62 @@ function Landing() {
                     </div>
                   )
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* App Purpose Section */}
+      <section className="section-padding bg-muted/30">
+        <div className="container-custom">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              What is NeuStream?
+            </h2>
+            <div className="space-y-6 text-lg text-muted-foreground">
+              <div className="bg-card p-6 rounded-lg border text-left">
+                <h3 className="text-xl font-semibold text-foreground mb-3">
+                  🎯 Our Purpose
+                </h3>
+                <p>
+                  NeuStream is designed to solve the biggest challenge content creators face:
+                  <strong>multistreaming without expensive hardware upgrades</strong>. We enable you to
+                  broadcast your live content to multiple platforms simultaneously while maintaining
+                  high performance on your local machine.
+                </p>
+              </div>
+
+              <div className="bg-card p-6 rounded-lg border text-left">
+                <h3 className="text-xl font-semibold text-foreground mb-3">
+                  💡 How It Works
+                </h3>
+                <p>
+                  Our cloud servers handle the heavy lifting of video encoding and distribution,
+                  so you can game, create, or work on resource-intensive projects while streaming.
+                  Simply connect your streaming software (OBS, Streamlabs, etc.) to NeuStream, and we'll
+                  deliver your content to YouTube, Twitch, Facebook, and LinkedIn simultaneously.
+                </p>
+              </div>
+
+              <div className="bg-card p-6 rounded-lg border text-left">
+                <h3 className="text-xl font-semibold text-foreground mb-3">
+                  🚀 Who It's For
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <strong>Gamers</strong>
+                    <p className="text-base mt-1">Stream without FPS drops or system performance impact</p>
+                  </div>
+                  <div>
+                    <strong>Content Creators</strong>
+                    <p className="text-base mt-1">Reach audiences across multiple platforms with one stream</p>
+                  </div>
+                  <div>
+                    <strong>Businesses</strong>
+                    <p className="text-base mt-1">Professional live streaming with minimal technical setup</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -665,6 +721,32 @@ function Landing() {
             <Button asChild size="lg" className="px-8">
               <Link to="/auth">Get Started Free</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Data Transparency Section */}
+      <section className="section-padding bg-muted/30">
+        <div className="container-custom">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+              Your Data & Privacy
+            </h2>
+            <div className="text-center space-y-4 mb-8">
+              <p className="text-muted-foreground">
+                NeuStream is committed to transparency about how we collect and use your data.
+                We only request the minimum information necessary to provide our multistreaming services.
+              </p>
+              <p className="text-muted-foreground">
+                <strong>Why we request your data:</strong> To connect streaming platforms,
+                provide analytics, and ensure reliable service delivery.
+              </p>
+            </div>
+            <div className="text-center">
+              <Button variant="outline" asChild>
+                <Link to="/privacy">Read Our Privacy Policy</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

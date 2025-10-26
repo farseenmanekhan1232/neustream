@@ -34,6 +34,12 @@ function Header() {
             >
               Features
             </a>
+            <Link
+              to="/privacy"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Privacy
+            </Link>
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-4">
@@ -114,6 +120,13 @@ function Header() {
             >
               Features
             </a>
+            <Link
+              to="/privacy"
+              className="px-2 py-2 text-sm font-medium hover:text-primary"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Privacy
+            </Link>
             {user ? (
               <div className="flex flex-col gap-2 pt-2 border-t">
                 <span className="text-sm text-muted-foreground px-2 py-2">
