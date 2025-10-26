@@ -24,6 +24,11 @@
   --color-ring: hsl(224.3 76.3% 48%);
 
   --radius: 0.5rem;
+
+  /* Teal gradient colors for landing page */
+  --color-teal-start: #009a62;
+  --color-teal-middle: #00b86b;
+  --color-teal-end: #00db75;
 }
 
 * {
@@ -33,6 +38,19 @@
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+/* Teal gradient background for landing page */
+.bg-teal-gradient {
+  background: linear-gradient(180deg, var(--color-teal-start) 10%, var(--color-teal-middle) 30%, var(--color-teal-end) 100%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+/* Header teal gradient */
+.bg-header-teal-gradient {
+  background: linear-gradient(to bottom, var(--color-teal-start), transparent);
+  backdrop-filter: blur(8px);
 }
 
 h1,
@@ -232,8 +250,8 @@ p {
   --sidebar-border: oklch(0.9276 0.0058 264.5313);
   --sidebar-ring: oklch(0.6397 0.1720 36.4421);
   --destructive-foreground: oklch(1.0000 0 0);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Source Serif 4, serif;
+  --font-sans: 'Instrumental Sans', sans-serif;
+  --font-serif: 'Instrumental Sans', serif;
   --font-mono: JetBrains Mono, monospace;
   --shadow-color: hsl(0 0% 0%);
   --shadow-opacity: 0.1;
@@ -288,8 +306,8 @@ p {
   --sidebar-ring: oklch(0.6397 0.1720 36.4421);
   --destructive-foreground: oklch(1.0000 0 0);
   --radius: 0.75rem;
-  --font-sans: Inter, sans-serif;
-  --font-serif: Source Serif 4, serif;
+  --font-sans: 'Instrumental Sans', sans-serif;
+  --font-serif: 'Instrumental Sans', serif;
   --font-mono: JetBrains Mono, monospace;
   --shadow-color: hsl(0 0% 0%);
   --shadow-opacity: 0.1;

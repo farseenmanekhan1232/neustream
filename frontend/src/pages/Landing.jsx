@@ -265,7 +265,7 @@ function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-teal-gradient">
       <Helmet>
         <title>Neustream - Multistream to all platforms from one place</title>
         <meta
