@@ -268,15 +268,33 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Neustream - Multistream to all platforms from one place</title>
-        <meta name="description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
-        <meta name="keywords" content="multistream, live streaming, youtube, twitch, facebook, linkedin, streaming software, content creator" />
-        <meta property="og:title" content="Neustream - Multistream to all platforms from one place" />
-        <meta property="og:description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
+        <meta
+          name="description"
+          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+        />
+        <meta
+          name="keywords"
+          content="multistream, live streaming, youtube, twitch, facebook, linkedin, streaming software, content creator"
+        />
+        <meta
+          property="og:title"
+          content="Neustream - Multistream to all platforms from one place"
+        />
+        <meta
+          property="og:description"
+          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Neustream - Multistream to all platforms from one place" />
-        <meta name="twitter:description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
+        <meta
+          name="twitter:title"
+          content="Neustream - Multistream to all platforms from one place"
+        />
+        <meta
+          name="twitter:description"
+          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+        />
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app" />
       </Helmet>
@@ -299,11 +317,15 @@ function Landing() {
             <div className="space-y-4 max-w-3xl">
               <div className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight lg:leading-tight">
                 Streaming Without{" "}
-                <span className="gradient-text">Performance Compromises</span>
+                <span className="">Performance Compromises</span>
               </div>
               <div className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                <strong>Best performance by default, not as a hidden option.</strong> Cloud-powered multistreaming that eliminates hardware bottlenecks,
-                protects your privacy, and respects your workflow. No CPU spikes, no dropped frames, no intrusive interruptions.
+                <strong>
+                  Best performance by default, not as a hidden option.
+                </strong>{" "}
+                Cloud-powered multistreaming that eliminates hardware
+                bottlenecks, protects your privacy, and respects your workflow.
+                No CPU spikes, no dropped frames, no intrusive interruptions.
               </div>
             </div>
 
@@ -327,7 +349,7 @@ function Landing() {
                     <div key={platform} className="text-lg font-semibold">
                       {platform}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -345,16 +367,22 @@ function Landing() {
                   Best performance by default, not as a hidden option
                 </h2>
                 <p className="text-lg text-muted-foreground">
-                  NeuStream eliminates hardware bottlenecks by offloading video encoding to our cloud infrastructure.
-                  Your local machine stays fast and responsive, whether you're gaming, creating, or working on
-                  resource-intensive projects. No CPU spikes, no dropped frames, no performance compromises.
-                  <br/><br/>
-                  Our distributed infrastructure ensures your streams stay live even if individual servers
-                  experience issues. You get 99.9% uptime guarantee without thinking about it.
-                  <br/><br/>
-                  Not enough? Fine-tune your streaming settings with advanced controls for bitrate, resolution,
-                  and platform-specific optimizations. You're finally in full control of your streaming performance
-                  without hardware limitations.
+                  NeuStream eliminates hardware bottlenecks by offloading video
+                  encoding to our cloud infrastructure. Your local machine stays
+                  fast and responsive, whether you're gaming, creating, or
+                  working on resource-intensive projects. No CPU spikes, no
+                  dropped frames, no performance compromises.
+                  <br />
+                  <br />
+                  Our distributed infrastructure ensures your streams stay live
+                  even if individual servers experience issues. You get 99.9%
+                  uptime guarantee without thinking about it.
+                  <br />
+                  <br />
+                  Not enough? Fine-tune your streaming settings with advanced
+                  controls for bitrate, resolution, and platform-specific
+                  optimizations. You're finally in full control of your
+                  streaming performance without hardware limitations.
                 </p>
               </div>
             </div>
@@ -363,24 +391,33 @@ function Landing() {
               <div className="space-y-4">
                 <h3 className="text-2xl font-bold">Respectful by design</h3>
                 <p className="text-muted-foreground">
-                  NeuStream doesn't interrupt your workflow or annoy you with anything. It doesn't do anything
-                  without your consent: no unexpected tabs about updates, no persistent popups telling you about
-                  features you don't care about, no weird restarts.
-                  <br/><br/>
-                  Nothing interrupts your stream, jumps in your face, or breaks your creative flow. Everything
-                  just makes sense. You're in full control.
+                  NeuStream doesn't interrupt your workflow or annoy you with
+                  anything. It doesn't do anything without your consent: no
+                  unexpected tabs about updates, no persistent popups telling
+                  you about features you don't care about, no weird restarts.
+                  <br />
+                  <br />
+                  Nothing interrupts your stream, jumps in your face, or breaks
+                  your creative flow. Everything just makes sense. You're in
+                  full control.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Fast, efficient, and reliable</h3>
+                <h3 className="text-2xl font-bold">
+                  Fast, efficient, and reliable
+                </h3>
                 <p className="text-muted-foreground">
-                  NeuStream's cloud architecture is optimized for streaming performance and energy efficiency.
-                  You will notice the difference after streaming with NeuStream for just one session. It doesn't
-                  slow down over time or during long streams.
-                  <br/><br/>
-                  All unnecessary bloat is removed: NeuStream is one of the most efficient multistreaming
-                  solutions available, delivering maximum performance with minimal resource usage.
+                  NeuStream's cloud architecture is optimized for streaming
+                  performance and energy efficiency. You will notice the
+                  difference after streaming with NeuStream for just one
+                  session. It doesn't slow down over time or during long
+                  streams.
+                  <br />
+                  <br />
+                  All unnecessary bloat is removed: NeuStream is one of the most
+                  efficient multistreaming solutions available, delivering
+                  maximum performance with minimal resource usage.
                 </p>
               </div>
             </div>
@@ -394,73 +431,104 @@ function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Powerful when you need it</h3>
+                <h3 className="text-2xl font-bold">
+                  Powerful when you need it
+                </h3>
                 <p className="text-muted-foreground">
-                  Stream to multiple platforms simultaneously with our advanced multistreaming technology.
-                  Connect your OBS, Streamlabs, or any RTMP-compatible software and reach audiences across
+                  Stream to multiple platforms simultaneously with our advanced
+                  multistreaming technology. Connect your OBS, Streamlabs, or
+                  any RTMP-compatible software and reach audiences across
                   YouTube, Twitch, Facebook, and more with one stream.
-                  <br/><br/>
-                  Monitor all your streams in real-time with our unified dashboard. Track performance metrics,
-                  viewer engagement, and platform-specific analytics without switching between tabs.
+                  <br />
+                  <br />
+                  Monitor all your streams in real-time with our unified
+                  dashboard. Track performance metrics, viewer engagement, and
+                  platform-specific analytics without switching between tabs.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Designed to get out of your way</h3>
+                <h3 className="text-2xl font-bold">
+                  Designed to get out of your way
+                </h3>
                 <p className="text-muted-foreground">
-                  NeuStream's interface is clean and minimalistic, but doesn't compromise on functionality.
-                  More screen space for your content, less clutter from the interface. Customize your
+                  NeuStream's interface is clean and minimalistic, but doesn't
+                  compromise on functionality. More screen space for your
+                  content, less clutter from the interface. Customize your
                   dashboard to show only what matters to you.
-                  <br/><br/>
-                  NeuStream is built with attention to detail. Your streams don't stutter or drop frames
-                  abnormally. Your creative workflow isn't interrupted by lag or technical issues.
-                  Everything's smooth, reliable, and simple. Comfort and performance are our top priorities.
+                  <br />
+                  <br />
+                  NeuStream is built with attention to detail. Your streams
+                  don't stutter or drop frames abnormally. Your creative
+                  workflow isn't interrupted by lag or technical issues.
+                  Everything's smooth, reliable, and simple. Comfort and
+                  performance are our top priorities.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Works with all streaming software</h3>
+                <h3 className="text-2xl font-bold">
+                  Works with all streaming software
+                </h3>
                 <p className="text-muted-foreground">
-                  All major streaming applications are supported and work right away, by default, including
-                  OBS Studio, Streamlabs, XSplit, and any RTMP-compatible software. We'll keep support for
+                  All major streaming applications are supported and work right
+                  away, by default, including OBS Studio, Streamlabs, XSplit,
+                  and any RTMP-compatible software. We'll keep support for
                   emerging platforms as they become available.
-                  <br/><br/>
-                  NeuStream provides secure, encrypted connections to all platforms. Your stream keys and
-                  credentials are protected with enterprise-grade security.
+                  <br />
+                  <br />
+                  NeuStream provides secure, encrypted connections to all
+                  platforms. Your stream keys and credentials are protected with
+                  enterprise-grade security.
                 </p>
               </div>
             </div>
 
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Transparent and honest pricing</h3>
+                <h3 className="text-2xl font-bold">
+                  Transparent and honest pricing
+                </h3>
                 <p className="text-muted-foreground">
-                  All NeuStream plans are clearly priced with no hidden fees. You get exactly what you pay for,
-                  with straightforward upgrade paths as your streaming needs grow.
-                  <br/><br/>
-                  Everything is available with transparent billing. No exceptions, no surprise charges.
+                  All NeuStream plans are clearly priced with no hidden fees.
+                  You get exactly what you pay for, with straightforward upgrade
+                  paths as your streaming needs grow.
+                  <br />
+                  <br />
+                  Everything is available with transparent billing. No
+                  exceptions, no surprise charges.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Always reliable and up-to-date</h3>
+                <h3 className="text-2xl font-bold">
+                  Always reliable and up-to-date
+                </h3>
                 <p className="text-muted-foreground">
-                  We maintain our infrastructure with the latest security and performance updates. Your
-                  streaming service will always be safe, fast, and current.
-                  <br/><br/>
-                  NeuStream updates its services automatically, with new features and optimizations
-                  delivered seamlessly. All improvements are available to you without manual intervention.
+                  We maintain our infrastructure with the latest security and
+                  performance updates. Your streaming service will always be
+                  safe, fast, and current.
+                  <br />
+                  <br />
+                  NeuStream updates its services automatically, with new
+                  features and optimizations delivered seamlessly. All
+                  improvements are available to you without manual intervention.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Best practices for everyone, by default</h3>
+                <h3 className="text-2xl font-bold">
+                  Best practices for everyone, by default
+                </h3>
                 <p className="text-muted-foreground">
-                  NeuStream enforces secure connections to all platforms and warns you when a platform
-                  connection needs attention. Your stream data is protected end-to-end.
-                  <br/><br/>
-                  There's no unnecessary data collection. We only process what's needed to deliver your
-                  streams reliably. Your privacy and control over your content are fundamental principles.
+                  NeuStream enforces secure connections to all platforms and
+                  warns you when a platform connection needs attention. Your
+                  stream data is protected end-to-end.
+                  <br />
+                  <br />
+                  There's no unnecessary data collection. We only process what's
+                  needed to deliver your streams reliably. Your privacy and
+                  control over your content are fundamental principles.
                 </p>
               </div>
             </div>
@@ -643,8 +711,10 @@ function Landing() {
               The streaming platform made for creators, with purpose
             </h2>
             <p className="text-muted-foreground text-lg">
-              We're building a streaming platform that we would want to use ourselves. NeuStream's main goal is to
-              provide an honest, reliable, performance-focused, and non-invasive streaming experience.
+              We're building a streaming platform that we would want to use
+              ourselves. NeuStream's main goal is to provide an honest,
+              reliable, performance-focused, and non-invasive streaming
+              experience.
             </p>
           </div>
 
@@ -652,24 +722,31 @@ function Landing() {
             <div className="text-center space-y-4">
               <h3 className="text-xl font-bold">Perfect for gamers</h3>
               <p className="text-muted-foreground">
-                Stream without FPS drops or system performance impact. Maintain competitive edge while
-                broadcasting to multiple platforms simultaneously.
+                Stream without FPS drops or system performance impact. Maintain
+                competitive edge while broadcasting to multiple platforms
+                simultaneously.
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold">Perfect for content creators</h3>
+              <h3 className="text-xl font-bold">
+                Perfect for content creators
+              </h3>
               <p className="text-muted-foreground">
-                Reach audiences across multiple platforms with one stream. Focus on creating amazing content
-                while we handle the technical complexity.
+                Reach audiences across multiple platforms with one stream. Focus
+                on creating amazing content while we handle the technical
+                complexity.
               </p>
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold">Perfect for everyone on the go</h3>
+              <h3 className="text-xl font-bold">
+                Perfect for everyone on the go
+              </h3>
               <p className="text-muted-foreground">
-                NeuStream's efficiency makes it perfect for mobile creators and professionals. Stream from
-                anywhere with reliable cloud infrastructure backing you up.
+                NeuStream's efficiency makes it perfect for mobile creators and
+                professionals. Stream from anywhere with reliable cloud
+                infrastructure backing you up.
               </p>
             </div>
           </div>
@@ -684,8 +761,10 @@ function Landing() {
               Ready to try NeuStream?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              It's never too late to get your streaming setup on the right track. NeuStream can help you
-              reach more viewers across platforms while keeping your local performance intact. We hope you'll love it!
+              It's never too late to get your streaming setup on the right
+              track. NeuStream can help you reach more viewers across platforms
+              while keeping your local performance intact. We hope you'll love
+              it!
             </p>
             <Button asChild size="lg" className="px-8">
               <Link to="/auth">Start Streaming Free</Link>
@@ -703,12 +782,14 @@ function Landing() {
             </h2>
             <div className="text-center space-y-4 mb-8">
               <p className="text-muted-foreground">
-                NeuStream is committed to transparency about how we collect and use your data.
-                We only request the minimum information necessary to provide our multistreaming services.
+                NeuStream is committed to transparency about how we collect and
+                use your data. We only request the minimum information necessary
+                to provide our multistreaming services.
               </p>
               <p className="text-muted-foreground">
-                <strong>Why we request your data:</strong> To connect streaming platforms,
-                provide analytics, and ensure reliable service delivery.
+                <strong>Why we request your data:</strong> To connect streaming
+                platforms, provide analytics, and ensure reliable service
+                delivery.
               </p>
             </div>
             <div className="text-center">
