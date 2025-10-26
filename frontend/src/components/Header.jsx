@@ -11,43 +11,37 @@ function Header() {
   const user = JSON.parse(localStorage.getItem("neustream_user") || "null");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-header-teal-gradient">
+    <header className="sticky top-0 z-50 w-full bg-header-teal-gradient">
       <div className="container-custom flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="NeuStream Logo" className="w-8 h-8 " />
             <span className="text-xl font-normal">NeuStream</span>
           </Link>
-          <nav className="hidden md:flex gap-6 ml-6">
-            <Link
-              to="/"
-              className={`text-sm font-medium transition-colors ${
-                isActivePath("/")
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+        </div>
+        <div className="hidden md:flex items-center gap-4">
+          <nav className="hidden md:flex gap-6 ml-6 opacity-75 ">
+            <Link to="/" className={`text-sm font-medium transition-colors`}>
               Home
             </Link>
             <a
               href="#features"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm font-medium  transition-colors hover:text-foreground"
             >
               Features
             </a>
             <Link
               to="/privacy"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm font-medium  transition-colors hover:text-foreground"
             >
               Privacy
             </Link>
           </nav>
-        </div>
-        <div className="hidden md:flex items-center gap-4">
           {user ? (
             <>
               <Link
                 to="/dashboard"
-                className={`text-sm font-medium transition-colors text-primary border p-2 rounded hover:border-black`}
+                className={`text-sm font-medium transition-colors bg-white text-black px-5 py-3 rounded-xl`}
               >
                 Dashboard
               </Link>
@@ -95,7 +89,7 @@ function Header() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4 6div6M4 12div6M4 18div6"
+                d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
           )}
@@ -129,9 +123,7 @@ function Header() {
             </Link>
             {user ? (
               <div className="flex flex-col gap-2 pt-2 border-t">
-                <span className="text-sm text-muted-foreground px-2 py-2">
-                  {user.email}
-                </span>
+                <span className="text-sm  px-2 py-2">{user.email}</span>
                 <Button variant="ghost" className="w-full" asChild>
                   <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
                     Dashboard

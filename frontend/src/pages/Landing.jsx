@@ -265,7 +265,7 @@ function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-teal-gradient">
+    <div className="min-h-screen bg-teal-gradient text-white">
       <Helmet>
         <title>Neustream - Multistream to all platforms from one place</title>
         <meta
@@ -304,22 +304,20 @@ function Landing() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="flex flex-col items-center text-center space-y-8 md:space-y-10">
-            <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium">
-              <span className="text-xs font-semibold uppercase tracking-wide">
-                Coming Soon
-              </span>
-              <span className="mx-2">|</span>
-              <span className="text-muted-foreground">
-                Launch Date: Q2 2025
-              </span>
+            <div className="inline-flex items-center">
+              <img
+                src="/logo.png"
+                alt="Neustream Logo"
+                className="h-20 w-20 -mb-8 animate-oscillate"
+              />
             </div>
 
             <div className="space-y-4 max-w-3xl">
-              <div className="text-4xl md:text-5xl lg:text-6xl font-normal leading-tight md:leading-tight lg:leading-tight">
+              <div className="text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight md:leading-tight lg:leading-tight">
                 Streaming Without{" "}
                 <span className="">Performance Compromises</span>
               </div>
-              <div className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <div className="text-xl  max-w-2xl mx-auto">
                 <strong>
                   Best performance by default, not as a hidden option.
                 </strong>{" "}
@@ -330,23 +328,22 @@ function Landing() {
             </div>
 
             <div className="flex flex-col gap-4 w-full max-w-md">
-              <Button asChild className="w-full">
+              <Button
+                asChild
+                className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl "
+              >
                 <Link to="/auth">Start Streaming Free</Link>
-              </Button>
-              <Button variant="outline" className="w-full">
-                <span>Watch Demo</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
 
             <div className="pt-8 md:pt-12">
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm  mb-1 opacity-75">
                 Seamlessly integrate with your favorite platforms
               </p>
-              <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 opacity-70">
+              <div className="flex flex-wrap justify-center gap-x-8 opacity-75">
                 {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
                   (platform) => (
-                    <div key={platform} className="text-lg font-semibold">
+                    <div key={platform} className="text-sm font-semibold">
                       {platform}
                     </div>
                   ),
@@ -358,7 +355,7 @@ function Landing() {
       </section>
 
       {/* Performance & Privacy Section */}
-      <section className="section-padding bg-muted/30">
+      <section className="section-padding ">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
@@ -366,7 +363,7 @@ function Landing() {
                 <h2 className="text-3xl md:text-4xl font-normal">
                   Best performance by default, not as a hidden option
                 </h2>
-                <p className="text-lg text-muted-foreground">
+                <p className="text-lg ">
                   NeuStream eliminates hardware bottlenecks by offloading video
                   encoding to our cloud infrastructure. Your local machine stays
                   fast and responsive, whether you're gaming, creating, or
@@ -390,7 +387,7 @@ function Landing() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <h3 className="text-2xl font-normal">Respectful by design</h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   NeuStream doesn't interrupt your workflow or annoy you with
                   anything. It doesn't do anything without your consent: no
                   unexpected tabs about updates, no persistent popups telling
@@ -407,7 +404,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Fast, efficient, and reliable
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   NeuStream's cloud architecture is optimized for streaming
                   performance and energy efficiency. You will notice the
                   difference after streaming with NeuStream for just one
@@ -434,7 +431,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Powerful when you need it
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   Stream to multiple platforms simultaneously with our advanced
                   multistreaming technology. Connect your OBS, Streamlabs, or
                   any RTMP-compatible software and reach audiences across
@@ -451,7 +448,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Designed to get out of your way
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   NeuStream's interface is clean and minimalistic, but doesn't
                   compromise on functionality. More screen space for your
                   content, less clutter from the interface. Customize your
@@ -470,7 +467,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Works with all streaming software
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   All major streaming applications are supported and work right
                   away, by default, including OBS Studio, Streamlabs, XSplit,
                   and any RTMP-compatible software. We'll keep support for
@@ -489,7 +486,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Transparent and honest pricing
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   All NeuStream plans are clearly priced with no hidden fees.
                   You get exactly what you pay for, with straightforward upgrade
                   paths as your streaming needs grow.
@@ -504,7 +501,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Always reliable and up-to-date
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   We maintain our infrastructure with the latest security and
                   performance updates. Your streaming service will always be
                   safe, fast, and current.
@@ -520,7 +517,7 @@ function Landing() {
                 <h3 className="text-2xl font-normal">
                   Best practices for everyone, by default
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="">
                   NeuStream enforces secure connections to all platforms and
                   warns you when a platform connection needs attention. Your
                   stream data is protected end-to-end.
@@ -535,15 +532,65 @@ function Landing() {
           </div>
         </div>
       </section>
+      {/* Target Audience Section */}
+      <section className="section-padding ">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              The streaming platform made for creators, with purpose
+            </h2>
+            <p className=" text-lg">
+              We're building a streaming platform that we would want to use
+              ourselves. NeuStream's main goal is to provide an honest,
+              reliable, performance-focused, and non-invasive streaming
+              experience.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-normal">Perfect for gamers</h3>
+              <p className="">
+                Stream without FPS drops or system performance impact. Maintain
+                competitive edge while broadcasting to multiple platforms
+                simultaneously.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-normal">
+                Perfect for content creators
+              </h3>
+              <p className="">
+                Reach audiences across multiple platforms with one stream. Focus
+                on creating amazing content while we handle the technical
+                complexity.
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-normal">
+                Perfect for everyone on the go
+              </h3>
+              <p className="">
+                NeuStream's efficiency makes it perfect for mobile creators and
+                professionals. Stream from anywhere with reliable cloud
+                infrastructure backing you up.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Subscription Plans Section */}
-      <section className="section-padding bg-muted/30">
+      <section className="section-padding bg-black/10">
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
-              Choose Your <span className="gradient-text">Perfect Plan</span>
+              Choose Your{" "}
+              <span className="underline font-medium">Perfect Plan</span>
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className=" text-lg">
               Start streaming to multiple platforms with our flexible pricing
               options. Scale as you grow with no hidden fees.
             </p>
@@ -572,7 +619,7 @@ function Landing() {
             </div>
           ) : plansError ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
+              <p className="">
                 Unable to load pricing plans. Please try again later.
               </p>
             </div>
@@ -599,7 +646,7 @@ function Landing() {
                     <div className="text-center space-y-4">
                       <div className="space-y-2">
                         <h3 className="text-2xl font-normal">{plan.name}</h3>
-                        <p className="text-muted-foreground">
+                        <p className="">
                           {plan.description ||
                             `Perfect for ${plan.name.toLowerCase()} users`}
                         </p>
@@ -607,12 +654,10 @@ function Landing() {
                       <div className="space-y-1">
                         <div className="text-3xl font-normal">
                           {formatPrice(plan.price_monthly)}
-                          <span className="text-sm font-normal text-muted-foreground">
-                            /month
-                          </span>
+                          <span className="text-sm font-normal ">/month</span>
                         </div>
                         {plan.price_yearly && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm ">
                             ${plan.price_yearly} billed annually
                           </p>
                         )}
@@ -639,17 +684,15 @@ function Landing() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No pricing plans available at the moment.
-              </p>
+              <p className="">No pricing plans available at the moment.</p>
             </div>
           )}
 
           <div className="text-center mt-12">
-            <p className="text-muted-foreground mb-4">
+            <p className=" mb-4">
               All plans include a 14-day free trial. No credit card required.
             </p>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-6 text-sm ">
               <span className="flex items-center gap-2">
                 <svg
                   className="h-4 w-4 text-primary"
@@ -703,56 +746,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* Target Audience Section */}
-      <section className="section-padding bg-muted/30">
-        <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-normal mb-4">
-              The streaming platform made for creators, with purpose
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              We're building a streaming platform that we would want to use
-              ourselves. NeuStream's main goal is to provide an honest,
-              reliable, performance-focused, and non-invasive streaming
-              experience.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">Perfect for gamers</h3>
-              <p className="text-muted-foreground">
-                Stream without FPS drops or system performance impact. Maintain
-                competitive edge while broadcasting to multiple platforms
-                simultaneously.
-              </p>
-            </div>
-
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">
-                Perfect for content creators
-              </h3>
-              <p className="text-muted-foreground">
-                Reach audiences across multiple platforms with one stream. Focus
-                on creating amazing content while we handle the technical
-                complexity.
-              </p>
-            </div>
-
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">
-                Perfect for everyone on the go
-              </h3>
-              <p className="text-muted-foreground">
-                NeuStream's efficiency makes it perfect for mobile creators and
-                professionals. Stream from anywhere with reliable cloud
-                infrastructure backing you up.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA Section */}
       <section className="section-padding">
         <div className="container-custom">
@@ -760,43 +753,18 @@ function Landing() {
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Ready to try NeuStream?
             </h2>
-            <p className="text-muted-foreground text-lg mb-8">
+            <p className=" text-lg mb-8">
               It's never too late to get your streaming setup on the right
               track. NeuStream can help you reach more viewers across platforms
               while keeping your local performance intact. We hope you'll love
               it!
-            </p>
-            <Button asChild size="lg" className="px-8">
+            </p>{" "}
+            <Button
+              asChild
+              className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl "
+            >
               <Link to="/auth">Start Streaming Free</Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Data Transparency Section */}
-      <section className="section-padding bg-muted/30">
-        <div className="container-custom">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-normal mb-6 text-center">
-              Your Data & Privacy
-            </h2>
-            <div className="text-center space-y-4 mb-8">
-              <p className="text-muted-foreground">
-                NeuStream is committed to transparency about how we collect and
-                use your data. We only request the minimum information necessary
-                to provide our multistreaming services.
-              </p>
-              <p className="text-muted-foreground">
-                <strong>Why we request your data:</strong> To connect streaming
-                platforms, provide analytics, and ensure reliable service
-                delivery.
-              </p>
-            </div>
-            <div className="text-center">
-              <Button variant="outline" asChild>
-                <Link to="/privacy">Read Our Privacy Policy</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </section>

@@ -111,20 +111,11 @@ function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" min-h-screen bg-teal-gradient">
       <Header />
       <main className="section-padding">
         <div className="container-custom">
           <div className="flex flex-col items-center text-center space-y-8 max-w-md mx-auto">
-            <div className="space-y-4">
-              <div className="text-4xl font-normal">
-                Welcome to <span className="gradient-text">NeuStream</span>
-              </div>
-              <p className="text-xl text-muted-foreground">
-                Multi-platform streaming made simple
-              </p>
-            </div>
-
             <Card className="w-full">
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">
@@ -224,7 +215,7 @@ function Auth() {
                     <Separator />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
+                    <span className="bg-background px-2 ">
                       Or continue with email
                     </span>
                   </div>
@@ -235,7 +226,7 @@ function Auth() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 " />
                       <Input
                         id="email"
                         type="email"
@@ -252,7 +243,7 @@ function Auth() {
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 " />
                       <Input
                         id="password"
                         type="password"
@@ -299,7 +290,7 @@ function Auth() {
                       : "Already have an account? Sign in"}
                   </Button>
 
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs ">
                     By {isLogin ? "signing in" : "creating an account"}, you
                     agree to our{" "}
                     <Link
@@ -319,15 +310,6 @@ function Auth() {
                 </div>
               </CardContent>
             </Card>
-
-            <div className="text-center">
-              <Link
-                to="/"
-                className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center"
-              >
-                ← Back to Home
-              </Link>
-            </div>
           </div>
         </div>
       </main>
