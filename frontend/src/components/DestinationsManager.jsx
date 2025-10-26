@@ -306,7 +306,7 @@ function DestinationsManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-3xl font-bold">Streaming Destinations</div>
+          <div className="text-3xl font-normal">Streaming Destinations</div>
           <p className="text-muted-foreground">
             {isUsingSources
               ? `Manage destinations for ${currentSource?.name || 'selected source'}`

@@ -327,7 +327,7 @@ const DestinationsPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">Destinations</div>
+          <div className="text-2xl font-normal text-foreground">Destinations</div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -413,7 +413,7 @@ const DestinationsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Stream Destinations
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -442,7 +442,7 @@ const DestinationsPage = () => {
               <Target className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {destinations.length}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -457,7 +457,7 @@ const DestinationsPage = () => {
               <CheckCircle className="h-6 w-6 text-success" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {destinations.filter((d) => d.is_active).length}
               </p>
               <p className="text-sm text-muted-foreground">Active</p>
@@ -470,7 +470,7 @@ const DestinationsPage = () => {
               <span className="text-xl">🎥</span>
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {destinations.filter((d) => d.platform === "youtube").length}
               </p>
               <p className="text-sm text-muted-foreground">YouTube</p>
@@ -483,7 +483,7 @@ const DestinationsPage = () => {
               <span className="text-xl">📺</span>
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {destinations.filter((d) => d.platform === "twitch").length}
               </p>
               <p className="text-sm text-muted-foreground">Twitch</p>
@@ -496,7 +496,7 @@ const DestinationsPage = () => {
               <span className="text-xl">📘</span>
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {destinations.filter((d) => d.platform === "facebook").length}
               </p>
               <p className="text-sm text-muted-foreground">Facebook</p>

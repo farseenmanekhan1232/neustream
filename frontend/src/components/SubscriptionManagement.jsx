@@ -90,7 +90,7 @@ function SubscriptionManagement() {
       // Create payment order
       const orderData = await subscriptionService.createPaymentOrder(
         planId,
-        billingCycle
+        billingCycle,
       );
 
       // Initialize Razorpay
@@ -107,18 +107,18 @@ function SubscriptionManagement() {
             const verifyResponse = await subscriptionService.verifyPayment(
               response.razorpay_order_id,
               response.razorpay_payment_id,
-              response.razorpay_signature
+              response.razorpay_signature,
             );
 
             if (verifyResponse.success) {
               toast.success(
-                "Payment successful! Your subscription has been upgraded."
+                "Payment successful! Your subscription has been upgraded.",
               );
               queryClient.invalidateQueries(["subscription", user.id]);
               setSelectedPlan(null);
             } else {
               toast.error(
-                "Payment verification failed. Please contact support."
+                "Payment verification failed. Please contact support.",
               );
             }
           } catch (error) {
@@ -236,7 +236,7 @@ function SubscriptionManagement() {
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {currentLimits?.max_sources}
               </div>
               <div className="text-sm text-muted-foreground">Max Sources</div>
@@ -245,7 +245,7 @@ function SubscriptionManagement() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {currentLimits?.max_destinations}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -256,7 +256,7 @@ function SubscriptionManagement() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {currentLimits?.max_streaming_hours_monthly}h
               </div>
               <div className="text-sm text-muted-foreground">Monthly Hours</div>
@@ -320,7 +320,7 @@ function SubscriptionManagement() {
                       )}
                     </CardTitle>
                     <div className="space-y-2">
-                      <div className="text-3xl font-bold">
+                      <div className="text-3xl font-normal">
                         {price.monthly}
                         <span className="text-sm font-normal text-muted-foreground">
                           /month
@@ -469,8 +469,8 @@ function SubscriptionManagement() {
                     processPaymentMutation.isLoading
                       ? "Processing..."
                       : selectedPlan.name.toLowerCase() === "free"
-                      ? "Switch to Free"
-                      : "Proceed to Payment"}
+                        ? "Switch to Free"
+                        : "Proceed to Payment"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -575,7 +575,7 @@ function SubscriptionManagement() {
                                 (month.hours /
                                   currentLimits?.max_streaming_hours_monthly) *
                                   100,
-                                100
+                                100,
                               )}%`,
                             }}
                           ></div>
@@ -639,7 +639,7 @@ function SubscriptionManagement() {
                       <p className="font-medium">Next Billing Date</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(
-                          currentPlan.current_period_end
+                          currentPlan.current_period_end,
                         ).toLocaleDateString()}
                       </p>
                     </div>

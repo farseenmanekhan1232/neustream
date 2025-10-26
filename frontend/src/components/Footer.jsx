@@ -8,7 +8,7 @@ function Footer() {
       <div className="container-custom">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <div>
-            <h3 className="text-lg font-bold mb-4">NeuStream</h3>
+            <h3 className="text-lg font-normal mb-4">NeuStream</h3>
             <p className="text-muted-foreground">
               Revolutionizing multi-platform streaming with advanced computational offloading technology. Empowering
               content creators to focus on what matters most.
@@ -16,7 +16,7 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Platform</h3>
+            <h3 className="text-lg font-normal mb-4">Platform</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -37,7 +37,7 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Company</h3>
+            <h3 className="text-lg font-normal mb-4">Company</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -58,7 +58,7 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-bold mb-4">Legal</h3>
+            <h3 className="text-lg font-normal mb-4">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">

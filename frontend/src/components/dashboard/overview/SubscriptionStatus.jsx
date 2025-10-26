@@ -45,7 +45,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
           {/* Plan Limits */}
           <div className="grid gap-4 md:grid-cols-3 text-center">
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {limits.max_sources}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -53,7 +53,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {limits.max_destinations}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -61,7 +61,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-normal text-primary">
                 {limits.max_streaming_hours_monthly}h
               </div>
               <div className="text-sm text-muted-foreground">

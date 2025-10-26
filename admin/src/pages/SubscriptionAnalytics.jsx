@@ -65,11 +65,11 @@ function SubscriptionAnalytics() {
   // Calculate totals
   const totalActiveUsers = revenueProjection.reduce(
     (sum, plan) => sum + (plan.active_users || 0),
-    0
+    0,
   );
   const totalMonthlyRevenue = revenueProjection.reduce(
     (sum, plan) => sum + (parseFloat(plan.monthly_revenue) || 0),
-    0
+    0,
   );
   const totalAnnualRevenue = totalMonthlyRevenue * 12;
 
@@ -104,7 +104,7 @@ function SubscriptionAnalytics() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <div className="text-3xl font-bold">Subscription Analytics</div>
+          <div className="text-3xl font-normal">Subscription Analytics</div>
           <p className="text-muted-foreground mt-2">
             Monitor subscription performance and revenue metrics
           </p>
@@ -138,7 +138,7 @@ function SubscriptionAnalytics() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalActiveUsers}</div>
+            <div className="text-2xl font-normal">{totalActiveUsers}</div>
             <p className="text-xs text-muted-foreground">
               +12% from last month
             </p>
@@ -153,7 +153,7 @@ function SubscriptionAnalytics() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-normal">
               ${totalMonthlyRevenue.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">+8% from last month</p>
@@ -168,7 +168,7 @@ function SubscriptionAnalytics() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-normal">
               ${totalAnnualRevenue.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -185,7 +185,9 @@ function SubscriptionAnalytics() {
             <PieChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{planDistribution.length}</div>
+            <div className="text-2xl font-normal">
+              {planDistribution.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               Active subscription plans
             </p>
@@ -218,7 +220,7 @@ function SubscriptionAnalytics() {
                     <div className="w-32 bg-gray-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${getPlanColor(
-                          plan.name
+                          plan.name,
                         )}`}
                         style={{ width: `${plan.percentage || 0}%` }}
                       ></div>
@@ -386,7 +388,7 @@ function SubscriptionAnalytics() {
                   <div className="text-sm text-muted-foreground">
                     $
                     {parseFloat(
-                      revenueProjection[0].monthly_revenue || 0
+                      revenueProjection[0].monthly_revenue || 0,
                     ).toFixed(2)}
                     /month
                   </div>

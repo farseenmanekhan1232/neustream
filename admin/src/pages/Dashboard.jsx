@@ -77,11 +77,11 @@ const Dashboard = () => {
 
         const totalActiveUsers = revenueProjection.reduce(
           (sum, plan) => sum + (plan.active_users || 0),
-          0
+          0,
         );
         const totalMonthlyRevenue = revenueProjection.reduce(
           (sum, plan) => sum + (parseFloat(plan.monthly_revenue) || 0),
-          0
+          0,
         );
 
         subscriptionData = {
@@ -92,7 +92,7 @@ const Dashboard = () => {
       } catch (subscriptionError) {
         console.warn(
           "⚠️ Could not load subscription analytics:",
-          subscriptionError
+          subscriptionError,
         );
       }
 
@@ -196,7 +196,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <div className="text-2xl font-bold text-foreground">Dashboard</div>
+        <div className="text-2xl font-normal text-foreground">Dashboard</div>
         <p className="mt-1 text-sm text-muted-foreground">
           Welcome back! Here's what's happening on Neustream today.
         </p>
@@ -223,7 +223,7 @@ const Dashboard = () => {
           value={stats.activeSubscriptions}
           icon={CreditCard}
           change={`${Math.round(
-            (stats.activeSubscriptions / Math.max(stats.totalUsers, 1)) * 100
+            (stats.activeSubscriptions / Math.max(stats.totalUsers, 1)) * 100,
           )}% of users`}
           changeType="positive"
         />

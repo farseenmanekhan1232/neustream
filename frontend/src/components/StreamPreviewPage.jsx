@@ -101,7 +101,7 @@ function StreamPreviewPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl font-bold">Stream Preview</div>
+              <div className="text-3xl font-normal">Stream Preview</div>
               <p className="text-muted-foreground">
                 Monitor your live streams and engage with your audience
               </p>
@@ -142,7 +142,7 @@ function StreamPreviewPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-3xl font-bold">Stream Preview</div>
+          <div className="text-3xl font-normal">Stream Preview</div>
           <p className="text-muted-foreground">
             Monitor your live streams and engage with your audience
           </p>
@@ -182,7 +182,7 @@ function StreamPreviewPage() {
                 size="sm"
                 onClick={() => {
                   const currentIndex = activeSources.findIndex(
-                    (s) => s.id === selectedSource.id
+                    (s) => s.id === selectedSource.id,
                   );
                   const prevIndex =
                     currentIndex === 0
@@ -213,7 +213,7 @@ function StreamPreviewPage() {
                 size="sm"
                 onClick={() => {
                   const currentIndex = activeSources.findIndex(
-                    (s) => s.id === selectedSource.id
+                    (s) => s.id === selectedSource.id,
                   );
                   const nextIndex = (currentIndex + 1) % activeSources.length;
                   handleSourceSwitch(activeSources[nextIndex].id);

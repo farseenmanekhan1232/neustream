@@ -46,7 +46,7 @@ const Layout = ({ children }) => {
             <div className="flex items-center gap-2">
               <Shield className="h-8 w-8 text-primary" />
               <div>
-                <div className="text-lg font-bold text-card-foreground">
+                <div className="text-lg font-normal text-card-foreground">
                   Neustream
                 </div>
                 <p className="text-xs text-muted-foreground">Admin Panel</p>

@@ -143,7 +143,7 @@ const UsersPage = () => {
       console.error("Failed to suspend user:", error);
       showNotification(
         error.response?.data?.error || "Failed to suspend user",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -167,7 +167,7 @@ const UsersPage = () => {
   const handleResetStreamKey = async (userId) => {
     if (
       !confirm(
-        "Are you sure you want to reset this user's stream key? This will invalidate their current key."
+        "Are you sure you want to reset this user's stream key? This will invalidate their current key.",
       )
     ) {
       return;
@@ -183,7 +183,7 @@ const UsersPage = () => {
       console.error("Failed to reset stream key:", error);
       showNotification(
         error.response?.data?.error || "Failed to reset stream key",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -193,7 +193,7 @@ const UsersPage = () => {
   const handleDeleteUser = async (userId) => {
     if (
       !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
+        "Are you sure you want to delete this user? This action cannot be undone.",
       )
     ) {
       return;
@@ -208,7 +208,7 @@ const UsersPage = () => {
       console.error("Failed to delete user:", error);
       showNotification(
         error.response?.data?.error || "Failed to delete user",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -256,8 +256,8 @@ const UsersPage = () => {
               user.oauth_provider === "google"
                 ? "default"
                 : user.oauth_provider === "twitch"
-                ? "secondary"
-                : "outline"
+                  ? "secondary"
+                  : "outline"
             }
           >
             {user.oauth_provider || "email"}
@@ -361,7 +361,7 @@ const UsersPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">Users</div>
+          <div className="text-2xl font-normal text-foreground">Users</div>
         </div>
         <Card>
           <CardContent className="p-0">
@@ -452,7 +452,7 @@ const UsersPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             User Management
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -481,7 +481,7 @@ const UsersPage = () => {
               <UsersIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {users.length}
               </p>
               <p className="text-sm text-muted-foreground">Total Users</p>
@@ -494,7 +494,7 @@ const UsersPage = () => {
               <Activity className="h-6 w-6 text-success" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {users.filter((u) => u.active_streams > 0).length}
               </p>
               <p className="text-sm text-muted-foreground">Active Today</p>
@@ -507,7 +507,7 @@ const UsersPage = () => {
               <Mail className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {users.filter((u) => u.oauth_provider).length}
               </p>
               <p className="text-sm text-muted-foreground">OAuth Users</p>
@@ -520,7 +520,7 @@ const UsersPage = () => {
               <Ban className="h-6 w-6 text-destructive" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {users.filter((u) => isSuspended(u)).length}
               </p>
               <p className="text-sm text-muted-foreground">Suspended</p>
@@ -533,7 +533,7 @@ const UsersPage = () => {
               <Calendar className="h-6 w-6 text-warning" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {
                   users.filter((u) => {
                     const createdDate = new Date(u.created_at);

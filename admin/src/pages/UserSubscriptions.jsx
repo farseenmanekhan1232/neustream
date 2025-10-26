@@ -86,7 +86,7 @@ function UserSubscriptions() {
     mutationFn: async ({ userId, subscriptionData }) => {
       const response = await adminApi.updateUserSubscription(
         userId,
-        subscriptionData
+        subscriptionData,
       );
       return response;
     },
@@ -166,7 +166,7 @@ function UserSubscriptions() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="text-3xl font-bold">User Subscriptions</div>
+        <div className="text-3xl font-normal">User Subscriptions</div>
         <p className="text-muted-foreground mt-2">
           Manage user subscriptions and billing information
         </p>
@@ -273,7 +273,7 @@ function UserSubscriptions() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
                           {new Date(
-                            subscription.current_period_end
+                            subscription.current_period_end,
                           ).toLocaleDateString()}
                         </span>
                       </div>

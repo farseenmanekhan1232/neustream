@@ -176,7 +176,7 @@ function SubscriptionPlans() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <div className="text-3xl font-bold">Subscription Plans</div>
+          <div className="text-3xl font-normal">Subscription Plans</div>
           <p className="text-muted-foreground mt-2">
             Manage subscription plans and pricing tiers
           </p>
@@ -245,7 +245,7 @@ function SubscriptionPlans() {
             <CardContent className="space-y-4">
               {/* Pricing */}
               <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-bold">
+                <span className="text-3xl font-normal">
                   ${plan.price_monthly}
                 </span>
                 <span className="text-muted-foreground">/month</span>

@@ -15,7 +15,7 @@ function Header() {
       <div className="container-custom flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">NeuStream</span>
+            <span className="text-xl font-normal">NeuStream</span>
           </Link>
           <nav className="hidden md:flex gap-6 ml-6">
             <Link

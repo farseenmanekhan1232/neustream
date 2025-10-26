@@ -117,7 +117,7 @@ function Auth() {
         <div className="container-custom">
           <div className="flex flex-col items-center text-center space-y-8 max-w-md mx-auto">
             <div className="space-y-4">
-              <div className="text-4xl font-bold">
+              <div className="text-4xl font-normal">
                 Welcome to <span className="gradient-text">NeuStream</span>
               </div>
               <p className="text-xl text-muted-foreground">

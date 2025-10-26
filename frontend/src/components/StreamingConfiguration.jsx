@@ -177,7 +177,7 @@ function StreamingConfiguration() {
       toast.success(
         `${
           platform.charAt(0).toUpperCase() + platform.slice(1)
-        } account connected successfully!`
+        } account connected successfully!`,
       );
 
       // Clear the OAuth parameters from URL
@@ -187,7 +187,7 @@ function StreamingConfiguration() {
       window.history.replaceState(
         {},
         "",
-        `${window.location.pathname}?${newSearchParams.toString()}`
+        `${window.location.pathname}?${newSearchParams.toString()}`,
       );
 
       // Refresh the chat connectors query
@@ -217,7 +217,7 @@ function StreamingConfiguration() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.error || "Failed to create stream source"
+        error.response?.data?.error || "Failed to create stream source",
       );
     },
   });
@@ -239,7 +239,7 @@ function StreamingConfiguration() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.error || "Failed to update stream source"
+        error.response?.data?.error || "Failed to update stream source",
       );
     },
   });
@@ -269,7 +269,7 @@ function StreamingConfiguration() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.error || "Failed to delete stream source"
+        error.response?.data?.error || "Failed to delete stream source",
       );
     },
   });
@@ -290,7 +290,7 @@ function StreamingConfiguration() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.error || "Failed to regenerate stream key"
+        error.response?.data?.error || "Failed to regenerate stream key",
       );
     },
   });
@@ -300,7 +300,7 @@ function StreamingConfiguration() {
     mutationFn: async (destination) => {
       const response = await apiService.post(
         `/sources/${selectedSourceId}/destinations`,
-        destination
+        destination,
       );
       return response;
     },
@@ -338,7 +338,7 @@ function StreamingConfiguration() {
   const deleteDestinationMutation = useMutation({
     mutationFn: async (id) => {
       const response = await apiService.delete(
-        `/sources/${selectedSourceId}/destinations/${id}`
+        `/sources/${selectedSourceId}/destinations/${id}`,
       );
       return response;
     },
@@ -359,7 +359,7 @@ function StreamingConfiguration() {
         source_id: selectedSourceId,
       });
       toast.error(
-        error.response?.data?.error || "Failed to remove destination"
+        error.response?.data?.error || "Failed to remove destination",
       );
     },
   });
@@ -377,7 +377,7 @@ function StreamingConfiguration() {
         {
           field_type: field,
           content_length: text.length,
-        }
+        },
       );
 
       setTimeout(() => setCopiedField(null), 2000);
@@ -444,7 +444,7 @@ function StreamingConfiguration() {
 
     if (
       window.confirm(
-        "Are you sure you want to delete this stream source? This action cannot be undone and will remove all associated destinations."
+        "Are you sure you want to delete this stream source? This action cannot be undone and will remove all associated destinations.",
       )
     ) {
       deleteSourceMutation.mutate(selectedSourceId);
@@ -459,7 +459,7 @@ function StreamingConfiguration() {
 
     if (
       window.confirm(
-        "Are you sure you want to regenerate the stream key? Your current stream key will stop working immediately."
+        "Are you sure you want to regenerate the stream key? Your current stream key will stop working immediately.",
       )
     ) {
       regenerateKeyMutation.mutate(selectedSourceId);
@@ -481,22 +481,22 @@ function StreamingConfiguration() {
   // const getPlatformIcon = (platform) => {
   //   const icons = {
   //     youtube: (
-  //       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+  //       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
   //         YT
   //       </div>
   //     ),
   //     twitch: (
-  //       <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+  //       <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
   //         TW
   //       </div>
   //     ),
   //     facebook: (
-  //       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+  //       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
   //         FB
   //       </div>
   //     ),
   //     custom: (
-  //       <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+  //       <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
   //         RTMP
   //       </div>
   //     ),
@@ -643,7 +643,7 @@ function StreamingConfiguration() {
                           onClick={() =>
                             copyToClipboard(
                               "rtmp://stream.neustream.app/live",
-                              "RTMP URL"
+                              "RTMP URL",
                             )
                           }
                         >
@@ -678,7 +678,7 @@ function StreamingConfiguration() {
                           onClick={() =>
                             copyToClipboard(
                               currentSource.stream_key,
-                              "Stream Key"
+                              "Stream Key",
                             )
                           }
                         >
@@ -731,7 +731,7 @@ function StreamingConfiguration() {
               onClick={() => {
                 if (!isUsingSources || !currentSource) {
                   toast.error(
-                    "Create a stream source first before adding destinations"
+                    "Create a stream source first before adding destinations",
                   );
                   return;
                 }
@@ -779,7 +779,7 @@ function StreamingConfiguration() {
                 onClick={() => {
                   if (!isUsingSources || !currentSource) {
                     toast.error(
-                      "Create a stream source first before adding destinations"
+                      "Create a stream source first before adding destinations",
                     );
                     return;
                   }
@@ -841,7 +841,7 @@ function StreamingConfiguration() {
                             onClick={() =>
                               copyToClipboard(
                                 destination.rtmp_url,
-                                `${config.name} RTMP URL`
+                                `${config.name} RTMP URL`,
                               )
                             }
                             className="h-8 w-8"
@@ -1095,7 +1095,7 @@ function StreamingConfiguration() {
                       onClick={() =>
                         copyToClipboard(
                           "rtmp://stream.neustream.app/live",
-                          "RTMP URL"
+                          "RTMP URL",
                         )
                       }
                     >
@@ -1271,7 +1271,7 @@ function StreamingConfiguration() {
                         onClick={() =>
                           copyToClipboard(
                             destinationFormData.rtmpUrl,
-                            "RTMP URL"
+                            "RTMP URL",
                           )
                         }
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"

@@ -315,7 +315,7 @@ function Landing() {
             </div>
 
             <div className="space-y-4 max-w-3xl">
-              <div className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight lg:leading-tight">
+              <div className="text-4xl md:text-5xl lg:text-6xl font-normal leading-tight md:leading-tight lg:leading-tight">
                 Streaming Without{" "}
                 <span className="">Performance Compromises</span>
               </div>
@@ -363,7 +363,7 @@ function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-bold">
+                <h2 className="text-3xl md:text-4xl font-normal">
                   Best performance by default, not as a hidden option
                 </h2>
                 <p className="text-lg text-muted-foreground">
@@ -389,7 +389,7 @@ function Landing() {
 
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">Respectful by design</h3>
+                <h3 className="text-2xl font-normal">Respectful by design</h3>
                 <p className="text-muted-foreground">
                   NeuStream doesn't interrupt your workflow or annoy you with
                   anything. It doesn't do anything without your consent: no
@@ -404,7 +404,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Fast, efficient, and reliable
                 </h3>
                 <p className="text-muted-foreground">
@@ -431,7 +431,7 @@ function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Powerful when you need it
                 </h3>
                 <p className="text-muted-foreground">
@@ -448,7 +448,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Designed to get out of your way
                 </h3>
                 <p className="text-muted-foreground">
@@ -467,7 +467,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Works with all streaming software
                 </h3>
                 <p className="text-muted-foreground">
@@ -486,7 +486,7 @@ function Landing() {
 
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Transparent and honest pricing
                 </h3>
                 <p className="text-muted-foreground">
@@ -501,7 +501,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Always reliable and up-to-date
                 </h3>
                 <p className="text-muted-foreground">
@@ -517,7 +517,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold">
+                <h3 className="text-2xl font-normal">
                   Best practices for everyone, by default
                 </h3>
                 <p className="text-muted-foreground">
@@ -540,7 +540,7 @@ function Landing() {
       <section className="section-padding bg-muted/30">
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Choose Your <span className="gradient-text">Perfect Plan</span>
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -598,14 +598,14 @@ function Landing() {
                     )}
                     <div className="text-center space-y-4">
                       <div className="space-y-2">
-                        <h3 className="text-2xl font-bold">{plan.name}</h3>
+                        <h3 className="text-2xl font-normal">{plan.name}</h3>
                         <p className="text-muted-foreground">
                           {plan.description ||
                             `Perfect for ${plan.name.toLowerCase()} users`}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <div className="text-3xl font-bold">
+                        <div className="text-3xl font-normal">
                           {formatPrice(plan.price_monthly)}
                           <span className="text-sm font-normal text-muted-foreground">
                             /month
@@ -707,7 +707,7 @@ function Landing() {
       <section className="section-padding bg-muted/30">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
               The streaming platform made for creators, with purpose
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -720,7 +720,7 @@ function Landing() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold">Perfect for gamers</h3>
+              <h3 className="text-xl font-normal">Perfect for gamers</h3>
               <p className="text-muted-foreground">
                 Stream without FPS drops or system performance impact. Maintain
                 competitive edge while broadcasting to multiple platforms
@@ -729,7 +729,7 @@ function Landing() {
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold">
+              <h3 className="text-xl font-normal">
                 Perfect for content creators
               </h3>
               <p className="text-muted-foreground">
@@ -740,7 +740,7 @@ function Landing() {
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-bold">
+              <h3 className="text-xl font-normal">
                 Perfect for everyone on the go
               </h3>
               <p className="text-muted-foreground">
@@ -757,7 +757,7 @@ function Landing() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Ready to try NeuStream?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
@@ -777,7 +777,7 @@ function Landing() {
       <section className="section-padding bg-muted/30">
         <div className="container-custom">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+            <h2 className="text-2xl md:text-3xl font-normal mb-6 text-center">
               Your Data & Privacy
             </h2>
             <div className="text-center space-y-4 mb-8">

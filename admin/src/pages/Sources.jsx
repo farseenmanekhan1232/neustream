@@ -130,7 +130,7 @@ const SourcesPage = () => {
       console.error("Failed to update source:", error);
       showNotification(
         error.response?.data?.error || "Failed to update source",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -140,7 +140,7 @@ const SourcesPage = () => {
   const handleDeleteSource = async (sourceId) => {
     if (
       !confirm(
-        "Are you sure you want to delete this source? This will also delete all associated destinations and cannot be undone."
+        "Are you sure you want to delete this source? This will also delete all associated destinations and cannot be undone.",
       )
     ) {
       return;
@@ -155,7 +155,7 @@ const SourcesPage = () => {
       console.error("Failed to delete source:", error);
       showNotification(
         error.response?.data?.error || "Failed to delete source",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -165,7 +165,7 @@ const SourcesPage = () => {
   const handleRegenerateKey = async (sourceId) => {
     if (
       !confirm(
-        "Are you sure you want to regenerate this stream key? This will invalidate the current key."
+        "Are you sure you want to regenerate this stream key? This will invalidate the current key.",
       )
     ) {
       return;
@@ -181,7 +181,7 @@ const SourcesPage = () => {
       console.error("Failed to regenerate stream key:", error);
       showNotification(
         error.response?.data?.error || "Failed to regenerate stream key",
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(false);
@@ -237,8 +237,8 @@ const SourcesPage = () => {
             source.oauth_provider === "google"
               ? "default"
               : source.oauth_provider === "twitch"
-              ? "secondary"
-              : "outline"
+                ? "secondary"
+                : "outline"
           }
         >
           {source.oauth_provider || "email"}
@@ -332,7 +332,7 @@ const SourcesPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Stream Sources
           </div>
         </div>
@@ -425,7 +425,7 @@ const SourcesPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Stream Sources
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -454,7 +454,7 @@ const SourcesPage = () => {
               <Radio className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {sources.length}
               </p>
               <p className="text-sm text-muted-foreground">Total Sources</p>
@@ -467,7 +467,7 @@ const SourcesPage = () => {
               <Wifi className="h-6 w-6 text-success" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {sources.filter((s) => s.is_active).length}
               </p>
               <p className="text-sm text-muted-foreground">Active</p>
@@ -480,10 +480,10 @@ const SourcesPage = () => {
               <Target className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {sources.reduce(
                   (acc, s) => acc + (s.destinations_count || 0),
-                  0
+                  0,
                 )}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -498,7 +498,7 @@ const SourcesPage = () => {
               <Calendar className="h-6 w-6 text-warning" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-2xl font-normal text-foreground">
                 {
                   sources.filter((s) => {
                     const createdDate = new Date(s.created_at);
@@ -789,7 +789,7 @@ const SourcesPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-foreground">
+                      <div className="text-2xl font-normal text-foreground">
                         {selectedSource.stats.totalStreams || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -799,9 +799,9 @@ const SourcesPage = () => {
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-foreground">
+                      <div className="text-2xl font-normal text-foreground">
                         {Math.round(
-                          (selectedSource.stats.avgDuration || 0) / 60
+                          (selectedSource.stats.avgDuration || 0) / 60,
                         )}
                         m
                       </div>
@@ -826,7 +826,7 @@ const SourcesPage = () => {
                       <div className="text-sm text-success/80">
                         Started:{" "}
                         {new Date(
-                          selectedSource.active_stream.started_at
+                          selectedSource.active_stream.started_at,
                         ).toLocaleString()}
                       </div>
                     </div>

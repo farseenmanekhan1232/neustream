@@ -161,7 +161,7 @@ const AnalyticsPage = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-gray-900">Analytics</div>
+          <div className="text-2xl font-normal text-gray-900">Analytics</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -184,7 +184,7 @@ const AnalyticsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Analytics Dashboard
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -242,7 +242,7 @@ const AnalyticsPage = () => {
                       <p className="text-primary-foreground/80 text-sm">
                         Total Users
                       </p>
-                      <p className="text-3xl font-bold">
+                      <p className="text-3xl font-normal">
                         {systemStats.users?.total_users || 0}
                       </p>
                       <p className="text-primary-foreground/80 text-xs mt-1">
@@ -258,7 +258,7 @@ const AnalyticsPage = () => {
                       <p className="text-success-foreground/80 text-sm">
                         Active Streams
                       </p>
-                      <p className="text-3xl font-bold">
+                      <p className="text-3xl font-normal">
                         {systemStats.streams?.activeStreams || 0}
                       </p>
                       <p className="text-success-foreground/80 text-xs mt-1">
@@ -274,7 +274,7 @@ const AnalyticsPage = () => {
                       <p className="text-primary-foreground/80 text-sm">
                         Total Destinations
                       </p>
-                      <p className="text-3xl font-bold">
+                      <p className="text-3xl font-normal">
                         {systemStats.destinations?.total_destinations || 0}
                       </p>
                       <p className="text-primary-foreground/80 text-xs mt-1">
@@ -290,7 +290,7 @@ const AnalyticsPage = () => {
                       <p className="text-warning-foreground/80 text-sm">
                         Recent Activity
                       </p>
-                      <p className="text-3xl font-bold">
+                      <p className="text-3xl font-normal">
                         {systemStats.activity?.streams_started_24h || 0}
                       </p>
                       <p className="text-warning-foreground/80 text-xs mt-1">
@@ -398,7 +398,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Total Users</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">
+                    <p className="text-2xl font-normal">
                       {userAnalytics.activityMetrics?.total_users || 0}
                     </p>
                   </CardContent>
@@ -408,7 +408,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Active Users (Period)</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-success">
+                    <p className="text-2xl font-normal text-success">
                       {userAnalytics.activityMetrics?.active_users || 0}
                     </p>
                   </CardContent>
@@ -418,7 +418,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Active Today</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-2xl font-normal text-primary">
                       {userAnalytics.activityMetrics?.active_users_24h || 0}
                     </p>
                   </CardContent>
@@ -468,7 +468,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Total Sessions</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">
+                    <p className="text-2xl font-normal">
                       {streamAnalytics.qualityMetrics?.total_sessions || 0}
                     </p>
                   </CardContent>
@@ -478,7 +478,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Completed</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-success">
+                    <p className="text-2xl font-normal text-success">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.streams_completed || 0),
                         0
@@ -491,7 +491,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Avg Duration</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-2xl font-normal text-primary">
                       {formatDuration(
                         streamAnalytics.qualityMetrics?.avg_duration_seconds
                       )}
@@ -503,7 +503,7 @@ const AnalyticsPage = () => {
                     <CardDescription>Unique Streamers</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-primary/70">
+                    <p className="text-2xl font-normal text-primary/70">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.unique_streamers || 0),
                         0
@@ -521,7 +521,7 @@ const AnalyticsPage = () => {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-destructive">
+                      <div className="text-2xl font-normal text-destructive">
                         {streamAnalytics.qualityMetrics?.under_1min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -529,7 +529,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-warning">
+                      <div className="text-2xl font-normal text-warning">
                         {streamAnalytics.qualityMetrics?.between_1_5min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -537,7 +537,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
+                      <div className="text-2xl font-normal text-primary">
                         {streamAnalytics.qualityMetrics?.between_5_30min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -545,7 +545,7 @@ const AnalyticsPage = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-success">
+                      <div className="text-2xl font-normal text-success">
                         {streamAnalytics.qualityMetrics?.over_30min || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">

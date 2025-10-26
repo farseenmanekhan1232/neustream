@@ -100,7 +100,7 @@ function AppContent() {
           element={
             <div className="w-full px-6 py-6 space-y-6  mx-auto">
               <div className="text-center py-12">
-                <h2 className="text-2xl font-bold mb-4">Analytics</h2>
+                <h2 className="text-2xl font-normal mb-4">Analytics</h2>
                 <p className="text-muted-foreground">
                   Coming soon! Track your stream performance and viewer
                   engagement.
@@ -114,7 +114,7 @@ function AppContent() {
           element={
             <div className="w-full px-6 py-6 space-y-6  mx-auto">
               <div className="text-center py-12">
-                <h2 className="text-2xl font-bold mb-4">Settings</h2>
+                <h2 className="text-2xl font-normal mb-4">Settings</h2>
                 <p className="text-muted-foreground">
                   Account settings coming soon! Manage your profile, streaming
                   preferences, and integrations.

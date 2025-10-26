@@ -48,7 +48,7 @@ const Login = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email, password }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -89,14 +89,14 @@ const Login = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-12 w-12 text-primary" />
             <div>
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-2xl font-normal text-foreground">
                 Neustream
               </div>
               <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
+        <h2 className="mt-6 text-center text-3xl font-normal text-foreground">
           Sign in to Admin
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">

@@ -133,7 +133,7 @@ useEffect(() => {
 // Current: Manual platform icon mapping
 const platformIcons = {
   youtube: () => (
-    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">YT</div>
+    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-normal text-sm">YT</div>
   ),
   // ... more platforms
 };

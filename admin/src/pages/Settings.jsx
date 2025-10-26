@@ -54,13 +54,13 @@ const SettingsPage = () => {
           onClick={() => handleNotificationChange(key)}
           className={cn(
             "relative inline-flex h-6 w-11 items-center rounded-full p-0",
-            enabled ? "bg-primary" : "bg-muted"
+            enabled ? "bg-primary" : "bg-muted",
           )}
         >
           <span
             className={cn(
               "inline-block h-5 w-5 transform rounded-full bg-background transition-transform",
-              enabled ? "translate-x-5" : "translate-x-0"
+              enabled ? "translate-x-5" : "translate-x-0",
             )}
           />
         </Button>
@@ -90,8 +90,8 @@ const SettingsPage = () => {
           {service === "API Server"
             ? "Operational"
             : service === "Database"
-            ? "Connected"
-            : "Limited Data"}
+              ? "Connected"
+              : "Limited Data"}
         </Badge>
       </TableCell>
     </TableRow>
@@ -184,8 +184,8 @@ const SettingsPage = () => {
                 user?.oauthProvider === "google"
                   ? "default"
                   : user?.oauthProvider === "twitch"
-                  ? "secondary"
-                  : "outline"
+                    ? "secondary"
+                    : "outline"
               }
             >
               {user?.oauthProvider?.charAt(0).toUpperCase() +
@@ -391,7 +391,7 @@ const SettingsPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-2xl font-bold text-foreground">Settings</div>
+        <div className="text-2xl font-normal text-foreground">Settings</div>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage your account settings and preferences.
         </p>

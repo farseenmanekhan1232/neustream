@@ -140,7 +140,7 @@ const Streams = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Active Streams
           </div>
         </div>
@@ -199,7 +199,7 @@ const Streams = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-2xl font-normal text-foreground">
             Active Streams
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -221,7 +221,7 @@ const Streams = () => {
                 <Activity className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-2xl font-normal text-foreground">
                   {streams.length}
                 </p>
                 <p className="text-sm text-muted-foreground">Active Streams</p>

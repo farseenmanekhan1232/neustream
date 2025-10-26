@@ -59,7 +59,7 @@ export default function Contact() {
 
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
+          <h1 className="text-4xl font-normal mb-4">Contact Us</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Have questions about Neustream? Need help with your streams? We're here to help.
             Reach out through any of the channels below or send us a message.
@@ -258,7 +258,7 @@ export default function Contact() {
 
         {/* FAQ Section */}
         <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-normal mb-4">Frequently Asked Questions</h2>
           <p className="text-muted-foreground mb-6">
             Find quick answers to common questions about Neustream.
           </p>
