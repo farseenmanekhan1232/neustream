@@ -6,8 +6,19 @@ import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { subscriptionService } from "../services/subscription";
+import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
 
 function Landing() {
+  // TextHighlighter configuration
+  const highlightConfig = {
+    transition: { type: "spring", duration: 1, delay: 0.2, bounce: 0 },
+    highlightColor: "#F2AD91",
+    className: "rounded-[0.3em] px-px",
+    useInViewOptions: { once: true, initial: false, amount: 0.3 },
+    triggerType: "inView",
+    direction: "ltr",
+  };
+
   // Fetch subscription plans from API
   const {
     data: plansData,
@@ -315,35 +326,37 @@ function Landing() {
             <div className="space-y-4 max-w-3xl">
               <div className="text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight md:leading-tight lg:leading-tight">
                 Streaming Without{" "}
-                <span className="">Performance Compromises</span>
-              </div>
-              <div className="text-xl  max-w-2xl mx-auto">
-                <strong>
-                  Best performance by default, not as a hidden option.
-                </strong>{" "}
-                Cloud-powered multistreaming that eliminates hardware
-                bottlenecks, protects your privacy, and respects your workflow.
-                No CPU spikes, no dropped frames, no intrusive interruptions.
+                <TextHighlighter {...highlightConfig}>
+                  Performance Compromises
+                </TextHighlighter>
               </div>
             </div>
 
             <div className="flex flex-col gap-4 w-full max-w-md">
               <Button
                 asChild
-                className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl "
+                className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl relative"
               >
-                <Link to="/auth">Start Streaming Free</Link>
+                <Link to="/auth">
+                  Start Streaming Free
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <span className="animate-pulse">LIVE</span>
+                  </span>
+                </Link>
               </Button>
             </div>
 
-            <div className="pt-8 md:pt-12">
-              <p className="text-sm  mb-1 opacity-75">
+            <div className=" ">
+              <p className=" opacity-80 text-sm">
                 Seamlessly integrate with your favorite platforms
               </p>
-              <div className="flex flex-wrap justify-center gap-x-8 opacity-75">
+              <div className="flex flex-wrap justify-center gap-x-8 opacity-80">
                 {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
                   (platform) => (
-                    <div key={platform} className="text-sm font-semibold">
+                    <div
+                      key={platform}
+                      className="text-base font-semibold text-shadow-md"
+                    >
                       {platform}
                     </div>
                   ),
@@ -352,6 +365,11 @@ function Landing() {
             </div>
           </div>
         </div>
+        <img
+          src="/hero.png"
+          alt="Integration"
+          className="w-2/3 mx-auto rounded-2xl mt-6"
+        />
       </section>
 
       {/* Performance & Privacy Section */}
@@ -368,18 +386,28 @@ function Landing() {
                   encoding to our cloud infrastructure. Your local machine stays
                   fast and responsive, whether you're gaming, creating, or
                   working on resource-intensive projects. No CPU spikes, no
-                  dropped frames, no performance compromises.
+                  dropped frames, no{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    performance compromises
+                  </TextHighlighter>
+                  .
                   <br />
                   <br />
                   Our distributed infrastructure ensures your streams stay live
-                  even if individual servers experience issues. You get 99.9%
-                  uptime guarantee without thinking about it.
+                  even if individual servers experience issues. You get{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    99.9% uptime guarantee
+                  </TextHighlighter>{" "}
+                  without thinking about it.
                   <br />
                   <br />
                   Not enough? Fine-tune your streaming settings with advanced
                   controls for bitrate, resolution, and platform-specific
-                  optimizations. You're finally in full control of your
-                  streaming performance without hardware limitations.
+                  optimizations. You're finally in{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    full control of your streaming performance
+                  </TextHighlighter>{" "}
+                  without hardware limitations.
                 </p>
               </div>
             </div>
@@ -396,7 +424,10 @@ function Landing() {
                   <br />
                   Nothing interrupts your stream, jumps in your face, or breaks
                   your creative flow. Everything just makes sense. You're in
-                  full control.
+                  <TextHighlighter {...highlightConfig}>
+                    full control
+                  </TextHighlighter>
+                  .
                 </p>
               </div>
 
@@ -412,9 +443,12 @@ function Landing() {
                   streams.
                   <br />
                   <br />
-                  All unnecessary bloat is removed: NeuStream is one of the most
-                  efficient multistreaming solutions available, delivering
-                  maximum performance with minimal resource usage.
+                  All unnecessary bloat is removed: NeuStream is one of the{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    most efficient multistreaming solutions
+                  </TextHighlighter>{" "}
+                  available, delivering maximum performance with minimal
+                  resource usage.
                 </p>
               </div>
             </div>
@@ -428,20 +462,49 @@ function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
-                  Powerful when you need it
-                </h3>
-                <p className="">
-                  Stream to multiple platforms simultaneously with our advanced
-                  multistreaming technology. Connect your OBS, Streamlabs, or
-                  any RTMP-compatible software and reach audiences across
-                  YouTube, Twitch, Facebook, and more with one stream.
-                  <br />
-                  <br />
-                  Monitor all your streams in real-time with our unified
-                  dashboard. Track performance metrics, viewer engagement, and
-                  platform-specific analytics without switching between tabs.
-                </p>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-normal">
+                    Works with all streaming software
+                  </h3>
+                  <p className="">
+                    All major streaming applications are supported and work
+                    right away, by default, including{" "}
+                    <TextHighlighter {...highlightConfig}>
+                      OBS Studio, Streamlabs, XSplit
+                    </TextHighlighter>
+                    , and any RTMP-compatible software. We'll keep support for
+                    emerging platforms as they become available.
+                    <br />
+                    <br />
+                    NeuStream provides{" "}
+                    <TextHighlighter {...highlightConfig}>
+                      secure, encrypted connections
+                    </TextHighlighter>{" "}
+                    to all platforms. Your stream keys and credentials are
+                    protected with enterprise-grade security.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-normal">
+                    Best practices for everyone, by default
+                  </h3>
+                  <p className="">
+                    NeuStream enforces{" "}
+                    <TextHighlighter {...highlightConfig}>
+                      secure connections to all platforms
+                    </TextHighlighter>{" "}
+                    and warns you when a platform connection needs attention.
+                    Your stream data is protected end-to-end.
+                    <br />
+                    <br />
+                    There's no unnecessary data collection. We only process
+                    what's needed to deliver your streams reliably. Your{" "}
+                    <TextHighlighter {...highlightConfig}>
+                      privacy and control over your content
+                    </TextHighlighter>{" "}
+                    are fundamental principles.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -449,51 +512,47 @@ function Landing() {
                   Designed to get out of your way
                 </h3>
                 <p className="">
-                  NeuStream's interface is clean and minimalistic, but doesn't
-                  compromise on functionality. More screen space for your
-                  content, less clutter from the interface. Customize your
-                  dashboard to show only what matters to you.
+                  NeuStream's interface is{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    clean and minimalistic
+                  </TextHighlighter>
+                  , but doesn't compromise on functionality. More screen space
+                  for your content, less clutter from the interface. Customize
+                  your dashboard to show only what matters to you.
                   <br />
                   <br />
                   NeuStream is built with attention to detail. Your streams
                   don't stutter or drop frames abnormally. Your creative
                   workflow isn't interrupted by lag or technical issues.
-                  Everything's smooth, reliable, and simple. Comfort and
-                  performance are our top priorities.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
-                  Works with all streaming software
-                </h3>
-                <p className="">
-                  All major streaming applications are supported and work right
-                  away, by default, including OBS Studio, Streamlabs, XSplit,
-                  and any RTMP-compatible software. We'll keep support for
-                  emerging platforms as they become available.
-                  <br />
-                  <br />
-                  NeuStream provides secure, encrypted connections to all
-                  platforms. Your stream keys and credentials are protected with
-                  enterprise-grade security.
+                  Everything's{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    smooth, reliable, and simple
+                  </TextHighlighter>
+                  . Comfort and performance are our top priorities.
                 </p>
               </div>
             </div>
 
             <div className="space-y-8">
+              <img src="/obs.png" alt="Gaming" className="w-full rounded-2xl" />
               <div className="space-y-4">
                 <h3 className="text-2xl font-normal">
                   Transparent and honest pricing
                 </h3>
                 <p className="">
-                  All NeuStream plans are clearly priced with no hidden fees.
-                  You get exactly what you pay for, with straightforward upgrade
-                  paths as your streaming needs grow.
+                  All NeuStream plans are{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    clearly priced with no hidden fees
+                  </TextHighlighter>
+                  . You get exactly what you pay for, with straightforward
+                  upgrade paths as your streaming needs grow.
                   <br />
                   <br />
-                  Everything is available with transparent billing. No
-                  exceptions, no surprise charges.
+                  Everything is available with{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    transparent billing
+                  </TextHighlighter>
+                  . No exceptions, no surprise charges.
                 </p>
               </div>
 
@@ -504,28 +563,19 @@ function Landing() {
                 <p className="">
                   We maintain our infrastructure with the latest security and
                   performance updates. Your streaming service will always be
-                  safe, fast, and current.
+                  <TextHighlighter {...highlightConfig}>
+                    safe, fast, and current
+                  </TextHighlighter>
+                  .
                   <br />
                   <br />
                   NeuStream updates its services automatically, with new
                   features and optimizations delivered seamlessly. All
-                  improvements are available to you without manual intervention.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
-                  Best practices for everyone, by default
-                </h3>
-                <p className="">
-                  NeuStream enforces secure connections to all platforms and
-                  warns you when a platform connection needs attention. Your
-                  stream data is protected end-to-end.
-                  <br />
-                  <br />
-                  There's no unnecessary data collection. We only process what's
-                  needed to deliver your streams reliably. Your privacy and
-                  control over your content are fundamental principles.
+                  improvements are available to you{" "}
+                  <TextHighlighter {...highlightConfig}>
+                    without manual intervention
+                  </TextHighlighter>
+                  .
                 </p>
               </div>
             </div>
@@ -534,6 +584,11 @@ function Landing() {
       </section>
       {/* Target Audience Section */}
       <section className="section-padding ">
+        <img
+          src="/live.png"
+          alt="Target Audience"
+          className="w-2/3 h-auto mb-8 mx-auto rounded-2xl"
+        />
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
@@ -541,9 +596,12 @@ function Landing() {
             </h2>
             <p className=" text-lg">
               We're building a streaming platform that we would want to use
-              ourselves. NeuStream's main goal is to provide an honest,
-              reliable, performance-focused, and non-invasive streaming
-              experience.
+              ourselves. NeuStream's main goal is to provide an{" "}
+              <TextHighlighter {...highlightConfig}>
+                honest, reliable, performance-focused, and non-invasive
+                streaming experience
+              </TextHighlighter>
+              .
             </p>
           </div>
 
@@ -552,8 +610,11 @@ function Landing() {
               <h3 className="text-xl font-normal">Perfect for gamers</h3>
               <p className="">
                 Stream without FPS drops or system performance impact. Maintain
-                competitive edge while broadcasting to multiple platforms
-                simultaneously.
+                competitive edge while{" "}
+                <TextHighlighter {...highlightConfig}>
+                  broadcasting to multiple platforms simultaneously
+                </TextHighlighter>
+                .
               </p>
             </div>
 
@@ -562,9 +623,11 @@ function Landing() {
                 Perfect for content creators
               </h3>
               <p className="">
-                Reach audiences across multiple platforms with one stream. Focus
-                on creating amazing content while we handle the technical
-                complexity.
+                Reach audiences across multiple platforms with one stream.{" "}
+                <TextHighlighter {...highlightConfig}>
+                  Focus on creating amazing content
+                </TextHighlighter>{" "}
+                while we handle the technical complexity.
               </p>
             </div>
 
@@ -574,8 +637,11 @@ function Landing() {
               </h3>
               <p className="">
                 NeuStream's efficiency makes it perfect for mobile creators and
-                professionals. Stream from anywhere with reliable cloud
-                infrastructure backing you up.
+                professionals. Stream from anywhere with{" "}
+                <TextHighlighter {...highlightConfig}>
+                  reliable cloud infrastructure
+                </TextHighlighter>{" "}
+                backing you up.
               </p>
             </div>
           </div>
@@ -755,15 +821,23 @@ function Landing() {
             </h2>
             <p className=" text-lg mb-8">
               It's never too late to get your streaming setup on the right
-              track. NeuStream can help you reach more viewers across platforms
-              while keeping your local performance intact. We hope you'll love
-              it!
+              track. NeuStream can help you{" "}
+              <TextHighlighter {...highlightConfig}>
+                reach more viewers across platforms while keeping your local
+                performance intact
+              </TextHighlighter>
+              . We hope you'll love it!
             </p>{" "}
             <Button
               asChild
-              className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl "
+              className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl relative"
             >
-              <Link to="/auth">Start Streaming Free</Link>
+              <Link to="/auth">
+                Start Streaming Free
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  <span className="animate-pulse">LIVE</span>
+                </span>
+              </Link>
             </Button>
           </div>
         </div>
