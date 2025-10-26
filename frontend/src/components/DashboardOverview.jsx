@@ -20,12 +20,22 @@ function DashboardOverview() {
   const { data: allData, isLoading } = useQuery({
     queryKey: ["dashboard-data", user?.id],
     queryFn: async () => {
-      const [streamInfo, destinationsData, sourcesData, subscriptionData] = await Promise.all([
-        apiService.get("/streams/info").then(res => res.data).catch(() => null),
-        apiService.get("/destinations").then(res => res.data).catch(() => null),
-        apiService.get("/sources").then(res => res.data).catch(() => null),
-        subscriptionService.getMySubscription().catch(() => null),
-      ]);
+      const [streamInfo, destinationsData, sourcesData, subscriptionData] =
+        await Promise.all([
+          apiService
+            .get("/streams/info")
+            .then((res) => res.data)
+            .catch(() => null),
+          apiService
+            .get("/destinations")
+            .then((res) => res.data)
+            .catch(() => null),
+          apiService
+            .get("/sources")
+            .then((res) => res.data)
+            .catch(() => null),
+          subscriptionService.getMySubscription().catch(() => null),
+        ]);
 
       return {
         streamInfo,
@@ -94,7 +104,7 @@ function DashboardOverview() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+    <div className="w-full px-6 py-6 space-y-6  mx-auto">
       {/* Welcome Section */}
       <WelcomeSection
         user={user}

@@ -174,13 +174,21 @@ function StreamingConfiguration() {
 
     if (oauthSuccess === "true" && platform && selectedSourceId) {
       // Show success message
-      toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} account connected successfully!`);
+      toast.success(
+        `${
+          platform.charAt(0).toUpperCase() + platform.slice(1)
+        } account connected successfully!`
+      );
 
       // Clear the OAuth parameters from URL
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete("oauth_success");
       newSearchParams.delete("platform");
-      window.history.replaceState({}, "", `${window.location.pathname}?${newSearchParams.toString()}`);
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}?${newSearchParams.toString()}`
+      );
 
       // Refresh the chat connectors query
       queryClient.invalidateQueries(["chatConnectors", selectedSourceId]);
@@ -500,7 +508,7 @@ function StreamingConfiguration() {
 
   if (isLoading) {
     return (
-      <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+      <div className="w-full px-6 py-6 space-y-6  mx-auto">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -520,7 +528,7 @@ function StreamingConfiguration() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+    <div className="w-full px-6 py-6 space-y-6  mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

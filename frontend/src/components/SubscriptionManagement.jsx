@@ -212,7 +212,7 @@ function SubscriptionManagement() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+    <div className="w-full px-6 py-6 space-y-6  mx-auto">
       {/* Current Plan Header */}
       <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
         <CardHeader>

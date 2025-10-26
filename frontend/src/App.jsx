@@ -84,7 +84,7 @@ function AppContent() {
         <Route
           path="analytics"
           element={
-            <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+            <div className="w-full px-6 py-6 space-y-6  mx-auto">
               <div className="text-center py-12">
                 <h2 className="text-2xl font-bold mb-4">Analytics</h2>
                 <p className="text-muted-foreground">
@@ -98,7 +98,7 @@ function AppContent() {
         <Route
           path="settings"
           element={
-            <div className="w-full px-6 py-6 space-y-6 max-w-7xl mx-auto">
+            <div className="w-full px-6 py-6 space-y-6  mx-auto">
               <div className="text-center py-12">
                 <h2 className="text-2xl font-bold mb-4">Settings</h2>
                 <p className="text-muted-foreground">

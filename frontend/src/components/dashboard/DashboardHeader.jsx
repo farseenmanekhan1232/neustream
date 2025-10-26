@@ -41,7 +41,7 @@ const DashboardHeader = memo(function DashboardHeader() {
       )}
     >
       <div className="flex items-center gap-3 md:gap-4">
-        <SidebarTrigger className="md:hidden">
+        <SidebarTrigger className="">
           {isMobile ? (
             <Menu className="h-5 w-5" />
           ) : (
