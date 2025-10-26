@@ -649,7 +649,7 @@ function Landing() {
       </section>
 
       {/* Subscription Plans Section */}
-      <section className="section-padding bg-black/10">
+      <section className="section-padding">
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
@@ -704,7 +704,7 @@ function Landing() {
                   >
                     {isProPlan && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                        <span className="bg-primary  px-3 py-1 rounded-full text-sm font-medium">
                           Most Popular
                         </span>
                       </div>
