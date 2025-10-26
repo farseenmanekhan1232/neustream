@@ -698,7 +698,7 @@ function Landing() {
                 return (
                   <div
                     key={plan.id}
-                    className={`feature-card relative ${
+                    className={`relative ${
                       isProPlan ? "border-2 border-primary" : ""
                     }`}
                   >
