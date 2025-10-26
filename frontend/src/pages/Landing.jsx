@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { subscriptionService } from "../services/subscription";
@@ -265,6 +266,20 @@ function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Neustream - Multistream to all platforms from one place</title>
+        <meta name="description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
+        <meta name="keywords" content="multistream, live streaming, youtube, twitch, facebook, linkedin, streaming software, content creator" />
+        <meta property="og:title" content="Neustream - Multistream to all platforms from one place" />
+        <meta property="og:description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Neustream - Multistream to all platforms from one place" />
+        <meta name="twitter:description" content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators." />
+        <meta name="twitter:image" content="/twitter-image.png" />
+        <link rel="canonical" href="https://neustream.app" />
+      </Helmet>
       <Header />
 
       {/* Hero Section */}

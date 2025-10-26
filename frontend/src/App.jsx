@@ -10,6 +10,8 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardOverview from "./components/DashboardOverview";
 import StreamingConfiguration from "./components/StreamingConfiguration";
@@ -54,6 +56,10 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+
+      {/* Public legal pages */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
 
       {/* Auth routes - redirect authenticated users to dashboard */}
       <Route
