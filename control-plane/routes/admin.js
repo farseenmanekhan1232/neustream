@@ -1117,7 +1117,7 @@ router.put("/subscription-plans/:id", async (req, res) => {
     max_destinations,
     max_streaming_hours_monthly,
     features
-  } = req.body;
+  } = req.body.planData || req.body; // Handle both nested and direct data
 
   try {
     const result = await db.run(
@@ -1151,8 +1151,16 @@ router.put("/subscription-plans/:id", async (req, res) => {
 
     res.json(result[0]);
   } catch (error) {
-    console.error("Update subscription plan error:", error);
-    res.status(500).json({ error: "Failed to update subscription plan" });
+    console.error("Update subscription plan error:", {
+      error: error.message,
+      stack: error.stack,
+      requestBody: req.body,
+      params: req.params
+    });
+    res.status(500).json({
+      error: "Failed to update subscription plan",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
