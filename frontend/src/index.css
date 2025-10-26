@@ -183,7 +183,6 @@ p {
     padding: 1.5rem;
     border-radius: 0.75rem;
     border: 1px solid var(--color-border);
-    background-color: var(--color-card);
     transition: all 0.2s;
 }
 
