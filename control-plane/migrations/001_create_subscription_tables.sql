@@ -96,24 +96,35 @@ ON CONFLICT DO NOTHING;
 CREATE OR REPLACE FUNCTION update_plan_limits_tracking()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Update sources count
-  UPDATE plan_limits_tracking
-  SET current_sources_count = (
-    SELECT COUNT(*) FROM stream_sources WHERE user_id = NEW.user_id
-  ),
-  last_updated = NOW()
-  WHERE user_id = NEW.user_id;
+  DECLARE
+    target_user_id INTEGER;
+  BEGIN
+    -- Determine the user_id based on operation type
+    IF TG_OP = 'DELETE' THEN
+      target_user_id := OLD.user_id;
+    ELSE
+      target_user_id := NEW.user_id;
+    END IF;
 
-  -- Insert if doesn't exist
-  IF NOT FOUND THEN
-    INSERT INTO plan_limits_tracking (user_id, current_sources_count)
-    VALUES (
-      NEW.user_id,
-      (SELECT COUNT(*) FROM stream_sources WHERE user_id = NEW.user_id)
-    );
-  END IF;
+    -- Update sources count
+    UPDATE plan_limits_tracking
+    SET current_sources_count = (
+      SELECT COUNT(*) FROM stream_sources WHERE user_id = target_user_id
+    ),
+    last_updated = NOW()
+    WHERE user_id = target_user_id;
 
-  RETURN NEW;
+    -- Insert if doesn't exist
+    IF NOT FOUND THEN
+      INSERT INTO plan_limits_tracking (user_id, current_sources_count)
+      VALUES (
+        target_user_id,
+        (SELECT COUNT(*) FROM stream_sources WHERE user_id = target_user_id)
+      );
+    END IF;
+
+    RETURN COALESCE(NEW, OLD);
+  END;
 END;
 $$ LANGUAGE plpgsql;
 
