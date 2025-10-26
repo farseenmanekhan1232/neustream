@@ -144,8 +144,8 @@ function LiveChat({ sourceId }) {
           </CardTitle>
           <CardDescription>Loading chat messages...</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
+          <div className="absolute inset-0 overflow-y-auto p-4 space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex space-x-3 animate-pulse">
                 <div className="w-8 h-8 bg-muted rounded-full"></div>
@@ -187,11 +187,11 @@ function LiveChat({ sourceId }) {
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-        {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
+        {/* Chat Messages Area - Fixed height container */}
+        <div className="absolute inset-0 overflow-y-auto p-4 space-y-3">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center min-h-[200px]">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageCircle className="h-8 w-8 text-muted-foreground" />

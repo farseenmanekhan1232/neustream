@@ -244,7 +244,7 @@ function StreamPreviewPage() {
       )}
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 items-start flex-1 min-h-0">
+      <div className="grid gap-6 lg:grid-cols-3 flex-1 min-h-0">
         {/* Stream Preview - Takes 2 columns */}
         <div className="lg:col-span-2">
           <Card className="h-full">
