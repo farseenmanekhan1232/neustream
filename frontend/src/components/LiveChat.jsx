@@ -8,11 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { MessageCircle, Send, Smile, Users } from "lucide-react";
+import { MessageCircle, Users } from "lucide-react";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -22,7 +20,6 @@ const API_BASE_URL =
 function LiveChat({ sourceId }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const messagesEndRef = useRef(null);
@@ -108,21 +105,6 @@ function LiveChat({ sourceId }) {
     }
   }, [messagesData]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !socketRef.current) return;
-
-    try {
-      socketRef.current.emit("send_message", {
-        sourceId,
-        message: newMessage.trim(),
-      });
-      setNewMessage("");
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  };
-
   const getPlatformColor = (platform) => {
     const colors = {
       twitch: "bg-purple-100 text-purple-800 border-purple-200",
@@ -207,9 +189,9 @@ function LiveChat({ sourceId }) {
 
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Chat Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[400px]">
+            <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageCircle className="h-8 w-8 text-muted-foreground" />
@@ -261,37 +243,6 @@ function LiveChat({ sourceId }) {
             ))
           )}
           <div ref={messagesEndRef} />
-        </div>
-
-        {/* Chat Input */}
-        <div className="p-4 border-t">
-          <form
-            onSubmit={handleSendMessage}
-            className="flex items-center space-x-2"
-          >
-            <Input
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="flex-1"
-              disabled={!isConnected}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!newMessage.trim() || !isConnected}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" disabled>
-              <Smile className="h-4 w-4" />
-            </Button>
-          </form>
-          <p className="text-xs text-muted-foreground mt-2">
-            {isConnected
-              ? "Messages will be sent to all connected platforms"
-              : "Connecting to chat server..."}
-          </p>
         </div>
       </CardContent>
     </Card>
