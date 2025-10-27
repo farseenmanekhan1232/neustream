@@ -43,6 +43,9 @@ class ChatConnectorService {
         case 'youtube':
           await this.startYouTubeGrpcConnector(connector);
           break;
+        case 'instagram':
+          await this.startInstagramConnector(connector);
+          break;
         case 'facebook':
           await this.startFacebookConnector(connector);
           break;
@@ -84,6 +87,18 @@ class ChatConnectorService {
             }
             // Stop gRPC streaming
             await this.youtubeGrpcService.stopGrpcStreaming(connectorId);
+            break;
+          case 'instagram':
+            if (connector.instagramEventSource) {
+              connector.instagramEventSource.close();
+              connector.instagramEventSource = null;
+              console.log(`Closed Instagram SSE connection`);
+            }
+            if (connector.instagramPollingInterval) {
+              clearInterval(connector.instagramPollingInterval);
+              connector.instagramPollingInterval = null;
+              console.log(`Stopped Instagram chat polling`);
+            }
             break;
         }
 
@@ -251,6 +266,179 @@ class ChatConnectorService {
         messageType: 'error',
         metadata: { error: true }
       });
+    }
+  }
+
+  async startInstagramConnector(connector) {
+    const { config } = connector;
+
+    if (!config || !config.accessToken || !config.liveVideoId) {
+      console.error('Instagram connector config, access token, or live video ID missing');
+      await this.handleIncomingMessage(connector, {
+        authorName: 'System',
+        authorId: 'system',
+        messageText: 'Instagram connector configuration is incomplete. Please reconnect your Instagram account and ensure you have an active live stream.',
+        platform: 'instagram',
+        messageType: 'error',
+        metadata: {
+          error: true,
+          config: !!config,
+          accessToken: !!config?.accessToken,
+          liveVideoId: !!config?.liveVideoId
+        }
+      });
+      return;
+    }
+
+    const displayName = config.displayName || config.platformUsername || 'Instagram User';
+    console.log(`Starting Instagram connector for live video: ${config.liveVideoId}`);
+
+    try {
+      // Try Server-Sent Events (SSE) for real-time comments first
+      await this.startInstagramSSE(connector);
+
+      // Send connection message
+      await this.handleIncomingMessage(connector, {
+        authorName: 'System',
+        authorId: 'system',
+        messageText: `Connected to ${displayName}'s Instagram Live comments via real-time streaming`,
+        platform: 'instagram',
+        messageType: 'system',
+        metadata: { connection: true, streaming: true }
+      });
+
+    } catch (error) {
+      console.error('Failed to start Instagram SSE connector:', error);
+
+      // Fallback to polling
+      console.log('Falling back to Instagram polling mode');
+      await this.startInstagramPolling(connector);
+
+      await this.handleIncomingMessage(connector, {
+        authorName: 'System',
+        authorId: 'system',
+        messageText: `Connected to ${displayName}'s Instagram Live comments via polling`,
+        platform: 'instagram',
+        messageType: 'system',
+        metadata: { connection: true, polling: true }
+      });
+    }
+  }
+
+  async startInstagramSSE(connector) {
+    const { config } = connector;
+    const { accessToken, liveVideoId } = config;
+
+    // Instagram SSE endpoint for real-time comments
+    const sseUrl = `https://streaming-graph.facebook.com/${liveVideoId}/live_comments?access_token=${accessToken}`;
+
+    console.log(`Starting Instagram SSE connection to: ${sseUrl}`);
+
+    try {
+      // Use EventSource for Server-Sent Events
+      const EventSource = require('eventsource');
+      const eventSource = new EventSource(sseUrl);
+
+      eventSource.onopen = () => {
+        console.log('Instagram SSE connection opened');
+      };
+
+      eventSource.onmessage = async (event) => {
+        try {
+          // Skip ping messages
+          if (event.data === ': ping') {
+            return;
+          }
+
+          const comment = JSON.parse(event.data);
+          await this.handleInstagramComment(connector, comment);
+        } catch (error) {
+          console.error('Error processing Instagram SSE message:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('Instagram SSE error:', error);
+        // SSE failed, fallback to polling
+        if (connector.instagramEventSource) {
+          connector.instagramEventSource.close();
+          connector.instagramEventSource = null;
+        }
+        this.startInstagramPolling(connector);
+      };
+
+      // Store for cleanup
+      connector.instagramEventSource = eventSource;
+
+    } catch (error) {
+      console.error('Failed to create Instagram SSE connection:', error);
+      throw error; // Let caller handle fallback
+    }
+  }
+
+  async startInstagramPolling(connector) {
+    const { config } = connector;
+    const { accessToken, liveVideoId } = config;
+
+    console.log(`Starting Instagram polling for live video: ${liveVideoId}`);
+
+    // Track last comment ID to avoid duplicates
+    let lastCommentId = null;
+
+    const pollComments = async () => {
+      try {
+        const response = await axios.get(
+          `https://graph.facebook.com/${liveVideoId}/comments?access_token=${accessToken}&limit=50`
+        );
+
+        const comments = response.data.data || [];
+
+        // Process comments in reverse order (oldest first)
+        for (const comment of comments.reverse()) {
+          // Skip if we've already processed this comment
+          if (lastCommentId && comment.id <= lastCommentId) {
+            continue;
+          }
+
+          await this.handleInstagramComment(connector, comment);
+
+          // Update last comment ID
+          if (!lastCommentId || comment.id > lastCommentId) {
+            lastCommentId = comment.id;
+          }
+        }
+
+      } catch (error) {
+        console.error('Instagram polling error:', error.response?.data || error.message);
+      }
+    };
+
+    // Initial poll
+    await pollComments();
+
+    // Set up polling interval (every 5 seconds)
+    connector.instagramPollingInterval = setInterval(pollComments, 5000);
+  }
+
+  async handleInstagramComment(connector, comment) {
+    try {
+      const messageData = {
+        authorName: comment.from?.name || 'Instagram User',
+        authorId: comment.from?.id || 'unknown',
+        messageText: comment.message,
+        platform: 'instagram',
+        messageType: 'text',
+        metadata: {
+          id: comment.id,
+          created_time: comment.created_time,
+          view_id: comment.view_id,
+          from: comment.from
+        }
+      };
+
+      await this.handleIncomingMessage(connector, messageData);
+    } catch (error) {
+      console.error('Error handling Instagram comment:', error);
     }
   }
 

@@ -329,6 +329,20 @@ router.get(
             `&include_granted_scopes=true` +
             `&state=${state}`;
           break;
+        case "instagram":
+          oauthUrl =
+            `https://www.facebook.com/v18.0/dialog/oauth?` +
+            `client_id=${process.env.INSTAGRAM_CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(
+              process.env.INSTAGRAM_CHAT_CALLBACK_URL ||
+                `${process.env.BACKEND_URL}/api/chat/connectors/instagram/oauth/callback`
+            )}` +
+            `&response_type=code` +
+            `&scope=${encodeURIComponent(
+              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement"
+            )}` +
+            `&state=${state}`;
+          break;
         default:
           return res
             .status(400)
@@ -436,6 +450,8 @@ async function exchangeCodeForTokens(platform, code) {
       return await exchangeTwitchCodeForTokens(code);
     case "youtube":
       return await exchangeYouTubeCodeForTokens(code);
+    case "instagram":
+      return await exchangeInstagramCodeForTokens(code);
     default:
       throw new Error(`Unsupported platform: ${platform}`);
   }
@@ -571,6 +587,93 @@ async function exchangeYouTubeCodeForTokens(code) {
       error.response?.data || error.message
     );
     throw new Error("Failed to exchange YouTube authorization code");
+  }
+}
+
+// Instagram OAuth token exchange
+async function exchangeInstagramCodeForTokens(code) {
+  try {
+    const redirectUri =
+      process.env.INSTAGRAM_CHAT_CALLBACK_URL ||
+      `${process.env.BACKEND_URL}/api/chat/connectors/instagram/oauth/callback`;
+
+    console.log("Instagram OAuth redirect URI:", redirectUri);
+    console.log(
+      "Instagram OAuth client ID:",
+      process.env.INSTAGRAM_CLIENT_ID ? "SET" : "NOT SET"
+    );
+    console.log(
+      "Instagram OAuth client secret:",
+      process.env.INSTAGRAM_CLIENT_SECRET ? "SET" : "NOT SET"
+    );
+
+    // Exchange code for access token
+    const response = await axios.post(
+      "https://graph.facebook.com/v18.0/oauth/access_token",
+      null,
+      {
+        params: {
+          client_id: process.env.INSTAGRAM_CLIENT_ID,
+          client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+          code: code,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        },
+      }
+    );
+
+    console.log("Instagram token exchange response:", {
+      status: response.status,
+      hasAccessToken: !!response.data.access_token,
+      expiresIn: response.data.expires_in,
+    });
+
+    const { access_token, expires_in } = response.data;
+
+    console.log("Instagram token exchange successful, fetching user info...");
+
+    // Get user info with the access token
+    const userResponse = await axios.get(
+      `https://graph.facebook.com/v18.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name}}&access_token=${access_token}`
+    );
+
+    const userData = userResponse.data;
+    console.log("Instagram user info:", userData);
+
+    // Find Instagram business account
+    let instagramAccount = null;
+    let liveVideoId = null;
+
+    if (userData.accounts && userData.accounts.data.length > 0) {
+      for (const account of userData.accounts.data) {
+        if (account.instagram_business_account) {
+          instagramAccount = account.instagram_business_account;
+          break;
+        }
+      }
+    }
+
+    if (!instagramAccount) {
+      throw new Error("No Instagram business account found for authenticated user");
+    }
+
+    console.log("Instagram business account found:", instagramAccount);
+
+    return {
+      accessToken: access_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+      platformUserId: instagramAccount.id,
+      platformUsername: instagramAccount.username,
+      displayName: instagramAccount.name || instagramAccount.username,
+      // Note: Instagram doesn't provide refresh tokens in basic flow
+      // We'll need to handle token refresh separately
+    };
+  } catch (error) {
+    console.error(
+      "Instagram token exchange error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to exchange Instagram authorization code");
   }
 }
 
