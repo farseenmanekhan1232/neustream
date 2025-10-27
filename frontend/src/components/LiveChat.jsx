@@ -10,7 +10,7 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { MessageCircle, Users } from "lucide-react";
+import { MessageCircle, Users, ExternalLink } from "lucide-react";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -360,6 +360,16 @@ function LiveChat({
               Live Chat
             </span>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  const popoutUrl = `${window.location.origin}/chat/${sourceId}`;
+                  window.open(popoutUrl, '_blank', 'width=400,height=600');
+                }}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                title="Pop out chat for OBS"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </button>
               <Badge
                 variant={isConnected ? "default" : "secondary"}
                 className={isConnected ? "bg-green-500" : ""}
