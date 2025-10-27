@@ -22,9 +22,12 @@ function LiveChat({ sourceId }) {
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  const [hasReceivedWebSocketMessages, setHasReceivedWebSocketMessages] = useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const systemMessageCache = useRef(new Map()); // Cache for system messages to prevent duplicates
+  const messageIdsRef = useRef(new Set()); // Track message IDs to prevent duplicates
+  const currentSourceIdRef = useRef(null); // Track current source to prevent unnecessary reconnections
 
   // Fetch initial chat messages
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
@@ -42,6 +45,21 @@ function LiveChat({ sourceId }) {
   useEffect(() => {
     if (!sourceId || !user) return;
 
+    // Prevent reconnection if we're already connected to the same source
+    if (socketRef.current?.connected && currentSourceIdRef.current === sourceId) {
+      return;
+    }
+
+    // Clean up previous connection if source changed
+    if (socketRef.current && currentSourceIdRef.current !== sourceId) {
+      socketRef.current.emit("leave_chat", { sourceId: currentSourceIdRef.current });
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setMessages([]); // Clear messages when switching sources
+      messageIdsRef.current.clear(); // Clear tracked message IDs
+      setHasReceivedWebSocketMessages(false); // Reset WebSocket message state
+    }
+
     // Initialize socket connection
     const socket = io(API_BASE_URL || "https://api.neustream.app", {
       auth: {
@@ -54,6 +72,7 @@ function LiveChat({ sourceId }) {
     });
 
     socketRef.current = socket;
+    currentSourceIdRef.current = sourceId;
 
     socket.on("connect", () => {
       console.log("Connected to chat server");
@@ -74,12 +93,14 @@ function LiveChat({ sourceId }) {
 
     socket.on("chat_history", (data) => {
       console.log("Received chat history:", data.messages.length);
-      setMessages(data.messages || []);
+      setMessagesWithTracking(data.messages || []);
+      setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
     });
 
     socket.on("new_message", (message) => {
       console.log("New message received:", message);
-      setMessages((prev) => [...prev, message]);
+      addMessagesWithDeduplication(message);
+      setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
     });
 
     socket.on("error", (error) => {
@@ -88,8 +109,10 @@ function LiveChat({ sourceId }) {
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.emit("leave_chat", { sourceId });
+        socketRef.current.emit("leave_chat", { sourceId: currentSourceIdRef.current });
         socketRef.current.disconnect();
+        socketRef.current = null;
+        currentSourceIdRef.current = null;
       }
     };
   }, [sourceId, user]);
@@ -99,12 +122,12 @@ function LiveChat({ sourceId }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Initialize messages from API
+  // Initialize messages from API (only if we haven't received WebSocket messages)
   useEffect(() => {
-    if (messagesData?.messages) {
-      setMessages(messagesData.messages);
+    if (messagesData?.messages && !hasReceivedWebSocketMessages) {
+      setMessagesWithTracking(messagesData.messages);
     }
-  }, [messagesData]);
+  }, [messagesData, hasReceivedWebSocketMessages]);
 
   const getPlatformColor = (platform) => {
     const colors = {
@@ -133,6 +156,51 @@ function LiveChat({ sourceId }) {
       custom: "🔗",
     };
     return icons[platform] || "💬";
+  };
+
+  // Helper function to add messages with deduplication
+  const addMessagesWithDeduplication = (newMessages) => {
+    if (!Array.isArray(newMessages)) {
+      newMessages = [newMessages];
+    }
+
+    setMessages((prev) => {
+      const filteredMessages = newMessages.filter(
+        (message) => message.id && !messageIdsRef.current.has(message.id)
+      );
+
+      if (filteredMessages.length === 0) {
+        return prev; // No new messages to add
+      }
+
+      // Add new message IDs to the tracking set
+      filteredMessages.forEach((message) => {
+        if (message.id) {
+          messageIdsRef.current.add(message.id);
+        }
+      });
+
+      return [...prev, ...filteredMessages];
+    });
+  };
+
+  // Helper function to set messages and track their IDs
+  const setMessagesWithTracking = (newMessages) => {
+    if (!Array.isArray(newMessages)) {
+      newMessages = [];
+    }
+
+    // Clear existing tracked IDs
+    messageIdsRef.current.clear();
+
+    // Add new message IDs to tracking set
+    newMessages.forEach((message) => {
+      if (message.id) {
+        messageIdsRef.current.add(message.id);
+      }
+    });
+
+    setMessages(newMessages);
   };
 
   // Filter repetitive system connection messages
