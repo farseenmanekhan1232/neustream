@@ -120,7 +120,7 @@ jobs:
             pm2 start server.js --name neustream-control-plane --env production
 
             # Wait for service to be ready
-            sleep 5
+            sleep 20
 
             # Verify deployment
             pm2 status
