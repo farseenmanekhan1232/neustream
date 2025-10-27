@@ -32,22 +32,47 @@ class WebSocketServer {
     // Socket.io middleware for authentication
     this.io.use((socket, next) => {
       const token = socket.handshake.auth.token;
+      const sourceId = socket.handshake.auth.sourceId;
 
+      // Allow anonymous connections for public chat access
+      if (!token && sourceId) {
+        // Public chat connection - validate source exists and is active
+        this.db.query(
+          'SELECT id, name, is_active FROM stream_sources WHERE id = $1',
+          [sourceId]
+        ).then(sourceCheck => {
+          if (sourceCheck.length === 0) {
+            return next(new Error('Public chat error: Source not found'));
+          }
+          if (!sourceCheck[0].is_active) {
+            return next(new Error('Public chat error: Source is not active'));
+          }
+
+          // Set anonymous user data
+          socket.user = {
+            id: `public_${sourceId}`,
+            displayName: 'Anonymous Viewer',
+            isPublic: true
+          };
+          socket.sourceId = sourceId;
+          next();
+        }).catch(error => {
+          next(new Error('Public chat error: Failed to validate source'));
+        });
+        return;
+      }
+
+      // Authenticated connection (existing logic)
       if (!token) {
         return next(new Error('Authentication error: No token provided'));
       }
 
-      // Mock authentication - in production, you'd verify the JWT
-      // For now, we'll accept any token and extract user info
       try {
-        // In production, you'd verify the JWT properly
-        // For now, we'll just parse it as JSON if it's a string
         let userData;
         if (typeof token === 'string') {
           try {
             userData = JSON.parse(token);
           } catch {
-            // If it's not JSON, treat it as a simple user ID
             userData = { id: token };
           }
         } else {
@@ -76,31 +101,52 @@ class WebSocketServer {
             return;
           }
 
-          // Verify user has access to this source
+          // For public connections, use the sourceId from handshake
+          const effectiveSourceId = socket.sourceId || sourceId;
+
+          // Verify source exists and is active
           const sources = await this.db.query(
-            'SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2',
-            [sourceId, socket.user.id]
+            'SELECT id, is_active FROM stream_sources WHERE id = $1',
+            [effectiveSourceId]
           );
 
           if (sources.length === 0) {
-            socket.emit('error', { message: 'Access denied to source' });
+            socket.emit('error', { message: 'Stream source not found' });
             return;
           }
 
+          if (!sources[0].is_active) {
+            socket.emit('error', { message: 'Stream source is not active' });
+            return;
+          }
+
+          // For authenticated users, verify ownership
+          if (!socket.user.isPublic) {
+            const userSources = await this.db.query(
+              'SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2',
+              [effectiveSourceId, socket.user.id]
+            );
+
+            if (userSources.length === 0) {
+              socket.emit('error', { message: 'Access denied to source' });
+              return;
+            }
+          }
+
           // Join the room for this source
-          socket.join(`source_${sourceId}`);
-          console.log(`User ${socket.user.id} joined chat for source ${sourceId}`);
+          socket.join(`source_${effectiveSourceId}`);
+          console.log(`User ${socket.user.id} joined chat for source ${effectiveSourceId}`);
 
           // Send recent messages
-          const recentMessages = await this.getRecentMessages(sourceId);
+          const recentMessages = await this.getRecentMessages(effectiveSourceId);
           socket.emit('chat_history', { messages: recentMessages });
 
           // Initialize chat connectors for this source
           if (this.chatConnectorService) {
-            await this.chatConnectorService.initializeForSourceConnection(sourceId);
+            await this.chatConnectorService.initializeForSourceConnection(effectiveSourceId);
           }
 
-          socket.emit('joined_chat', { sourceId });
+          socket.emit('joined_chat', { sourceId: effectiveSourceId });
         } catch (error) {
           console.error('Join chat error:', error);
           socket.emit('error', { message: 'Failed to join chat' });

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import {
   Card,
@@ -10,45 +9,53 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { MessageCircle, Users, ExternalLink, Copy } from "lucide-react";
-import { apiService } from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
+import { MessageCircle, Users } from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.neustream.app";
 
-function LiveChat({
+function PublicChat({
   sourceId,
   showHeader = true,
   backgroundColor = "default",
   transparent = false,
   rawMode = false
 }) {
-  const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [hasReceivedWebSocketMessages, setHasReceivedWebSocketMessages] = useState(false);
-  const [copyFeedback, setCopyFeedback] = useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
-  const systemMessageCache = useRef(new Map()); // Cache for system messages to prevent duplicates
-  const messageIdsRef = useRef(new Set()); // Track message IDs to prevent duplicates
-  const currentSourceIdRef = useRef(null); // Track current source to prevent unnecessary reconnections
+  const systemMessageCache = useRef(new Map());
+  const messageIdsRef = useRef(new Set());
+  const currentSourceIdRef = useRef(null);
 
-  // Fetch initial chat messages
-  const { data: messagesData, isLoading: messagesLoading } = useQuery({
-    queryKey: ["chatMessages", sourceId],
-    queryFn: async () => {
-      const response = await apiService.get(
-        `/chat/sources/${sourceId}/messages`
-      );
-      return response;
-    },
-    enabled: !!sourceId,
-  });
+  // Fetch initial chat messages from public endpoint
+  useEffect(() => {
+    if (!sourceId) return;
 
-  // Initialize WebSocket connection
+    const fetchPublicMessages = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/chat/public/sources/${sourceId}/messages`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch messages: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setMessagesWithTracking(data.messages || []);
+      } catch (error) {
+        console.error("Failed to fetch public chat messages:", error);
+      }
+    };
+
+    fetchPublicMessages();
+  }, [sourceId]);
+
+  // Initialize WebSocket connection (public access)
   useEffect(() => {
     if (!sourceId) return;
 
@@ -62,27 +69,23 @@ function LiveChat({
       socketRef.current.emit("leave_chat", { sourceId: currentSourceIdRef.current });
       socketRef.current.disconnect();
       socketRef.current = null;
-      setMessages([]); // Clear messages when switching sources
-      messageIdsRef.current.clear(); // Clear tracked message IDs
-      setHasReceivedWebSocketMessages(false); // Reset WebSocket message state
+      setMessages([]);
+      messageIdsRef.current.clear();
+      setHasReceivedWebSocketMessages(false);
     }
 
-    // Initialize socket connection
+    // Initialize socket connection with public access
     const socket = io(API_BASE_URL || "https://api.neustream.app", {
-      auth: user ? {
-        token: JSON.stringify({
-          id: user.id,
-          displayName: user.displayName,
-          email: user.email,
-        }),
-      } : undefined,
+      auth: {
+        sourceId: sourceId, // Public access using sourceId only
+      },
     });
 
     socketRef.current = socket;
     currentSourceIdRef.current = sourceId;
 
     socket.on("connect", () => {
-      console.log("Connected to chat server");
+      console.log("Connected to public chat server");
       setIsConnected(true);
 
       // Join the chat room for this source
@@ -90,28 +93,28 @@ function LiveChat({
     });
 
     socket.on("disconnect", () => {
-      console.log("Disconnected from chat server");
+      console.log("Disconnected from public chat server");
       setIsConnected(false);
     });
 
     socket.on("joined_chat", (data) => {
-      console.log("Joined chat room:", data);
+      console.log("Joined public chat room:", data);
     });
 
     socket.on("chat_history", (data) => {
-      console.log("Received chat history:", data.messages.length);
+      console.log("Received public chat history:", data.messages?.length);
       setMessagesWithTracking(data.messages || []);
-      setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
+      setHasReceivedWebSocketMessages(true);
     });
 
     socket.on("new_message", (message) => {
-      console.log("New message received:", message);
+      console.log("New public message received:", message);
       addMessagesWithDeduplication(message);
-      setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
+      setHasReceivedWebSocketMessages(true);
     });
 
     socket.on("error", (error) => {
-      console.error("Chat error:", error);
+      console.error("Public chat error:", error);
     });
 
     return () => {
@@ -122,19 +125,12 @@ function LiveChat({
         currentSourceIdRef.current = null;
       }
     };
-  }, [sourceId, user]);
+  }, [sourceId]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Initialize messages from API (only if we haven't received WebSocket messages)
-  useEffect(() => {
-    if (messagesData?.messages && !hasReceivedWebSocketMessages) {
-      setMessagesWithTracking(messagesData.messages);
-    }
-  }, [messagesData, hasReceivedWebSocketMessages]);
 
   const getPlatformColor = (platform) => {
     const colors = {
@@ -177,10 +173,9 @@ function LiveChat({
       );
 
       if (filteredMessages.length === 0) {
-        return prev; // No new messages to add
+        return prev;
       }
 
-      // Add new message IDs to the tracking set
       filteredMessages.forEach((message) => {
         if (message.id) {
           messageIdsRef.current.add(message.id);
@@ -197,10 +192,8 @@ function LiveChat({
       newMessages = [];
     }
 
-    // Clear existing tracked IDs
     messageIdsRef.current.clear();
 
-    // Add new message IDs to tracking set
     newMessages.forEach((message) => {
       if (message.id) {
         messageIdsRef.current.add(message.id);
@@ -212,41 +205,33 @@ function LiveChat({
 
   // Filter repetitive system connection messages
   const shouldShowSystemMessage = (message) => {
-    // Only filter system messages
     if (message.messageType !== 'system' || message.authorName !== 'System') {
       return true;
     }
 
     const messageText = message.messageText;
 
-    // Define repetitive system message patterns
     const connectionPatterns = [
       { pattern: /connected to.*youtube chat.*via real-time grpc streaming/i, platform: 'youtube', type: 'grpc' },
       { pattern: /connected to.*youtube chat.*via real-time streaming/i, platform: 'youtube', type: 'streaming' },
       { pattern: /connected to.*twitch chat/i, platform: 'twitch', type: 'irc' }
     ];
 
-    // Check if this is a connection message
     const connectionInfo = connectionPatterns.find(({ pattern }) =>
       pattern.test(messageText)
     );
 
     if (connectionInfo) {
-      // Create a cache key based on message type and platform
       const cacheKey = `system_connection_${connectionInfo.platform}`;
-
-      // Check if we've seen this type of message recently (within 5 minutes)
       const now = Date.now();
       const lastSeen = systemMessageCache.current.get(cacheKey);
 
-      if (lastSeen && (now - lastSeen) < 300000) { // 5 minutes
-        return false; // Don't show if seen within 5 minutes
+      if (lastSeen && (now - lastSeen) < 300000) {
+        return false;
       }
 
-      // Update cache with current timestamp
       systemMessageCache.current.set(cacheKey, now);
 
-      // Clean up old entries (older than 10 minutes)
       const tenMinutesAgo = now - 600000;
       for (const [key, timestamp] of systemMessageCache.current.entries()) {
         if (timestamp < tenMinutesAgo) {
@@ -254,38 +239,11 @@ function LiveChat({
         }
       }
 
-      return false; // Hide repetitive connection messages
+      return false;
     }
 
-    return true; // Show other system messages (including errors)
+    return true;
   };
-
-  if (messagesLoading) {
-    return (
-      <Card className="h-full flex flex-col">
-        <CardHeader className="pb-3 flex-shrink-0">
-          <CardTitle className="flex items-center">
-            <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-            Live Chat
-          </CardTitle>
-          <CardDescription>Loading chat messages...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
-          <div className="absolute inset-0 overflow-y-auto p-4 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex space-x-3 animate-pulse">
-                <div className="w-8 h-8 bg-muted rounded-full"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-1/4"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Determine container styles based on props
   const containerClass = rawMode
@@ -307,18 +265,6 @@ function LiveChat({
   const timeClass = rawMode
     ? "text-xs text-gray-300"
     : "text-xs text-muted-foreground";
-
-  // Copy OBS link to clipboard
-  const copyOBSLink = async () => {
-    const obsUrl = `${window.location.origin}/chat/${sourceId}?background=green&raw=true&header=false`;
-    try {
-      await navigator.clipboard.writeText(obsUrl);
-      setCopyFeedback(true);
-      setTimeout(() => setCopyFeedback(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy OBS link:', err);
-    }
-  };
 
   // Render raw mode (minimal styling for OBS)
   if (rawMode) {
@@ -373,27 +319,6 @@ function LiveChat({
               Live Chat
             </span>
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => {
-                  const popoutUrl = `${window.location.origin}/chat/${sourceId}`;
-                  window.open(popoutUrl, '_blank', 'width=400,height=600');
-                }}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                title="Pop out chat for OBS"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </button>
-              <button
-                onClick={copyOBSLink}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                title="Copy OBS browser source URL"
-              >
-                {copyFeedback ? (
-                  <span className="text-xs text-green-500">✓</span>
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </button>
               <Badge
                 variant={isConnected ? "default" : "secondary"}
                 className={isConnected ? "bg-green-500" : ""}
@@ -413,7 +338,6 @@ function LiveChat({
       )}
 
       <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
-        {/* Chat Messages Area - Fixed height container */}
         <div className={containerClass}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center min-h-[200px]">
@@ -429,7 +353,7 @@ function LiveChat({
             </div>
           ) : (
             messages
-              .filter(shouldShowSystemMessage) // Filter out repetitive system messages
+              .filter(shouldShowSystemMessage)
               .map((message) => (
                 <div key={message.id} className={messageClass}>
                   <Avatar className="h-8 w-8">
@@ -476,4 +400,4 @@ function LiveChat({
   );
 }
 
-export default LiveChat;
+export default PublicChat;

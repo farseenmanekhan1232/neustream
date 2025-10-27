@@ -574,4 +574,64 @@ async function exchangeYouTubeCodeForTokens(code) {
   }
 }
 
+// Public chat endpoint - get messages by source ID (no authentication required)
+router.get("/public/sources/:sourceId/messages", async (req, res) => {
+  const { sourceId } = req.params;
+  const { limit = 50, offset = 0 } = req.query;
+
+  try {
+    // Verify source exists and is active
+    const sourceCheck = await db.query(
+      "SELECT id, name, is_active FROM stream_sources WHERE id = $1",
+      [sourceId]
+    );
+
+    if (sourceCheck.length === 0) {
+      return res.status(404).json({ error: "Stream source not found" });
+    }
+
+    if (!sourceCheck[0].is_active) {
+      return res.status(400).json({ error: "Stream source is not active" });
+    }
+
+    // Get chat messages for this source
+    const messages = await db.query(
+      `SELECT
+        cm.id,
+        cm.source_id as "sourceId",
+        cm.connector_id as "connectorId",
+        cm.platform_message_id as "platformMessageId",
+        cm.author_name as "authorName",
+        cm.author_id as "authorId",
+        cm.message_text as "messageText",
+        cm.message_type as "messageType",
+        cm.metadata,
+        cm.created_at as "createdAt",
+        cc.platform
+      FROM chat_messages cm
+      LEFT JOIN chat_connectors cc ON cm.connector_id = cc.id
+      WHERE cm.source_id = $1
+      ORDER BY cm.created_at DESC
+      LIMIT $2 OFFSET $3`,
+      [sourceId, parseInt(limit), parseInt(offset)]
+    );
+
+    // Get total count
+    const countResult = await db.query(
+      "SELECT COUNT(*) as total FROM chat_messages WHERE source_id = $1",
+      [sourceId]
+    );
+
+    res.json({
+      messages: messages.reverse(), // Return in chronological order
+      total: parseInt(countResult[0].total),
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+    });
+  } catch (error) {
+    console.error("Get public chat messages error:", error);
+    res.status(500).json({ error: "Failed to fetch chat messages" });
+  }
+});
+
 module.exports = router;

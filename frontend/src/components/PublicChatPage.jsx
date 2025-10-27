@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import LiveChat from "./LiveChat";
+import PublicChat from "./PublicChat";
 import { Card, CardContent } from "./ui/card";
 
 function PublicChatPage() {
@@ -69,7 +69,7 @@ function PublicChatPage() {
         className="min-h-screen p-4"
         style={getBackgroundStyle()}
       >
-        <LiveChat
+        <PublicChat
           sourceId={sourceId}
           showHeader={false}
           backgroundColor={backgroundColor}
@@ -87,7 +87,7 @@ function PublicChatPage() {
     >
       <Card className="w-full max-w-md h-[600px]">
         <CardContent className="p-0 h-full">
-          <LiveChat
+          <PublicChat
             sourceId={sourceId}
             showHeader={showHeader}
             backgroundColor={backgroundColor}
