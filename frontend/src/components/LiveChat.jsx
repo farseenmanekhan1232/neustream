@@ -22,8 +22,10 @@ function LiveChat({ sourceId }) {
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  const [connectionStatus, setConnectionStatus] = useState({}); // Track platform connection status
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+  const systemMessageCache = useRef(new Map()); // Cache for system messages to prevent duplicates
 
   // Fetch initial chat messages
   const { data: messagesData, isLoading: messagesLoading } = useQuery({
@@ -134,6 +136,128 @@ function LiveChat({ sourceId }) {
     return icons[platform] || "💬";
   };
 
+  // Render connection status indicators
+  const renderConnectionStatus = () => {
+    const platforms = Object.keys(connectionStatus);
+    if (platforms.length === 0) return null;
+
+    return (
+      <div className="flex items-center space-x-2 ml-4">
+        {platforms.map(platform => {
+          const status = connectionStatus[platform];
+          const isConnected = status?.connected;
+          const Icon = getPlatformIcon(platform);
+
+          return (
+            <div
+              key={platform}
+              className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
+                isConnected
+                  ? 'bg-green-100 text-green-800 border border-green-200'
+                  : 'bg-red-100 text-red-800 border border-red-200'
+              }`}
+              title={`${platform}: ${isConnected ? 'Connected' : 'Disconnected'}`}
+            >
+              <span>{Icon}</span>
+              <span className="capitalize">{platform}</span>
+              <div className={`w-2 h-2 rounded-full ${
+                isConnected ? 'bg-green-500' : 'bg-red-500'
+              }`} />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Filter repetitive system connection messages and update connection status
+  const shouldShowSystemMessage = (message) => {
+    // Only filter system messages
+    if (message.messageType !== 'system' || message.authorName !== 'System') {
+      return true;
+    }
+
+    const messageText = message.messageText;
+
+    // Define repetitive system message patterns
+    const connectionPatterns = [
+      { pattern: /connected to.*youtube chat.*via real-time grpc streaming/i, platform: 'youtube', type: 'grpc' },
+      { pattern: /connected to.*youtube chat.*via real-time streaming/i, platform: 'youtube', type: 'streaming' },
+      { pattern: /connected to.*twitch chat/i, platform: 'twitch', type: 'irc' }
+    ];
+
+    // Check if this is a connection message and update status
+    const connectionInfo = connectionPatterns.find(({ pattern }) =>
+      pattern.test(messageText)
+    );
+
+    if (connectionInfo) {
+      // Update connection status
+      setConnectionStatus(prev => ({
+        ...prev,
+        [connectionInfo.platform]: {
+          connected: true,
+          type: connectionInfo.type,
+          lastConnected: Date.now()
+        }
+      }));
+
+      // Create a cache key based on message type and platform
+      const cacheKey = `system_connection_${connectionInfo.platform}`;
+
+      // Check if we've seen this type of message recently (within 5 minutes)
+      const now = Date.now();
+      const lastSeen = systemMessageCache.current.get(cacheKey);
+
+      if (lastSeen && (now - lastSeen) < 300000) { // 5 minutes
+        return false; // Don't show if seen within 5 minutes
+      }
+
+      // Update cache with current timestamp
+      systemMessageCache.current.set(cacheKey, now);
+
+      // Clean up old entries (older than 10 minutes)
+      const tenMinutesAgo = now - 600000;
+      for (const [key, timestamp] of systemMessageCache.current.entries()) {
+        if (timestamp < tenMinutesAgo) {
+          systemMessageCache.current.delete(key);
+        }
+      }
+
+      return false; // Hide repetitive connection messages (we'll show status in UI instead)
+    }
+
+    // Handle error messages
+    const errorPatterns = [
+      /failed to connect/i,
+      /connection failed/i,
+      /error/i
+    ];
+
+    const isErrorMessage = errorPatterns.some(pattern =>
+      pattern.test(messageText)
+    );
+
+    if (isErrorMessage) {
+      // Extract platform from error message if possible
+      const platformMatch = messageText.match(/(youtube|twitch|facebook)/i);
+      if (platformMatch) {
+        const platform = platformMatch[1].toLowerCase();
+        setConnectionStatus(prev => ({
+          ...prev,
+          [platform]: {
+            connected: false,
+            error: messageText,
+            lastError: Date.now()
+          }
+        }));
+      }
+      return true; // Show error messages
+    }
+
+    return true; // Show other system messages
+  };
+
   if (messagesLoading) {
     return (
       <Card className="h-full flex flex-col">
@@ -203,44 +327,46 @@ function LiveChat({ sourceId }) {
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <div key={message.id} className="flex space-x-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="text-xs">
-                    {getAuthorInitials(message.authorName)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm font-medium">
-                      {message.authorName}
-                    </span>
-                    {message.platform && (
-                      <Badge
-                        variant="outline"
-                        className={`text-xs capitalize ${getPlatformColor(
-                          message.platform
-                        )}`}
-                      >
-                        {getPlatformIcon(message.platform)} {message.platform}
+            messages
+              .filter(shouldShowSystemMessage) // Filter out repetitive system messages
+              .map((message) => (
+                <div key={message.id} className="flex space-x-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {getAuthorInitials(message.authorName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-sm font-medium">
+                        {message.authorName}
+                      </span>
+                      {message.platform && (
+                        <Badge
+                          variant="outline"
+                          className={`text-xs capitalize ${getPlatformColor(
+                            message.platform
+                          )}`}
+                        >
+                          {getPlatformIcon(message.platform)} {message.platform}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-sm break-words">{message.messageText}</p>
+                    {message.messageType !== "text" && (
+                      <Badge variant="secondary" className="mt-1 text-xs">
+                        {message.messageType}
                       </Badge>
                     )}
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
                   </div>
-                  <p className="text-sm break-words">{message.messageText}</p>
-                  {message.messageType !== "text" && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
-                      {message.messageType}
-                    </Badge>
-                  )}
                 </div>
-              </div>
-            ))
+              ))
           )}
           <div ref={messagesEndRef} />
         </div>
