@@ -17,7 +17,13 @@ import { useAuth } from "../contexts/AuthContext";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.neustream.app";
 
-function LiveChat({ sourceId }) {
+function LiveChat({
+  sourceId,
+  showHeader = true,
+  backgroundColor = "default",
+  transparent = false,
+  rawMode = false
+}) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -43,7 +49,7 @@ function LiveChat({ sourceId }) {
 
   // Initialize WebSocket connection
   useEffect(() => {
-    if (!sourceId || !user) return;
+    if (!sourceId) return;
 
     // Prevent reconnection if we're already connected to the same source
     if (socketRef.current?.connected && currentSourceIdRef.current === sourceId) {
@@ -62,13 +68,13 @@ function LiveChat({ sourceId }) {
 
     // Initialize socket connection
     const socket = io(API_BASE_URL || "https://api.neustream.app", {
-      auth: {
+      auth: user ? {
         token: JSON.stringify({
           id: user.id,
           displayName: user.displayName,
           email: user.email,
         }),
-      },
+      } : undefined,
     });
 
     socketRef.current = socket;
@@ -280,35 +286,101 @@ function LiveChat({ sourceId }) {
     );
   }
 
+  // Determine container styles based on props
+  const containerClass = rawMode
+    ? `h-full overflow-y-auto space-y-3 ${transparent ? '' : 'p-4'}`
+    : "absolute inset-0 overflow-y-auto p-4 space-y-3";
+
+  const messageClass = rawMode
+    ? "flex space-x-3"
+    : "flex space-x-3";
+
+  const authorClass = rawMode
+    ? "text-sm font-medium text-white"
+    : "text-sm font-medium";
+
+  const messageTextClass = rawMode
+    ? "text-sm break-words text-white"
+    : "text-sm break-words";
+
+  const timeClass = rawMode
+    ? "text-xs text-gray-300"
+    : "text-xs text-muted-foreground";
+
+  // Render raw mode (minimal styling for OBS)
+  if (rawMode) {
+    return (
+      <div className={containerClass}>
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <p className="text-gray-400">No messages yet</p>
+            </div>
+          </div>
+        ) : (
+          messages
+            .filter(shouldShowSystemMessage)
+            .map((message) => (
+              <div key={message.id} className={messageClass}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className={authorClass}>
+                      {message.authorName}
+                    </span>
+                    {message.platform && (
+                      <span className="text-xs text-gray-400">
+                        [{message.platform}]
+                      </span>
+                    )}
+                    <span className={timeClass}>
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <p className={messageTextClass}>{message.messageText}</p>
+                </div>
+              </div>
+            ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+    );
+  }
+
+  // Render normal mode with card
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 flex-shrink-0">
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center">
-            <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-            Live Chat
-          </span>
-          <div className="flex items-center space-x-2">
-            <Badge
-              variant={isConnected ? "default" : "secondary"}
-              className={isConnected ? "bg-green-500" : ""}
-            >
-              {isConnected ? "Connected" : "Connecting..."}
-            </Badge>
-            <Badge variant="outline" className="flex items-center text-xs">
-              <Users className="h-3 w-3 mr-1" />
-              {viewerCount}
-            </Badge>
-          </div>
-        </CardTitle>
-        <CardDescription>
-          Real-time chat from all connected platforms
-        </CardDescription>
-      </CardHeader>
+      {showHeader && (
+        <CardHeader className="pb-3 flex-shrink-0">
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center">
+              <MessageCircle className="h-5 w-5 mr-2 text-primary" />
+              Live Chat
+            </span>
+            <div className="flex items-center space-x-2">
+              <Badge
+                variant={isConnected ? "default" : "secondary"}
+                className={isConnected ? "bg-green-500" : ""}
+              >
+                {isConnected ? "Connected" : "Connecting..."}
+              </Badge>
+              <Badge variant="outline" className="flex items-center text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                {viewerCount}
+              </Badge>
+            </div>
+          </CardTitle>
+          <CardDescription>
+            Real-time chat from all connected platforms
+          </CardDescription>
+        </CardHeader>
+      )}
 
       <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
         {/* Chat Messages Area - Fixed height container */}
-        <div className="absolute inset-0 overflow-y-auto p-4 space-y-3">
+        <div className={containerClass}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center min-h-[200px]">
               <div className="text-center">
@@ -325,7 +397,7 @@ function LiveChat({ sourceId }) {
             messages
               .filter(shouldShowSystemMessage) // Filter out repetitive system messages
               .map((message) => (
-                <div key={message.id} className="flex space-x-3">
+                <div key={message.id} className={messageClass}>
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs">
                       {getAuthorInitials(message.authorName)}
@@ -333,7 +405,7 @@ function LiveChat({ sourceId }) {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-medium">
+                      <span className={authorClass}>
                         {message.authorName}
                       </span>
                       {message.platform && (
@@ -346,14 +418,14 @@ function LiveChat({ sourceId }) {
                           {getPlatformIcon(message.platform)} {message.platform}
                         </Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">
+                      <span className={timeClass}>
                         {new Date(message.createdAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
                       </span>
                     </div>
-                    <p className="text-sm break-words">{message.messageText}</p>
+                    <p className={messageTextClass}>{message.messageText}</p>
                     {message.messageType !== "text" && (
                       <Badge variant="secondary" className="mt-1 text-xs">
                         {message.messageType}

@@ -20,6 +20,7 @@ import DashboardOverview from "./components/DashboardOverview";
 import StreamingConfiguration from "./components/StreamingConfiguration";
 import StreamPreviewPage from "./components/StreamPreviewPage";
 import SubscriptionManagement from "./components/SubscriptionManagement";
+import PublicChatPage from "./components/PublicChatPage";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 import { ThemeProvider } from "./components/theme-provider";
@@ -68,6 +69,9 @@ function AppContent() {
       {/* Public legal pages */}
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
+
+      {/* Public chat route for OBS integration */}
+      <Route path="/chat/:sourceId" element={<PublicChatPage />} />
 
       {/* Auth routes - redirect authenticated users to dashboard */}
       <Route
