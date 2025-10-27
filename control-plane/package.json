@@ -29,7 +29,8 @@
     "posthog-node": "^5.9.5",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.1",
-    "tmi.js": "^1.8.5"
+    "tmi.js": "^1.8.5",
+    "eventsource": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

@@ -20,7 +20,7 @@ router.get(
       // Verify source belongs to user
       const sourceCheck = await db.query(
         "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-        [sourceId, userId]
+        [sourceId, userId],
       );
 
       if (sourceCheck.length === 0) {
@@ -30,7 +30,7 @@ router.get(
       // Get chat connectors for this source
       const connectors = await db.query(
         "SELECT * FROM chat_connectors WHERE source_id = $1 ORDER BY created_at DESC",
-        [sourceId]
+        [sourceId],
       );
 
       res.json({ connectors });
@@ -38,7 +38,7 @@ router.get(
       console.error("Get chat connectors error:", error);
       res.status(500).json({ error: "Failed to fetch chat connectors" });
     }
-  }
+  },
 );
 
 // Create new chat connector
@@ -54,7 +54,7 @@ router.post(
       // Verify source belongs to user
       const sourceCheck = await db.query(
         "SELECT id, name FROM stream_sources WHERE id = $1 AND user_id = $2",
-        [sourceId, userId]
+        [sourceId, userId],
       );
 
       if (sourceCheck.length === 0) {
@@ -71,7 +71,7 @@ router.post(
       // Check if connector already exists for this platform and source
       const existingConnectors = await db.query(
         "SELECT id FROM chat_connectors WHERE source_id = $1 AND platform = $2",
-        [sourceId, platform]
+        [sourceId, platform],
       );
 
       if (existingConnectors.length > 0) {
@@ -83,7 +83,7 @@ router.post(
       // Create the chat connector
       const result = await db.run(
         "INSERT INTO chat_connectors (source_id, platform, connector_type, config) VALUES ($1, $2, $3, $4) RETURNING *",
-        [sourceId, platform, connectorType, config]
+        [sourceId, platform, connectorType, config],
       );
 
       // Track connector creation
@@ -99,7 +99,7 @@ router.post(
       console.error("Create chat connector error:", error);
       res.status(500).json({ error: "Failed to create chat connector" });
     }
-  }
+  },
 );
 
 // Update chat connector
@@ -115,7 +115,7 @@ router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
        FROM chat_connectors cc
        JOIN stream_sources ss ON cc.source_id = ss.id
        WHERE cc.id = $1 AND ss.user_id = $2`,
-      [connectorId, userId]
+      [connectorId, userId],
     );
 
     if (connectorCheck.length === 0) {
@@ -125,7 +125,7 @@ router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
     // Update the connector
     const result = await db.run(
       "UPDATE chat_connectors SET config = COALESCE($1, config), is_active = COALESCE($2, is_active) WHERE id = $3 RETURNING *",
-      [config, isActive, connectorId]
+      [config, isActive, connectorId],
     );
 
     if (!result) {
@@ -162,7 +162,7 @@ router.delete(
        FROM chat_connectors cc
        JOIN stream_sources ss ON cc.source_id = ss.id
        WHERE cc.id = $1 AND ss.user_id = $2`,
-        [connectorId, userId]
+        [connectorId, userId],
       );
 
       if (connectorCheck.length === 0) {
@@ -202,7 +202,7 @@ router.delete(
       console.error("Delete chat connector error:", error);
       res.status(500).json({ error: "Failed to delete chat connector" });
     }
-  }
+  },
 );
 
 // Get chat messages for a source
@@ -218,7 +218,7 @@ router.get(
       // Verify source belongs to user
       const sourceCheck = await db.query(
         "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-        [sourceId, userId]
+        [sourceId, userId],
       );
 
       if (sourceCheck.length === 0) {
@@ -244,13 +244,13 @@ router.get(
       WHERE cm.source_id = $1
       ORDER BY cm.created_at DESC
       LIMIT $2 OFFSET $3`,
-        [sourceId, parseInt(limit), parseInt(offset)]
+        [sourceId, parseInt(limit), parseInt(offset)],
       );
 
       // Get total count
       const countResult = await db.query(
         "SELECT COUNT(*) as total FROM chat_messages WHERE source_id = $1",
-        [sourceId]
+        [sourceId],
       );
 
       res.json({
@@ -263,7 +263,7 @@ router.get(
       console.error("Get chat messages error:", error);
       res.status(500).json({ error: "Failed to fetch chat messages" });
     }
-  }
+  },
 );
 
 // OAuth flow for chat connectors
@@ -280,7 +280,7 @@ router.get(
       if (sourceId) {
         const sourceCheck = await db.query(
           "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
-          [sourceId, userId]
+          [sourceId, userId],
         );
 
         if (sourceCheck.length === 0) {
@@ -296,7 +296,7 @@ router.get(
           sourceId,
           redirectUrl:
             redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`,
-        })
+        }),
       ).toString("base64");
 
       switch (platform.toLowerCase()) {
@@ -306,7 +306,7 @@ router.get(
             `client_id=${process.env.TWITCH_CLIENT_ID}` +
             `&redirect_uri=${encodeURIComponent(
               process.env.TWITCH_CHAT_CALLBACK_URL ||
-                `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`
+                `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`,
             )}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent("chat:read chat:edit")}` +
@@ -318,15 +318,29 @@ router.get(
             `client_id=${process.env.GOOGLE_CLIENT_ID}` +
             `&redirect_uri=${encodeURIComponent(
               process.env.YOUTUBE_CHAT_CALLBACK_URL ||
-                `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`
+                `${process.env.BACKEND_URL}/api/chat/connectors/youtube/oauth/callback`,
             )}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent(
-              "https://www.googleapis.com/auth/youtube.readonly"
+              "https://www.googleapis.com/auth/youtube.readonly",
             )}` +
             `&access_type=offline` +
             `&prompt=consent` +
             `&include_granted_scopes=true` +
+            `&state=${state}`;
+          break;
+        case "instagram":
+          oauthUrl =
+            `https://www.facebook.com/v18.0/dialog/oauth?` +
+            `client_id=${process.env.INSTAGRAM_CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(
+              process.env.INSTAGRAM_CALLBACK_URL ||
+                `${process.env.BACKEND_URL}/api/chat/connectors/instagram/oauth/callback`,
+            )}` +
+            `&response_type=code` +
+            `&scope=${encodeURIComponent(
+              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement",
+            )}` +
             `&state=${state}`;
           break;
         default:
@@ -337,21 +351,22 @@ router.get(
 
       console.log(
         `OAuth start successful for ${platform}, redirecting to:`,
-        oauthUrl
+        oauthUrl,
       );
       console.log(`OAuth start request details:`, {
         platform,
         sourceId,
         userId,
-        redirectUrl: redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`,
-        oauthUrlLength: oauthUrl.length
+        redirectUrl:
+          redirectUrl || `${process.env.FRONTEND_URL}/dashboard/streaming`,
+        oauthUrlLength: oauthUrl.length,
       });
       res.json({ oauthUrl });
     } catch (error) {
       console.error("OAuth start error:", error);
       res.status(500).json({ error: "Failed to start OAuth flow" });
     }
-  }
+  },
 );
 
 // OAuth callback endpoint (placeholder - will be implemented per platform)
@@ -364,13 +379,13 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
       return res.redirect(
         `${
           process.env.FRONTEND_URL
-        }/dashboard/streaming?oauth_error=${encodeURIComponent(error)}`
+        }/dashboard/streaming?oauth_error=${encodeURIComponent(error)}`,
       );
     }
 
     if (!code || !state) {
       return res.redirect(
-        `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=invalid_callback`
+        `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=invalid_callback`,
       );
     }
 
@@ -394,7 +409,7 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
     // Check if connector already exists
     const existingConnectors = await db.query(
       "SELECT id FROM chat_connectors WHERE source_id = $1 AND platform = $2",
-      [sourceId, platform]
+      [sourceId, platform],
     );
 
     let connector;
@@ -402,13 +417,13 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
       // Update existing connector
       connector = await db.run(
         "UPDATE chat_connectors SET config = $1, is_active = true WHERE id = $2 RETURNING *",
-        [connectorConfig, existingConnectors[0].id]
+        [connectorConfig, existingConnectors[0].id],
       );
     } else {
       // Create new connector
       connector = await db.run(
         "INSERT INTO chat_connectors (source_id, platform, connector_type, config) VALUES ($1, $2, $3, $4) RETURNING *",
-        [sourceId, platform, "oauth", connectorConfig]
+        [sourceId, platform, "oauth", connectorConfig],
       );
     }
 
@@ -424,7 +439,7 @@ router.get("/connectors/:platform/oauth/callback", async (req, res) => {
   } catch (error) {
     console.error("OAuth callback error:", error);
     res.redirect(
-      `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=callback_failed`
+      `${process.env.FRONTEND_URL}/dashboard/streaming?oauth_error=callback_failed`,
     );
   }
 });
@@ -436,6 +451,8 @@ async function exchangeCodeForTokens(platform, code) {
       return await exchangeTwitchCodeForTokens(code);
     case "youtube":
       return await exchangeYouTubeCodeForTokens(code);
+    case "instagram":
+      return await exchangeInstagramCodeForTokens(code);
     default:
       throw new Error(`Unsupported platform: ${platform}`);
   }
@@ -457,7 +474,7 @@ async function exchangeTwitchCodeForTokens(code) {
             process.env.TWITCH_CHAT_CALLBACK_URL ||
             `${process.env.BACKEND_URL}/api/chat/connectors/twitch/oauth/callback`,
         },
-      }
+      },
     );
 
     const { access_token, refresh_token, expires_in } = response.data;
@@ -483,7 +500,7 @@ async function exchangeTwitchCodeForTokens(code) {
   } catch (error) {
     console.error(
       "Twitch token exchange error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw new Error("Failed to exchange Twitch authorization code");
   }
@@ -498,18 +515,18 @@ async function exchangeYouTubeCodeForTokens(code) {
     console.log("YouTube OAuth redirect URI:", redirectUri);
     console.log(
       "YouTube OAuth client ID:",
-      process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET"
+      process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET",
     );
     console.log(
       "YouTube OAuth client secret:",
-      process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET"
+      process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET",
     );
 
     const response = await axios.post(
       "https://oauth2.googleapis.com/token",
       `client_id=${encodeURIComponent(process.env.GOOGLE_CLIENT_ID)}&` +
         `client_secret=${encodeURIComponent(
-          process.env.GOOGLE_CLIENT_SECRET
+          process.env.GOOGLE_CLIENT_SECRET,
         )}&` +
         `code=${encodeURIComponent(code)}&` +
         `grant_type=authorization_code&` +
@@ -518,34 +535,39 @@ async function exchangeYouTubeCodeForTokens(code) {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-      }
+      },
     );
 
     console.log("YouTube token exchange response:", {
       status: response.status,
       hasAccessToken: !!response.data.access_token,
       hasRefreshToken: !!response.data.refresh_token,
-      expiresIn: response.data.expires_in
+      expiresIn: response.data.expires_in,
     });
 
     const { access_token, refresh_token, expires_in } = response.data;
 
-    console.log("YouTube token exchange successful, fetching user channel info...");
+    console.log(
+      "YouTube token exchange successful, fetching user channel info...",
+    );
 
     // Get the user's actual YouTube channel ID using the Channels API
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: access_token });
 
-    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const youtube = google.youtube({ version: "v3", auth: oauth2Client });
 
     // Get the authenticated user's channel info
     const channelResponse = await youtube.channels.list({
-      part: 'snippet',
-      mine: true
+      part: "snippet",
+      mine: true,
     });
 
-    if (!channelResponse.data.items || channelResponse.data.items.length === 0) {
-      throw new Error('No YouTube channel found for authenticated user');
+    if (
+      !channelResponse.data.items ||
+      channelResponse.data.items.length === 0
+    ) {
+      throw new Error("No YouTube channel found for authenticated user");
     }
 
     const channel = channelResponse.data.items[0];
@@ -554,7 +576,7 @@ async function exchangeYouTubeCodeForTokens(code) {
 
     console.log("YouTube channel info retrieved:", {
       channelId,
-      channelTitle
+      channelTitle,
     });
 
     return {
@@ -568,7 +590,7 @@ async function exchangeYouTubeCodeForTokens(code) {
   } catch (error) {
     console.error(
       "YouTube token exchange error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw new Error("Failed to exchange YouTube authorization code");
   }
@@ -583,7 +605,7 @@ router.get("/public/sources/:sourceId/messages", async (req, res) => {
     // Verify source exists and is active
     const sourceCheck = await db.query(
       "SELECT id, name, is_active FROM stream_sources WHERE id = $1",
-      [sourceId]
+      [sourceId],
     );
 
     if (sourceCheck.length === 0) {
@@ -613,13 +635,13 @@ router.get("/public/sources/:sourceId/messages", async (req, res) => {
       WHERE cm.source_id = $1
       ORDER BY cm.created_at DESC
       LIMIT $2 OFFSET $3`,
-      [sourceId, parseInt(limit), parseInt(offset)]
+      [sourceId, parseInt(limit), parseInt(offset)],
     );
 
     // Get total count
     const countResult = await db.query(
       "SELECT COUNT(*) as total FROM chat_messages WHERE source_id = $1",
-      [sourceId]
+      [sourceId],
     );
 
     res.json({
@@ -633,5 +655,93 @@ router.get("/public/sources/:sourceId/messages", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch chat messages" });
   }
 });
+// Instagram OAuth token exchange
+async function exchangeInstagramCodeForTokens(code) {
+  try {
+    const redirectUri =
+      process.env.INSTAGRAM_CHAT_CALLBACK_URL ||
+      `${process.env.BACKEND_URL}/api/chat/connectors/instagram/oauth/callback`;
+
+    console.log("Instagram OAuth redirect URI:", redirectUri);
+    console.log(
+      "Instagram OAuth client ID:",
+      process.env.INSTAGRAM_CLIENT_ID ? "SET" : "NOT SET",
+    );
+    console.log(
+      "Instagram OAuth client secret:",
+      process.env.INSTAGRAM_CLIENT_SECRET ? "SET" : "NOT SET",
+    );
+
+    // Exchange code for access token
+    const response = await axios.post(
+      "https://graph.facebook.com/v18.0/oauth/access_token",
+      null,
+      {
+        params: {
+          client_id: process.env.INSTAGRAM_CLIENT_ID,
+          client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+          code: code,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        },
+      },
+    );
+
+    console.log("Instagram token exchange response:", {
+      status: response.status,
+      hasAccessToken: !!response.data.access_token,
+      expiresIn: response.data.expires_in,
+    });
+
+    const { access_token, expires_in } = response.data;
+
+    console.log("Instagram token exchange successful, fetching user info...");
+
+    // Get user info with the access token
+    const userResponse = await axios.get(
+      `https://graph.facebook.com/v18.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name}}&access_token=${access_token}`,
+    );
+
+    const userData = userResponse.data;
+    console.log("Instagram user info:", userData);
+
+    // Find Instagram business account
+    let instagramAccount = null;
+    let liveVideoId = null;
+
+    if (userData.accounts && userData.accounts.data.length > 0) {
+      for (const account of userData.accounts.data) {
+        if (account.instagram_business_account) {
+          instagramAccount = account.instagram_business_account;
+          break;
+        }
+      }
+    }
+
+    if (!instagramAccount) {
+      throw new Error(
+        "No Instagram business account found for authenticated user",
+      );
+    }
+
+    console.log("Instagram business account found:", instagramAccount);
+
+    return {
+      accessToken: access_token,
+      expiresAt: new Date(Date.now() + expires_in * 1000).toISOString(),
+      platformUserId: instagramAccount.id,
+      platformUsername: instagramAccount.username,
+      displayName: instagramAccount.name || instagramAccount.username,
+      // Note: Instagram doesn't provide refresh tokens in basic flow
+      // We'll need to handle token refresh separately
+    };
+  } catch (error) {
+    console.error(
+      "Instagram token exchange error:",
+      error.response?.data || error.message,
+    );
+    throw new Error("Failed to exchange Instagram authorization code");
+  }
+}
 
 module.exports = router;

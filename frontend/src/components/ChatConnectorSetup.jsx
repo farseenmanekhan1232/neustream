@@ -37,6 +37,14 @@ const PLATFORMS = [
     features: ["Live chat messages", "Super Chat support", "Emoji reactions"],
   },
   {
+    id: "instagram",
+    name: "Instagram",
+    description: "Connect to your Instagram Live comments",
+    icon: "📸",
+    status: "available",
+    features: ["Live comments", "Reactions", "Real-time streaming"],
+  },
+  {
     id: "facebook",
     name: "Facebook",
     description: "Connect to your Facebook Live comments",
