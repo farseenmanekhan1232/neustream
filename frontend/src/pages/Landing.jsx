@@ -7,6 +7,9 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { subscriptionService } from "../services/subscription";
 import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
+import MetricsDisplay from "../components/MetricsDisplay";
+import LiveChatSimulator from "../components/LiveChatSimulator";
+import StreamConfigSimulator from "../components/StreamConfigSimulator";
 
 function Landing() {
   // TextHighlighter configuration
@@ -376,82 +379,88 @@ function Landing() {
       <section className="section-padding ">
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-normal">
-                  Best performance by default, not as a hidden option
-                </h2>
-                <p className="text-lg ">
-                  NeuStream eliminates hardware bottlenecks by offloading video
-                  encoding to our cloud infrastructure. Your local machine stays
-                  fast and responsive, whether you're gaming, creating, or
-                  working on resource-intensive projects. No CPU spikes, no
-                  dropped frames, no{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    performance compromises
-                  </TextHighlighter>
-                  .
-                  <br />
-                  <br />
-                  Our distributed infrastructure ensures your streams stay live
-                  even if individual servers experience issues. You get{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    99.9% uptime guarantee
-                  </TextHighlighter>{" "}
-                  without thinking about it.
-                  <br />
-                  <br />
-                  Not enough? Fine-tune your streaming settings with advanced
-                  controls for bitrate, resolution, and platform-specific
-                  optimizations. You're finally in{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    full control of your streaming performance
-                  </TextHighlighter>{" "}
-                  without hardware limitations.
-                </p>
-              </div>
+            <div className="space-y-2">
+              <MetricsDisplay />
+              <StreamConfigSimulator />
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-3xl md:text-4xl font-normal">
+                Best performance by default, not as a hidden option
+              </h2>
+              <p className="text-lg ">
+                NeuStream eliminates hardware bottlenecks by offloading video
+                encoding to our cloud infrastructure. Your local machine stays
+                fast and responsive, whether you're gaming, creating, or working
+                on resource-intensive projects. No CPU spikes, no dropped
+                frames, no{" "}
+                <TextHighlighter {...highlightConfig}>
+                  performance compromises
+                </TextHighlighter>
+                .
+                <br />
+                <br />
+                Our distributed infrastructure ensures your streams stay live
+                even if individual servers experience issues. You get{" "}
+                <TextHighlighter {...highlightConfig}>
+                  99.9% uptime guarantee
+                </TextHighlighter>{" "}
+                without thinking about it.
+                <br />
+                <br />
+                Not enough? Fine-tune your streaming settings with advanced
+                controls for bitrate, resolution, and platform-specific
+                optimizations. You're finally in{" "}
+                <TextHighlighter {...highlightConfig}>
+                  full control of your streaming performance
+                </TextHighlighter>{" "}
+                without hardware limitations.
+              </p>
             </div>
 
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-normal">Respectful by design</h3>
-                <p className="">
-                  NeuStream doesn't interrupt your workflow or annoy you with
-                  anything. It doesn't do anything without your consent: no
-                  unexpected tabs about updates, no persistent popups telling
-                  you about features you don't care about, no weird restarts.
-                  <br />
-                  <br />
-                  Nothing interrupts your stream, jumps in your face, or breaks
-                  your creative flow. Everything just makes sense. You're in
-                  <TextHighlighter {...highlightConfig}>
-                    full control
-                  </TextHighlighter>
-                  .
-                </p>
-              </div>
+            <div>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-normal">Respectful by design</h3>
+                  <p className="">
+                    NeuStream doesn't interrupt your workflow or annoy you with
+                    anything. It doesn't do anything without your consent: no
+                    unexpected tabs about updates, no persistent popups telling
+                    you about features you don't care about, no weird restarts.
+                    <br />
+                    <br />
+                    Nothing interrupts your stream, jumps in your face, or
+                    breaks your creative flow. Everything just makes sense.
+                    You're in
+                    <TextHighlighter {...highlightConfig}>
+                      full control
+                    </TextHighlighter>
+                    .
+                  </p>
+                </div>
 
-              <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
-                  Fast, efficient, and reliable
-                </h3>
-                <p className="">
-                  NeuStream's cloud architecture is optimized for streaming
-                  performance and energy efficiency. You will notice the
-                  difference after streaming with NeuStream for just one
-                  session. It doesn't slow down over time or during long
-                  streams.
-                  <br />
-                  <br />
-                  All unnecessary bloat is removed: NeuStream is one of the{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    most efficient multistreaming solutions
-                  </TextHighlighter>{" "}
-                  available, delivering maximum performance with minimal
-                  resource usage.
-                </p>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-normal">
+                    Fast, efficient, and reliable
+                  </h3>
+                  <p className="">
+                    NeuStream's cloud architecture is optimized for streaming
+                    performance and energy efficiency. You will notice the
+                    difference after streaming with NeuStream for just one
+                    session. It doesn't slow down over time or during long
+                    streams.
+                    <br />
+                    <br />
+                    All unnecessary bloat is removed: NeuStream is one of the{" "}
+                    <TextHighlighter {...highlightConfig}>
+                      most efficient multistreaming solutions
+                    </TextHighlighter>{" "}
+                    available, delivering maximum performance with minimal
+                    resource usage.
+                  </p>
+                </div>
               </div>
             </div>
+            <LiveChatSimulator />
           </div>
         </div>
       </section>
@@ -808,13 +817,13 @@ function Landing() {
                 30-day money-back guarantee
               </span>
             </div>
-            <div className="mt-6 pt-6 border-t border-white/20">
+            <div className="mt-6 pt-6  border-white/20">
               <p className="text-xs opacity-70">
-                By using our service, you agree to our{' '}
+                By using our service, you agree to our{" "}
                 <Link to="/privacy" className="underline hover:opacity-80">
                   Privacy Policy
-                </Link>
-                {' '}and{' '}
+                </Link>{" "}
+                and{" "}
                 <Link to="/terms" className="underline hover:opacity-80">
                   Terms of Service
                 </Link>
@@ -851,13 +860,13 @@ function Landing() {
                 </span>
               </Link>
             </Button>
-            <div className="mt-8 pt-6 border-t border-white/20">
+            <div className="mt-8 pt-6  border-white/20">
               <p className="text-xs opacity-70">
-                By signing up, you agree to our{' '}
+                By signing up, you agree to our{" "}
                 <Link to="/privacy" className="underline hover:opacity-80">
                   Privacy Policy
-                </Link>
-                {' '}and{' '}
+                </Link>{" "}
+                and{" "}
                 <Link to="/terms" className="underline hover:opacity-80">
                   Terms of Service
                 </Link>
