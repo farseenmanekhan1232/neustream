@@ -22,7 +22,6 @@ function LiveChat({ sourceId }) {
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState({}); // Track platform connection status
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const systemMessageCache = useRef(new Map()); // Cache for system messages to prevent duplicates
@@ -136,41 +135,7 @@ function LiveChat({ sourceId }) {
     return icons[platform] || "💬";
   };
 
-  // Render connection status indicators
-  const renderConnectionStatus = () => {
-    const platforms = Object.keys(connectionStatus);
-    if (platforms.length === 0) return null;
-
-    return (
-      <div className="flex items-center space-x-2 ml-4">
-        {platforms.map(platform => {
-          const status = connectionStatus[platform];
-          const isConnected = status?.connected;
-          const Icon = getPlatformIcon(platform);
-
-          return (
-            <div
-              key={platform}
-              className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
-                isConnected
-                  ? 'bg-green-100 text-green-800 border border-green-200'
-                  : 'bg-red-100 text-red-800 border border-red-200'
-              }`}
-              title={`${platform}: ${isConnected ? 'Connected' : 'Disconnected'}`}
-            >
-              <span>{Icon}</span>
-              <span className="capitalize">{platform}</span>
-              <div className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
-              }`} />
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Filter repetitive system connection messages and update connection status
+  // Filter repetitive system connection messages
   const shouldShowSystemMessage = (message) => {
     // Only filter system messages
     if (message.messageType !== 'system' || message.authorName !== 'System') {
@@ -186,22 +151,12 @@ function LiveChat({ sourceId }) {
       { pattern: /connected to.*twitch chat/i, platform: 'twitch', type: 'irc' }
     ];
 
-    // Check if this is a connection message and update status
+    // Check if this is a connection message
     const connectionInfo = connectionPatterns.find(({ pattern }) =>
       pattern.test(messageText)
     );
 
     if (connectionInfo) {
-      // Update connection status
-      setConnectionStatus(prev => ({
-        ...prev,
-        [connectionInfo.platform]: {
-          connected: true,
-          type: connectionInfo.type,
-          lastConnected: Date.now()
-        }
-      }));
-
       // Create a cache key based on message type and platform
       const cacheKey = `system_connection_${connectionInfo.platform}`;
 
@@ -224,38 +179,10 @@ function LiveChat({ sourceId }) {
         }
       }
 
-      return false; // Hide repetitive connection messages (we'll show status in UI instead)
+      return false; // Hide repetitive connection messages
     }
 
-    // Handle error messages
-    const errorPatterns = [
-      /failed to connect/i,
-      /connection failed/i,
-      /error/i
-    ];
-
-    const isErrorMessage = errorPatterns.some(pattern =>
-      pattern.test(messageText)
-    );
-
-    if (isErrorMessage) {
-      // Extract platform from error message if possible
-      const platformMatch = messageText.match(/(youtube|twitch|facebook)/i);
-      if (platformMatch) {
-        const platform = platformMatch[1].toLowerCase();
-        setConnectionStatus(prev => ({
-          ...prev,
-          [platform]: {
-            connected: false,
-            error: messageText,
-            lastError: Date.now()
-          }
-        }));
-      }
-      return true; // Show error messages
-    }
-
-    return true; // Show other system messages
+    return true; // Show other system messages (including errors)
   };
 
   if (messagesLoading) {
