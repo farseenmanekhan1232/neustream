@@ -808,6 +808,18 @@ function Landing() {
                 30-day money-back guarantee
               </span>
             </div>
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <p className="text-xs opacity-70">
+                By using our service, you agree to our{' '}
+                <Link to="/privacy" className="underline hover:opacity-80">
+                  Privacy Policy
+                </Link>
+                {' '}and{' '}
+                <Link to="/terms" className="underline hover:opacity-80">
+                  Terms of Service
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -839,6 +851,18 @@ function Landing() {
                 </span>
               </Link>
             </Button>
+            <div className="mt-8 pt-6 border-t border-white/20">
+              <p className="text-xs opacity-70">
+                By signing up, you agree to our{' '}
+                <Link to="/privacy" className="underline hover:opacity-80">
+                  Privacy Policy
+                </Link>
+                {' '}and{' '}
+                <Link to="/terms" className="underline hover:opacity-80">
+                  Terms of Service
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </section>
