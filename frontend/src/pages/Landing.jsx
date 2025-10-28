@@ -371,7 +371,7 @@ function Landing() {
         <img
           src="/hero.png"
           alt="Integration"
-          className="w-full max-md:max-w-2xl md:w-4/5 mx-auto rounded-2xl mt-6 px-4 sm:px-0 shadow-xl"
+          className="max-md:hidden w-full max-md:max-w-2xl md:w-4/5 mx-auto rounded-2xl mt-6 px-4 sm:px-0 shadow-xl"
         />
       </section>
 
