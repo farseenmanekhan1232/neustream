@@ -153,7 +153,7 @@ p {
     padding-right: 1rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
     .container-custom {
         padding-left: 1.5rem;
         padding-right: 1.5rem;
@@ -161,8 +161,15 @@ p {
 }
 
 .section-padding {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+    .section-padding {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+    }
 }
 
 @media (min-width: 768px) {
@@ -180,10 +187,16 @@ p {
 }
 
 .feature-card {
-    padding: 1.5rem;
+    padding: 1rem sm:p-1.5rem;
     border-radius: 0.75rem;
     border: 1px solid var(--color-border);
     transition: all 0.2s;
+}
+
+@media (min-width: 640px) {
+    .feature-card {
+        padding: 1.5rem;
+    }
 }
 
 .feature-card:hover {

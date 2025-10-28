@@ -60,7 +60,7 @@ function Header() {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden p-2"
+          className="md:hidden p-3 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -99,24 +99,24 @@ function Header() {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden border-t">
-          <div className="container-custom py-4 flex flex-col gap-4">
+          <div className="container-custom py-4 flex flex-col gap-2">
             <Link
               to="/"
-              className="px-2 py-2 text-sm font-medium hover:text-primary"
+              className="px-4 py-3 text-sm font-medium hover:text-primary rounded-lg hover:bg-white/10 transition-colors min-h-[44px] flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
               Home
             </Link>
             <a
               href="#features"
-              className="px-2 py-2 text-sm font-medium hover:text-primary"
+              className="px-4 py-3 text-sm font-medium hover:text-primary rounded-lg hover:bg-white/10 transition-colors min-h-[44px] flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
               Features
             </a>
             <Link
               to="/privacy"
-              className="px-2 py-2 text-sm font-medium hover:text-primary"
+              className="px-4 py-3 text-sm font-medium hover:text-primary rounded-lg hover:bg-white/10 transition-colors min-h-[44px] flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
               Privacy

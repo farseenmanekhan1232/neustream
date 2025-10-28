@@ -317,7 +317,7 @@ function Landing() {
       {/* Hero Section */}
       <section className="section-padding">
         <div className="container-custom">
-          <div className="flex flex-col items-center text-center space-y-8 md:space-y-10">
+          <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8 md:space-y-10">
             <div className="inline-flex items-center">
               <img
                 src="/logo.png"
@@ -327,7 +327,7 @@ function Landing() {
             </div>
 
             <div className="space-y-4 max-w-3xl">
-              <div className="text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight md:leading-tight lg:leading-tight">
+              <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
                 Streaming Without{" "}
                 <TextHighlighter {...highlightConfig}>
                   Performance Compromises
@@ -338,7 +338,7 @@ function Landing() {
             <div className="flex flex-col gap-4 w-full max-w-md">
               <Button
                 asChild
-                className="w-min mx-auto text-base py-8 px-6 bg-white text-black rounded-3xl font-light hover:bg-white shadow-xl relative"
+                className="w-full min-h-[44px] mx-auto text-base py-6 px-8 sm:py-8 sm:px-6 bg-white text-black rounded-2xl sm:rounded-3xl font-light hover:bg-white shadow-xl relative"
               >
                 <Link to="/auth">
                   Start Streaming Free
@@ -371,20 +371,20 @@ function Landing() {
         <img
           src="/hero.png"
           alt="Integration"
-          className="w-2/3 mx-auto rounded-2xl mt-6"
+          className="w-full max-w-2xl mx-auto rounded-2xl mt-6 px-4 sm:px-0"
         />
       </section>
 
       {/* Performance & Privacy Section */}
       <section className="section-padding ">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             <div className="space-y-2">
               <MetricsDisplay />
               <StreamConfigSimulator />
             </div>
             <div className="space-y-4">
-              <h2 className="text-3xl md:text-4xl font-normal">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal">
                 Best performance by default, not as a hidden option
               </h2>
               <p className="text-lg ">
@@ -420,7 +420,7 @@ function Landing() {
             <div>
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-normal">Respectful by design</h3>
+                  <h3 className="text-xl sm:text-2xl font-normal">Respectful by design</h3>
                   <p className="">
                     NeuStream doesn't interrupt your workflow or annoy you with
                     anything. It doesn't do anything without your consent: no
@@ -439,7 +439,7 @@ function Landing() {
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-normal">
+                  <h3 className="text-xl sm:text-2xl font-normal">
                     Fast, efficient, and reliable
                   </h3>
                   <p className="">
@@ -468,11 +468,11 @@ function Landing() {
       {/* Features Section */}
       <section id="features" className="section-padding">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-normal">
+                  <h3 className="text-xl sm:text-2xl font-normal">
                     Works with all streaming software
                   </h3>
                   <p className="">
@@ -494,7 +494,7 @@ function Landing() {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-normal">
+                  <h3 className="text-xl sm:text-2xl font-normal">
                     Best practices for everyone, by default
                   </h3>
                   <p className="">
@@ -517,7 +517,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
+                <h3 className="text-xl sm:text-2xl font-normal">
                   Designed to get out of your way
                 </h3>
                 <p className="">
@@ -543,9 +543,9 @@ function Landing() {
             </div>
 
             <div className="space-y-8">
-              <img src="/obs.png" alt="Gaming" className="w-full rounded-2xl" />
+              <img src="/obs.png" alt="Gaming" className="w-full rounded-2xl px-4 sm:px-0" />
               <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
+                <h3 className="text-xl sm:text-2xl font-normal">
                   Transparent and honest pricing
                 </h3>
                 <p className="">
@@ -566,7 +566,7 @@ function Landing() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-2xl font-normal">
+                <h3 className="text-xl sm:text-2xl font-normal">
                   Always reliable and up-to-date
                 </h3>
                 <p className="">
@@ -596,7 +596,7 @@ function Landing() {
         <img
           src="/live.png"
           alt="Target Audience"
-          className="w-2/3 h-auto mb-8 mx-auto rounded-2xl"
+          className="w-full max-w-3xl h-auto mb-8 mx-auto rounded-2xl px-4 sm:px-0"
         />
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-12">
@@ -614,9 +614,9 @@ function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">Perfect for gamers</h3>
+              <h3 className="text-lg sm:text-xl font-normal">Perfect for gamers</h3>
               <p className="">
                 Stream without FPS drops or system performance impact. Maintain
                 competitive edge while{" "}
@@ -628,7 +628,7 @@ function Landing() {
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">
+              <h3 className="text-lg sm:text-xl font-normal">
                 Perfect for content creators
               </h3>
               <p className="">
@@ -641,7 +641,7 @@ function Landing() {
             </div>
 
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-normal">
+              <h3 className="text-lg sm:text-xl font-normal">
                 Perfect for everyone on the go
               </h3>
               <p className="">
@@ -672,7 +672,7 @@ function Landing() {
           </div>
 
           {plansLoading ? (
-            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+            <div className="grid gap-6 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="feature-card animate-pulse">
                   <div className="text-center space-y-4">
@@ -699,7 +699,7 @@ function Landing() {
               </p>
             </div>
           ) : plans.length > 0 ? (
-            <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+            <div className="grid gap-6 sm:gap-8 md:grid-cols-3 max-w-5xl mx-auto">
               {plans.map((plan) => {
                 const features = getPlanFeatures(plan);
                 const isProPlan = plan.name.toLowerCase() === "pro";
@@ -720,7 +720,7 @@ function Landing() {
                     )}
                     <div className="text-center space-y-4">
                       <div className="space-y-2">
-                        <h3 className="text-2xl font-normal">{plan.name}</h3>
+                        <h3 className="text-xl sm:text-2xl font-normal">{plan.name}</h3>
                         <p className="">
                           {plan.description ||
                             `Perfect for ${plan.name.toLowerCase()} users`}
