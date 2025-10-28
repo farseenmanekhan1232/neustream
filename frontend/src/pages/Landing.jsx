@@ -371,7 +371,7 @@ function Landing() {
         <img
           src="/hero.png"
           alt="Integration"
-          className="w-full max-w-2xl mx-auto rounded-2xl mt-6 px-4 sm:px-0"
+          className="w-full max-md:max-w-2xl md:w-4/5 mx-auto rounded-2xl mt-6 px-4 sm:px-0 shadow-xl"
         />
       </section>
 
@@ -420,7 +420,9 @@ function Landing() {
             <div>
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <h3 className="text-xl sm:text-2xl font-normal">Respectful by design</h3>
+                  <h3 className="text-xl sm:text-2xl font-normal">
+                    Respectful by design
+                  </h3>
                   <p className="">
                     NeuStream doesn't interrupt your workflow or annoy you with
                     anything. It doesn't do anything without your consent: no
@@ -543,7 +545,11 @@ function Landing() {
             </div>
 
             <div className="space-y-8">
-              <img src="/obs.png" alt="Gaming" className="w-full rounded-2xl px-4 sm:px-0" />
+              <img
+                src="/obs.png"
+                alt="Gaming"
+                className="w-full rounded-2xl px-4 sm:px-0"
+              />
               <div className="space-y-4">
                 <h3 className="text-xl sm:text-2xl font-normal">
                   Transparent and honest pricing
@@ -616,7 +622,9 @@ function Landing() {
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
             <div className="text-center space-y-4">
-              <h3 className="text-lg sm:text-xl font-normal">Perfect for gamers</h3>
+              <h3 className="text-lg sm:text-xl font-normal">
+                Perfect for gamers
+              </h3>
               <p className="">
                 Stream without FPS drops or system performance impact. Maintain
                 competitive edge while{" "}
@@ -720,7 +728,9 @@ function Landing() {
                     )}
                     <div className="text-center space-y-4">
                       <div className="space-y-2">
-                        <h3 className="text-xl sm:text-2xl font-normal">{plan.name}</h3>
+                        <h3 className="text-xl sm:text-2xl font-normal">
+                          {plan.name}
+                        </h3>
                         <p className="">
                           {plan.description ||
                             `Perfect for ${plan.name.toLowerCase()} users`}
