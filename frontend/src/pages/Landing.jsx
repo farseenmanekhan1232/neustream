@@ -602,7 +602,7 @@ function Landing() {
         <img
           src="/live.png"
           alt="Target Audience"
-          className="w-full max-w-3xl h-auto mb-8 mx-auto rounded-2xl px-4 sm:px-0"
+          className="max-md:hidden w-full max-w-3xl h-auto mb-8 mx-auto rounded-2xl px-4 sm:px-0"
         />
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-12">

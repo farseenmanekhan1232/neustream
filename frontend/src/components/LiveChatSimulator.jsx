@@ -208,7 +208,7 @@ function LiveChatSimulator() {
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center">
             <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-            Live Chat Demo
+            Live Chat
           </span>
           <div className="flex items-center space-x-2">
             <Badge
