@@ -1213,13 +1213,13 @@ router.get("/user-subscriptions", async (req, res) => {
          sp.name as plan_name,
          sp.price_monthly,
          sp.price_yearly,
-         ut.sources_count,
-         ut.destinations_count,
-         ut.streaming_hours
+         plt.current_sources_count as sources_count,
+         plt.current_destinations_count as destinations_count,
+         plt.current_month_streaming_hours as streaming_hours
        FROM user_subscriptions us
        JOIN users u ON us.user_id = u.id
        JOIN subscription_plans sp ON us.plan_id = sp.id
-       LEFT JOIN usage_tracking ut ON us.user_id = ut.user_id
+       LEFT JOIN plan_limits_tracking plt ON us.user_id = plt.user_id
        WHERE u.email ILIKE $1 OR u.display_name ILIKE $1 OR sp.name ILIKE $1
        ORDER BY us.created_at DESC
        LIMIT $2 OFFSET $3`,
