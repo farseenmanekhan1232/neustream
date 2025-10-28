@@ -188,9 +188,9 @@ function SubscriptionManagement() {
       case "free":
         return { monthly: "$0", yearly: "$0" };
       case "pro":
-        return { monthly: "$19", yearly: "$190" };
+        return { monthly: "$12", yearly: "$120" };
       case "business":
-        return { monthly: "$49", yearly: "$490" };
+        return { monthly: "$39", yearly: "$390" };
       default:
         return { monthly: "$0", yearly: "$0" };
     }
