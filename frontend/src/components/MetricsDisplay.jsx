@@ -38,19 +38,35 @@ const MetricsDisplay = () => {
     return () => clearInterval(interval);
   }, [isActive]);
 
-  const formatCpu = (value) => `${value.toFixed(1)}%`;
-  const formatFps = (value) => `${Math.round(value)} FPS`;
-  const formatBitrate = (value) => `${Math.round(value)} kbps`;
+  const formatCpu = (value) => (
+    <>
+      {`${value.toFixed(1)}`}
+      <span className="max-md:text-xs">%</span>
+    </>
+  );
+  const formatFps = (value) => (
+    <>
+      {`${Math.round(value)} `} <span className="max-md:text-xs"> FPS</span>
+    </>
+  );
+  const formatBitrate = (value) => (
+    <>
+      {`${Math.round(value)} `}
+      <span className="max-md:text-xs">kbps</span>
+    </>
+  );
 
   const MetricCard = ({ label, value, formatter, icon, colorClass }) => (
-    <div className="bg-white rounded-lg p-4  transition-all duration-300 hover:border-gray-600">
+    <div className="bg-white rounded-lg px-2.5 py-3 lg:p-4  transition-all duration-300 hover:border-gray-600">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-gray-400 text-sm font-medium">{label}</span>
+        <span className="text-gray-400 text-xs md:text-sm font-medium">
+          {label}
+        </span>
         <div
           className={`w-2 h-2 rounded-full ${colorClass} animate-pulse`}
         ></div>
       </div>
-      <div className="text-2xl font-mono font-bold text-black/70">
+      <div className="text-lg md:text-2xl font-mono font-bold text-black/70">
         {formatter(value)}
       </div>
       <div className="mt-1 h-1 bg-gray-300 rounded-full overflow-hidden">
@@ -66,7 +82,7 @@ const MetricsDisplay = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-1 lg:gap-4">
         <MetricCard
           label="CPU Usage"
           value={metrics.cpu}
