@@ -548,7 +548,7 @@ function StreamingConfiguration() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        <div className="lg:col-span-3 gap-3">
+        <div className="lg:col-span-3 flex flex-col gap-3">
           {/* Current Source Selection */}
           {isUsingSources && (
             <Card>
