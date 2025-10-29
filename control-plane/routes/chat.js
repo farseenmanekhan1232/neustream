@@ -659,7 +659,7 @@ router.get("/public/sources/:sourceId/messages", async (req, res) => {
 async function exchangeInstagramCodeForTokens(code) {
   try {
     const redirectUri =
-      process.env.INSTAGRAM_CHAT_CALLBACK_URL ||
+      process.env.INSTAGRAM_CALLBACK_URL ||
       `${process.env.BACKEND_URL}/api/chat/connectors/instagram/oauth/callback`;
 
     console.log("Instagram OAuth redirect URI:", redirectUri);
@@ -720,7 +720,7 @@ async function exchangeInstagramCodeForTokens(code) {
 
     if (!instagramAccount) {
       throw new Error(
-        "No Instagram business account found for authenticated user",
+        "No Instagram business account found for authenticated user. Please ensure you have an Instagram Business account connected to your Facebook account and try again.",
       );
     }
 
@@ -740,7 +740,24 @@ async function exchangeInstagramCodeForTokens(code) {
       "Instagram token exchange error:",
       error.response?.data || error.message,
     );
-    throw new Error("Failed to exchange Instagram authorization code");
+
+    // Provide more specific error messages
+    if (
+      error.response?.data?.error?.message?.includes(
+        "Error validating client secret",
+      )
+    ) {
+      throw new Error(
+        "Instagram client secret is invalid. Please check your Facebook Developer app configuration.",
+      );
+    } else if (error.message.includes("No Instagram business account found")) {
+      throw new Error(error.message);
+    } else {
+      throw new Error(
+        "Failed to exchange Instagram authorization code: " +
+          (error.response?.data?.error?.message || error.message),
+      );
+    }
   }
 }
 
