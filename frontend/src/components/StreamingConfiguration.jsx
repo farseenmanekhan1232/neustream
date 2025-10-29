@@ -547,8 +547,8 @@ function StreamingConfiguration() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+        <div className="lg:col-span-3">
           {/* Current Source Selection */}
           {isUsingSources && (
             <Card>
@@ -835,14 +835,15 @@ function StreamingConfiguration() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Chat Connectors Section */}
-        {isUsingSources && currentSource && (
-          <ChatConnectorSetup
-            sourceId={currentSource.id}
-            sourceName={currentSource.name}
-          />
-        )}
+        <div className="lg:col-span-1">
+          {/* Chat Connectors Section */}
+          {isUsingSources && currentSource && (
+            <ChatConnectorSetup
+              sourceId={currentSource.id}
+              sourceName={currentSource.name}
+            />
+          )}
+        </div>
       </div>
 
       {/* Add Source Dialog */}
