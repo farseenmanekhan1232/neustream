@@ -11,6 +11,7 @@ import {
 } from "./ui/dialog";
 import { apiService } from "../services/api";
 import { Twitch, Youtube, Instagram, Facebook, Settings } from "lucide-react";
+import { Badge } from "./ui/badge";
 
 const PLATFORMS = [
   {
@@ -19,7 +20,11 @@ const PLATFORMS = [
     description: "Connect to your Twitch channel chat",
     icon: Twitch,
     status: "available",
-    features: ["Real-time chat messages", "Subscriptions & bits", "Emotes support"],
+    features: [
+      "Real-time chat messages",
+      "Subscriptions & bits",
+      "Emotes support",
+    ],
   },
   {
     id: "youtube",
@@ -64,7 +69,9 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   const { data: connectorsData, isLoading: connectorsLoading } = useQuery({
     queryKey: ["chatConnectors", sourceId],
     queryFn: async () => {
-      const response = await apiService.get(`/chat/sources/${sourceId}/connectors`);
+      const response = await apiService.get(
+        `/chat/sources/${sourceId}/connectors`,
+      );
       return response;
     },
     enabled: !!sourceId,
@@ -75,11 +82,19 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   // Mutation for starting OAuth flow
   const startOAuthMutation = useMutation({
     mutationFn: async (platform) => {
-      console.log("Starting OAuth for platform:", platform, "sourceId:", sourceId);
-      const response = await apiService.get(`/chat/connectors/${platform}/oauth/start`, {
+      console.log(
+        "Starting OAuth for platform:",
+        platform,
+        "sourceId:",
         sourceId,
-        redirectUrl: `${window.location.origin}/dashboard/streaming`,
-      });
+      );
+      const response = await apiService.get(
+        `/chat/connectors/${platform}/oauth/start`,
+        {
+          sourceId,
+          redirectUrl: `${window.location.origin}/dashboard/streaming`,
+        },
+      );
       console.log("OAuth start response:", response);
       return response;
     },
@@ -131,17 +146,27 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
     return {
       status: platform?.status || "unavailable",
       connector: null,
-      platform
+      platform,
     };
   };
 
-  
   if (connectorsLoading) {
     return (
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
-          <p className="text-sm text-muted-foreground">Connect your streaming platform chats</p>
+          <span className="relative">
+            <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
+            <Badge
+              className={
+                "absolute right-0 top-0 bg-white text-black rounded-full text-sm"
+              }
+            >
+              beta
+            </Badge>
+          </span>
+          <p className="text-sm text-muted-foreground">
+            Connect your streaming platform chats
+          </p>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -157,7 +182,8 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
       <div>
         <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
         <p className="text-sm text-muted-foreground">
-          Connect streaming platforms to aggregate chat messages in your stream preview
+          Connect streaming platforms to aggregate chat messages in your stream
+          preview
         </p>
       </div>
 
@@ -175,8 +201,8 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
                 isConnected
                   ? "bg-green-50 border-green-200"
                   : isComingSoon
-                  ? "bg-muted/30 border-muted"
-                  : "border-border hover:bg-muted/50"
+                    ? "bg-muted/30 border-muted"
+                    : "border-border hover:bg-muted/50"
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -185,13 +211,19 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{platform.name}</span>
                     {isConnected && (
-                      <span className="text-xs text-green-600 font-medium">Connected</span>
+                      <span className="text-xs text-green-600 font-medium">
+                        Connected
+                      </span>
                     )}
                     {isComingSoon && (
-                      <span className="text-xs text-muted-foreground">Soon</span>
+                      <span className="text-xs text-muted-foreground">
+                        Soon
+                      </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{platform.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {platform.description}
+                  </p>
                 </div>
               </div>
 
