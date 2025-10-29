@@ -339,7 +339,7 @@ router.get(
             )}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent(
-              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement",
+              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,business_management",
             )}` +
             `&state=${state}`;
           break;
@@ -704,6 +704,7 @@ async function exchangeInstagramCodeForTokens(code) {
 
     const userData = userResponse.data;
     console.log("Instagram user info:", userData);
+    console.log("Instagram user accounts data:", userData.accounts);
 
     // Find Instagram business account
     let instagramAccount = null;
@@ -719,9 +720,34 @@ async function exchangeInstagramCodeForTokens(code) {
     }
 
     if (!instagramAccount) {
-      throw new Error(
-        "No Instagram business account found for authenticated user. Please ensure you have an Instagram Business account connected to your Facebook account and try again.",
-      );
+      console.log("No Instagram business account found, trying to get Instagram account directly...");
+
+      // Try to get Instagram account directly
+      try {
+        const instagramResponse = await axios.get(
+          `https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account{id,username,name}&access_token=${access_token}`,
+        );
+
+        console.log("Instagram accounts response:", instagramResponse.data);
+
+        if (instagramResponse.data.data && instagramResponse.data.data.length > 0) {
+          for (const account of instagramResponse.data.data) {
+            if (account.instagram_business_account) {
+              instagramAccount = account.instagram_business_account;
+              console.log("Found Instagram business account via accounts endpoint:", instagramAccount);
+              break;
+            }
+          }
+        }
+      } catch (directError) {
+        console.log("Direct Instagram account fetch failed:", directError.message);
+      }
+
+      if (!instagramAccount) {
+        throw new Error(
+          "No Instagram business account found for authenticated user. Please ensure you have an Instagram Business account connected to your Facebook account and try again.",
+        );
+      }
     }
 
     console.log("Instagram business account found:", instagramAccount);
