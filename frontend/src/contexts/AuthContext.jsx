@@ -83,14 +83,15 @@ export const AuthProvider = ({ children }) => {
 
           console.log("User state set successfully");
 
-          // Clean up URL but keep the user logged in
-          const cleanUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
-          console.log("URL cleaned, user should be logged in");
-
           // Store user data in localStorage for persistence
           localStorage.setItem("neustream_user", JSON.stringify(parsedUser));
           console.log("User data stored in localStorage");
+
+          // Clean up URL but keep the user logged in
+          // Do this after storing user data to ensure redirect can happen
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          console.log("URL cleaned, user should be logged in");
 
           // Validate the token with the server to ensure it's legitimate
           try {

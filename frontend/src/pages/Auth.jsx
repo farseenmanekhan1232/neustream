@@ -46,9 +46,10 @@ function Auth() {
     console.log("Current user:", user);
     console.log("Current path:", location.pathname);
 
-    if (user && hasToken) {
-      console.log("User authenticated via OAuth, redirecting to dashboard...");
-      // Redirect to dashboard after successful OAuth
+    // Redirect if user is authenticated (either via OAuth or regular login)
+    if (user) {
+      console.log("User authenticated, redirecting to dashboard...");
+      // Redirect to dashboard after successful authentication
       navigate("/dashboard", { replace: true });
     }
   }, [user, location, navigate]);

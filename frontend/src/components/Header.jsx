@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const isActivePath = (path) => location.pathname === path;
-
-  // Check if user is logged in
-  const user = JSON.parse(localStorage.getItem("neustream_user") || "null");
 
   return (
     <header className="sticky top-0 z-50 w-full bg-header-teal-gradient">
