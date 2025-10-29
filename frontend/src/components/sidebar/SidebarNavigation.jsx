@@ -14,7 +14,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Circle, LayoutDashboard, MonitorSpeaker, Radio, Crown, BarChart3, Settings } from "lucide-react";
+import { Circle, LayoutDashboard, MonitorSpeaker, Radio, Crown, BarChart3, Settings, HelpCircle } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { usePostHog } from "@/hooks/usePostHog";
 
@@ -82,6 +82,20 @@ const navigationGroups = [
         description: "Configure your account",
         keywords: ["settings", "preferences", "configuration", "account"],
         shortcut: "6",
+      },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      {
+        id: "help",
+        label: "Setup Guide",
+        icon: HelpCircle,
+        path: "/help",
+        description: "Get help and setup instructions",
+        keywords: ["help", "guide", "tutorial", "setup", "support"],
+        shortcut: "7",
       },
     ],
   },

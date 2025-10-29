@@ -46,10 +46,10 @@ const WelcomeSection = memo(function WelcomeSection({
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <a href="/help" target="_blank" rel="noopener noreferrer">
+              <Link to="/help">
                 <HelpCircle className="h-4 w-4 mr-2" />
                 View Setup Guide
-              </a>
+              </Link>
             </Button>
           </div>
         ) : (

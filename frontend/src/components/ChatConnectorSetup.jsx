@@ -10,13 +10,14 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { apiService } from "../services/api";
+import { Twitch, Youtube, Instagram, Facebook, Settings } from "lucide-react";
 
 const PLATFORMS = [
   {
     id: "twitch",
     name: "Twitch",
     description: "Connect to your Twitch channel chat",
-    icon: "🎮",
+    icon: Twitch,
     status: "available",
     features: ["Real-time chat messages", "Subscriptions & bits", "Emotes support"],
   },
@@ -24,7 +25,7 @@ const PLATFORMS = [
     id: "youtube",
     name: "YouTube",
     description: "Connect to your YouTube Live chat",
-    icon: "📺",
+    icon: Youtube,
     status: "available",
     features: ["Live chat messages", "Super Chat support", "Emoji reactions"],
   },
@@ -32,7 +33,7 @@ const PLATFORMS = [
     id: "instagram",
     name: "Instagram",
     description: "Connect to your Instagram Live comments",
-    icon: "📸",
+    icon: Instagram,
     status: "available",
     features: ["Live comments", "Reactions", "Real-time streaming"],
   },
@@ -40,7 +41,7 @@ const PLATFORMS = [
     id: "facebook",
     name: "Facebook",
     description: "Connect to your Facebook Live comments",
-    icon: "📘",
+    icon: Facebook,
     status: "coming-soon",
     features: ["Live comments", "Reactions", "Comment moderation"],
   },
@@ -48,7 +49,7 @@ const PLATFORMS = [
     id: "custom",
     name: "Custom",
     description: "Connect custom chat via webhooks",
-    icon: "🔧",
+    icon: Settings,
     status: "coming-soon",
     features: ["Webhook integration", "Custom formatting", "Flexible setup"],
   },
@@ -179,7 +180,7 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
               }`}
             >
               <div className="flex items-center space-x-3">
-                <span className="text-lg">{platform.icon}</span>
+                <platform.icon className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{platform.name}</span>
