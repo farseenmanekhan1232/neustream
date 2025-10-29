@@ -180,7 +180,16 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
+        <span className="relative">
+          <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
+          <Badge
+            className={
+              "absolute right-0 top-0 bg-white text-black rounded-full text-sm"
+            }
+          >
+            beta
+          </Badge>
+        </span>
         <p className="text-sm text-muted-foreground">
           Connect streaming platforms to aggregate chat messages in your stream
           preview
