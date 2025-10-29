@@ -514,34 +514,6 @@ function StreamingConfiguration() {
     });
     setShowManageSourceDialog(true);
   };
-
-  // Get platform icon
-  // const getPlatformIcon = (platform) => {
-  //   const icons = {
-  //     youtube: (
-  //       <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
-  //         YT
-  //       </div>
-  //     ),
-  //     twitch: (
-  //       <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
-  //         TW
-  //       </div>
-  //     ),
-  //     facebook: (
-  //       <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
-  //         FB
-  //       </div>
-  //     ),
-  //     custom: (
-  //       <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-normal">
-  //         RTMP
-  //       </div>
-  //     ),
-  //   };
-  //   return icons[platform] || icons.custom;
-  // };
-
   const isLoading = sourcesLoading || destinationsLoading;
 
   if (isLoading) {
@@ -568,312 +540,310 @@ function StreamingConfiguration() {
   return (
     <div className="w-full px-6 py-6 space-y-6  mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-2xl font-semibold mb-2">
-            Streaming Configuration
-          </div>
-          <p className="text-muted-foreground">
-            Manage your stream sources and configure destinations for
-            multi-platform broadcasting
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={() => setShowAddSourceDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
       </div>
 
-      {/* Current Source Selection */}
-      {isUsingSources && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <MonitorSpeaker className="h-5 w-5 text-primary" />
-                  Current Source
-                </CardTitle>
-                <CardDescription>
-                  Configure destinations for the selected stream source
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSwitchSourceDialog(true)}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Switch Source
-                </Button>
-                <Button variant="outline" onClick={openManageSourceDialog}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {currentSource ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`p-3 rounded-lg ${
-                      currentSource.is_active ? "bg-green-100" : "bg-gray-100"
-                    }`}
-                  >
-                    <MonitorSpeaker
-                      className={`h-8 w-8 ${
-                        currentSource.is_active
-                          ? "text-green-600"
-                          : "text-gray-600"
-                      }`}
-                    />
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        <div>
+          {/* Current Source Selection */}
+          {isUsingSources && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <MonitorSpeaker className="h-5 w-5 text-primary" />
+                      Current Source
+                    </CardTitle>
+                    <CardDescription>
+                      Configure destinations for the selected stream source
+                    </CardDescription>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold">
-                      {currentSource.name}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {currentSource.description || "No description"}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <Badge
-                        variant={
-                          currentSource.is_active ? "default" : "secondary"
-                        }
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSwitchSourceDialog(true)}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Switch Source
+                    </Button>
+                    <Button variant="outline" onClick={openManageSourceDialog}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {currentSource ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`p-3 rounded-lg ${
+                          currentSource.is_active
+                            ? "bg-green-100"
+                            : "bg-gray-100"
+                        }`}
                       >
-                        {currentSource.is_active ? (
-                          <>
-                            <Play className="h-3 w-3 mr-1" />
-                            Live
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="h-3 w-3 mr-1" />
-                            Offline
-                          </>
-                        )}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {destinations.length} destination
-                        {destinations.length !== 1 ? "s" : ""}
-                      </span>
+                        <MonitorSpeaker
+                          className={`h-8 w-8 ${
+                            currentSource.is_active
+                              ? "text-green-600"
+                              : "text-gray-600"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold">
+                          {currentSource.name}
+                        </h3>
+                        <p className="text-muted-foreground">
+                          {currentSource.description || "No description"}
+                        </p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <Badge
+                            variant={
+                              currentSource.is_active ? "default" : "secondary"
+                            }
+                          >
+                            {currentSource.is_active ? (
+                              <>
+                                <Play className="h-3 w-3 mr-1" />
+                                Live
+                              </>
+                            ) : (
+                              <>
+                                <Pause className="h-3 w-3 mr-1" />
+                                Offline
+                              </>
+                            )}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {destinations.length} destination
+                            {destinations.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stream Configuration */}
+                    <div className="border-t pt-4">
+                      <StreamConfig
+                        streamKey={currentSource.stream_key}
+                        onCopy={handleStreamConfigCopy}
+                      />
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MonitorSpeaker className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Stream Sources
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create your first stream source to start configuring
+                      destinations
+                    </p>
+                    <Button onClick={() => setShowAddSourceDialog(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First Source
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-                {/* Stream Configuration */}
-                <div className="border-t pt-4">
-                  <StreamConfig
-                    streamKey={currentSource.stream_key}
-                    onCopy={handleStreamConfigCopy}
-                  />
+          {/* Destinations Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Destinations</CardTitle>
+                  <CardDescription>
+                    {isUsingSources
+                      ? `Configure platforms for "${
+                          currentSource?.name || "selected source"
+                        }"`
+                      : "Create a stream source first to configure destinations"}
+                  </CardDescription>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <MonitorSpeaker className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No Stream Sources
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Create your first stream source to start configuring
-                  destinations
-                </p>
-                <Button onClick={() => setShowAddSourceDialog(true)}>
+                <Button
+                  onClick={() => {
+                    if (!isUsingSources || !currentSource) {
+                      toast.error(
+                        "Create a stream source first before adding destinations",
+                      );
+                      return;
+                    }
+                    setShowAddDestinationDialog(true);
+                  }}
+                  disabled={!isUsingSources || !currentSource}
+                  title={
+                    !isUsingSources || !currentSource
+                      ? "Create a stream source first"
+                      : "Add destination"
+                  }
+                >
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Source
+                  Add Destination
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Destinations Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Destinations</CardTitle>
-              <CardDescription>
-                {isUsingSources
-                  ? `Configure platforms for "${
-                      currentSource?.name || "selected source"
-                    }"`
-                  : "Create a stream source first to configure destinations"}
-              </CardDescription>
-            </div>
-            <Button
-              onClick={() => {
-                if (!isUsingSources || !currentSource) {
-                  toast.error(
-                    "Create a stream source first before adding destinations",
-                  );
-                  return;
-                }
-                setShowAddDestinationDialog(true);
-              }}
-              disabled={!isUsingSources || !currentSource}
-              title={
-                !isUsingSources || !currentSource
-                  ? "Create a stream source first"
-                  : "Add destination"
-              }
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Destination
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {!isUsingSources || !currentSource ? (
-            <div className="text-center py-12">
-              <MonitorSpeaker className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                No Stream Source Available
-              </h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create a stream source first before you can configure
-                destinations for multi-platform broadcasting.
-              </p>
-              <Button onClick={() => setShowAddSourceDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Source
-              </Button>
-            </div>
-          ) : destinations.length === 0 ? (
-            <div className="text-center py-12">
-              <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                No Destinations Configured
-              </h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Add streaming platforms to {currentSource.name} to start
-                broadcasting to multiple destinations.
-              </p>
-              <Button
-                onClick={() => {
-                  if (!isUsingSources || !currentSource) {
-                    toast.error(
-                      "Create a stream source first before adding destinations",
-                    );
-                    return;
-                  }
-                  setShowAddDestinationDialog(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Destination
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {destinations.map((destination) => {
-                const config =
-                  platformConfig[destination.platform] || platformConfig.custom;
-                const Icon = config.icon;
-
-                return (
-                  <Card
-                    key={destination.id}
-                    className="group hover:border-primary/50 transition-colors"
+            </CardHeader>
+            <CardContent>
+              {!isUsingSources || !currentSource ? (
+                <div className="text-center py-12">
+                  <MonitorSpeaker className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">
+                    No Stream Source Available
+                  </h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Create a stream source first before you can configure
+                    destinations for multi-platform broadcasting.
+                  </p>
+                  <Button onClick={() => setShowAddSourceDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Source
+                  </Button>
+                </div>
+              ) : destinations.length === 0 ? (
+                <div className="text-center py-12">
+                  <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">
+                    No Destinations Configured
+                  </h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Add streaming platforms to {currentSource.name} to start
+                    broadcasting to multiple destinations.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      if (!isUsingSources || !currentSource) {
+                        toast.error(
+                          "Create a stream source first before adding destinations",
+                        );
+                        return;
+                      }
+                      setShowAddDestinationDialog(true);
+                    }}
                   >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`p-2 rounded-lg ${config.color} text-white`}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-base">
-                            {config.name}
-                          </CardTitle>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={
-                          destination.is_active ? "default" : "secondary"
-                        }
-                        className="text-xs"
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Destination
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {destinations.map((destination) => {
+                    const config =
+                      platformConfig[destination.platform] ||
+                      platformConfig.custom;
+                    const Icon = config.icon;
+
+                    return (
+                      <Card
+                        key={destination.id}
+                        className="group hover:border-primary/50 transition-colors"
                       >
-                        {destination.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">
-                          RTMP URL
-                        </label>
-                        <div className="flex items-center space-x-2">
-                          <code className="flex-1 text-xs font-mono bg-muted px-2 py-1 rounded truncate">
-                            {destination.rtmp_url}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              copyToClipboard(
-                                destination.rtmp_url,
-                                `${config.name} RTMP URL`,
-                              )
-                            }
-                            className="h-6 w-6"
-                          >
-                            {copiedField === `${config.name} RTMP URL` ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end space-x-2">
-                        {config.helpUrl && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a
-                              href={config.helpUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs"
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`p-2 rounded-lg ${config.color} text-white`}
                             >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Help
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            deleteDestinationMutation.mutate(destination.id)
-                          }
-                          disabled={deleteDestinationMutation.isPending}
-                          className="text-destructive hover:text-destructive text-xs"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-base">
+                                {config.name}
+                              </CardTitle>
+                            </div>
+                          </div>
+                          <Badge
+                            variant={
+                              destination.is_active ? "default" : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {destination.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="space-y-1">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              RTMP URL
+                            </label>
+                            <div className="flex items-center space-x-2">
+                              <code className="flex-1 text-xs font-mono bg-muted px-2 py-1 rounded truncate">
+                                {destination.rtmp_url}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    destination.rtmp_url,
+                                    `${config.name} RTMP URL`,
+                                  )
+                                }
+                                className="h-6 w-6"
+                              >
+                                {copiedField === `${config.name} RTMP URL` ? (
+                                  <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
 
-      {/* Chat Connectors Section */}
-      {isUsingSources && currentSource && (
-        <ChatConnectorSetup
-          sourceId={currentSource.id}
-          sourceName={currentSource.name}
-        />
-      )}
+                          <div className="flex justify-end space-x-2">
+                            {config.helpUrl && (
+                              <Button variant="ghost" size="sm" asChild>
+                                <a
+                                  href={config.helpUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  Help
+                                </a>
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                deleteDestinationMutation.mutate(destination.id)
+                              }
+                              disabled={deleteDestinationMutation.isPending}
+                              className="text-destructive hover:text-destructive text-xs"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Chat Connectors Section */}
+        {isUsingSources && currentSource && (
+          <ChatConnectorSetup
+            sourceId={currentSource.id}
+            sourceName={currentSource.name}
+          />
+        )}
+      </div>
 
       {/* Add Source Dialog */}
       <Dialog open={showAddSourceDialog} onOpenChange={setShowAddSourceDialog}>
@@ -1059,7 +1029,9 @@ function StreamingConfiguration() {
                 <StreamConfig
                   streamKey={currentSource.stream_key}
                   showRegenerateButton={true}
-                  onRegenerate={() => regenerateKeyMutation.mutate(selectedSourceId)}
+                  onRegenerate={() =>
+                    regenerateKeyMutation.mutate(selectedSourceId)
+                  }
                   isRegenerating={regenerateKeyMutation.isPending}
                   canRegenerate={!currentSource.is_active}
                   size="compact"
@@ -1126,14 +1098,15 @@ function StreamingConfiguration() {
         open={showAddDestinationDialog}
         onOpenChange={handleCloseAddDestinationDialog}
       >
-        <DialogContent className={addDestinationStep === 1 ? "max-w-2xl" : "max-w-md"}>
+        <DialogContent
+          className={addDestinationStep === 1 ? "max-w-2xl" : "max-w-md"}
+        >
           <DialogHeader>
             <DialogTitle>Add New Destination</DialogTitle>
             <DialogDescription>
               {addDestinationStep === 1
                 ? `Select a platform to broadcast "${currentSource?.name || "your stream"}"`
-                : `Configure your ${platformConfig[destinationFormData.platform]?.name} destination`
-              }
+                : `Configure your ${platformConfig[destinationFormData.platform]?.name} destination`}
             </DialogDescription>
           </DialogHeader>
 
@@ -1149,8 +1122,18 @@ function StreamingConfiguration() {
                 platform={destinationFormData.platform}
                 rtmpUrl={destinationFormData.rtmpUrl}
                 streamKey={destinationFormData.streamKey}
-                onRtmpUrlChange={(value) => setDestinationFormData({...destinationFormData, rtmpUrl: value})}
-                onStreamKeyChange={(value) => setDestinationFormData({...destinationFormData, streamKey: value})}
+                onRtmpUrlChange={(value) =>
+                  setDestinationFormData({
+                    ...destinationFormData,
+                    rtmpUrl: value,
+                  })
+                }
+                onStreamKeyChange={(value) =>
+                  setDestinationFormData({
+                    ...destinationFormData,
+                    streamKey: value,
+                  })
+                }
                 onCopy={copyToClipboard}
                 platformConfig={platformConfig}
                 copiedField={copiedField}
@@ -1161,26 +1144,33 @@ function StreamingConfiguration() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={addDestinationStep === 1 ? handleCloseAddDestinationDialog : handlePreviousStep}
+                onClick={
+                  addDestinationStep === 1
+                    ? handleCloseAddDestinationDialog
+                    : handlePreviousStep
+                }
               >
                 {addDestinationStep === 1 ? "Cancel" : "Back"}
               </Button>
               <Button
                 type={addDestinationStep === 2 ? "submit" : "button"}
                 onClick={addDestinationStep === 1 ? handleNextStep : undefined}
-                disabled={addDestinationStep === 2 && (addDestinationMutation.isPending || !destinationFormData.streamKey)}
-              >
-                {addDestinationStep === 1
-                  ? "Next"
-                  : addDestinationMutation.isPending
-                    ? (
-                      <>
-                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                        Adding...
-                      </>
-                    )
-                    : "Add Destination"
+                disabled={
+                  addDestinationStep === 2 &&
+                  (addDestinationMutation.isPending ||
+                    !destinationFormData.streamKey)
                 }
+              >
+                {addDestinationStep === 1 ? (
+                  "Next"
+                ) : addDestinationMutation.isPending ? (
+                  <>
+                    <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Destination"
+                )}
               </Button>
             </DialogFooter>
           </form>
