@@ -339,7 +339,7 @@ router.get(
             )}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent(
-              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,business_management",
+              "instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list,pages_read_engagement",
             )}` +
             `&state=${state}`;
           break;
@@ -697,16 +697,16 @@ async function exchangeInstagramCodeForTokens(code) {
 
     console.log("Instagram token exchange successful, fetching user info...");
 
-    // Get user info with the access token
+    // Get user info with the access token - focus on Instagram data
     const userResponse = await axios.get(
-      `https://graph.facebook.com/v18.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name}}&access_token=${access_token}`,
+      `https://graph.facebook.com/v18.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}}&access_token=${access_token}`,
     );
 
     const userData = userResponse.data;
     console.log("Instagram user info:", userData);
     console.log("Instagram user accounts data:", userData.accounts);
 
-    // Find Instagram business account
+    // Find Instagram business account and get Live videos
     let instagramAccount = null;
     let liveVideoId = null;
 
@@ -714,6 +714,19 @@ async function exchangeInstagramCodeForTokens(code) {
       for (const account of userData.accounts.data) {
         if (account.instagram_business_account) {
           instagramAccount = account.instagram_business_account;
+          console.log("Found Instagram business account:", instagramAccount);
+
+          // Try to find active Live videos
+          if (instagramAccount.media && instagramAccount.media.data) {
+            for (const media of instagramAccount.media.data) {
+              if (media.media_type === "VIDEO" && media.comments) {
+                console.log("Found video with comments:", media);
+                // This could be a Live video - we'll use this for testing
+                liveVideoId = media.id;
+                break;
+              }
+            }
+          }
           break;
         }
       }
@@ -725,7 +738,7 @@ async function exchangeInstagramCodeForTokens(code) {
       // Try to get Instagram account directly
       try {
         const instagramResponse = await axios.get(
-          `https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account{id,username,name}&access_token=${access_token}`,
+          `https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}&access_token=${access_token}`,
         );
 
         console.log("Instagram accounts response:", instagramResponse.data);
@@ -758,6 +771,7 @@ async function exchangeInstagramCodeForTokens(code) {
       platformUserId: instagramAccount.id,
       platformUsername: instagramAccount.username,
       displayName: instagramAccount.name || instagramAccount.username,
+      liveVideoId: liveVideoId,
       // Note: Instagram doesn't provide refresh tokens in basic flow
       // We'll need to handle token refresh separately
     };
