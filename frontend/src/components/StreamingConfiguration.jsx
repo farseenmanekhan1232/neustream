@@ -547,8 +547,8 @@ function StreamingConfiguration() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        <div className="lg:col-span-3 gap-3">
           {/* Current Source Selection */}
           {isUsingSources && (
             <Card>
