@@ -331,7 +331,7 @@ router.get(
           break;
         case "instagram":
           oauthUrl =
-            `https://www.facebook.com/v18.0/dialog/oauth?` +
+            `https://www.facebook.com/v24.0/dialog/oauth?` +
             `client_id=${process.env.INSTAGRAM_CLIENT_ID}` +
             `&redirect_uri=${encodeURIComponent(
               process.env.INSTAGRAM_CALLBACK_URL ||
@@ -339,7 +339,7 @@ router.get(
             )}` +
             `&response_type=code` +
             `&scope=${encodeURIComponent(
-              "instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list,pages_read_engagement",
+              "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_engagement,pages_read_user_content",
             )}` +
             `&state=${state}`;
           break;
@@ -674,7 +674,7 @@ async function exchangeInstagramCodeForTokens(code) {
 
     // Exchange code for access token
     const response = await axios.post(
-      "https://graph.facebook.com/v18.0/oauth/access_token",
+      "https://graph.facebook.com/v20.0/oauth/access_token",
       null,
       {
         params: {
@@ -699,7 +699,7 @@ async function exchangeInstagramCodeForTokens(code) {
 
     // Get user info with the access token - focus on Instagram data
     const userResponse = await axios.get(
-      `https://graph.facebook.com/v18.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}}&access_token=${access_token}`,
+      `https://graph.facebook.com/v20.0/me?fields=id,name,accounts{id,name,access_token,instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}}&access_token=${access_token}`,
     );
 
     const userData = userResponse.data;
@@ -733,27 +733,38 @@ async function exchangeInstagramCodeForTokens(code) {
     }
 
     if (!instagramAccount) {
-      console.log("No Instagram business account found, trying to get Instagram account directly...");
+      console.log(
+        "No Instagram business account found, trying to get Instagram account directly...",
+      );
 
       // Try to get Instagram account directly
       try {
         const instagramResponse = await axios.get(
-          `https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}&access_token=${access_token}`,
+          `https://graph.facebook.com/v20.0/me/accounts?fields=instagram_business_account{id,username,name,media{id,caption,media_type,media_url,timestamp,comments{id,text,username,timestamp}}}&access_token=${access_token}`,
         );
 
         console.log("Instagram accounts response:", instagramResponse.data);
 
-        if (instagramResponse.data.data && instagramResponse.data.data.length > 0) {
+        if (
+          instagramResponse.data.data &&
+          instagramResponse.data.data.length > 0
+        ) {
           for (const account of instagramResponse.data.data) {
             if (account.instagram_business_account) {
               instagramAccount = account.instagram_business_account;
-              console.log("Found Instagram business account via accounts endpoint:", instagramAccount);
+              console.log(
+                "Found Instagram business account via accounts endpoint:",
+                instagramAccount,
+              );
               break;
             }
           }
         }
       } catch (directError) {
-        console.log("Direct Instagram account fetch failed:", directError.message);
+        console.log(
+          "Direct Instagram account fetch failed:",
+          directError.message,
+        );
       }
 
       if (!instagramAccount) {
