@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 import {
   User,
   Shield,
   Database,
   Bell,
+  DollarSign,
   Eye,
   EyeOff,
   Save,
   RefreshCw,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,12 +27,14 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const { currency, currencyPreference, location, loading, error, updateCurrencyPreference, getCurrencyInfo } = useCurrency();
   const [activeTab, setActiveTab] = useState("profile");
   const [showApiKeys, setShowApiKeys] = useState({});
   const [notifications, setNotifications] = useState({
@@ -38,6 +43,7 @@ const SettingsPage = () => {
     systemAlerts: false,
     weeklyReports: true,
   });
+  const [savingCurrency, setSavingCurrency] = useState(false);
 
   const NotificationSettingsRow = ({ key, label, description, enabled }) => (
     <TableRow>
@@ -102,6 +108,17 @@ const SettingsPage = () => {
       ...prev,
       [key]: !prev[key],
     }));
+  };
+
+  const handleCurrencyPreferenceChange = async (newPreference) => {
+    try {
+      setSavingCurrency(true);
+      await updateCurrencyPreference(newPreference);
+    } catch (error) {
+      console.error('Failed to update currency preference:', error);
+    } finally {
+      setSavingCurrency(false);
+    }
   };
 
   const ProfileSettings = () => (
@@ -388,6 +405,107 @@ const SettingsPage = () => {
     </div>
   );
 
+  const CurrencySettings = () => {
+    const currencyInfo = getCurrencyInfo();
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Currency Preferences
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="currency-preference">Display Currency</Label>
+                <Select
+                  value={currencyPreference}
+                  onValueChange={handleCurrencyPreferenceChange}
+                  disabled={loading || savingCurrency}
+                >
+                  <SelectTrigger id="currency-preference" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AUTO">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Auto-detect based on location
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="USD">
+                      <div className="flex items-center gap-2">
+                        <span>🇺🇸</span>
+                        US Dollar (USD)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="INR">
+                      <div className="flex items-center gap-2">
+                        <span>🇮🇳</span>
+                        Indian Rupee (INR)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {currencyPreference === 'AUTO'
+                    ? 'Prices will be shown in your local currency based on your location'
+                    : `Prices will be shown in ${currencyInfo.name} (${currency})`
+                  }
+                </p>
+              </div>
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                  Error: {error}
+                </div>
+              )}
+
+              {location && (
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Globe className="h-4 w-4" />
+                    <span className="font-medium">Location Detected:</span>
+                    <span>{location.countryCode}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-medium">Active Currency:</span>
+                    <span>{currencyInfo.flag} {currencyInfo.name} ({currency})</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Exchange Rate Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Current Rate:</span>
+                <span className="text-sm font-medium">1 USD = 83.5 INR</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Last Updated:</span>
+                <span className="text-sm font-medium">Just now</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Exchange rates are updated hourly and may vary slightly from market rates.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -398,7 +516,7 @@ const SettingsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Profile
@@ -406,6 +524,10 @@ const SettingsPage = () => {
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             Security
+          </TabsTrigger>
+          <TabsTrigger value="currency" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Currency
           </TabsTrigger>
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -426,6 +548,10 @@ const SettingsPage = () => {
 
         <TabsContent value="security" className="mt-6">
           <SecuritySettings />
+        </TabsContent>
+
+        <TabsContent value="currency" className="mt-6">
+          <CurrencySettings />
         </TabsContent>
 
         <TabsContent value="system" className="mt-6">

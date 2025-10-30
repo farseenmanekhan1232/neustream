@@ -1,6 +1,8 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
+const currencyService = require("../services/currencyService");
+const { detectCurrency, getCurrencyContext } = require("../middleware/currencyMiddleware");
 
 const router = express.Router();
 const db = new Database();
@@ -1359,6 +1361,99 @@ router.get("/subscription-analytics", async (req, res) => {
   } catch (error) {
     console.error("Get subscription analytics error:", error);
     res.status(500).json({ error: "Failed to fetch subscription analytics" });
+  }
+});
+
+// Get user's currency preference
+router.get("/settings/currency", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const preference = await currencyService.getUserCurrencyPreference(userId);
+    const currencyInfo = currencyService.getCurrencyInfo(preference);
+
+    res.json({
+      success: true,
+      data: {
+        preference,
+        currency: currencyInfo
+      }
+    });
+  } catch (error) {
+    console.error("Get currency preference error:", error);
+    res.status(500).json({ error: "Failed to fetch currency preference" });
+  }
+});
+
+// Update user's currency preference
+router.post("/settings/currency", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currency_preference } = req.body;
+
+    if (!['AUTO', 'USD', 'INR'].includes(currency_preference)) {
+      return res.status(400).json({
+        error: "Invalid currency preference. Must be AUTO, USD, or INR"
+      });
+    }
+
+    const updatedPreference = await currencyService.setUserCurrencyPreference(
+      userId,
+      currency_preference
+    );
+
+    res.json({
+      success: true,
+      data: {
+        preference: updatedPreference,
+        message: "Currency preference updated successfully"
+      }
+    });
+  } catch (error) {
+    console.error("Update currency preference error:", error);
+    res.status(500).json({ error: "Failed to update currency preference" });
+  }
+});
+
+// Get current currency context (for debugging/admin info)
+router.get("/currency/context", authenticateToken, detectCurrency, async (req, res) => {
+  try {
+    const currencyContext = getCurrencyContext(req);
+
+    res.json({
+      success: true,
+      data: currencyContext
+    });
+  } catch (error) {
+    console.error("Get currency context error:", error);
+    res.status(500).json({ error: "Failed to fetch currency context" });
+  }
+});
+
+// Update exchange rate (admin only)
+router.post("/currency/exchange-rate", authenticateToken, async (req, res) => {
+  try {
+    const { rate, from_currency = 'USD', to_currency = 'INR' } = req.body;
+
+    if (!rate || rate <= 0) {
+      return res.status(400).json({
+        error: "Invalid exchange rate"
+      });
+    }
+
+    await currencyService.updateExchangeRate(rate, from_currency, to_currency);
+
+    res.json({
+      success: true,
+      data: {
+        rate,
+        from_currency,
+        to_currency,
+        message: "Exchange rate updated successfully"
+      }
+    });
+  } catch (error) {
+    console.error("Update exchange rate error:", error);
+    res.status(500).json({ error: "Failed to update exchange rate" });
   }
 });
 

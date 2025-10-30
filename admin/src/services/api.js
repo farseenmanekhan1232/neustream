@@ -232,7 +232,7 @@ export const adminApi = {
     return response.data;
   },
 
-  // Get subscription plans
+  // Get subscription plans with currency support
   getSubscriptionPlans: async () => {
     const response = await api.get('/api/admin/subscription-plans');
     return response.data;

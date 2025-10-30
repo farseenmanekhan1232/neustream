@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Plus,
   Edit,
@@ -14,6 +15,7 @@ import {
   Crown,
   Zap,
   Shield,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi } from "@/services/api";
@@ -48,6 +50,7 @@ import {
 } from "@/components/ui/table";
 
 function SubscriptionPlans() {
+  const { currency, formatPrice, location } = useCurrency();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -180,6 +183,12 @@ function SubscriptionPlans() {
           <p className="text-muted-foreground mt-2">
             Manage subscription plans and pricing tiers
           </p>
+          {location && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <Globe className="h-4 w-4" />
+              <span>Detected: {location.countryCode} ({currency})</span>
+            </div>
+          )}
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -246,12 +255,12 @@ function SubscriptionPlans() {
               {/* Pricing */}
               <div className="flex items-baseline space-x-2">
                 <span className="text-3xl font-normal">
-                  ${plan.price_monthly}
+                  {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
                 </span>
                 <span className="text-muted-foreground">/month</span>
               </div>
               <div className="text-sm text-muted-foreground">
-                ${plan.price_yearly} billed annually
+                {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
               </div>
 
               {/* Limits */}

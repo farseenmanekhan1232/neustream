@@ -1,18 +1,25 @@
 const express = require("express");
 const { authenticateToken } = require("../middleware/auth");
 const { getUserPlanInfo } = require("../middleware/planValidation");
+const { detectCurrency, requireCurrencyContext, getCurrencyContext } = require("../middleware/currencyMiddleware");
 const subscriptionService = require("../services/subscriptionService");
 
 const router = express.Router();
 
 /**
- * Get user's current subscription and usage
+ * Get user's current subscription and usage with currency support
  */
-router.get("/usage", authenticateToken, getUserPlanInfo, async (req, res) => {
+router.get("/usage", authenticateToken, detectCurrency, getUserPlanInfo, async (req, res) => {
   try {
+    const currencyContext = getCurrencyContext(req);
+
     res.json({
       success: true,
-      data: req.userPlan,
+      data: {
+        ...req.userPlan,
+        currency: currencyContext.currency,
+        location: currencyContext.location
+      },
     });
   } catch (error) {
     console.error("Error getting subscription usage:", error);
@@ -24,14 +31,20 @@ router.get("/usage", authenticateToken, getUserPlanInfo, async (req, res) => {
 });
 
 /**
- * Get available subscription plans
+ * Get available subscription plans with currency support
  */
-router.get("/plans", async (req, res) => {
+router.get("/plans", detectCurrency, async (req, res) => {
   try {
-    const plans = await subscriptionService.getAvailablePlans();
+    const currencyContext = getCurrencyContext(req);
+    const plans = await subscriptionService.getAvailablePlans(currencyContext.currency);
+
     res.json({
       success: true,
-      data: plans,
+      data: {
+        plans,
+        currency: currencyContext.currency,
+        location: currencyContext.location
+      },
     });
   } catch (error) {
     console.error("Error getting subscription plans:", error);

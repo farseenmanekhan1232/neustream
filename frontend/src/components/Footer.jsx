@@ -104,7 +104,7 @@ function Footer() {
             © {currentYear} NeuStream Technologies, Inc. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <a href="#" className=" hover:text-foreground">
+            <a href="https://twitter.com/farsn_" target="_blank" rel="noopener noreferrer" className=" hover:text-foreground">
               <span className="sr-only">Twitter</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +121,7 @@ function Footer() {
                 <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
               </svg>
             </a>
-            <a href="#" className=" hover:text-foreground">
+            <a href="https://www.linkedin.com/in/mohammad-farseen-manekhan-2419531a7" target="_blank" rel="noopener noreferrer" className=" hover:text-foreground">
               <span className="sr-only">LinkedIn</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -140,7 +140,7 @@ function Footer() {
                 <circle cx="4" cy="4" r="2" />
               </svg>
             </a>
-            <a href="#" className=" hover:text-foreground">
+            <a href="https://github.com/farseenmanekhan1232" target="_blank" rel="noopener noreferrer" className=" hover:text-foreground">
               <span className="sr-only">GitHub</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"

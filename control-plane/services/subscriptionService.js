@@ -1,4 +1,5 @@
 const Database = require('../lib/database');
+const currencyService = require('./currencyService');
 
 class SubscriptionService {
   constructor() {
@@ -6,9 +7,9 @@ class SubscriptionService {
   }
 
   /**
-   * Get user's current subscription
+   * Get user's current subscription with currency support
    */
-  async getUserSubscription(userId) {
+  async getUserSubscription(userId, currency = 'USD') {
     try {
       const result = await this.db.query(`
         SELECT
@@ -17,6 +18,8 @@ class SubscriptionService {
           sp.description as plan_description,
           sp.price_monthly,
           sp.price_yearly,
+          sp.price_monthly_inr,
+          sp.price_yearly_inr,
           sp.max_sources,
           sp.max_destinations,
           sp.max_streaming_hours_monthly,
@@ -31,8 +34,9 @@ class SubscriptionService {
       if (result.length === 0) {
         // Return default free plan
         const freePlan = await this.getPlanByName('Free');
+        const processedPlan = await currencyService.processPlanWithCurrency(freePlan, currency);
         return {
-          ...freePlan,
+          ...processedPlan,
           status: 'active',
           billing_cycle: 'monthly',
           current_period_start: new Date(),
@@ -40,7 +44,13 @@ class SubscriptionService {
         };
       }
 
-      return result[0];
+      const subscription = result[0];
+      const processedPlan = await currencyService.processPlanWithCurrency(subscription, currency);
+
+      return {
+        ...subscription,
+        ...processedPlan
+      };
     } catch (error) {
       console.error('Error getting user subscription:', error);
       throw error;
@@ -64,13 +74,22 @@ class SubscriptionService {
   }
 
   /**
-   * Get all available subscription plans
+   * Get all available subscription plans with currency support
    */
-  async getAvailablePlans() {
+  async getAvailablePlans(currency = 'USD') {
     try {
-      return await this.db.query(
+      const plans = await this.db.query(
         'SELECT * FROM subscription_plans WHERE is_active = true ORDER BY price_monthly ASC'
       );
+
+      // Process each plan with currency conversion
+      const processedPlans = await Promise.all(
+        plans.map(async (plan) => {
+          return await currencyService.processPlanWithCurrency(plan, currency);
+        })
+      );
+
+      return processedPlans;
     } catch (error) {
       console.error('Error getting available plans:', error);
       throw error;

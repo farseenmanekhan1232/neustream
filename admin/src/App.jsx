@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -72,8 +73,9 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <div className="App">
-          <Routes>
+          <CurrencyProvider>
+            <div className="App">
+            <Routes>
             <Route
               path="/login"
               element={
@@ -157,6 +159,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </div>
+          </CurrencyProvider>
         </AuthProvider>
       </QueryClientProvider>
     </Router>
