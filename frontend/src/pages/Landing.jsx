@@ -14,12 +14,7 @@ import { useCurrency } from "../contexts/CurrencyContext";
 
 function Landing() {
   // Use currency context
-  const {
-    currency,
-    location,
-    loading: currencyLoading,
-    formatPrice,
-  } = useCurrency();
+  const { formatPrice } = useCurrency();
 
   // TextHighlighter configuration
   const highlightConfig = {
@@ -681,21 +676,6 @@ function Landing() {
               Start streaming to multiple platforms with our flexible pricing
               options. Scale as you grow with no hidden fees.
             </p>
-
-            {/* Currency indicator */}
-            {!currencyLoading && (
-              <div className="mt-4 inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 text-sm">
-                <span className="text-xs opacity-70">Prices shown in</span>
-                <span className="font-medium">
-                  {currency === "INR" ? "🇮🇳 INR" : "🇺🇸 USD"}
-                </span>
-                {location && (
-                  <span className="text-xs opacity-70">
-                    (detected from {location})
-                  </span>
-                )}
-              </div>
-            )}
           </div>
 
           {plansLoading ? (
