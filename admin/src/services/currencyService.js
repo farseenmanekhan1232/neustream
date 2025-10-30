@@ -6,7 +6,7 @@ class CurrencyService {
    */
   async getCurrencyPreference() {
     try {
-      const response = await api.get('/admin/settings/currency');
+      const response = await api.get('/api/admin/settings/currency');
       return response.data;
     } catch (error) {
       console.error('Failed to get currency preference:', error);
@@ -19,7 +19,7 @@ class CurrencyService {
    */
   async updateCurrencyPreference(preference) {
     try {
-      const response = await api.post('/admin/settings/currency', {
+      const response = await api.post('/api/admin/settings/currency', {
         currency_preference: preference
       });
       return response.data;
@@ -34,7 +34,7 @@ class CurrencyService {
    */
   async getCurrencyContext() {
     try {
-      const response = await api.get('/admin/currency/context');
+      const response = await api.get('/api/admin/currency/context');
       return response.data;
     } catch (error) {
       console.error('Failed to get currency context:', error);
@@ -47,7 +47,7 @@ class CurrencyService {
    */
   async updateExchangeRate(rate, fromCurrency = 'USD', toCurrency = 'INR') {
     try {
-      const response = await api.post('/admin/currency/exchange-rate', {
+      const response = await api.post('/api/admin/currency/exchange-rate', {
         rate,
         from_currency: fromCurrency,
         to_currency: toCurrency
