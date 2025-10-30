@@ -10,11 +10,16 @@ import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
 import MetricsDisplay from "../components/MetricsDisplay";
 import LiveChatSimulator from "../components/LiveChatSimulator";
 import StreamConfigSimulator from "../components/StreamConfigSimulator";
-import { CurrencyProvider, useCurrency } from "../contexts/CurrencyContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 function Landing() {
   // Use currency context
-  const { currency, location, loading: currencyLoading, formatPrice } = useCurrency();
+  const {
+    currency,
+    location,
+    loading: currencyLoading,
+    formatPrice,
+  } = useCurrency();
 
   // TextHighlighter configuration
   const highlightConfig = {
@@ -361,7 +366,7 @@ function Landing() {
                     >
                       {platform}
                     </div>
-                  ),
+                  )
                 )}
               </div>
             </div>
@@ -682,7 +687,7 @@ function Landing() {
               <div className="mt-4 inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 text-sm">
                 <span className="text-xs opacity-70">Prices shown in</span>
                 <span className="font-medium">
-                  {currency === 'INR' ? '🇮🇳 INR' : '🇺🇸 USD'}
+                  {currency === "INR" ? "🇮🇳 INR" : "🇺🇸 USD"}
                 </span>
                 {location && (
                   <span className="text-xs opacity-70">
@@ -752,12 +757,15 @@ function Landing() {
                       </div>
                       <div className="space-y-1">
                         <div className="text-3xl font-normal">
-                          {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
+                          {plan.formatted_price_monthly ||
+                            formatPrice(plan.price_monthly)}
                           <span className="text-sm font-normal ">/month</span>
                         </div>
                         {plan.price_yearly && (
                           <p className="text-sm ">
-                            {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
+                            {plan.formatted_price_yearly ||
+                              formatPrice(plan.price_yearly)}{" "}
+                            billed annually
                           </p>
                         )}
                       </div>
@@ -907,11 +915,7 @@ function Landing() {
 
 // Wrapper component that provides CurrencyProvider
 function LandingWithCurrency() {
-  return (
-    <CurrencyProvider>
-      <Landing />
-    </CurrencyProvider>
-  );
+  return <Landing />;
 }
 
 export default LandingWithCurrency;
