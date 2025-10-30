@@ -232,24 +232,31 @@ class CurrencyService {
   }
 
   /**
-   * Process subscription plan with currency conversion
+   * Process subscription plan with currency - use database values directly
    */
   async processPlanWithCurrency(plan, currency, exchangeRate = null) {
     if (!plan) return null;
 
-    const rate = exchangeRate || await this.getExchangeRate('USD', currency);
+    // Use currency-specific prices directly from database
+    let monthlyPrice, yearlyPrice;
 
-    // Convert prices to target currency
-    const convertedMonthly = this.convertPrice(plan.price_monthly, currency, rate);
-    const convertedYearly = this.convertPrice(plan.price_yearly, currency, rate);
+    if (currency === 'INR') {
+      // Use INR prices from database
+      monthlyPrice = plan.price_monthly_inr || plan.price_monthly * this.DEFAULT_USD_TO_INR_RATE;
+      yearlyPrice = plan.price_yearly_inr || plan.price_yearly * this.DEFAULT_USD_TO_INR_RATE;
+    } else {
+      // Use USD prices from database
+      monthlyPrice = plan.price_monthly;
+      yearlyPrice = plan.price_yearly;
+    }
 
     return {
       ...plan,
       currency,
-      price_monthly: convertedMonthly,
-      price_yearly: convertedYearly,
-      formatted_price_monthly: this.formatPrice(convertedMonthly, currency),
-      formatted_price_yearly: this.formatPrice(convertedYearly, currency)
+      price_monthly: monthlyPrice,
+      price_yearly: yearlyPrice,
+      formatted_price_monthly: this.formatPrice(monthlyPrice, currency),
+      formatted_price_yearly: this.formatPrice(yearlyPrice, currency)
     };
   }
 
