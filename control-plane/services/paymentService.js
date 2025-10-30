@@ -14,7 +14,7 @@ class PaymentService {
   /**
    * Create a Razorpay order for subscription payment
    */
-  async createOrder(userId, planId, billingCycle = "monthly") {
+  async createOrder(userId, planId, billingCycle = "monthly", currency = "USD") {
     try {
       // Get plan details
       const plan = await this.db.query(
@@ -27,15 +27,27 @@ class PaymentService {
       }
 
       const planData = plan[0];
-      const amount =
-        billingCycle === "yearly"
+
+      // Use currency-specific prices from database
+      let amount;
+      let currencyCode;
+
+      if (currency === 'INR') {
+        amount = billingCycle === "yearly"
+          ? planData.price_yearly_inr * 100
+          : planData.price_monthly_inr * 100;
+        currencyCode = "INR";
+      } else {
+        amount = billingCycle === "yearly"
           ? planData.price_yearly * 100
-          : planData.price_monthly * 100; // Amount in paise
+          : planData.price_monthly * 100;
+        currencyCode = "USD";
+      }
 
       // Create Razorpay order
       const orderOptions = {
         amount: Math.round(amount), // Amount in paise
-        currency: "USD",
+        currency: currencyCode,
         receipt: `sub_${userId}_${planId}_${Date.now()}`,
         notes: {
           userId: userId.toString(),
@@ -55,7 +67,7 @@ class PaymentService {
           order_id, user_id, plan_id, billing_cycle, amount, currency, status, created_at
         ) VALUES ($1, $2, $3, $4, $5, $6, 'created', NOW())
       `,
-        [order.id, userId, planId, billingCycle, amount / 100, "INR"]
+        [order.id, userId, planId, billingCycle, amount / 100, currencyCode]
       );
 
       return {

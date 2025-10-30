@@ -241,11 +241,11 @@ class CurrencyService {
     let monthlyPrice, yearlyPrice;
 
     if (currency === 'INR') {
-      // Use INR prices from database
-      monthlyPrice = plan.price_monthly_inr || plan.price_monthly * this.DEFAULT_USD_TO_INR_RATE;
-      yearlyPrice = plan.price_yearly_inr || plan.price_yearly * this.DEFAULT_USD_TO_INR_RATE;
+      // Use INR prices from database directly - no conversion
+      monthlyPrice = plan.price_monthly_inr;
+      yearlyPrice = plan.price_yearly_inr;
     } else {
-      // Use USD prices from database
+      // Use USD prices from database directly
       monthlyPrice = plan.price_monthly;
       yearlyPrice = plan.price_yearly;
     }

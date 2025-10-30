@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
+const { detectCurrency, requireCurrencyContext, getCurrencyContext } = require('../middleware/currencyMiddleware');
 const paymentService = require('../services/paymentService');
 
 const router = express.Router();
@@ -7,9 +8,10 @@ const router = express.Router();
 /**
  * Create a Razorpay order for subscription payment
  */
-router.post('/create-order', authenticateToken, async (req, res) => {
+router.post('/create-order', authenticateToken, detectCurrency, async (req, res) => {
   try {
     const { plan_id, billing_cycle = 'monthly' } = req.body;
+    const currencyContext = getCurrencyContext(req);
 
     if (!plan_id) {
       return res.status(400).json({
@@ -18,7 +20,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       });
     }
 
-    const order = await paymentService.createOrder(req.user.id, plan_id, billing_cycle);
+    const order = await paymentService.createOrder(req.user.id, plan_id, billing_cycle, currencyContext.currency);
 
     res.json({
       success: true,
