@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
@@ -10,8 +10,12 @@ import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
 import MetricsDisplay from "../components/MetricsDisplay";
 import LiveChatSimulator from "../components/LiveChatSimulator";
 import StreamConfigSimulator from "../components/StreamConfigSimulator";
+import { CurrencyProvider, useCurrency } from "../contexts/CurrencyContext";
 
 function Landing() {
+  // Use currency context
+  const { currency, location, loading: currencyLoading, formatPrice } = useCurrency();
+
   // TextHighlighter configuration
   const highlightConfig = {
     transition: { type: "spring", duration: 1, delay: 0.2, bounce: 0 },
@@ -34,7 +38,8 @@ function Landing() {
     },
   });
 
-  const plans = plansData || [];
+  // Handle both direct data and wrapped response structures
+  const plans = plansData?.data?.plans || plansData?.plans || plansData || [];
 
   // Helper function to format plan features based on plan data
   const getPlanFeatures = (plan) => {
@@ -270,12 +275,6 @@ function Landing() {
     }
 
     return features;
-  };
-
-  // Helper function to format price
-  const formatPrice = (price) => {
-    if (!price) return "$0";
-    return `$${price}`;
   };
 
   return (
@@ -677,6 +676,21 @@ function Landing() {
               Start streaming to multiple platforms with our flexible pricing
               options. Scale as you grow with no hidden fees.
             </p>
+
+            {/* Currency indicator */}
+            {!currencyLoading && (
+              <div className="mt-4 inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1 text-sm">
+                <span className="text-xs opacity-70">Prices shown in</span>
+                <span className="font-medium">
+                  {currency === 'INR' ? '🇮🇳 INR' : '🇺🇸 USD'}
+                </span>
+                {location && (
+                  <span className="text-xs opacity-70">
+                    (detected from {location})
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {plansLoading ? (
@@ -738,12 +752,12 @@ function Landing() {
                       </div>
                       <div className="space-y-1">
                         <div className="text-3xl font-normal">
-                          {formatPrice(plan.price_monthly)}
+                          {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
                           <span className="text-sm font-normal ">/month</span>
                         </div>
                         {plan.price_yearly && (
                           <p className="text-sm ">
-                            ${plan.price_yearly} billed annually
+                            {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
                           </p>
                         )}
                       </div>
@@ -891,4 +905,13 @@ function Landing() {
   );
 }
 
-export default Landing;
+// Wrapper component that provides CurrencyProvider
+function LandingWithCurrency() {
+  return (
+    <CurrencyProvider>
+      <Landing />
+    </CurrencyProvider>
+  );
+}
+
+export default LandingWithCurrency;

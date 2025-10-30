@@ -28,10 +28,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "../contexts/AuthContext";
 import { subscriptionService } from "../services/subscription";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 function SubscriptionManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { formatPrice } = useCurrency();
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   // Fetch current subscription
@@ -90,7 +92,7 @@ function SubscriptionManagement() {
       // Create payment order
       const orderData = await subscriptionService.createPaymentOrder(
         planId,
-        billingCycle,
+        billingCycle
       );
 
       // Initialize Razorpay
@@ -107,18 +109,18 @@ function SubscriptionManagement() {
             const verifyResponse = await subscriptionService.verifyPayment(
               response.razorpay_order_id,
               response.razorpay_payment_id,
-              response.razorpay_signature,
+              response.razorpay_signature
             );
 
             if (verifyResponse.success) {
               toast.success(
-                "Payment successful! Your subscription has been upgraded.",
+                "Payment successful! Your subscription has been upgraded."
               );
               queryClient.invalidateQueries(["subscription", user.id]);
               setSelectedPlan(null);
             } else {
               toast.error(
-                "Payment verification failed. Please contact support.",
+                "Payment verification failed. Please contact support."
               );
             }
           } catch (error) {
@@ -153,7 +155,7 @@ function SubscriptionManagement() {
   const currentPlan = subscriptionData?.subscription;
   const currentLimits = subscriptionData?.limits;
   const currentUsage = subscriptionData?.current_usage;
-  const plans = plansData || [];
+  const plans = plansData?.data?.plans || plansData?.plans || plansData || [];
 
   const planFeatures = {
     free: [
@@ -183,17 +185,14 @@ function SubscriptionManagement() {
     return planFeatures[planKey] || planFeatures.free;
   };
 
-  const getPlanPrice = (planName) => {
-    switch (planName.toLowerCase()) {
-      case "free":
-        return { monthly: "$0", yearly: "$0" };
-      case "pro":
-        return { monthly: "$12", yearly: "$120" };
-      case "business":
-        return { monthly: "$39", yearly: "$390" };
-      default:
-        return { monthly: "$0", yearly: "$0" };
-    }
+  const getPlanPrice = (plan) => {
+    if (!plan) return { monthly: formatPrice(0), yearly: formatPrice(0) };
+
+    // Use formatted prices from API if available, otherwise format manually
+    return {
+      monthly: plan.formatted_price_monthly || formatPrice(plan.price_monthly),
+      yearly: plan.formatted_price_yearly || formatPrice(plan.price_yearly),
+    };
   };
 
   if (subscriptionLoading || plansLoading) {
@@ -291,7 +290,7 @@ function SubscriptionManagement() {
               const isCurrentPlan =
                 currentPlan?.plan_name?.toLowerCase() ===
                 plan.name.toLowerCase();
-              const price = getPlanPrice(plan.name);
+              const price = getPlanPrice(plan);
               const features = getPlanFeatures(plan.name);
 
               return (
@@ -411,7 +410,7 @@ function SubscriptionManagement() {
                     <div className="flex justify-between">
                       <span>Monthly Price:</span>
                       <span className="font-medium">
-                        {getPlanPrice(selectedPlan.name).monthly}/month
+                        {getPlanPrice(selectedPlan).monthly}/month
                       </span>
                     </div>
                   </div>
@@ -469,8 +468,8 @@ function SubscriptionManagement() {
                     processPaymentMutation.isLoading
                       ? "Processing..."
                       : selectedPlan.name.toLowerCase() === "free"
-                        ? "Switch to Free"
-                        : "Proceed to Payment"}
+                      ? "Switch to Free"
+                      : "Proceed to Payment"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -575,7 +574,7 @@ function SubscriptionManagement() {
                                 (month.hours /
                                   currentLimits?.max_streaming_hours_monthly) *
                                   100,
-                                100,
+                                100
                               )}%`,
                             }}
                           ></div>
@@ -639,7 +638,7 @@ function SubscriptionManagement() {
                       <p className="font-medium">Next Billing Date</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(
-                          currentPlan.current_period_end,
+                          currentPlan.current_period_end
                         ).toLocaleDateString()}
                       </p>
                     </div>

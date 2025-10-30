@@ -117,6 +117,8 @@ function SubscriptionPlans() {
       description: formData.description,
       price_monthly: parseFloat(formData.price_monthly),
       price_yearly: parseFloat(formData.price_yearly),
+      price_monthly_inr: formData.price_monthly_inr ? parseFloat(formData.price_monthly_inr) : null,
+      price_yearly_inr: formData.price_yearly_inr ? parseFloat(formData.price_yearly_inr) : null,
       max_sources: parseInt(formData.max_sources),
       max_destinations: parseInt(formData.max_destinations),
       max_streaming_hours_monthly: parseInt(
@@ -136,6 +138,8 @@ function SubscriptionPlans() {
         description: formData.description,
         price_monthly: parseFloat(formData.price_monthly),
         price_yearly: parseFloat(formData.price_yearly),
+        price_monthly_inr: formData.price_monthly_inr ? parseFloat(formData.price_monthly_inr) : null,
+        price_yearly_inr: formData.price_yearly_inr ? parseFloat(formData.price_yearly_inr) : null,
         max_sources: parseInt(formData.max_sources),
         max_destinations: parseInt(formData.max_destinations),
         max_streaming_hours_monthly: parseInt(
@@ -253,14 +257,29 @@ function SubscriptionPlans() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Pricing */}
-              <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-normal">
-                  {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
-                </span>
-                <span className="text-muted-foreground">/month</span>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
+              <div className="space-y-2">
+                <div className="flex items-baseline space-x-2">
+                  <span className="text-3xl font-normal">
+                    {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
+                  </span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
+                </div>
+
+                {/* INR Pricing */}
+                {(plan.price_monthly_inr || plan.price_yearly_inr) && (
+                  <div className="text-sm text-green-600 border-l-2 border-green-200 pl-2 mt-2">
+                    <div className="font-medium">🇮🇳 INR Pricing:</div>
+                    <div>
+                      {plan.formatted_price_monthly_inr || formatPrice(plan.price_monthly_inr, 'INR')} /month
+                    </div>
+                    <div>
+                      {plan.formatted_price_yearly_inr || formatPrice(plan.price_yearly_inr, 'INR')} billed annually
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Limits */}
@@ -367,6 +386,8 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
     description: plan?.description || "",
     price_monthly: plan?.price_monthly || "",
     price_yearly: plan?.price_yearly || "",
+    price_monthly_inr: plan?.price_monthly_inr || "",
+    price_yearly_inr: plan?.price_yearly_inr || "",
     max_sources: plan?.max_sources || "",
     max_destinations: plan?.max_destinations || "",
     max_streaming_hours_monthly: plan?.max_streaming_hours_monthly || "",
@@ -433,6 +454,34 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
               value={formData.price_yearly}
               onChange={(e) => handleChange("price_yearly", e.target.value)}
               required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="price_monthly_inr">Monthly Price (₹)</Label>
+            <Input
+              id="price_monthly_inr"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price_monthly_inr}
+              onChange={(e) => handleChange("price_monthly_inr", e.target.value)}
+              placeholder="Leave empty for auto-conversion"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="price_yearly_inr">Yearly Price (₹)</Label>
+            <Input
+              id="price_yearly_inr"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price_yearly_inr}
+              onChange={(e) => handleChange("price_yearly_inr", e.target.value)}
+              placeholder="Leave empty for auto-conversion"
             />
           </div>
         </div>

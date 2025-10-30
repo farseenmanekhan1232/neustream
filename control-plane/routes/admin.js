@@ -1076,6 +1076,8 @@ router.post("/subscription-plans", async (req, res) => {
     description,
     price_monthly,
     price_yearly,
+    price_monthly_inr,
+    price_yearly_inr,
     max_sources,
     max_destinations,
     max_streaming_hours_monthly,
@@ -1085,14 +1087,16 @@ router.post("/subscription-plans", async (req, res) => {
   try {
     const result = await db.run(
       `INSERT INTO subscription_plans (
-        name, description, price_monthly, price_yearly,
+        name, description, price_monthly, price_yearly, price_monthly_inr, price_yearly_inr,
         max_sources, max_destinations, max_streaming_hours_monthly, features
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         name,
         description,
         price_monthly,
         price_yearly,
+        price_monthly_inr,
+        price_yearly_inr,
         max_sources,
         max_destinations,
         max_streaming_hours_monthly,
@@ -1115,6 +1119,8 @@ router.put("/subscription-plans/:id", async (req, res) => {
     description,
     price_monthly,
     price_yearly,
+    price_monthly_inr,
+    price_yearly_inr,
     max_sources,
     max_destinations,
     max_streaming_hours_monthly,
@@ -1128,16 +1134,20 @@ router.put("/subscription-plans/:id", async (req, res) => {
         description = $2,
         price_monthly = $3,
         price_yearly = $4,
-        max_sources = $5,
-        max_destinations = $6,
-        max_streaming_hours_monthly = $7,
-        features = $8
-      WHERE id = $9 RETURNING *`,
+        price_monthly_inr = $5,
+        price_yearly_inr = $6,
+        max_sources = $7,
+        max_destinations = $8,
+        max_streaming_hours_monthly = $9,
+        features = $10
+      WHERE id = $11 RETURNING *`,
       [
         name,
         description,
         price_monthly,
         price_yearly,
+        price_monthly_inr,
+        price_yearly_inr,
         max_sources,
         max_destinations,
         max_streaming_hours_monthly,
