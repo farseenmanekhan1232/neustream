@@ -63,10 +63,17 @@ class CurrencyService {
    * Format price for display
    */
   formatPrice(amount, currency) {
-    if (currency === 'INR') {
-      return `₹${amount.toLocaleString('en-IN')}`;
+    // Convert to number and validate
+    const numAmount = Number(amount);
+    if (isNaN(numAmount)) {
+      console.error('Invalid amount for formatting:', amount);
+      return currency === 'INR' ? '₹0' : '$0.00';
     }
-    return `$${amount.toFixed(2)}`;
+
+    if (currency === 'INR') {
+      return `₹${numAmount.toLocaleString('en-IN')}`;
+    }
+    return `$${numAmount.toFixed(2)}`;
   }
 
   /**

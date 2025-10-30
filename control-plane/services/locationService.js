@@ -1,8 +1,9 @@
 const fetch = require('node-fetch');
-const db = require('../db');
+const Database = require('../lib/database');
 
 class LocationService {
   constructor() {
+    this.db = new Database();
     this.IP_API_BASE = 'http://ip-api.com/json';
     this.DEFAULT_RATE = 83.5; // USD to INR
   }
@@ -73,15 +74,15 @@ class LocationService {
    */
   async getCachedLocation(ipAddress) {
     try {
-      const result = await db.query(
+      const result = await this.db.query(
         `SELECT country_code, currency, is_india, created_at
          FROM ip_location_cache
          WHERE ip_address = $1 AND expires_at > CURRENT_TIMESTAMP`,
         [ipAddress]
       );
 
-      if (result.rows.length > 0) {
-        const row = result.rows[0];
+      if (result.length > 0) {
+        const row = result[0];
         return {
           countryCode: row.country_code,
           currency: row.currency,
@@ -101,7 +102,7 @@ class LocationService {
    */
   async cacheLocation(ipAddress, location) {
     try {
-      await db.query(
+      await this.db.query(
         `INSERT INTO ip_location_cache (ip_address, country_code, currency, is_india, expires_at)
          VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP + INTERVAL '24 hours')
          ON CONFLICT (ip_address) DO UPDATE SET
@@ -122,14 +123,14 @@ class LocationService {
   async getExchangeRate() {
     try {
       // Check cache first
-      const result = await db.query(
+      const result = await this.db.query(
         `SELECT rate FROM currency_rates
          WHERE from_currency = 'USD' AND to_currency = 'INR'
          AND expires_at > CURRENT_TIMESTAMP`
       );
 
-      if (result.rows.length > 0) {
-        return parseFloat(result.rows[0].rate);
+      if (result.length > 0) {
+        return parseFloat(result[0].rate);
       }
 
       // Fallback to default rate
@@ -145,7 +146,7 @@ class LocationService {
    */
   async updateExchangeRate(rate) {
     try {
-      await db.query(
+      await this.db.query(
         `INSERT INTO currency_rates (from_currency, to_currency, rate, expires_at)
          VALUES ('USD', 'INR', $1, CURRENT_TIMESTAMP + INTERVAL '1 hour')
          ON CONFLICT (from_currency, to_currency) DO UPDATE SET
@@ -202,8 +203,8 @@ class LocationService {
    */
   async cleanupExpiredCache() {
     try {
-      await db.query('DELETE FROM ip_location_cache WHERE expires_at < CURRENT_TIMESTAMP');
-      await db.query('DELETE FROM currency_rates WHERE expires_at < CURRENT_TIMESTAMP');
+      await this.db.query('DELETE FROM ip_location_cache WHERE expires_at < CURRENT_TIMESTAMP');
+      await this.db.query('DELETE FROM currency_rates WHERE expires_at < CURRENT_TIMESTAMP');
     } catch (error) {
       console.error('Cache cleanup failed:', error);
     }

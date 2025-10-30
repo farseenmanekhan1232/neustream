@@ -1,7 +1,8 @@
-const db = require('../db');
+const Database = require('../lib/database');
 
 class CurrencyService {
   constructor() {
+    this.db = new Database();
     this.DEFAULT_USD_TO_INR_RATE = 83.5;
     this.SUPPORTED_CURRENCIES = ['USD', 'INR'];
   }
@@ -30,15 +31,22 @@ class CurrencyService {
    * Format price for display
    */
   formatPrice(amount, currency) {
+    // Convert to number and validate
+    const numAmount = Number(amount);
+    if (isNaN(numAmount)) {
+      console.error('Invalid amount for formatting:', amount);
+      return currency === 'INR' ? '₹0' : '$0.00';
+    }
+
     if (!this.isValidCurrency(currency)) {
-      return `$${amount}`;
+      return `$${numAmount.toFixed(2)}`;
     }
 
     if (currency === 'INR') {
-      return `₹${amount.toLocaleString('en-IN')}`;
+      return `₹${numAmount.toLocaleString('en-IN')}`;
     }
 
-    return `$${amount.toFixed(2)}`;
+    return `$${numAmount.toFixed(2)}`;
   }
 
   /**
@@ -46,7 +54,7 @@ class CurrencyService {
    */
   async getSubscriptionPlans(currency = 'USD') {
     try {
-      const result = await db.query(`
+      const result = await this.db.query(`
         SELECT
           id,
           name,
@@ -69,7 +77,7 @@ class CurrencyService {
         ORDER BY price_monthly ASC
       `, [currency]);
 
-      return result.rows.map(plan => ({
+      return result.map(plan => ({
         ...plan,
         currency,
         formatted_price_monthly: this.formatPrice(plan.price_monthly, currency),
@@ -86,13 +94,13 @@ class CurrencyService {
    */
   async getUserCurrencyPreference(userId) {
     try {
-      const result = await db.query(
+      const result = await this.db.query(
         'SELECT currency_preference FROM admin_settings WHERE user_id = $1',
         [userId]
       );
 
-      if (result.rows.length > 0) {
-        return result.rows[0].currency_preference;
+      if (result.length > 0) {
+        return result[0].currency_preference;
       }
 
       return 'AUTO'; // Default to auto-detection
@@ -111,7 +119,7 @@ class CurrencyService {
     }
 
     try {
-      await db.query(`
+      await this.db.query(`
         INSERT INTO admin_settings (user_id, currency_preference)
         VALUES ($1, $2)
         ON CONFLICT (user_id) DO UPDATE SET
@@ -164,13 +172,13 @@ class CurrencyService {
 
     if (fromCurrency === 'USD' && toCurrency === 'INR') {
       try {
-        const result = await db.query(
+        const result = await this.db.query(
           'SELECT rate FROM currency_rates WHERE from_currency = $1 AND to_currency = $2 AND expires_at > CURRENT_TIMESTAMP',
           [fromCurrency, toCurrency]
         );
 
-        if (result.rows.length > 0) {
-          return parseFloat(result.rows[0].rate);
+        if (result.length > 0) {
+          return parseFloat(result[0].rate);
         }
       } catch (error) {
         console.error('Failed to get exchange rate from cache:', error);
@@ -191,7 +199,7 @@ class CurrencyService {
     }
 
     try {
-      await db.query(`
+      await this.db.query(`
         INSERT INTO currency_rates (from_currency, to_currency, rate, expires_at)
         VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '1 hour')
         ON CONFLICT (from_currency, to_currency) DO UPDATE SET
@@ -231,13 +239,17 @@ class CurrencyService {
 
     const rate = exchangeRate || await this.getExchangeRate('USD', currency);
 
+    // Convert prices to target currency
+    const convertedMonthly = this.convertPrice(plan.price_monthly, currency, rate);
+    const convertedYearly = this.convertPrice(plan.price_yearly, currency, rate);
+
     return {
       ...plan,
       currency,
-      price_monthly: this.convertPrice(plan.price_monthly, currency, rate),
-      price_yearly: this.convertPrice(plan.price_yearly, currency, rate),
-      formatted_price_monthly: this.formatPrice(plan.price_monthly, currency),
-      formatted_price_yearly: this.formatPrice(plan.price_yearly, currency)
+      price_monthly: convertedMonthly,
+      price_yearly: convertedYearly,
+      formatted_price_monthly: this.formatPrice(convertedMonthly, currency),
+      formatted_price_yearly: this.formatPrice(convertedYearly, currency)
     };
   }
 
@@ -246,7 +258,7 @@ class CurrencyService {
    */
   async cleanupExpiredCache() {
     try {
-      await db.query('DELETE FROM currency_rates WHERE expires_at < CURRENT_TIMESTAMP');
+      await this.db.query('DELETE FROM currency_rates WHERE expires_at < CURRENT_TIMESTAMP');
     } catch (error) {
       console.error('Failed to cleanup currency cache:', error);
     }
