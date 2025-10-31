@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Plus,
   Edit,
@@ -50,7 +49,6 @@ import {
 } from "@/components/ui/table";
 
 function SubscriptionPlans() {
-  const { currency, formatPrice, location } = useCurrency();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -117,12 +115,16 @@ function SubscriptionPlans() {
       description: formData.description,
       price_monthly: parseFloat(formData.price_monthly),
       price_yearly: parseFloat(formData.price_yearly),
-      price_monthly_inr: formData.price_monthly_inr ? parseFloat(formData.price_monthly_inr) : null,
-      price_yearly_inr: formData.price_yearly_inr ? parseFloat(formData.price_yearly_inr) : null,
+      price_monthly_inr: formData.price_monthly_inr
+        ? parseFloat(formData.price_monthly_inr)
+        : null,
+      price_yearly_inr: formData.price_yearly_inr
+        ? parseFloat(formData.price_yearly_inr)
+        : null,
       max_sources: parseInt(formData.max_sources),
       max_destinations: parseInt(formData.max_destinations),
       max_streaming_hours_monthly: parseInt(
-        formData.max_streaming_hours_monthly
+        formData.max_streaming_hours_monthly,
       ),
       features: formData.features
         ? formData.features.split("\n").filter((f) => f.trim())
@@ -138,12 +140,16 @@ function SubscriptionPlans() {
         description: formData.description,
         price_monthly: parseFloat(formData.price_monthly),
         price_yearly: parseFloat(formData.price_yearly),
-        price_monthly_inr: formData.price_monthly_inr ? parseFloat(formData.price_monthly_inr) : null,
-        price_yearly_inr: formData.price_yearly_inr ? parseFloat(formData.price_yearly_inr) : null,
+        price_monthly_inr: formData.price_monthly_inr
+          ? parseFloat(formData.price_monthly_inr)
+          : null,
+        price_yearly_inr: formData.price_yearly_inr
+          ? parseFloat(formData.price_yearly_inr)
+          : null,
         max_sources: parseInt(formData.max_sources),
         max_destinations: parseInt(formData.max_destinations),
         max_streaming_hours_monthly: parseInt(
-          formData.max_streaming_hours_monthly
+          formData.max_streaming_hours_monthly,
         ),
         features: formData.features
           ? formData.features.split("\n").filter((f) => f.trim())
@@ -187,12 +193,6 @@ function SubscriptionPlans() {
           <p className="text-muted-foreground mt-2">
             Manage subscription plans and pricing tiers
           </p>
-          {location && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <Globe className="h-4 w-4" />
-              <span>Detected: {location.countryCode} ({currency})</span>
-            </div>
-          )}
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -241,7 +241,7 @@ function SubscriptionPlans() {
                     onClick={() => {
                       if (
                         confirm(
-                          `Are you sure you want to delete the "${plan.name}" plan?`
+                          `Are you sure you want to delete the "${plan.name}" plan?`,
                         )
                       ) {
                         deletePlanMutation.mutate(plan.id);
@@ -260,24 +260,20 @@ function SubscriptionPlans() {
               <div className="space-y-2">
                 <div className="flex items-baseline space-x-2">
                   <span className="text-3xl font-normal">
-                    {plan.formatted_price_monthly || formatPrice(plan.price_monthly)}
+                    {plan.formatted_price_monthly}
                   </span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {plan.formatted_price_yearly || formatPrice(plan.price_yearly)} billed annually
+                  {plan.formatted_price_yearly} billed annually
                 </div>
 
                 {/* INR Pricing */}
                 {(plan.price_monthly_inr || plan.price_yearly_inr) && (
                   <div className="text-sm text-green-600 border-l-2 border-green-200 pl-2 mt-2">
                     <div className="font-medium">🇮🇳 INR Pricing:</div>
-                    <div>
-                      {plan.formatted_price_monthly_inr || formatPrice(plan.price_monthly_inr, 'INR')} /month
-                    </div>
-                    <div>
-                      {plan.formatted_price_yearly_inr || formatPrice(plan.price_yearly_inr, 'INR')} billed annually
-                    </div>
+                    <div>{plan.formatted_price_monthly_inr} /month</div>
+                    <div>{plan.formatted_price_yearly_inr} billed annually</div>
                   </div>
                 )}
               </div>
@@ -314,12 +310,14 @@ function SubscriptionPlans() {
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Features</h4>
                   <ul className="space-y-1 text-sm text-muted-foreground">
-                    {featuresObjectToArray(plan.features).map((feature, index) => (
-                      <li key={index} className="flex items-center space-x-2">
-                        <Check className="h-3 w-3 text-green-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
+                    {featuresObjectToArray(plan.features).map(
+                      (feature, index) => (
+                        <li key={index} className="flex items-center space-x-2">
+                          <Check className="h-3 w-3 text-green-500" />
+                          <span>{feature}</span>
+                        </li>
+                      ),
+                    )}
                   </ul>
                 </div>
               )}
@@ -368,12 +366,12 @@ function SubscriptionPlans() {
 const featuresObjectToArray = (features) => {
   if (!features) return [];
   if (Array.isArray(features)) return features;
-  if (typeof features === 'object') {
+  if (typeof features === "object") {
     return Object.entries(features).map(([key, value]) => {
-      if (typeof value === 'boolean') {
-        return `${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
+      if (typeof value === "boolean") {
+        return `${key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}`;
       }
-      return `${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${value}`;
+      return `${key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}: ${value}`;
     });
   }
   return [features];
@@ -467,7 +465,9 @@ function PlanForm({ plan, onSubmit, isLoading, onCancel }) {
               step="0.01"
               min="0"
               value={formData.price_monthly_inr}
-              onChange={(e) => handleChange("price_monthly_inr", e.target.value)}
+              onChange={(e) =>
+                handleChange("price_monthly_inr", e.target.value)
+              }
               placeholder="Leave empty for auto-conversion"
             />
           </div>
