@@ -73,93 +73,91 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <CurrencyProvider>
-            <div className="App">
+          <div className="App">
             <Routes>
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute>
-                  <UsersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/subscription-plans"
-              element={
-                <ProtectedRoute>
-                  <SubscriptionPlans />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/user-subscriptions"
-              element={
-                <ProtectedRoute>
-                  <UserSubscriptions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/sources"
-              element={
-                <ProtectedRoute>
-                  <Sources />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/destinations"
-              element={
-                <ProtectedRoute>
-                  <Destinations />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute>
-                  <Analytics />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/streams"
-              element={
-                <ProtectedRoute>
-                  <Streams />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute>
+                    <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/subscription-plans"
+                element={
+                  <ProtectedRoute>
+                    <SubscriptionPlans />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user-subscriptions"
+                element={
+                  <ProtectedRoute>
+                    <UserSubscriptions />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sources"
+                element={
+                  <ProtectedRoute>
+                    <Sources />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/destinations"
+                element={
+                  <ProtectedRoute>
+                    <Destinations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/streams"
+                element={
+                  <ProtectedRoute>
+                    <Streams />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </div>
-          </CurrencyProvider>
         </AuthProvider>
       </QueryClientProvider>
     </Router>
