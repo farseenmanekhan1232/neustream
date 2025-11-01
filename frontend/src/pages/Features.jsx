@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Monitor, MessageCircle, Zap, Shield, Settings, Users, Globe } from "lucide-react";
+import { ArrowRight, Monitor, MessageCircle, Zap, Shield, Settings, Users, Globe, CheckCircle } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -20,7 +20,7 @@ function Features() {
     direction: "ltr",
   };
 
-  const features = [
+  const featuredSimulators = [
     {
       icon: Globe,
       title: "Multi-Platform Streaming",
@@ -56,7 +56,10 @@ function Features() {
         "Zero dropped frames with optimized streaming pipeline"
       ],
       simulator: <MetricsDisplay />
-    },
+    }
+  ];
+
+  const additionalFeatures = [
     {
       icon: Shield,
       title: "Enterprise Security",
@@ -66,8 +69,7 @@ function Features() {
         "Secure credential storage with zero-knowledge architecture",
         "Two-factor authentication for account protection",
         "Regular security audits and compliance certifications"
-      ],
-      simulator: null
+      ]
     },
     {
       icon: Monitor,
@@ -78,8 +80,7 @@ function Features() {
         "RTMP-compatible with any streaming software",
         "Mobile streaming support for on-the-go creators",
         "Hardware encoder integration (NVENC, QuickSync)"
-      ],
-      simulator: null
+      ]
     },
     {
       icon: Users,
@@ -90,8 +91,18 @@ function Features() {
         "Real-time performance metrics and health monitoring",
         "Engagement tracking and chat sentiment analysis",
         "Customizable reports and export capabilities"
-      ],
-      simulator: null
+      ]
+    },
+    {
+      icon: Settings,
+      title: "Advanced Configuration",
+      description: "Fine-tune every aspect of your streaming setup with comprehensive configuration options.",
+      details: [
+        "Custom bitrate and resolution settings per platform",
+        "Advanced audio and video codec configuration",
+        "Stream delay and synchronization controls",
+        "API access for custom integrations"
+      ]
     }
   ];
 
@@ -173,11 +184,11 @@ function Features() {
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Featured Simulators Section */}
       <section className="section-padding">
         <div className="container-custom">
           <div className="space-y-16">
-            {features.map((feature, index) => (
+            {featuredSimulators.map((feature, index) => (
               <div
                 key={feature.title}
                 className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${
@@ -220,19 +231,52 @@ function Features() {
                   )}
                 </div>
 
-                {/* Simulator/Visual */}
+                {/* Simulator */}
                 <div className={`${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                  {feature.simulator ? (
-                    feature.simulator
-                  ) : (
-                    <div className="bg-white/10 rounded-xl p-8 h-full flex items-center justify-center">
-                      <div className="text-center space-y-4">
-                        <feature.icon className="h-12 w-12 text-white mx-auto opacity-60" />
-                        <p className="opacity-70">Interactive demo coming soon</p>
-                      </div>
-                    </div>
-                  )}
+                  {feature.simulator}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Features Grid */}
+      <section className="section-padding bg-white/5">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Complete Streaming Toolkit
+            </h2>
+            <p className="text-lg opacity-80">
+              Everything you need to stream professionally, from security to analytics and beyond.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {additionalFeatures.map((feature, index) => (
+              <div key={feature.title} className="bg-white/5 rounded-2xl p-8 space-y-4 hover:bg-white/10 transition-all duration-300">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-white/10 rounded-xl">
+                    <feature.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-normal">
+                    {feature.title}
+                  </h3>
+                </div>
+
+                <p className="opacity-80">
+                  {feature.description}
+                </p>
+
+                <ul className="space-y-2">
+                  {feature.details.map((detail, detailIndex) => (
+                    <li key={detailIndex} className="flex items-start space-x-3 text-sm opacity-80">
+                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
