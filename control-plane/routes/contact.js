@@ -1,12 +1,12 @@
 const express = require("express");
+const Database = require("../lib/database");
+const { authenticateToken } = require("../middleware/auth");
+
 const router = express.Router();
-const { pool } = require("../config/database");
-const auth = require("../middleware/auth");
+const db = new Database();
 
 // Public contact form submission endpoint
 router.post("/", async (req, res) => {
-  const client = await pool.connect();
-
   try {
     const { name, email, subject, message } = req.body;
 
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Get user ID if logged in
+    // Get user ID if logged in (for future when we make this auth-optional)
     let userId = null;
     if (req.user) {
       userId = req.user.id;
@@ -49,9 +49,13 @@ router.post("/", async (req, res) => {
     `;
 
     const values = [name, email, subject, message, userId, ipAddress, userAgent];
-    const result = await client.query(query, values);
+    const result = await db.query(query, values);
 
-    const submission = result.rows[0];
+    if (result.length === 0) {
+      throw new Error("Failed to create contact submission");
+    }
+
+    const submission = result[0];
 
     // TODO: Send email notification to admin
     // TODO: Send confirmation email to user
@@ -74,23 +78,19 @@ router.post("/", async (req, res) => {
       error: "Internal server error",
       message: "Failed to process contact submission"
     });
-  } finally {
-    client.release();
   }
 });
 
 // Get all contact submissions (admin only)
-router.get("/", auth, async (req, res) => {
-  const client = await pool.connect();
+router.get("/", authenticateToken, async (req, res) => {
+  // Check if user is admin
+  if (req.user.email !== "admin@neustream.app") {
+    return res.status(403).json({
+      error: "Admin access required"
+    });
+  }
 
   try {
-    // Check if user is admin (you might want to add an admin role check)
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        error: "Admin access required"
-      });
-    }
-
     const {
       status,
       priority,
@@ -148,9 +148,9 @@ router.get("/", auth, async (req, res) => {
     `;
 
     params.push(limit, offset);
-    const result = await client.query(query, params);
+    const result = await db.query(query, params);
 
-    const submissions = result.rows;
+    const submissions = result;
     const totalCount = submissions.length > 0 ? parseInt(submissions[0].total_count) : 0;
 
     res.json({
@@ -185,23 +185,19 @@ router.get("/", auth, async (req, res) => {
       error: "Internal server error",
       message: "Failed to retrieve contact submissions"
     });
-  } finally {
-    client.release();
   }
 });
 
 // Get contact submission by ID (admin only)
-router.get("/:id", auth, async (req, res) => {
-  const client = await pool.connect();
+router.get("/:id", authenticateToken, async (req, res) => {
+  // Check if user is admin
+  if (req.user.email !== "admin@neustream.app") {
+    return res.status(403).json({
+      error: "Admin access required"
+    });
+  }
 
   try {
-    // Check if user is admin
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        error: "Admin access required"
-      });
-    }
-
     const { id } = req.params;
 
     const query = `
@@ -216,15 +212,15 @@ router.get("/:id", auth, async (req, res) => {
       GROUP BY cs.id, u.username
     `;
 
-    const result = await client.query(query, [id]);
+    const result = await db.query(query, [id]);
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return res.status(404).json({
         error: "Contact submission not found"
       });
     }
 
-    const submission = result.rows[0];
+    const submission = result[0];
 
     // Get responses for this submission
     const responsesQuery = `
@@ -237,7 +233,7 @@ router.get("/:id", auth, async (req, res) => {
       ORDER BY csr.created_at ASC
     `;
 
-    const responsesResult = await client.query(responsesQuery, [id]);
+    const responsesResult = await db.query(responsesQuery, [id]);
 
     res.json({
       submission: {
@@ -259,7 +255,7 @@ router.get("/:id", auth, async (req, res) => {
         notes: submission.notes,
         responseCount: parseInt(submission.response_count)
       },
-      responses: responsesResult.rows
+      responses: responsesResult
     });
 
   } catch (error) {
@@ -268,23 +264,19 @@ router.get("/:id", auth, async (req, res) => {
       error: "Internal server error",
       message: "Failed to retrieve contact submission"
     });
-  } finally {
-    client.release();
   }
 });
 
 // Update contact submission status (admin only)
-router.patch("/:id", auth, async (req, res) => {
-  const client = await pool.connect();
+router.patch("/:id", authenticateToken, async (req, res) => {
+  // Check if user is admin
+  if (req.user.email !== "admin@neustream.app") {
+    return res.status(403).json({
+      error: "Admin access required"
+    });
+  }
 
   try {
-    // Check if user is admin
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        error: "Admin access required"
-      });
-    }
-
     const { id } = req.params;
     const { status, priority, notes } = req.body;
 
@@ -330,9 +322,9 @@ router.patch("/:id", auth, async (req, res) => {
       RETURNING *
     `;
 
-    const result = await client.query(query, params);
+    const result = await db.query(query, params);
 
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return res.status(404).json({
         error: "Contact submission not found"
       });
@@ -340,7 +332,7 @@ router.patch("/:id", auth, async (req, res) => {
 
     res.json({
       message: "Contact submission updated successfully",
-      submission: result.rows[0]
+      submission: result[0]
     });
 
   } catch (error) {
@@ -349,23 +341,19 @@ router.patch("/:id", auth, async (req, res) => {
       error: "Internal server error",
       message: "Failed to update contact submission"
     });
-  } finally {
-    client.release();
   }
 });
 
 // Add response to contact submission (admin only)
-router.post("/:id/responses", auth, async (req, res) => {
-  const client = await pool.connect();
+router.post("/:id/responses", authenticateToken, async (req, res) => {
+  // Check if user is admin
+  if (req.user.email !== "admin@neustream.app") {
+    return res.status(403).json({
+      error: "Admin access required"
+    });
+  }
 
   try {
-    // Check if user is admin
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({
-        error: "Admin access required"
-      });
-    }
-
     const { id } = req.params;
     const { response, responseType = 'email' } = req.body;
 
@@ -383,10 +371,14 @@ router.post("/:id/responses", auth, async (req, res) => {
     `;
 
     const values = [id, req.user.id, response, responseType];
-    const result = await client.query(query, values);
+    const result = await db.query(query, values);
+
+    if (result.length === 0) {
+      throw new Error("Failed to add response");
+    }
 
     // Update submission status to responded
-    await client.query(
+    await db.query(
       `UPDATE contact_submissions
        SET status = 'responded', responded_at = NOW(), responded_by = $1, updated_at = NOW()
        WHERE id = $2`,
@@ -395,7 +387,7 @@ router.post("/:id/responses", auth, async (req, res) => {
 
     res.status(201).json({
       message: "Response added successfully",
-      response: result.rows[0]
+      response: result[0]
     });
 
   } catch (error) {
@@ -404,8 +396,6 @@ router.post("/:id/responses", auth, async (req, res) => {
       error: "Internal server error",
       message: "Failed to add response"
     });
-  } finally {
-    client.release();
   }
 });
 
