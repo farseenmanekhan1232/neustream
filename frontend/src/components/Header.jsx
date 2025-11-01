@@ -23,12 +23,12 @@ function Header() {
             <Link to="/" className={`text-sm font-medium transition-colors`}>
               Home
             </Link>
-            <a
-              href="#features"
-              className="text-sm font-medium  transition-colors hover:text-foreground"
+            <Link
+              to="/features"
+              className={`text-sm font-medium  transition-colors hover:text-foreground ${isActivePath('/features') ? 'text-foreground' : ''}`}
             >
               Features
-            </a>
+            </Link>
             <Link
               to="/blog"
               className={`text-sm font-medium  transition-colors hover:text-foreground ${isActivePath('/blog') ? 'text-foreground' : ''}`}
@@ -112,13 +112,13 @@ function Header() {
             >
               Home
             </Link>
-            <a
-              href="#features"
+            <Link
+              to="/features"
               className="px-4 py-3 text-sm font-medium hover:text-primary rounded-lg hover:bg-white/10 transition-colors min-h-[44px] flex items-center"
               onClick={() => setIsMenuOpen(false)}
             >
               Features
-            </a>
+            </Link>
             <Link
               to="/privacy"
               className="px-4 py-3 text-sm font-medium hover:text-primary rounded-lg hover:bg-white/10 transition-colors min-h-[44px] flex items-center"

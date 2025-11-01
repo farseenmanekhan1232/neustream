@@ -24,6 +24,7 @@ import PublicChatPage from "./components/PublicChatPage";
 import SetupGuide from "./pages/SetupGuide";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Features from "./pages/Features";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 import { ThemeProvider } from "./components/theme-provider";
@@ -69,6 +70,7 @@ function AppContent() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/help" element={<SetupGuide />} />
+      <Route path="/features" element={<Features />} />
 
       {/* Blog routes */}
       <Route path="/blog" element={<Blog />} />
