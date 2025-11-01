@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Monitor, Zap, Shield, MessageCircle, Users, Globe, Cpu, BarChart3, Settings } from "lucide-react";
+import { ArrowRight, Check, Monitor, Zap, Shield, MessageCircle, Users, Globe, Cpu, BarChart3, Settings, Star, TrendingUp, Target, Clock, Heart } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -19,102 +19,133 @@ function Features() {
     direction: "ltr",
   };
 
-  const features = [
+  // Layer 1: Benefit-Focused Showcase
+  const benefitFeatures = [
     {
-      icon: Globe,
-      title: "Multi-Platform Streaming",
-      description: "Stream to multiple platforms simultaneously with a single broadcast",
-      details: [
-        "Connect to YouTube, Twitch, Facebook, TikTok, and more",
-        "No additional bandwidth requirements for multi-streaming",
-        "Platform-specific optimizations for each destination",
-        "Easy platform switching without restarting streams"
+      icon: TrendingUp,
+      title: "Grow Your Audience Faster",
+      description: "Reach viewers across all major platforms simultaneously without extra effort",
+      benefits: [
+        "Expand your reach 3x faster by streaming everywhere at once",
+        "Build communities on multiple platforms simultaneously",
+        "No technical expertise required - just stream once, reach everywhere"
       ],
       simulator: "streamConfig"
     },
     {
-      icon: Cpu,
-      title: "Cloud-Powered Performance",
-      description: "Offload video encoding to our cloud infrastructure for optimal performance",
-      details: [
-        "Zero impact on your local machine's performance",
-        "No CPU spikes or dropped frames during streaming",
-        "Automatic scaling for high-demand streams",
-        "Consistent quality regardless of local hardware"
+      icon: Zap,
+      title: "Perfect Streams, Zero Performance Impact",
+      description: "Keep your gaming performance intact while streaming in crystal-clear quality",
+      benefits: [
+        "No FPS drops or lag during intense gaming sessions",
+        "Cloud encoding means your PC stays fast and responsive",
+        "Professional stream quality without expensive hardware upgrades"
       ],
       simulator: null
     },
     {
-      icon: MessageCircle,
-      title: "Unified Live Chat",
-      description: "Consolidate chat from all platforms into one easy-to-manage interface",
-      details: [
-        "Real-time chat aggregation from all connected platforms",
-        "Platform identification for each message",
-        "Moderation tools across all platforms",
-        "Customizable chat display for OBS integration"
+      icon: Heart,
+      title: "Engage with All Your Viewers in One Place",
+      description: "Never miss a comment or question across multiple chat platforms",
+      benefits: [
+        "Respond to YouTube, Twitch, and Facebook chats simultaneously",
+        "Build stronger connections with your entire audience",
+        "Moderate all platforms from one simple interface"
       ],
       simulator: "liveChat"
     },
     {
-      icon: Shield,
-      title: "Enterprise-Grade Security",
-      description: "Protect your stream and credentials with advanced security measures",
-      details: [
-        "End-to-end encrypted stream connections",
-        "Secure credential storage with industry standards",
-        "Two-factor authentication support",
-        "Regular security audits and updates"
+      icon: Clock,
+      title: "Save Hours of Setup Time",
+      description: "Go live in minutes instead of hours with our streamlined workflow",
+      benefits: [
+        "One-click platform connections that save you setup time",
+        "No complex OBS scene configurations for multi-streaming",
+        "Focus on creating content, not managing technical details"
       ],
       simulator: null
+    }
+  ];
+
+  // Layer 2: Deep Dive Reference
+  const technicalFeatures = [
+    {
+      icon: Globe,
+      title: "Multi-Platform Streaming",
+      description: "Advanced platform management and optimization",
+      details: [
+        "Support for YouTube, Twitch, Facebook, TikTok, LinkedIn, and custom RTMP",
+        "Platform-specific bitrate and resolution optimization",
+        "Individual platform controls and status monitoring",
+        "Automatic reconnection and failover handling"
+      ]
     },
     {
-      icon: Zap,
-      title: "Reliable Infrastructure",
-      description: "99.9% uptime guarantee with distributed cloud infrastructure",
+      icon: Cpu,
+      title: "Cloud Infrastructure",
+      description: "Enterprise-grade streaming infrastructure",
       details: [
-        "Automatic failover between multiple servers",
-        "Global CDN for optimal stream delivery",
-        "Real-time monitoring and alerting",
-        "24/7 technical support"
-      ],
-      simulator: null
+        "Distributed encoding across multiple cloud regions",
+        "Real-time monitoring and automatic scaling",
+        "99.9% uptime SLA with automatic failover",
+        "Global CDN for optimal viewer experience"
+      ]
+    },
+    {
+      icon: Shield,
+      title: "Security & Privacy",
+      description: "Enterprise-grade security for your content and data",
+      details: [
+        "End-to-end encrypted stream transmission",
+        "Secure credential storage with AES-256 encryption",
+        "Two-factor authentication and session management",
+        "GDPR and CCPA compliant data handling"
+      ]
     },
     {
       icon: BarChart3,
-      title: "Advanced Analytics",
-      description: "Comprehensive insights into your stream performance and audience engagement",
+      title: "Analytics & Insights",
+      description: "Comprehensive performance and audience analytics",
       details: [
-        "Real-time viewer count and engagement metrics",
-        "Platform-specific performance analytics",
-        "Historical data and trend analysis",
-        "Exportable reports for content planning"
-      ],
-      simulator: null
+        "Real-time viewer metrics across all platforms",
+        "Engagement analysis and audience demographics",
+        "Stream quality and performance monitoring",
+        "Exportable reports and API access"
+      ]
+    }
+  ];
+
+  // Layer 3: Comparison & Differentiation
+  const comparisonPoints = [
+    {
+      feature: "Multi-Platform Streaming",
+      neuStream: "Unlimited platforms, no extra cost",
+      competitors: "Limited platforms, extra fees"
     },
     {
-      icon: Settings,
-      title: "Advanced Configuration",
-      description: "Fine-tune every aspect of your streaming setup with professional controls",
-      details: [
-        "Custom bitrate and resolution settings",
-        "Platform-specific encoding presets",
-        "Stream delay and synchronization controls",
-        "Custom RTMP endpoints and advanced routing"
-      ],
-      simulator: "streamConfig"
+      feature: "Performance Impact",
+      neuStream: "Zero local performance impact",
+      competitors: "High CPU usage, FPS drops"
     },
     {
-      icon: Users,
-      title: "Team Collaboration",
-      description: "Work with co-hosts, moderators, and production teams seamlessly",
-      details: [
-        "Multi-user stream management",
-        "Role-based access controls",
-        "Shared stream configurations",
-        "Collaborative chat moderation"
-      ],
-      simulator: null
+      feature: "Setup Time",
+      neuStream: "Minutes to go live",
+      competitors: "Complex, hours of configuration"
+    },
+    {
+      feature: "Chat Management",
+      neuStream: "Unified chat from all platforms",
+      competitors: "Separate windows, missed messages"
+    },
+    {
+      feature: "Reliability",
+      neuStream: "99.9% uptime guarantee",
+      competitors: "Frequent outages and downtime"
+    },
+    {
+      feature: "Pricing",
+      neuStream: "Transparent, no hidden fees",
+      competitors: "Complex pricing with add-ons"
     }
   ];
 
@@ -198,11 +229,21 @@ function Features() {
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Layer 1: Benefit-Focused Showcase */}
       <section className="section-padding">
         <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Focus on Creating, We Handle the Rest
+            </h2>
+            <p className="text-lg opacity-80">
+              NeuStream transforms complex multi-platform streaming into a seamless experience
+              that lets you focus on what matters most - your content and your audience.
+            </p>
+          </div>
+
           <div className="grid gap-12 lg:gap-16">
-            {features.map((feature, index) => (
+            {benefitFeatures.map((feature, index) => (
               <div
                 key={feature.title}
                 className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${
@@ -225,10 +266,10 @@ function Features() {
                   </p>
 
                   <ul className="space-y-3">
-                    {feature.details.map((detail, detailIndex) => (
-                      <li key={detailIndex} className="flex items-start gap-3">
+                    {feature.benefits.map((benefit, benefitIndex) => (
+                      <li key={benefitIndex} className="flex items-start gap-3">
                         <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-base">{detail}</span>
+                        <span className="text-base">{benefit}</span>
                       </li>
                     ))}
                   </ul>
@@ -251,21 +292,84 @@ function Features() {
 
                 {/* Simulator */}
                 <div className={`${index % 2 === 1 ? "lg:col-start-1" : ""}`}>
-                  {feature.simulator ? (
-                    renderSimulator(feature.simulator)
-                  ) : (
-                    <div className="bg-white/5 rounded-2xl p-8 h-full flex items-center justify-center">
-                      <div className="text-center space-y-4">
-                        <feature.icon className="h-12 w-12 text-primary mx-auto" />
-                        <p className="text-lg opacity-70">
-                          Experience this feature in action
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  {feature.simulator && renderSimulator(feature.simulator)}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Layer 2: Deep Dive Reference */}
+      <section className="section-padding bg-white/5">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Technical Excellence Under the Hood
+            </h2>
+            <p className="text-lg opacity-80">
+              Built on enterprise-grade infrastructure with cutting-edge technology
+              to deliver the most reliable streaming experience available.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {technicalFeatures.map((feature) => (
+              <div key={feature.title} className="bg-white/5 rounded-2xl p-8 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white/10 rounded-xl">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-normal">{feature.title}</h3>
+                </div>
+                <p className="opacity-80">{feature.description}</p>
+                <ul className="space-y-2">
+                  {feature.details.map((detail, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Layer 3: Comparison & Differentiation */}
+      <section className="section-padding">
+        <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Why Creators Choose NeuStream
+            </h2>
+            <p className="text-lg opacity-80">
+              See how we stack up against traditional multi-streaming solutions
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/5 rounded-2xl overflow-hidden">
+              <div className="grid grid-cols-3 gap-4 p-6 border-b border-white/10">
+                <div className="font-medium">Feature</div>
+                <div className="font-medium text-primary">NeuStream</div>
+                <div className="font-medium opacity-70">Other Solutions</div>
+              </div>
+
+              {comparisonPoints.map((point, index) => (
+                <div
+                  key={point.feature}
+                  className={`grid grid-cols-3 gap-4 p-6 ${
+                    index % 2 === 0 ? "bg-white/5" : ""
+                  }`}
+                >
+                  <div className="font-medium">{point.feature}</div>
+                  <div className="text-primary">{point.neuStream}</div>
+                  <div className="opacity-70">{point.competitors}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -309,7 +413,7 @@ function Features() {
 
               <div className="bg-black/20 rounded-lg p-4">
                 <code className="text-sm font-mono text-primary">
-                  rtmp://your-server.neustream.app/live/your-stream-key
+                  rtmp://stream.neustream.app
                 </code>
               </div>
             </div>
