@@ -395,3 +395,129 @@ p {
         letter-spacing: var(--tracking-normal);
     }
 }
+
+/* Blog Content Typography Styles */
+.blog-content {
+    @apply text-foreground leading-relaxed;
+}
+
+.blog-content h2 {
+    @apply text-3xl font-bold text-foreground mt-8 mb-4 scroll-mt-20 first:mt-0;
+    @apply tracking-tight;
+}
+
+.blog-content h3 {
+    @apply text-2xl font-semibold text-foreground mt-6 mb-3 scroll-mt-20 first:mt-0;
+    @apply tracking-tight;
+}
+
+.blog-content h4 {
+    @apply text-xl font-semibold text-foreground mt-4 mb-2 scroll-mt-20 first:mt-0;
+    @apply tracking-tight;
+}
+
+.blog-content p {
+    @apply text-base leading-relaxed mb-4 text-foreground/90;
+    @apply font-normal;
+}
+
+.blog-content p:last-child {
+    @apply mb-0;
+}
+
+.blog-content ul {
+    @apply list-disc list-inside space-y-2 mb-6 pl-6 text-foreground/80;
+}
+
+.blog-content ol {
+    @apply list-decimal list-inside space-y-2 mb-6 pl-6 text-foreground/80;
+}
+
+.blog-content li {
+    @apply leading-relaxed;
+}
+
+.blog-content a {
+    @apply text-primary hover:text-primary/80 underline underline-offset-2 transition-colors;
+    @apply font-medium;
+}
+
+.blog-content strong {
+    @apply font-semibold text-foreground;
+}
+
+.blog-content em {
+    @apply italic text-foreground;
+}
+
+.blog-content code {
+    @apply bg-muted text-foreground px-2 py-1 rounded-md text-sm font-mono;
+}
+
+.blog-content blockquote {
+    @apply border-l-4 border-primary pl-4 py-2 my-6 italic text-muted-foreground bg-muted/30 rounded-r-md;
+}
+
+.blog-content blockquote p {
+    @apply mb-0 text-muted-foreground;
+}
+
+.blog-content hr {
+    @apply border-border my-8;
+}
+
+.blog-content table {
+    @apply w-full border-collapse border-spacing-0 text-sm mb-6;
+}
+
+.blog-content thead {
+    @apply bg-muted/50;
+}
+
+.blog-content th {
+    @apply border-b border-border px-4 py-3 text-left font-semibold text-foreground;
+}
+
+.blog-content td {
+    @apply border-b border-border px-4 py-3 text-foreground;
+}
+
+.blog-content img {
+    @apply rounded-lg shadow-lg my-6;
+}
+
+.blog-content figure {
+    @apply my-6;
+}
+
+.blog-content figcaption {
+    @apply text-center text-sm text-muted-foreground mt-2;
+}
+
+/* Blog post specific improvements */
+.blog-content .list-disc li::marker {
+    @apply text-primary;
+}
+
+.blog-content .list-decimal li::marker {
+    @apply text-primary;
+}
+
+/* Improve table of contents styling */
+.blog-toc button {
+    @apply text-left text-sm text-muted-foreground hover:text-primary transition-colors font-normal py-1;
+    @apply border-none bg-transparent;
+}
+
+.blog-toc button:hover {
+    @apply text-primary;
+}
+
+/* Blog post meta info improvements */
+.blog-meta {
+    @apply flex items-center gap-2 text-sm text-muted-foreground;
+}
+
+.blog-meta-icon {
+    @apply w-4 h-4;
+}

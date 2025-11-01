@@ -266,12 +266,12 @@ export default function BlogPost() {
                   </div>
                 )}
 
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-foreground">
                   {post.title}
                 </h1>
 
                 {post.excerpt && (
-                  <p className="text-xl text-muted-foreground leading-relaxed">
+                  <p className="text-xl text-muted-foreground leading-relaxed font-normal">
                     {post.excerpt}
                   </p>
                 )}
@@ -288,19 +288,19 @@ export default function BlogPost() {
                     />
                   )}
                   <div>
-                    <div className="font-medium">
+                    <div className="font-semibold text-base">
                       {post.author?.name || 'Neustream Team'}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span className="flex items-center space-x-1">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-4 h-4" />
                         <span>
                           {blogService.formatDate(post.publishedAt)}
                         </span>
                       </span>
                       {post.readTimeMinutes && (
                         <span className="flex items-center space-x-1">
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-4 h-4" />
                           <span>
                             {blogService.formatReadingTime(post.readTimeMinutes)}
                           </span>
@@ -308,7 +308,7 @@ export default function BlogPost() {
                       )}
                       {post.viewCount > 0 && (
                         <span className="flex items-center space-x-1">
-                          <Eye className="w-3 h-3" />
+                          <Eye className="w-4 h-4" />
                           <span>{post.viewCount.toLocaleString()} views</span>
                         </span>
                       )}
@@ -381,14 +381,14 @@ export default function BlogPost() {
                 {/* Article Content */}
                 <div className="lg:col-span-3">
                   <div
-                    className="prose prose-lg max-w-none prose-headings:scroll-mt-24"
+                    className="blog-content max-w-none"
                     dangerouslySetInnerHTML={{ __html: post.contentHtml }}
                   />
 
                   {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
                     <div className="mt-8 pt-8 border-t">
-                      <h3 className="font-semibold mb-4">Tags</h3>
+                      <h3 className="font-semibold text-lg mb-4">Tags</h3>
                       <div className="flex flex-wrap gap-2">
                         {post.tags.map((tag) => (
                           <Link key={tag.id} to={`/blog/tag/${tag.slug}`}>
@@ -407,7 +407,7 @@ export default function BlogPost() {
             {/* Related Posts */}
             {relatedData?.posts && relatedData.posts.length > 0 && (
               <div className="mt-16 pt-16 border-t">
-                <h2 className="text-2xl font-bold mb-8">Related Posts</h2>
+                <h2 className="text-3xl font-bold mb-8 text-foreground">Related Posts</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {relatedData.posts.map((relatedPost) => (
                     <BlogCard
