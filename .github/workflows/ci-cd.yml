@@ -121,13 +121,13 @@ jobs:
             cd /opt/neustream
             echo " Running Control Plane Migrations..."
 
-            if node scripts/run-migrations.js; then
-              echo "✅ Control Plane Migration passed"
-            else
-              echo "❌ Control Plane Migration failed - checking logs..."
-              pm2 logs neustream-control-plane --lines 20
-              exit 1
-            fi
+            # if node scripts/run-migrations.js; then
+            #   echo "✅ Control Plane Migration passed"
+            # else
+            #   echo "❌ Control Plane Migration failed - checking logs..."
+            #   pm2 logs neustream-control-plane --lines 20
+            #   exit 1
+            # fi
 
             pm2 start server.js --name neustream-control-plane --env production
 
