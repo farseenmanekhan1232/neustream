@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check, Monitor, Zap, Shield, MessageCircle, Users, Globe, Cpu, BarChart3, Settings } from "lucide-react";
+import { ArrowRight, Monitor, MessageCircle, Zap, Shield, Settings, Users, Globe } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
+import MetricsDisplay from "../components/MetricsDisplay";
 import LiveChatSimulator from "../components/LiveChatSimulator";
 import StreamConfigSimulator from "../components/StreamConfigSimulator";
-import { TextHighlighter } from "../components/fancy/text/TextHighlighter";
 
 function Features() {
   // TextHighlighter configuration
@@ -21,132 +22,109 @@ function Features() {
 
   const features = [
     {
-      icon: Monitor,
-      title: "Multi-Source Streaming",
-      description: "Manage multiple stream sources under one account - gaming, podcast, events, all in one place",
-      details: [
-        "Create separate stream sources for different content types",
-        "Each source gets its own stream key and destinations",
-        "Switch between active sources in real-time",
-        "Perfect for creators with multiple streaming setups"
-      ],
-      simulator: "streamConfig"
-    },
-    {
       icon: Globe,
-      title: "Multi-Platform Broadcasting",
-      description: "Stream to YouTube, Twitch, Facebook, and custom RTMP destinations simultaneously",
+      title: "Multi-Platform Streaming",
+      description: "Stream to YouTube, Twitch, Facebook, TikTok, and LinkedIn simultaneously from a single source.",
       details: [
-        "Broadcast to multiple platforms with one stream",
-        "Platform-specific RTMP URLs and stream keys",
-        "Easy destination management per stream source",
-        "Custom RTMP endpoints for specialized workflows"
+        "Broadcast to unlimited platforms with one stream",
+        "Customize destinations per stream session",
+        "Platform-specific optimization settings",
+        "Real-time connection status monitoring"
       ],
-      simulator: "streamConfig"
+      simulator: <StreamConfigSimulator />
     },
     {
       icon: MessageCircle,
-      title: "Unified Live Chat",
-      description: "Aggregate chat from Twitch, YouTube, and Instagram into one interface",
+      title: "Unified Chat Management",
+      description: "Aggregate and manage chat from all streaming platforms in one intuitive interface.",
       details: [
-        "OAuth-based platform authentication for secure connections",
-        "Real-time chat aggregation across all connected platforms",
-        "Platform identification for each message",
-        "Public chat pages for OBS integration"
+        "Real-time chat aggregation from all connected platforms",
+        "Platform-specific message filtering and moderation",
+        "Customizable chat display and layout options",
+        "Viewer engagement analytics and insights"
       ],
-      simulator: "liveChat"
+      simulator: <LiveChatSimulator />
     },
     {
       icon: Zap,
-      title: "Real-time Stream Preview",
-      description: "Monitor your live streams with high-quality video preview and multi-source switching",
+      title: "Performance Optimization",
+      description: "Eliminate hardware bottlenecks with cloud-based encoding and intelligent resource management.",
       details: [
-        "Live video preview for each active stream source",
-        "Switch between multiple active sources seamlessly",
-        "Real-time stream status and health monitoring",
-        "Integrated chat display alongside video preview"
+        "Cloud-based video encoding reduces local CPU usage",
+        "Intelligent bitrate optimization for each platform",
+        "Automatic quality adjustment based on network conditions",
+        "Zero dropped frames with optimized streaming pipeline"
+      ],
+      simulator: <MetricsDisplay />
+    },
+    {
+      icon: Shield,
+      title: "Enterprise Security",
+      description: "Protect your streams and credentials with military-grade encryption and security protocols.",
+      details: [
+        "End-to-end encrypted stream transmission",
+        "Secure credential storage with zero-knowledge architecture",
+        "Two-factor authentication for account protection",
+        "Regular security audits and compliance certifications"
       ],
       simulator: null
     },
     {
-      icon: Settings,
-      title: "Advanced Stream Management",
-      description: "Fine-tune your streaming setup with professional-grade controls",
+      icon: Monitor,
+      title: "Universal Compatibility",
+      description: "Works seamlessly with all major streaming software and hardware configurations.",
       details: [
-        "Per-source stream key management and regeneration",
-        "Destination configuration with platform-specific settings",
-        "Stream source naming and organization",
-        "Real-time stream status and connection monitoring"
-      ],
-      simulator: "streamConfig"
-    },
-    {
-      icon: Shield,
-      title: "Secure Infrastructure",
-      description: "Enterprise-grade security with MediaMTX media server and encrypted connections",
-      details: [
-        "RTMP ingest with MediaMTX media server",
-        "Secure credential storage and management",
-        "OAuth 2.0 authentication for platform connections",
-        "JWT-based session management"
+        "Native support for OBS Studio, Streamlabs, XSplit",
+        "RTMP-compatible with any streaming software",
+        "Mobile streaming support for on-the-go creators",
+        "Hardware encoder integration (NVENC, QuickSync)"
       ],
       simulator: null
     },
     {
       icon: Users,
-      title: "Production-Ready Workflow",
-      description: "Professional streaming workflow designed for content creators and production teams",
+      title: "Advanced Analytics",
+      description: "Gain deep insights into your stream performance and audience engagement across all platforms.",
       details: [
-        "Multi-source architecture for complex streaming setups",
-        "Real-time monitoring and preview capabilities",
-        "Chat aggregation for audience engagement",
-        "Scalable infrastructure for growing audiences"
+        "Cross-platform viewer analytics and demographics",
+        "Real-time performance metrics and health monitoring",
+        "Engagement tracking and chat sentiment analysis",
+        "Customizable reports and export capabilities"
       ],
       simulator: null
     }
   ];
 
-  const renderSimulator = (type) => {
-    switch (type) {
-      case "streamConfig":
-        return <StreamConfigSimulator />;
-      case "liveChat":
-        return <LiveChatSimulator />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-teal-gradient text-white">
       <Helmet>
-        <title>Features - NeuStream | Professional Multistreaming Platform</title>
+        <title>Features - NeuStream | Advanced Multistreaming Platform</title>
         <meta
           name="description"
-          content="Explore NeuStream's comprehensive features: multi-platform streaming, cloud-powered performance, unified chat, and enterprise-grade security."
+          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta
           name="keywords"
-          content="multistream features, streaming platform, live streaming, youtube, twitch, facebook, chat aggregation, cloud encoding"
+          content="multistream features, live streaming platform, chat aggregation, performance optimization, streaming security, analytics"
         />
         <meta
           property="og:title"
-          content="Features - NeuStream | Professional Multistreaming Platform"
+          content="Features - NeuStream | Advanced Multistreaming Platform"
         />
         <meta
           property="og:description"
-          content="Explore NeuStream's comprehensive features for professional streaming."
+          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Features - NeuStream | Professional Multistreaming Platform"
+          content="Features - NeuStream | Advanced Multistreaming Platform"
         />
         <meta
           name="twitter:description"
-          content="Explore NeuStream's comprehensive features for professional streaming."
+          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app/features" />
@@ -157,15 +135,24 @@ function Features() {
       <section className="section-padding">
         <div className="container-custom">
           <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8 md:space-y-10">
+            <div className="inline-flex items-center">
+              <img
+                src="/logo.png"
+                alt="Neustream Logo"
+                className="h-20 w-20 -mb-8 animate-oscillate"
+              />
+            </div>
+
             <div className="space-y-4 max-w-3xl">
               <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
-                Multi-Source Streaming
+                Every Feature You Need to
                 <TextHighlighter {...highlightConfig}>
-                  Without Compromise
+                  Stream Like a Pro
                 </TextHighlighter>
               </div>
-              <p className="text-lg sm:text-xl md:text-2xl opacity-80 max-w-2xl mx-auto">
-                Manage multiple stream sources, aggregate chat across platforms, and monitor everything in real-time
+              <p className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto">
+                Discover how NeuStream's comprehensive feature set helps you reach more viewers,
+                engage your audience, and grow your streaming presence across all platforms.
               </p>
             </div>
 
@@ -189,19 +176,19 @@ function Features() {
       {/* Features Grid */}
       <section className="section-padding">
         <div className="container-custom">
-          <div className="grid gap-12 lg:gap-16">
+          <div className="space-y-16">
             {features.map((feature, index) => (
               <div
                 key={feature.title}
                 className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center ${
-                  index % 2 === 1 ? "lg:grid-flow-dense" : ""
+                  index % 2 === 1 ? 'lg:grid-flow-row-dense' : ''
                 }`}
               >
                 {/* Content */}
-                <div className={`space-y-6 ${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                  <div className="flex items-center gap-4">
+                <div className={`space-y-6 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                  <div className="flex items-center space-x-4">
                     <div className="p-3 bg-white/10 rounded-xl">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                      <feature.icon className="h-6 w-6 text-white" />
                     </div>
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal">
                       {feature.title}
@@ -214,32 +201,37 @@ function Features() {
 
                   <ul className="space-y-3">
                     {feature.details.map((detail, detailIndex) => (
-                      <li key={detailIndex} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-base">{detail}</span>
+                      <li key={detailIndex} className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="opacity-80">{detail}</span>
                       </li>
                     ))}
                   </ul>
 
                   {index === 0 && (
                     <div className="pt-4">
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="bg-transparent border-white text-white hover:bg-white hover:text-black"
-                      >
+                      <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
                         <Link to="/auth">
-                          Try It Now
-                          <ArrowRight className="h-4 w-4 ml-2" />
+                          Try Multi-Streaming
+                          <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
                     </div>
                   )}
                 </div>
 
-                {/* Simulator */}
-                <div className={`${index % 2 === 1 ? "lg:col-start-1" : ""}`}>
-                  {feature.simulator && renderSimulator(feature.simulator)}
+                {/* Simulator/Visual */}
+                <div className={`${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                  {feature.simulator ? (
+                    feature.simulator
+                  ) : (
+                    <div className="bg-white/10 rounded-xl p-8 h-full flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <feature.icon className="h-12 w-12 text-white mx-auto opacity-60" />
+                        <p className="opacity-70">Interactive demo coming soon</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -250,56 +242,36 @@ function Features() {
       {/* Platform Integration Section */}
       <section className="section-padding bg-white/5">
         <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="space-y-6">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal">
-                Built for Professional Streaming Workflows
-              </h2>
-              <p className="text-lg opacity-80">
-                NeuStream's multi-source architecture and real-time monitoring make it perfect
-                for creators managing complex streaming setups across multiple platforms.
-              </p>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Seamless Platform Integration
+            </h2>
+            <p className="text-lg opacity-80">
+              NeuStream works with all major streaming platforms and software,
+              ensuring you can reach your audience wherever they are.
+            </p>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { name: "Multi-Source Support", icon: "🎮" },
-                  { name: "Real-time Preview", icon: "📺" },
-                  { name: "Chat Aggregation", icon: "💬" },
-                  { name: "RTMP Compatible", icon: "🔌" },
-                ].map((feature) => (
-                  <div key={feature.name} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                    <span className="text-xl">{feature.icon}</span>
-                    <span className="font-medium">{feature.name}</span>
-                  </div>
-                ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            {[
+              { name: "YouTube", color: "bg-red-500" },
+              { name: "Twitch", color: "bg-purple-500" },
+              { name: "Facebook", color: "bg-blue-500" },
+              { name: "TikTok", color: "bg-black" },
+              { name: "Instagram", color: "bg-pink-500" },
+              { name: "LinkedIn", color: "bg-blue-600" },
+              { name: "OBS Studio", color: "bg-orange-500" },
+              { name: "Streamlabs", color: "bg-green-500" },
+            ].map((platform) => (
+              <div key={platform.name} className="text-center space-y-3">
+                <div className={`${platform.color} rounded-xl p-4 aspect-square flex items-center justify-center`}>
+                  <span className="text-white font-medium text-sm">
+                    {platform.name}
+                  </span>
+                </div>
+                <p className="text-sm opacity-70">{platform.name}</p>
               </div>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="text-xl sm:text-2xl font-normal">
-                Supported Platforms & Software
-              </h3>
-              <p className="opacity-80">
-                Connect with any RTMP-compatible streaming software and broadcast
-                to major platforms with our integrated chat connectors.
-              </p>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { name: "YouTube", status: "✅ Streaming & Chat" },
-                  { name: "Twitch", status: "✅ Streaming & Chat" },
-                  { name: "Facebook", status: "✅ Streaming" },
-                  { name: "Instagram", status: "✅ Chat" },
-                  { name: "OBS Studio", status: "✅ Compatible" },
-                  { name: "Streamlabs", status: "✅ Compatible" },
-                ].map((platform) => (
-                  <div key={platform.name} className="flex items-center justify-between p-2 bg-white/5 rounded">
-                    <span className="text-sm font-medium">{platform.name}</span>
-                    <span className="text-xs opacity-70">{platform.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -309,11 +281,11 @@ function Features() {
         <div className="container-custom">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
-              Ready to Stream Like a Pro?
+              Ready to Experience Professional Streaming?
             </h2>
-            <p className="text-lg mb-8 opacity-80">
-              Experience the power of multi-source streaming with unified chat and real-time monitoring.
-              Perfect for creators who manage complex streaming workflows across multiple platforms.
+            <p className="text-lg opacity-80 mb-8">
+              Join thousands of creators who trust NeuStream to power their multi-platform
+              streaming strategy. Start reaching more viewers and growing your audience today.
             </p>
             <Button
               asChild

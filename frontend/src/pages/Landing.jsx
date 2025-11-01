@@ -469,6 +469,18 @@ function Landing() {
       {/* Features Section */}
       <section id="features" className="section-padding">
         <div className="container-custom">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl md:text-4xl font-normal mb-4">
+              Powerful Features for Professional Streaming
+            </h2>
+            <p className="text-lg opacity-80">
+              NeuStream provides everything you need to stream like a pro across all platforms.
+              <br />
+              <Link to="/features" className="underline hover:opacity-80 inline-flex items-center mt-2">
+                Explore all features <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </p>
+          </div>
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             <div className="space-y-8">
               <div className="space-y-4">
