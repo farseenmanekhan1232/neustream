@@ -81,32 +81,26 @@ class BlogService {
 
     const postsQuery = `
       SELECT DISTINCT
-        bp.*,
+        bp.id,
+        bp.title,
+        bp.slug,
+        bp.excerpt,
+        bp.featured_image,
+        bp.author_id,
+        bp.status,
+        bp.published_at,
+        bp.created_at,
+        bp.updated_at,
+        bp.meta_title,
+        bp.meta_description,
+        bp.meta_keywords,
+        bp.canonical_url,
+        bp.view_count,
+        bp.read_time_minutes,
+        bp.search_score,
         u.display_name as author_name,
         u.avatar_url as author_avatar,
-        u.email as author_email,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', bc.id,
-              'name', bc.name,
-              'slug', bc.slug,
-              'color', bc.color,
-              'icon', bc.icon
-            )
-          ) FILTER (WHERE bc.id IS NOT NULL),
-          '[]'::json
-        ) as categories,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', bt.id,
-              'name', bt.name,
-              'slug', bt.slug
-            )
-          ) FILTER (WHERE bt.id IS NOT NULL),
-          '[]'::json
-        ) as tags
+        u.email as author_email
       FROM blog_posts bp
       LEFT JOIN users u ON bp.author_id = u.id
       LEFT JOIN blog_post_categories bpc ON bp.id = bpc.post_id
@@ -114,7 +108,6 @@ class BlogService {
       LEFT JOIN blog_post_tags bpt ON bp.id = bpt.post_id
       LEFT JOIN blog_tags bt ON bpt.tag_id = bt.id
       WHERE ${whereClause}
-      GROUP BY bp.id, u.display_name, u.avatar_url, u.email
       ORDER BY bp.${sortBy} ${sortOrder}
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
@@ -122,6 +115,33 @@ class BlogService {
     queryParams.push(limit, offset);
 
     const posts = await this.db.query(postsQuery, queryParams);
+
+    // Fetch categories and tags for each post separately
+    const enrichedPosts = await Promise.all(
+      posts.map(async (post) => {
+        // Get categories for this post
+        const categories = await this.db.query(`
+          SELECT bc.id, bc.name, bc.slug, bc.color, bc.icon
+          FROM blog_categories bc
+          JOIN blog_post_categories bpc ON bc.id = bpc.category_id
+          WHERE bpc.post_id = $1 AND bc.is_active = true
+        `, [post.id]);
+
+        // Get tags for this post
+        const tags = await this.db.query(`
+          SELECT bt.id, bt.name, bt.slug
+          FROM blog_tags bt
+          JOIN blog_post_tags bpt ON bt.id = bpt.tag_id
+          WHERE bpt.post_id = $1
+        `, [post.id]);
+
+        return {
+          ...post,
+          categories: categories,
+          tags: tags
+        };
+      })
+    );
 
     // Get total count for pagination
     const countQuery = `
@@ -138,7 +158,7 @@ class BlogService {
     const totalPosts = parseInt(countResult[0].total);
 
     return {
-      posts: posts.map(this.transformPost),
+      posts: enrichedPosts.map(this.transformPost),
       pagination: {
         page,
         limit,
@@ -159,47 +179,45 @@ class BlogService {
         bp.*,
         u.display_name as author_name,
         u.avatar_url as author_avatar,
-        u.email as author_email,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', bc.id,
-              'name', bc.name,
-              'slug', bc.slug,
-              'color', bc.color,
-              'icon', bc.icon
-            )
-          ) FILTER (WHERE bc.id IS NOT NULL),
-          '[]'::json
-        ) as categories,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', bt.id,
-              'name', bt.name,
-              'slug', bt.slug
-            )
-          ) FILTER (WHERE bt.id IS NOT NULL),
-          '[]'::json
-        ) as tags
+        u.email as author_email
       FROM blog_posts bp
       LEFT JOIN users u ON bp.author_id = u.id
-      LEFT JOIN blog_post_categories bpc ON bp.id = bpc.post_id
-      LEFT JOIN blog_categories bc ON bpc.category_id = bc.id AND bc.is_active = true
-      LEFT JOIN blog_post_tags bpt ON bp.id = bpt.post_id
-      LEFT JOIN blog_tags bt ON bpt.tag_id = bt.id
       WHERE bp.slug = $1 AND bp.status = 'published'
-      GROUP BY bp.id, u.display_name, u.avatar_url, u.email
     `, [slug]);
 
     if (posts.length === 0) {
       return null;
     }
 
-    // Increment view count
-    await this.incrementViewCount(posts[0].id);
+    const post = posts[0];
+    const postId = post.id;
 
-    return this.transformPost(posts[0]);
+    // Get categories for this post
+    const categories = await this.db.query(`
+      SELECT bc.id, bc.name, bc.slug, bc.color, bc.icon
+      FROM blog_categories bc
+      JOIN blog_post_categories bpc ON bc.id = bpc.category_id
+      WHERE bpc.post_id = $1 AND bc.is_active = true
+    `, [postId]);
+
+    // Get tags for this post
+    const tags = await this.db.query(`
+      SELECT bt.id, bt.name, bt.slug
+      FROM blog_tags bt
+      JOIN blog_post_tags bpt ON bt.id = bpt.tag_id
+      WHERE bpt.post_id = $1
+    `, [postId]);
+
+    // Increment view count
+    await this.incrementViewCount(postId);
+
+    const enrichedPost = {
+      ...post,
+      categories: categories,
+      tags: tags
+    };
+
+    return this.transformPost(enrichedPost);
   }
 
   /**
@@ -460,7 +478,7 @@ class BlogService {
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt,
-      content: typeof post.content === 'string' ? JSON.parse(post.content) : post.content,
+      content: post.content ? (typeof post.content === 'string' ? JSON.parse(post.content) : post.content) : [],
       contentHtml: post.content_html,
       featuredImage: post.featured_image,
       author: {
