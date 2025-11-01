@@ -32,10 +32,12 @@ const handleUserIdParam = async (req, res, next) => {
       // UUID parameter
       query = 'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE uuid = $1';
       params = [userId];
+      req.isUuid = true;
     } else if (isValidInteger(userId)) {
       // Integer parameter (backward compatibility)
       query = 'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1';
       params = [parseInt(userId, 10)];
+      req.isUuid = false;
     } else {
       return res.status(400).json({ error: 'Invalid user ID format' });
     }
@@ -81,10 +83,12 @@ const handleGenericIdParam = (tableName, idField = 'id') => {
         // UUID parameter
         query = `SELECT * FROM ${tableName} WHERE uuid = $1`;
         params = [id];
+        req.isUuid = true;
       } else if (isValidInteger(id)) {
         // Integer parameter (backward compatibility)
         query = `SELECT * FROM ${tableName} WHERE ${idField} = $1`;
         params = [parseInt(id, 10)];
+        req.isUuid = false;
       } else {
         return res.status(400).json({ error: `Invalid ${tableName} ID format` });
       }

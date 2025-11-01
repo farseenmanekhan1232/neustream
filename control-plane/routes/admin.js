@@ -76,11 +76,11 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req, res) => {
         ) as is_active
       FROM stream_sources ss
       LEFT JOIN source_destinations sd ON ss.id = sd.source_id
-      WHERE ss.user_id = $1
+      WHERE ${req.isUuid ? 'ss.user_uuid = $1' : 'ss.user_id = $1'}
       GROUP BY ss.id
       ORDER BY ss.created_at DESC
     `,
-      [id]
+      [req.isUuid ? user.uuid : user.id]
     );
 
     // Get user's active streams
@@ -91,10 +91,10 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req, res) => {
         ss.name as source_name
       FROM active_streams as_
       LEFT JOIN stream_sources ss ON as_.source_id = ss.id
-      WHERE as_.user_id = $1 AND as_.ended_at IS NULL
+      WHERE ${req.isUuid ? 'as_.user_uuid = $1' : 'as_.user_id = $1'} AND as_.ended_at IS NULL
       ORDER BY as_.started_at DESC
     `,
-      [id]
+      [req.isUuid ? user.uuid : user.id]
     );
 
     // Get stream statistics
@@ -104,9 +104,9 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req, res) => {
         COUNT(*) as total_streams,
         AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
       FROM active_streams
-      WHERE user_id = $1 AND ended_at IS NOT NULL
+      WHERE ${req.isUuid ? 'user_uuid = $1' : 'user_id = $1'} AND ended_at IS NOT NULL
     `,
-      [id]
+      [req.isUuid ? user.uuid : user.id]
     );
 
     res.json({
