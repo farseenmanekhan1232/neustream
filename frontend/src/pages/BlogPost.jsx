@@ -403,6 +403,48 @@ export default function BlogPost() {
                     dangerouslySetInnerHTML={{ __html: post.contentHtml }}
                   />
 
+                  {/* Neustream CTA */}
+                  <div className="mt-12 pt-8 border-t">
+                    <div className="bg-teal-gradient rounded-2xl p-8 text-white text-center">
+                      <h2 className="text-3xl font-bold mb-4">
+                        Ready to Take Your Streaming to the Next Level?
+                      </h2>
+                      <p className="text-lg mb-8 text-white/90 max-w-2xl mx-auto">
+                        Join thousands of streamers who trust Neustream for
+                        professional-grade multistreaming, analytics, and
+                        audience growth tools.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Button
+                          size="lg"
+                          className="bg-white text-teal-600 hover:bg-white/90 font-semibold px-8"
+                          onClick={() =>
+                            window.open("https://neustream.app", "_blank")
+                          }
+                        >
+                          Start Streaming Free
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="border-white text-white hover:bg-white hover:text-teal-600 font-semibold px-8"
+                          onClick={() =>
+                            window.open(
+                              "https://neustream.app/#features",
+                              "_blank",
+                            )
+                          }
+                        >
+                          Explore Features
+                        </Button>
+                      </div>
+                      <p className="text-sm mt-6 text-white/80">
+                        No credit card required • Set up in 2 minutes • Cancel
+                        anytime
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
                     <div className="mt-8 pt-8 border-t">
