@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
   Clock,
@@ -10,20 +10,20 @@ import {
   Share2,
   Bookmark,
   Heart,
-} from 'lucide-react';
-import BlogCard from '../components/blog/BlogCard';
-import blogService from '../services/blogService';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
+} from "lucide-react";
+import BlogCard from "../components/blog/BlogCard";
+import blogService from "../services/blogService";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Separator } from "../components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import { Helmet } from 'react-helmet-async';
-import { Skeleton } from '../components/ui/skeleton';
+} from "../components/ui/dropdown-menu";
+import { Helmet } from "react-helmet-async";
+import { Skeleton } from "../components/ui/skeleton";
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -36,14 +36,14 @@ export default function BlogPost() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['blog-post', slug],
+    queryKey: ["blog-post", slug],
     queryFn: () => blogService.getPostBySlug(slug),
     enabled: !!slug,
   });
 
   // Fetch related posts
   const { data: relatedData } = useQuery({
-    queryKey: ['blog-related', slug],
+    queryKey: ["blog-related", slug],
     queryFn: () => blogService.getRelatedPosts(slug, 3),
     enabled: !!post,
   });
@@ -51,9 +51,9 @@ export default function BlogPost() {
   // Generate table of contents from content
   useEffect(() => {
     if (post?.contentHtml) {
-      const tempDiv = document.createElement('div');
+      const tempDiv = document.createElement("div");
       tempDiv.innerHTML = post.contentHtml;
-      const headings = tempDiv.querySelectorAll('h2, h3, h4');
+      const headings = tempDiv.querySelectorAll("h2, h3, h4");
 
       const toc = Array.from(headings).map((heading, index) => ({
         id: `heading-${index}`,
@@ -76,7 +76,7 @@ export default function BlogPost() {
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   };
@@ -84,7 +84,7 @@ export default function BlogPost() {
   // Handle share
   const handleShare = (platform) => {
     const url = window.location.href;
-    const title = post?.title || '';
+    const title = post?.title || "";
 
     const shareUrls = {
       twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
@@ -93,27 +93,27 @@ export default function BlogPost() {
       copy: url,
     };
 
-    if (platform === 'copy') {
+    if (platform === "copy") {
       navigator.clipboard.writeText(url);
       // You could add a toast notification here
     } else {
-      window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+      window.open(shareUrls[platform], "_blank", "width=600,height=400");
     }
   };
 
   // Get category color
   const getCategoryColor = (category) => {
     const colors = {
-      'streaming-guides': 'bg-red-500',
-      'platform-updates': 'bg-blue-500',
-      'equipment-reviews': 'bg-green-500',
-      'growth-tips': 'bg-yellow-500',
-      'technical-tutorials': 'bg-purple-500',
-      'industry-news': 'bg-cyan-500',
-      'success-stories': 'bg-pink-500',
-      'neustream-features': 'bg-indigo-500',
+      "streaming-guides": "bg-red-500",
+      "platform-updates": "bg-blue-500",
+      "equipment-reviews": "bg-green-500",
+      "growth-tips": "bg-yellow-500",
+      "technical-tutorials": "bg-purple-500",
+      "industry-news": "bg-cyan-500",
+      "success-stories": "bg-pink-500",
+      "neustream-features": "bg-indigo-500",
     };
-    return colors[category?.slug] || 'bg-gray-500';
+    return colors[category?.slug] || "bg-gray-500";
   };
 
   if (isLoading) {
@@ -161,9 +161,10 @@ export default function BlogPost() {
           <div className="max-w-4xl mx-auto text-center space-y-6">
             <h1 className="text-4xl font-bold">Blog Post Not Found</h1>
             <p className="text-muted-foreground">
-              The blog post you're looking for doesn't exist or has been removed.
+              The blog post you're looking for doesn't exist or has been
+              removed.
             </p>
-            <Button onClick={() => navigate('/blog')}>
+            <Button onClick={() => navigate("/blog")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Blog
             </Button>
@@ -183,9 +184,12 @@ export default function BlogPost() {
         />
         <meta
           name="keywords"
-          content={post.seo?.metaKeywords || 'streaming, neustream, blog'}
+          content={post.seo?.metaKeywords || "streaming, neustream, blog"}
         />
-        <link rel="canonical" href={`https://www.neustream.app/blog/${post.slug}`} />
+        <link
+          rel="canonical"
+          href={`https://www.neustream.app/blog/${post.slug}`}
+        />
 
         {/* Open Graph */}
         <meta property="og:title" content={post.title} />
@@ -194,7 +198,10 @@ export default function BlogPost() {
           content={post.seo?.metaDescription || post.excerpt}
         />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`https://www.neustream.app/blog/${post.slug}`} />
+        <meta
+          property="og:url"
+          content={`https://www.neustream.app/blog/${post.slug}`}
+        />
         {post.featuredImage && (
           <meta property="og:image" content={post.featuredImage} />
         )}
@@ -210,7 +217,11 @@ export default function BlogPost() {
           <meta property="article:author" content={post.author.name} />
         )}
         {post.categories?.map((category) => (
-          <meta key={category.id} property="article:tag" content={category.name} />
+          <meta
+            key={category.id}
+            property="article:tag"
+            content={category.name}
+          />
         ))}
 
         {/* Twitter Card */}
@@ -236,7 +247,7 @@ export default function BlogPost() {
           <div className="container mx-auto px-4 py-4">
             <Button
               variant="ghost"
-              onClick={() => navigate('/blog')}
+              onClick={() => navigate("/blog")}
               className="mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -254,7 +265,10 @@ export default function BlogPost() {
                 {post.categories && post.categories.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {post.categories.map((category) => (
-                      <Link key={category.id} to={`/blog/category/${category.slug}`}>
+                      <Link
+                        key={category.id}
+                        to={`/blog/category/${category.slug}`}
+                      >
                         <Badge
                           variant="secondary"
                           className={`${getCategoryColor(category)} text-white hover:opacity-80 transition-opacity`}
@@ -266,7 +280,7 @@ export default function BlogPost() {
                   </div>
                 )}
 
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight text-foreground">
+                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight text-foreground">
                   {post.title}
                 </h1>
 
@@ -289,20 +303,20 @@ export default function BlogPost() {
                   )}
                   <div>
                     <div className="font-semibold text-base">
-                      {post.author?.name || 'Neustream Team'}
+                      {post.author?.name || "Neustream Team"}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>
-                          {blogService.formatDate(post.publishedAt)}
-                        </span>
+                        <span>{blogService.formatDate(post.publishedAt)}</span>
                       </span>
                       {post.readTimeMinutes && (
                         <span className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
                           <span>
-                            {blogService.formatReadingTime(post.readTimeMinutes)}
+                            {blogService.formatReadingTime(
+                              post.readTimeMinutes,
+                            )}
                           </span>
                         </span>
                       )}
@@ -325,16 +339,16 @@ export default function BlogPost() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleShare('twitter')}>
+                    <DropdownMenuItem onClick={() => handleShare("twitter")}>
                       Share on Twitter
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('facebook')}>
+                    <DropdownMenuItem onClick={() => handleShare("facebook")}>
                       Share on Facebook
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('linkedin')}>
+                    <DropdownMenuItem onClick={() => handleShare("linkedin")}>
                       Share on LinkedIn
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('copy')}>
+                    <DropdownMenuItem onClick={() => handleShare("copy")}>
                       Copy Link
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -367,7 +381,11 @@ export default function BlogPost() {
                             key={index}
                             onClick={() => scrollToHeading(item.id)}
                             className={`block text-left text-sm hover:text-primary transition-colors ${
-                              item.level === 3 ? 'pl-4' : item.level === 4 ? 'pl-8' : ''
+                              item.level === 3
+                                ? "pl-4"
+                                : item.level === 4
+                                  ? "pl-8"
+                                  : ""
                             }`}
                           >
                             {item.text}
@@ -407,7 +425,9 @@ export default function BlogPost() {
             {/* Related Posts */}
             {relatedData?.posts && relatedData.posts.length > 0 && (
               <div className="mt-16 pt-16 border-t">
-                <h2 className="text-3xl font-bold mb-8 text-foreground">Related Posts</h2>
+                <h2 className="text-3xl font-bold mb-8 text-foreground">
+                  Related Posts
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {relatedData.posts.map((relatedPost) => (
                     <BlogCard
