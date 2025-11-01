@@ -180,7 +180,7 @@ export default function Contact() {
                   <Mail className="h-5 w-5 mt-0.5 text-muted-foreground" />
                   <div>
                     <h4 className="font-medium">Email</h4>
-                    <p className="text-sm text-muted-foreground">support@neustream.app</p>
+                    <p className="text-sm text-muted-foreground">farseen@neustream.app</p>
                     <p className="text-sm text-muted-foreground">For general support and inquiries</p>
                   </div>
                 </div>

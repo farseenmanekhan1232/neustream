@@ -214,7 +214,7 @@ export default function PrivacyPolicy() {
                   data practices, please contact us:
                 </p>
                 <ul className="list-none space-y-2">
-                  <li>Email: privacy@neustream.app</li>
+                  <li>Email: farseen@neustream.app</li>
                   <li>Website: https://neustream.app</li>
                 </ul>
               </div>

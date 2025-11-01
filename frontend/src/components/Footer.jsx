@@ -8,7 +8,7 @@ function Footer() {
       <div className="container-custom">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
           <div>
-            <h3 className="text-lg font-normal mb-4">NeuStream</h3>
+            <h3 className="text-lg font-normal mb-4">Techmorph Technology</h3>
             <p className="">
               Revolutionizing multi-platform streaming with advanced
               computational offloading technology. Empowering content creators
@@ -101,7 +101,7 @@ function Footer() {
 
         <div className=" pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm  mb-4 md:mb-0">
-            © {currentYear} NeuStream Technologies, Inc. All rights reserved.
+            © {currentYear} Techmorph Technology. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <a

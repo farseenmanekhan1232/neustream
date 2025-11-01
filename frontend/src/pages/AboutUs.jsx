@@ -30,7 +30,7 @@ export default function AboutUs() {
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="prose prose-gray dark:prose-invert max-w-none">
           <h1 className="text-4xl font-normal text-center mb-8">
-            About Neustream
+            About Techmorph Technology
           </h1>
 
           <div className="space-y-8">
@@ -38,7 +38,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
               <div className="text-muted-foreground">
                 <p className="mb-4">
-                  Neustream is on a mission to revolutionize multistreaming by
+                  Techmorph Technology is on a mission to revolutionize multistreaming by
                   providing content creators with a powerful, intuitive platform
                   to broadcast their content across multiple streaming platforms
                   simultaneously. We believe that great content deserves maximum
@@ -47,7 +47,7 @@ export default function AboutUs() {
                 </p>
                 <p>
                   Founded by streaming enthusiasts and technology experts,
-                  Neustream combines cutting-edge technology with a deep
+                  Techmorph Technology combines cutting-edge technology with a deep
                   understanding of what content creators need to succeed in
                   today's digital landscape.
                 </p>
@@ -58,7 +58,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
               <div className="text-muted-foreground">
                 <p className="mb-4">
-                  Neustream was born from a simple observation: content creators
+                  Techmorph Technology's Neustream service was born from a simple observation: content creators
                   were struggling with the technical complexity of reaching
                   audiences across multiple platforms. Juggling different
                   streaming software, managing multiple accounts, and
@@ -72,7 +72,7 @@ export default function AboutUs() {
                   they do best – creating engaging content.
                 </p>
                 <p>
-                  Today, Neustream serves thousands of content creators
+                  Today, Techmorph Technology's Neustream service serves thousands of content creators
                   worldwide, helping them reach millions of viewers across
                   YouTube, Twitch, Facebook, LinkedIn, and other major streaming
                   platforms.
@@ -84,7 +84,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-semibold mb-4">Our Technology</h2>
               <div className="text-muted-foreground">
                 <p className="mb-4">
-                  At the core of Neustream is our advanced computational
+                  At the core of Techmorph Technology's Neustream service is our advanced computational
                   offloading technology, which ensures smooth, high-quality
                   streaming across all platforms without putting additional
                   strain on the creator's hardware.
@@ -152,7 +152,7 @@ export default function AboutUs() {
               <h2 className="text-2xl font-semibold mb-4">Our Team</h2>
               <div className="text-muted-foreground">
                 <p className="mb-4">
-                  The Neustream team consists of passionate streaming
+                  The Techmorph Technology team consists of passionate streaming
                   enthusiasts, experienced software engineers, and dedicated
                   support professionals who share a common goal: empowering
                   content creators to achieve their full potential.
