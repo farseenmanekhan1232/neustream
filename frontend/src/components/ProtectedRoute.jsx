@@ -59,9 +59,23 @@ function ProtectedRoute({ children, requireAuth = true }) {
   }
 
   // If authentication is required but user is not logged in
-  if (requireAuth && !user) {
+  // Only redirect if we're sure auth initialization is complete and user is not authenticated
+  if (requireAuth && !user && !loading) {
     console.log("User not authenticated, redirecting to auth...");
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // If auth is still loading and authentication is required, show loading
+  if (requireAuth && loading) {
+    console.log("Auth still loading, showing loading screen...");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
   }
 
   // If user is authenticated and visiting auth page (without OAuth callback), redirect to dashboard

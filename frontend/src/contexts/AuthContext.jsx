@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }) => {
         // It might be recovered during OAuth callback processing
         localStorage.removeItem("neustream_token");
       } finally {
+        // Ensure loading is only set to false after all auth checks are complete
         setLoading(false);
       }
     };
@@ -134,6 +135,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Only run this effect after the initial auth initialization is complete
+    // This prevents race conditions between initial auth check and OAuth processing
     if (!loading) {
       handleOAuthCallback();
     }

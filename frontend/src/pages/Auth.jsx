@@ -46,8 +46,9 @@ function Auth() {
     console.log("Current user:", user);
     console.log("Current path:", location.pathname);
 
-    // Redirect if user is authenticated (either via OAuth or regular login)
-    if (user) {
+    // Only redirect if user is authenticated and this is not an OAuth callback
+    // OAuth callbacks should be handled by AuthContext first
+    if (user && !hasToken) {
       console.log("User authenticated, redirecting to dashboard...");
       // Redirect to dashboard after successful authentication
       navigate("/dashboard", { replace: true });

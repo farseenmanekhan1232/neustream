@@ -52,12 +52,15 @@ class AuthService {
 
       return await response.json();
     } catch (error) {
+      // Only redirect on auth errors, not network errors
       if (
         error.message === "Unauthorized" ||
-        error.message === "Invalid token"
+        error.message === "Invalid token" ||
+        error.message === "User not found"
       ) {
         this.clearToken();
-        window.location.href = "/auth";
+        // Don't redirect immediately, let the component handle it
+        console.warn("Auth token invalid, cleared from storage");
       }
       throw error;
     }
@@ -71,9 +74,7 @@ class AuthService {
     });
 
     if (response.user) {
-      this.setToken(
-        response.token || this.generateTemporaryToken(response.user)
-      );
+      this.setToken(response.token);
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
 
@@ -87,9 +88,7 @@ class AuthService {
     });
 
     if (response.user) {
-      this.setToken(
-        response.token || this.generateTemporaryToken(response.user)
-      );
+      this.setToken(response.token);
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
 
@@ -132,19 +131,6 @@ class AuthService {
     }
   }
 
-  // Temporary token generation for backward compatibility
-  generateTemporaryToken(user) {
-    // This is a temporary solution until backend returns JWT tokens
-    // In production, the backend should return a proper JWT token
-    return btoa(
-      JSON.stringify({
-        userId: user.id,
-        email: user.email,
-        streamKey: user.streamKey,
-        timestamp: Date.now(),
-      })
-    );
-  }
 
   // User management
   getCurrentUser() {
