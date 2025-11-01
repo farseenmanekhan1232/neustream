@@ -4,6 +4,7 @@ const { google } = require("googleapis");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
 const posthogService = require("../services/posthog");
+const { handleGenericIdParam } = require("../middleware/idHandler");
 
 const router = express.Router();
 const db = new Database();
@@ -12,6 +13,7 @@ const db = new Database();
 router.get(
   "/sources/:sourceId/connectors",
   authenticateToken,
+  handleGenericIdParam('stream_sources'),
   async (req, res) => {
     const { sourceId } = req.params;
     const userId = req.user.id;
@@ -45,6 +47,7 @@ router.get(
 router.post(
   "/sources/:sourceId/connectors",
   authenticateToken,
+  handleGenericIdParam('stream_sources'),
   async (req, res) => {
     const { sourceId } = req.params;
     const { platform, connectorType, config } = req.body;
@@ -103,7 +106,7 @@ router.post(
 );
 
 // Update chat connector
-router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
+router.put("/connectors/:connectorId", authenticateToken, handleGenericIdParam('chat_connectors'), async (req, res) => {
   const { connectorId } = req.params;
   const { config, isActive } = req.body;
   const userId = req.user.id;
@@ -151,6 +154,7 @@ router.put("/connectors/:connectorId", authenticateToken, async (req, res) => {
 router.delete(
   "/connectors/:connectorId",
   authenticateToken,
+  handleGenericIdParam('chat_connectors'),
   async (req, res) => {
     const { connectorId } = req.params;
     const userId = req.user.id;
@@ -209,6 +213,7 @@ router.delete(
 router.get(
   "/sources/:sourceId/messages",
   authenticateToken,
+  handleGenericIdParam('stream_sources'),
   async (req, res) => {
     const { sourceId } = req.params;
     const userId = req.user.id;
@@ -597,7 +602,7 @@ async function exchangeYouTubeCodeForTokens(code) {
 }
 
 // Public chat endpoint - get messages by source ID (no authentication required)
-router.get("/public/sources/:sourceId/messages", async (req, res) => {
+router.get("/public/sources/:sourceId/messages", handleGenericIdParam('stream_sources'), async (req, res) => {
   const { sourceId } = req.params;
   const { limit = 50, offset = 0 } = req.query;
 

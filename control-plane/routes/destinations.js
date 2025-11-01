@@ -1,6 +1,7 @@
 const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
+const { handleGenericIdParam } = require("../middleware/idHandler");
 
 const router = express.Router();
 const db = new Database();
@@ -43,7 +44,7 @@ router.post("/", authenticateToken, async (req, res) => {
 });
 
 // Update destination - requires authentication
-router.put("/:id", authenticateToken, async (req, res) => {
+router.put("/:id", authenticateToken, handleGenericIdParam('destinations'), async (req, res) => {
   const { id } = req.params;
   const { platform, rtmpUrl, streamKey, isActive } = req.body;
 
@@ -68,7 +69,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
 });
 
 // Delete destination - requires authentication
-router.delete("/:id", authenticateToken, async (req, res) => {
+router.delete("/:id", authenticateToken, handleGenericIdParam('destinations'), async (req, res) => {
   const { id } = req.params;
 
   try {

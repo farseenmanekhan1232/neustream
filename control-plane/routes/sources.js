@@ -2,6 +2,7 @@ const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
 const { canCreateSource, canCreateDestination } = require("../middleware/planValidation");
+const { handleGenericIdParam } = require("../middleware/idHandler");
 
 const crypto = require("crypto");
 const posthogService = require("../services/posthog");
@@ -43,7 +44,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // Get specific stream source with destinations - requires authentication
-router.get("/:id", authenticateToken, async (req, res) => {
+router.get("/:id", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -166,7 +167,7 @@ router.post("/", authenticateToken, canCreateSource, async (req, res) => {
 });
 
 // Update stream source - requires authentication
-router.put("/:id", authenticateToken, async (req, res) => {
+router.put("/:id", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const { name, description, is_active } = req.body;
   const userId = req.user.id;
@@ -227,7 +228,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
 });
 
 // Delete stream source - requires authentication
-router.delete("/:id", authenticateToken, async (req, res) => {
+router.delete("/:id", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -278,7 +279,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 });
 
 // Get stream key for specific source - requires authentication
-router.get("/:id/stream-key", authenticateToken, async (req, res) => {
+router.get("/:id/stream-key", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -300,7 +301,7 @@ router.get("/:id/stream-key", authenticateToken, async (req, res) => {
 });
 
 // Regenerate stream key for source - requires authentication
-router.post("/:id/regenerate-key", authenticateToken, async (req, res) => {
+router.post("/:id/regenerate-key", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
 
@@ -388,7 +389,7 @@ router.post("/:id/regenerate-key", authenticateToken, async (req, res) => {
 // Source-specific destination routes
 
 // Get destinations for a specific source - requires authentication
-router.get("/:sourceId/destinations", authenticateToken, async (req, res) => {
+router.get("/:sourceId/destinations", authenticateToken, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { sourceId } = req.params;
   const userId = req.user.id;
 
@@ -417,7 +418,7 @@ router.get("/:sourceId/destinations", authenticateToken, async (req, res) => {
 });
 
 // Add destination to a specific source - requires authentication and plan validation
-router.post("/:sourceId/destinations", authenticateToken, canCreateDestination, async (req, res) => {
+router.post("/:sourceId/destinations", authenticateToken, canCreateDestination, handleGenericIdParam('stream_sources'), async (req, res) => {
   const { sourceId } = req.params;
   const { platform, rtmpUrl, streamKey } = req.body;
   const userId = req.user.id;
@@ -465,6 +466,8 @@ router.post("/:sourceId/destinations", authenticateToken, canCreateDestination, 
 router.delete(
   "/:sourceId/destinations/:destinationId",
   authenticateToken,
+  handleGenericIdParam('stream_sources'),
+  handleGenericIdParam('source_destinations'),
   async (req, res) => {
     const { sourceId, destinationId } = req.params;
     const userId = req.user.id;

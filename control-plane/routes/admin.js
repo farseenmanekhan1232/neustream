@@ -3,6 +3,7 @@ const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
 const currencyService = require("../services/currencyService");
 const { detectCurrency, getCurrencyContext } = require("../middleware/currencyMiddleware");
+const { handleUserIdParam, handleGenericIdParam } = require("../middleware/idHandler");
 
 const router = express.Router();
 const db = new Database();
@@ -56,24 +57,12 @@ router.get("/users", async (req, res) => {
 });
 
 // Get specific user details with their sources and streams
-router.get("/users/:id", async (req, res) => {
+router.get("/users/:id", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Get user basic info
-    const users = await db.query(
-      `
-      SELECT id, email, display_name, avatar_url, oauth_provider, stream_key, created_at
-      FROM users WHERE id = $1
-    `,
-      [id]
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const user = users[0];
+    // User info is already available from middleware
+    const user = req.entity;
 
     // Get user's stream sources
     const sources = await db.query(
@@ -281,18 +270,13 @@ router.get("/analytics", async (req, res) => {
 });
 
 // Update user (basic info)
-router.put("/users/:id", async (req, res) => {
+router.put("/users/:id", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
   const { displayName, isActive } = req.body;
 
   try {
-    // Check if user exists
-    const userCheck = await db.query("SELECT id FROM users WHERE id = $1", [
-      id,
-    ]);
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const user = req.entity;
 
     // Update user (limited fields for admin)
     const updates = [];
@@ -325,18 +309,12 @@ router.put("/users/:id", async (req, res) => {
 });
 
 // Delete user (with cascading deletes)
-router.delete("/users/:id", async (req, res) => {
+router.delete("/users/:id", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if user exists
-    const userCheck = await db.query(
-      "SELECT id, email FROM users WHERE id = $1",
-      [id]
-    );
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const user = req.entity;
 
     // Check if user has active streams
     const activeStreams = await db.query(
@@ -426,26 +404,12 @@ router.get("/sources", async (req, res) => {
 });
 
 // Get specific stream source with destinations
-router.get("/sources/:id", async (req, res) => {
+router.get("/sources/:id", handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Get the stream source
-    const sources = await db.query(
-      `
-      SELECT ss.*, u.email, u.display_name
-      FROM stream_sources ss
-      LEFT JOIN users u ON ss.user_id = u.id
-      WHERE ss.id = $1
-    `,
-      [id]
-    );
-
-    if (sources.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
-
-    const source = sources[0];
+    // Stream source is already available from middleware
+    const source = req.entity;
 
     // Get destinations for this source
     const destinations = await db.query(
@@ -498,19 +462,13 @@ router.get("/sources/:id", async (req, res) => {
 });
 
 // Update stream source
-router.put("/sources/:id", async (req, res) => {
+router.put("/sources/:id", handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const { name, description, is_active } = req.body;
 
   try {
-    // Check if source exists
-    const existingSource = await db.query(
-      "SELECT * FROM stream_sources WHERE id = $1",
-      [id]
-    );
-    if (existingSource.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
+    // Source exists check is already handled by middleware
+    const existingSource = req.entity;
 
     // Check if source is currently active before deactivating
     if (is_active === false) {
@@ -540,18 +498,12 @@ router.put("/sources/:id", async (req, res) => {
 });
 
 // Delete stream source
-router.delete("/sources/:id", async (req, res) => {
+router.delete("/sources/:id", handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if source exists
-    const existingSource = await db.query(
-      "SELECT * FROM stream_sources WHERE id = $1",
-      [id]
-    );
-    if (existingSource.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
+    // Source exists check is already handled by middleware
+    const existingSource = req.entity;
 
     // Check if source is currently active
     const activeStream = await db.query(
@@ -582,19 +534,13 @@ router.delete("/sources/:id", async (req, res) => {
 });
 
 // Regenerate stream key for source
-router.post("/sources/:id/regenerate-key", async (req, res) => {
+router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'), async (req, res) => {
   const { id } = req.params;
   const crypto = require("crypto");
 
   try {
-    // Check if source exists
-    const existingSource = await db.query(
-      "SELECT * FROM stream_sources WHERE id = $1",
-      [id]
-    );
-    if (existingSource.length === 0) {
-      return res.status(404).json({ error: "Stream source not found" });
-    }
+    // Source exists check is already handled by middleware
+    const existingSource = req.entity;
 
     // Check if source is currently active
     const activeStream = await db.query(
@@ -682,30 +628,14 @@ router.get("/destinations", async (req, res) => {
 });
 
 // Get specific destination
-router.get("/destinations/:id", async (req, res) => {
+router.get("/destinations/:id", handleGenericIdParam('source_destinations'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    const destinations = await db.query(
-      `
-      SELECT
-        sd.*,
-        ss.name as source_name,
-        u.email as user_email,
-        u.display_name as user_display_name
-      FROM source_destinations sd
-      LEFT JOIN stream_sources ss ON sd.source_id = ss.id
-      LEFT JOIN users u ON ss.user_id = u.id
-      WHERE sd.id = $1
-    `,
-      [id]
-    );
+    // Destination is already available from middleware
+    const destination = req.entity;
 
-    if (destinations.length === 0) {
-      return res.status(404).json({ error: "Destination not found" });
-    }
-
-    res.json({ destination: destinations[0] });
+    res.json({ destination });
   } catch (error) {
     console.error("Get destination error:", error);
     res.status(500).json({ error: "Failed to fetch destination" });
@@ -713,19 +643,13 @@ router.get("/destinations/:id", async (req, res) => {
 });
 
 // Update destination
-router.put("/destinations/:id", async (req, res) => {
+router.put("/destinations/:id", handleGenericIdParam('source_destinations'), async (req, res) => {
   const { id } = req.params;
   const { platform, rtmp_url, stream_key, is_active } = req.body;
 
   try {
-    // Check if destination exists
-    const existingDest = await db.query(
-      "SELECT * FROM source_destinations WHERE id = $1",
-      [id]
-    );
-    if (existingDest.length === 0) {
-      return res.status(404).json({ error: "Destination not found" });
-    }
+    // Destination exists check is already handled by middleware
+    const existingDest = req.entity;
 
     // Update the destination
     const result = await db.run(
@@ -741,7 +665,7 @@ router.put("/destinations/:id", async (req, res) => {
 });
 
 // Delete destination
-router.delete("/destinations/:id", async (req, res) => {
+router.delete("/destinations/:id", handleGenericIdParam('source_destinations'), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -766,18 +690,12 @@ router.delete("/destinations/:id", async (req, res) => {
 // ============================================
 
 // Suspend user
-router.post("/users/:id/suspend", async (req, res) => {
+router.post("/users/:id/suspend", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if user exists
-    const userCheck = await db.query(
-      "SELECT id, email FROM users WHERE id = $1",
-      [id]
-    );
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const user = req.entity;
 
     // Check if user has active streams
     const activeStreams = await db.query(
@@ -811,18 +729,12 @@ router.post("/users/:id/suspend", async (req, res) => {
 });
 
 // Unsuspend user
-router.post("/users/:id/unsuspend", async (req, res) => {
+router.post("/users/:id/unsuspend", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Check if user exists
-    const userCheck = await db.query(
-      "SELECT id, email FROM users WHERE id = $1",
-      [id]
-    );
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const user = req.entity;
 
     // Remove suspension prefix from display_name
     await db.run(
@@ -838,19 +750,13 @@ router.post("/users/:id/unsuspend", async (req, res) => {
 });
 
 // Reset user stream key
-router.post("/users/:id/reset-stream-key", async (req, res) => {
+router.post("/users/:id/reset-stream-key", handleGenericIdParam('users'), async (req, res) => {
   const { id } = req.params;
   const crypto = require("crypto");
 
   try {
-    // Check if user exists
-    const userCheck = await db.query(
-      "SELECT id, email FROM users WHERE id = $1",
-      [id]
-    );
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const user = req.entity;
 
     // Check if user has active streams
     const activeStreams = await db.query(
@@ -1112,7 +1018,7 @@ router.post("/subscription-plans", async (req, res) => {
 });
 
 // Update subscription plan
-router.put("/subscription-plans/:id", async (req, res) => {
+router.put("/subscription-plans/:id", handleGenericIdParam('subscription_plans'), async (req, res) => {
   const { id } = req.params;
   const {
     name,
@@ -1128,6 +1034,9 @@ router.put("/subscription-plans/:id", async (req, res) => {
   } = req.body.planData || req.body; // Handle both nested and direct data
 
   try {
+    // Plan exists check is already handled by middleware
+    const plan = req.entity;
+
     const result = await db.run(
       `UPDATE subscription_plans SET
         name = $1,
@@ -1152,7 +1061,7 @@ router.put("/subscription-plans/:id", async (req, res) => {
         max_destinations,
         max_streaming_hours_monthly,
         JSON.stringify(features || []),
-        id
+        plan.id
       ]
     );
 
@@ -1176,14 +1085,17 @@ router.put("/subscription-plans/:id", async (req, res) => {
 });
 
 // Delete subscription plan
-router.delete("/subscription-plans/:id", async (req, res) => {
+router.delete("/subscription-plans/:id", handleGenericIdParam('subscription_plans'), async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Plan exists check is already handled by middleware
+    const plan = req.entity;
+
     // Check if plan has active subscriptions
     const activeSubscriptions = await db.query(
       "SELECT COUNT(*) as count FROM user_subscriptions WHERE plan_id = $1 AND status = 'active'",
-      [id]
+      [plan.id]
     );
 
     if (parseInt(activeSubscriptions[0].count) > 0) {
@@ -1194,7 +1106,7 @@ router.delete("/subscription-plans/:id", async (req, res) => {
 
     const result = await db.run(
       "DELETE FROM subscription_plans WHERE id = $1 RETURNING *",
-      [id]
+      [plan.id]
     );
 
     if (result.length === 0) {
@@ -1264,20 +1176,13 @@ router.get("/user-subscriptions", async (req, res) => {
 });
 
 // Update user subscription
-router.put("/user-subscriptions/:userId", async (req, res) => {
+router.put("/user-subscriptions/:userId", handleUserIdParam, async (req, res) => {
   const { userId } = req.params;
   const { plan_id, status, current_period_end } = req.body;
 
   try {
-    // Check if user exists
-    const userCheck = await db.query(
-      "SELECT id FROM users WHERE id = $1",
-      [userId]
-    );
-
-    if (userCheck.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    // User exists check is already handled by middleware
+    const targetUser = req.targetUser;
 
     // Check if plan exists
     const planCheck = await db.query(
@@ -1292,7 +1197,7 @@ router.put("/user-subscriptions/:userId", async (req, res) => {
     // Update or create subscription
     const existingSubscription = await db.query(
       "SELECT id FROM user_subscriptions WHERE user_id = $1",
-      [userId]
+      [targetUser.id]
     );
 
     let result;
@@ -1305,7 +1210,7 @@ router.put("/user-subscriptions/:userId", async (req, res) => {
           current_period_end = $3,
           updated_at = NOW()
         WHERE user_id = $4 RETURNING *`,
-        [plan_id, status, current_period_end, userId]
+        [plan_id, status, current_period_end, targetUser.id]
       );
     } else {
       // Create new subscription
@@ -1313,7 +1218,7 @@ router.put("/user-subscriptions/:userId", async (req, res) => {
         `INSERT INTO user_subscriptions (
           user_id, plan_id, status, current_period_start, current_period_end
         ) VALUES ($1, $2, $3, NOW(), $4) RETURNING *`,
-        [userId, plan_id, status, current_period_end]
+        [targetUser.id, plan_id, status, current_period_end]
       );
     }
 
