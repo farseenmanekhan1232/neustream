@@ -188,7 +188,7 @@ export default function BlogPost() {
         />
         <link
           rel="canonical"
-          href={`https://www.neustream.app/blog/${post.slug}`}
+          href={`https://neustream.app/blog/${post.slug}`}
         />
 
         {/* Open Graph */}
@@ -200,7 +200,7 @@ export default function BlogPost() {
         <meta property="og:type" content="article" />
         <meta
           property="og:url"
-          content={`https://www.neustream.app/blog/${post.slug}`}
+          content={`https://neustream.app/blog/${post.slug}`}
         />
         {post.featuredImage && (
           <meta property="og:image" content={post.featuredImage} />

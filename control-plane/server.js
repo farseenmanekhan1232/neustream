@@ -33,7 +33,7 @@ app.use(
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
-  })
+  }),
 );
 
 // Initialize Passport and restore authentication state, if any, from the session
@@ -43,7 +43,7 @@ app.use(passport.session());
 // Configure CORS with separate handling for webhooks
 const corsOptions = {
   origin: [
-    "https://www.neustream.app",
+    "https://neustream.app",
     "https://neustream.app",
     "https://admin.neustream.app",
   ],
@@ -89,7 +89,7 @@ app.use((req, res, next) => {
       req.path,
       req.method,
       res.statusCode,
-      responseTime
+      responseTime,
     );
   });
 
@@ -106,20 +106,20 @@ const server = app.listen(PORT, () => {
 });
 
 // Initialize WebSocket server
-const WebSocketServer = require('./lib/websocket');
+const WebSocketServer = require("./lib/websocket");
 const wsServer = new WebSocketServer(server);
-console.log('WebSocket server initialized');
+console.log("WebSocket server initialized");
 
 // Initialize Chat Connector Service
-const ChatConnectorService = require('./services/chatConnectorService');
+const ChatConnectorService = require("./services/chatConnectorService");
 const chatConnectorService = new ChatConnectorService(wsServer);
 
 // Connect WebSocket server to Chat Connector Service
 wsServer.setChatConnectorService(chatConnectorService);
 
 // Make chat connector service available to routes
-app.set('chatConnectorService', chatConnectorService);
-console.log('Chat connector service initialized');
+app.set("chatConnectorService", chatConnectorService);
+console.log("Chat connector service initialized");
 
 // Graceful shutdown
 const gracefulShutdown = async () => {

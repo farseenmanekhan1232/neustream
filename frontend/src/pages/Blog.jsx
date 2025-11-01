@@ -142,7 +142,7 @@ export default function Blog() {
           name="keywords"
           content="streaming blog, streaming guides, twitch tips, youtube streaming, obs tutorials, content creator tips, neustream"
         />
-        <link rel="canonical" href="https://www.neustream.app/blog" />
+        <link rel="canonical" href="https://neustream.app/blog" />
 
         {/* Open Graph */}
         <meta property="og:title" content="Neustream Blog - Streaming Guides, Tips & Industry News" />
@@ -151,8 +151,8 @@ export default function Blog() {
           content="Discover the latest streaming guides, platform updates, equipment reviews, and growth tips for content creators."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.neustream.app/blog" />
-        <meta property="og:image" content="https://www.neustream.app/og-image-blog.jpg" />
+        <meta property="og:url" content="https://neustream.app/blog" />
+        <meta property="og:image" content="https://neustream.app/og-image-blog.jpg" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -161,7 +161,7 @@ export default function Blog() {
           name="twitter:description"
           content="Discover the latest streaming guides, platform updates, equipment reviews, and growth tips for content creators."
         />
-        <meta name="twitter:image" content="https://www.neustream.app/og-image-blog.jpg" />
+        <meta name="twitter:image" content="https://neustream.app/og-image-blog.jpg" />
 
         {/* Structured Data */}
         <script type="application/ld+json">
@@ -170,13 +170,13 @@ export default function Blog() {
             '@type': 'Blog',
             name: 'Neustream Blog',
             description: 'Discover the latest streaming guides, platform updates, equipment reviews, and growth tips for content creators.',
-            url: 'https://www.neustream.app/blog',
+            url: 'https://neustream.app/blog',
             publisher: {
               '@type': 'Organization',
               name: 'Neustream',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://www.neustream.app/logo.png',
+                url: 'https://neustream.app/logo.png',
               },
             },
           })}

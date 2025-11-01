@@ -1,20 +1,20 @@
-const { Server } = require('socket.io');
-const Database = require('./database');
-const { authenticateToken } = require('../middleware/auth');
+const { Server } = require("socket.io");
+const Database = require("./database");
+const { authenticateToken } = require("../middleware/auth");
 
 class WebSocketServer {
   constructor(server) {
     this.io = new Server(server, {
       cors: {
         origin: [
-          "https://www.neustream.app",
+          "https://neustream.app",
           "https://neustream.app",
           "https://admin.neustream.app",
-          "http://localhost:5173"
+          "http://localhost:5173",
         ],
         methods: ["GET", "POST"],
-        credentials: true
-      }
+        credentials: true,
+      },
     });
 
     this.db = new Database();
@@ -37,39 +37,42 @@ class WebSocketServer {
       // Allow anonymous connections for public chat access
       if (!token && sourceId) {
         // Public chat connection - validate source exists and is active
-        this.db.query(
-          'SELECT id, name, is_active FROM stream_sources WHERE id = $1',
-          [sourceId]
-        ).then(sourceCheck => {
-          if (sourceCheck.length === 0) {
-            return next(new Error('Public chat error: Source not found'));
-          }
-          if (!sourceCheck[0].is_active) {
-            return next(new Error('Public chat error: Source is not active'));
-          }
+        this.db
+          .query(
+            "SELECT id, name, is_active FROM stream_sources WHERE id = $1",
+            [sourceId],
+          )
+          .then((sourceCheck) => {
+            if (sourceCheck.length === 0) {
+              return next(new Error("Public chat error: Source not found"));
+            }
+            if (!sourceCheck[0].is_active) {
+              return next(new Error("Public chat error: Source is not active"));
+            }
 
-          // Set anonymous user data
-          socket.user = {
-            id: `public_${sourceId}`,
-            displayName: 'Anonymous Viewer',
-            isPublic: true
-          };
-          socket.sourceId = sourceId;
-          next();
-        }).catch(error => {
-          next(new Error('Public chat error: Failed to validate source'));
-        });
+            // Set anonymous user data
+            socket.user = {
+              id: `public_${sourceId}`,
+              displayName: "Anonymous Viewer",
+              isPublic: true,
+            };
+            socket.sourceId = sourceId;
+            next();
+          })
+          .catch((error) => {
+            next(new Error("Public chat error: Failed to validate source"));
+          });
         return;
       }
 
       // Authenticated connection (existing logic)
       if (!token) {
-        return next(new Error('Authentication error: No token provided'));
+        return next(new Error("Authentication error: No token provided"));
       }
 
       try {
         let userData;
-        if (typeof token === 'string') {
+        if (typeof token === "string") {
           try {
             userData = JSON.parse(token);
           } catch {
@@ -82,22 +85,22 @@ class WebSocketServer {
         socket.user = userData;
         next();
       } catch (error) {
-        next(new Error('Authentication error: Invalid token'));
+        next(new Error("Authentication error: Invalid token"));
       }
     });
   }
 
   setupEventHandlers() {
-    this.io.on('connection', (socket) => {
+    this.io.on("connection", (socket) => {
       console.log(`User ${socket.user?.id} connected to WebSocket`);
 
       // Join chat room for a specific source
-      socket.on('join_chat', async (data) => {
+      socket.on("join_chat", async (data) => {
         try {
           const { sourceId } = data;
 
           if (!sourceId) {
-            socket.emit('error', { message: 'Source ID is required' });
+            socket.emit("error", { message: "Source ID is required" });
             return;
           }
 
@@ -106,69 +109,78 @@ class WebSocketServer {
 
           // Verify source exists and is active
           const sources = await this.db.query(
-            'SELECT id, is_active FROM stream_sources WHERE id = $1',
-            [effectiveSourceId]
+            "SELECT id, is_active FROM stream_sources WHERE id = $1",
+            [effectiveSourceId],
           );
 
           if (sources.length === 0) {
-            socket.emit('error', { message: 'Stream source not found' });
+            socket.emit("error", { message: "Stream source not found" });
             return;
           }
 
           if (!sources[0].is_active) {
-            socket.emit('error', { message: 'Stream source is not active' });
+            socket.emit("error", { message: "Stream source is not active" });
             return;
           }
 
           // For authenticated users, verify ownership
           if (!socket.user.isPublic) {
             const userSources = await this.db.query(
-              'SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2',
-              [effectiveSourceId, socket.user.id]
+              "SELECT id FROM stream_sources WHERE id = $1 AND user_id = $2",
+              [effectiveSourceId, socket.user.id],
             );
 
             if (userSources.length === 0) {
-              socket.emit('error', { message: 'Access denied to source' });
+              socket.emit("error", { message: "Access denied to source" });
               return;
             }
           }
 
           // Join the room for this source
           socket.join(`source_${effectiveSourceId}`);
-          console.log(`User ${socket.user.id} joined chat for source ${effectiveSourceId}`);
+          console.log(
+            `User ${socket.user.id} joined chat for source ${effectiveSourceId}`,
+          );
 
           // Send recent messages
-          const recentMessages = await this.getRecentMessages(effectiveSourceId);
-          socket.emit('chat_history', { messages: recentMessages });
+          const recentMessages =
+            await this.getRecentMessages(effectiveSourceId);
+          socket.emit("chat_history", { messages: recentMessages });
 
           // Initialize chat connectors for this source
           if (this.chatConnectorService) {
-            await this.chatConnectorService.initializeForSourceConnection(effectiveSourceId);
+            await this.chatConnectorService.initializeForSourceConnection(
+              effectiveSourceId,
+            );
           }
 
-          socket.emit('joined_chat', { sourceId: effectiveSourceId });
+          socket.emit("joined_chat", { sourceId: effectiveSourceId });
         } catch (error) {
-          console.error('Join chat error:', error);
-          socket.emit('error', { message: 'Failed to join chat' });
+          console.error("Join chat error:", error);
+          socket.emit("error", { message: "Failed to join chat" });
         }
       });
 
       // Leave chat room
-      socket.on('leave_chat', (data) => {
+      socket.on("leave_chat", (data) => {
         const { sourceId } = data;
         if (sourceId) {
           socket.leave(`source_${sourceId}`);
-          console.log(`User ${socket.user.id} left chat for source ${sourceId}`);
+          console.log(
+            `User ${socket.user.id} left chat for source ${sourceId}`,
+          );
         }
       });
 
       // Send chat message (for future use when we implement sending messages)
-      socket.on('send_message', async (data) => {
+      socket.on("send_message", async (data) => {
         try {
           const { sourceId, message } = data;
 
           if (!sourceId || !message) {
-            socket.emit('error', { message: 'Source ID and message are required' });
+            socket.emit("error", {
+              message: "Source ID and message are required",
+            });
             return;
           }
 
@@ -177,23 +189,23 @@ class WebSocketServer {
           const messageData = {
             id: Date.now().toString(), // Temporary ID
             sourceId,
-            authorName: socket.user.displayName || 'User',
+            authorName: socket.user.displayName || "User",
             authorId: socket.user.id,
             messageText: message,
-            messageType: 'text',
-            createdAt: new Date().toISOString()
+            messageType: "text",
+            createdAt: new Date().toISOString(),
           };
 
           // Broadcast to all users in the source room
-          this.io.to(`source_${sourceId}`).emit('new_message', messageData);
+          this.io.to(`source_${sourceId}`).emit("new_message", messageData);
         } catch (error) {
-          console.error('Send message error:', error);
-          socket.emit('error', { message: 'Failed to send message' });
+          console.error("Send message error:", error);
+          socket.emit("error", { message: "Failed to send message" });
         }
       });
 
       // Handle disconnection
-      socket.on('disconnect', () => {
+      socket.on("disconnect", () => {
         console.log(`User ${socket.user?.id} disconnected from WebSocket`);
       });
     });
@@ -219,12 +231,12 @@ class WebSocketServer {
         WHERE cm.source_id = $1
         ORDER BY cm.created_at DESC
         LIMIT $2`,
-        [sourceId, limit]
+        [sourceId, limit],
       );
 
       return messages.reverse(); // Return in chronological order
     } catch (error) {
-      console.error('Get recent messages error:', error);
+      console.error("Get recent messages error:", error);
       return [];
     }
   }
@@ -244,19 +256,21 @@ class WebSocketServer {
         authorName: messageData.authorName,
         authorId: messageData.authorId,
         messageText: messageData.messageText,
-        messageType: messageData.messageType || 'text',
+        messageType: messageData.messageType || "text",
         metadata: messageData.metadata || {},
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       // Broadcast to all connected clients in the source room
-      this.io.to(`source_${sourceId}`).emit('new_message', message);
+      this.io.to(`source_${sourceId}`).emit("new_message", message);
 
-      console.log(`Broadcasted message from ${messageData.platform || 'unknown'}: ${messageData.authorName}: ${messageData.messageText}`);
+      console.log(
+        `Broadcasted message from ${messageData.platform || "unknown"}: ${messageData.authorName}: ${messageData.messageText}`,
+      );
 
       return message;
     } catch (error) {
-      console.error('Broadcast message error:', error);
+      console.error("Broadcast message error:", error);
       throw error;
     }
   }

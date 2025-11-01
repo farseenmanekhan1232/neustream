@@ -124,7 +124,7 @@ npm run build
 Add these to your GitHub Secrets for deployment:
 - `SESSION_SECRET` - Secure session encryption key
 - `JWT_SECRET` - JWT token signing secret
-- `FRONTEND_URL` - Your frontend URL (e.g., `https://www.neustream.app`)
+- `FRONTEND_URL` - Your frontend URL (e.g., `https://neustream.app`)
 - `GOOGLE_CLIENT_ID` - From Google Cloud Console
 - `GOOGLE_CLIENT_SECRET` - From Google Cloud Console
 - `GOOGLE_CALLBACK_URL` - OAuth callback URL

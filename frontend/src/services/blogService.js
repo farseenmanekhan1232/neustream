@@ -295,12 +295,12 @@ class BlogService {
         name: 'Neustream',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.neustream.app/logo.png'
+          url: 'https://neustream.app/logo.png'
         }
       },
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': `https://www.neustream.app/blog/${post.slug}`
+        '@id': `https://neustream.app/blog/${post.slug}`
       }
     };
   }
