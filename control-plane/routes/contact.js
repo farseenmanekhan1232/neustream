@@ -138,7 +138,7 @@ router.get("/", authenticateToken, async (req, res) => {
         cs.responded_at,
         cs.responded_by,
         cs.notes,
-        u.username as responder_username,
+        u.display_name as responder_username,
         COUNT(*) OVER() as total_count
       FROM contact_submissions cs
       LEFT JOIN users u ON cs.responded_by = u.id
@@ -203,7 +203,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
     const query = `
       SELECT
         cs.*,
-        u.username as responder_username,
+        u.display_name as responder_username,
         COUNT(csr.id) as response_count
       FROM contact_submissions cs
       LEFT JOIN users u ON cs.responded_by = u.id
@@ -226,7 +226,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
     const responsesQuery = `
       SELECT
         csr.*,
-        u.username as responder_username
+        u.display_name as responder_username
       FROM contact_submission_responses csr
       LEFT JOIN users u ON csr.user_id = u.id
       WHERE csr.submission_id = $1
