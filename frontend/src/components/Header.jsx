@@ -30,6 +30,12 @@ function Header() {
               Features
             </a>
             <Link
+              to="/blog"
+              className={`text-sm font-medium  transition-colors hover:text-foreground ${isActivePath('/blog') ? 'text-foreground' : ''}`}
+            >
+              Blog
+            </Link>
+            <Link
               to="/privacy"
               className="text-sm font-medium  transition-colors hover:text-foreground"
             >

@@ -22,6 +22,8 @@ import StreamPreviewPage from "./components/StreamPreviewPage";
 import SubscriptionManagement from "./components/SubscriptionManagement";
 import PublicChatPage from "./components/PublicChatPage";
 import SetupGuide from "./pages/SetupGuide";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 import { ThemeProvider } from "./components/theme-provider";
@@ -67,6 +69,10 @@ function AppContent() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/help" element={<SetupGuide />} />
+
+      {/* Blog routes */}
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
 
       {/* Public legal pages */}
       <Route path="/privacy" element={<PrivacyPolicy />} />
