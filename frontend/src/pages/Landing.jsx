@@ -361,7 +361,7 @@ function Landing() {
                     >
                       {platform}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -474,9 +474,13 @@ function Landing() {
               Powerful Features for Professional Streaming
             </h2>
             <p className="text-lg opacity-80">
-              NeuStream provides everything you need to stream like a pro across all platforms.
+              NeuStream provides everything you need to stream like a pro across
+              all platforms.
               <br />
-              <Link to="/features" className="underline hover:opacity-80 inline-flex items-center mt-2">
+              <Link
+                to="/features"
+                className="underline hover:opacity-80 inline-flex items-center mt-2"
+              >
                 Explore all features <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </p>
@@ -774,7 +778,12 @@ function Landing() {
                         className="w-full"
                         asChild
                       >
-                        <Link to="/auth">Start Free Trial</Link>
+                        <Link
+                          to="/auth"
+                          className={isProPlan ? "text-white" : "text-black"}
+                        >
+                          Start Free Trial
+                        </Link>
                       </Button>
                     </div>
                   </div>
