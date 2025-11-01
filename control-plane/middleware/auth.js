@@ -40,7 +40,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Verify user still exists in database
     const users = await db.query(
-      "SELECT id, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1",
+      "SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1",
       [decoded.userId]
     );
 
@@ -55,6 +55,7 @@ const authenticateToken = async (req, res, next) => {
     // Attach user info to request object
     req.user = {
       id: user.id,
+      uuid: user.uuid,
       email: user.email,
       displayName: user.display_name,
       avatarUrl: user.avatar_url,
@@ -90,13 +91,14 @@ const optionalAuth = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const users = await db.query(
-      "SELECT id, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1",
+      "SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1",
       [decoded.userId]
     );
 
     if (users.length > 0) {
       req.user = {
         id: users[0].id,
+        uuid: users[0].uuid,
         email: users[0].email,
         displayName: users[0].display_name,
         avatarUrl: users[0].avatar_url,

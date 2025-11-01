@@ -48,6 +48,7 @@ async function runMigrations() {
         console.log(`✅ ${file} - executed successfully`);
       } catch (error) {
         console.error(`❌ ${file} - failed:`, error.message);
+        console.error(`Full error details:`, error);
         throw error;
       }
     }

@@ -236,11 +236,12 @@ router.post('/register', async (req, res) => {
     const streamKey = crypto.randomBytes(24).toString('hex');
 
     const result = await db.run(
-      'INSERT INTO users (email, password_hash, stream_key) VALUES ($1, $2, $3) RETURNING id, email, stream_key',
+      'INSERT INTO users (email, password_hash, stream_key) VALUES ($1, $2, $3) RETURNING id, uuid, email, stream_key',
       [email, passwordHash, streamKey]
     );
 
     const userId = result.id;
+    const userUuid = result.uuid;
 
     // Assign free plan to new user
     try {
@@ -279,6 +280,7 @@ router.post('/register', async (req, res) => {
     // Generate JWT token for API authentication
     const token = generateToken({
       id: userId,
+      uuid: userUuid,
       email: email,
       displayName: null,
       avatarUrl: null,
@@ -290,6 +292,7 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: userId,
+        uuid: userUuid,
         email: email,
         displayName: null,
         avatarUrl: null,
@@ -317,7 +320,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const users = await db.query(
-      'SELECT id, email, password_hash, stream_key, display_name, avatar_url, oauth_provider FROM users WHERE email = $1',
+      'SELECT id, uuid, email, password_hash, stream_key, display_name, avatar_url, oauth_provider FROM users WHERE email = $1',
       [email]
     );
 
@@ -350,6 +353,7 @@ router.post('/login', async (req, res) => {
     // Generate JWT token for API authentication
     const token = generateToken({
       id: user.id,
+      uuid: user.uuid,
       email: user.email,
       displayName: user.display_name,
       avatarUrl: user.avatar_url,
@@ -361,6 +365,7 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.id,
+        uuid: user.uuid,
         email: user.email,
         displayName: user.display_name,
         avatarUrl: user.avatar_url,
@@ -507,7 +512,7 @@ router.post('/validate-token', async (req, res) => {
 
     // Verify user still exists
     const users = await db.query(
-      'SELECT id, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1',
+      'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1',
       [decoded.userId]
     );
 
@@ -522,6 +527,7 @@ router.post('/validate-token', async (req, res) => {
     res.json({
       user: {
         id: user.id,
+        uuid: user.uuid,
         email: user.email,
         displayName: user.display_name,
         avatarUrl: user.avatar_url,

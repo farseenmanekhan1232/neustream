@@ -51,6 +51,7 @@ async (accessToken, refreshToken, profile, done) => {
 
       return done(null, {
         id: user.id,
+        uuid: user.uuid,
         email: user.email,
         displayName: profile.displayName,
         avatarUrl: profile.photos[0]?.value,
@@ -89,6 +90,7 @@ async (accessToken, refreshToken, profile, done) => {
 
       return done(null, {
         id: existingUser.id,
+        uuid: existingUser.uuid,
         email: existingUser.email,
         displayName: profile.displayName,
         avatarUrl: profile.photos[0]?.value,
@@ -102,7 +104,7 @@ async (accessToken, refreshToken, profile, done) => {
     // Create new user
     const streamKey = crypto.randomBytes(24).toString('hex');
     const result = await db.run(
-      'INSERT INTO users (email, oauth_provider, oauth_id, display_name, avatar_url, oauth_email, stream_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, stream_key',
+      'INSERT INTO users (email, oauth_provider, oauth_id, display_name, avatar_url, oauth_email, stream_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid, email, stream_key',
       [profile.emails[0]?.value, 'google', profile.id, profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, streamKey]
     );
 
@@ -144,6 +146,7 @@ async (accessToken, refreshToken, profile, done) => {
 
     return done(null, {
       id: result.id,
+      uuid: result.uuid,
       email: result.email,
       displayName: profile.displayName,
       avatarUrl: profile.photos[0]?.value,
@@ -201,6 +204,7 @@ async (accessToken, refreshToken, profile, done) => {
 
       return done(null, {
         id: user.id,
+        uuid: user.uuid,
         email: user.email,
         displayName: profile.display_name,
         avatarUrl: profile.profile_image_url,
@@ -239,6 +243,7 @@ async (accessToken, refreshToken, profile, done) => {
 
       return done(null, {
         id: existingUser.id,
+        uuid: existingUser.uuid,
         email: existingUser.email,
         displayName: profile.display_name,
         avatarUrl: profile.profile_image_url,
@@ -252,7 +257,7 @@ async (accessToken, refreshToken, profile, done) => {
     // Create new user
     const streamKey = crypto.randomBytes(24).toString('hex');
     const result = await db.run(
-      'INSERT INTO users (email, oauth_provider, oauth_id, display_name, avatar_url, oauth_email, stream_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, stream_key',
+      'INSERT INTO users (email, oauth_provider, oauth_id, display_name, avatar_url, oauth_email, stream_key) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid, email, stream_key',
       [profile.email, 'twitch', profile.id, profile.display_name, profile.profile_image_url, profile.email, streamKey]
     );
 
@@ -294,6 +299,7 @@ async (accessToken, refreshToken, profile, done) => {
 
     return done(null, {
       id: result.id,
+      uuid: result.uuid,
       email: result.email,
       displayName: profile.display_name,
       avatarUrl: profile.profile_image_url,
@@ -317,7 +323,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const users = await db.query(
-      'SELECT id, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1',
+      'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1',
       [id]
     );
 
@@ -325,6 +331,7 @@ passport.deserializeUser(async (id, done) => {
       const user = users[0];
       done(null, {
         id: user.id,
+        uuid: user.uuid,
         email: user.email,
         displayName: user.display_name,
         avatarUrl: user.avatar_url,
@@ -348,6 +355,7 @@ function generateToken(user) {
 
   const payload = {
     userId: user.id,
+    userUuid: user.uuid,
     email: user.email,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
