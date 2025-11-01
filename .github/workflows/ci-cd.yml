@@ -96,7 +96,7 @@ jobs:
             RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
             RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
             RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }}
-            FRONTEND_URL=https://www.neustream.app
+            FRONTEND_URL=https://neustream.app
             BACKEND_URL=https://api.neustream.app
             DB_HOST=localhost
             DB_PORT=5432
