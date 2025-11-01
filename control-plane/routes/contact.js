@@ -209,7 +209,7 @@ router.get("/:id", authenticateToken, async (req, res) => {
       LEFT JOIN users u ON cs.responded_by = u.id
       LEFT JOIN contact_submission_responses csr ON cs.id = csr.submission_id
       WHERE cs.id = $1
-      GROUP BY cs.id, u.username
+      GROUP BY cs.id, u.display_name
     `;
 
     const result = await db.query(query, [id]);
