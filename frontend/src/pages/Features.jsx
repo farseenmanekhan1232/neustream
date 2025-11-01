@@ -242,7 +242,7 @@ function Features() {
             </p>
           </div>
 
-          <div className="grid gap-12 lg:gap-16">
+          <div className="grid gap-8 lg:gap-12">
             {benefitFeatures.map((feature, index) => (
               <div
                 key={feature.title}
@@ -252,37 +252,44 @@ function Features() {
               >
                 {/* Content */}
                 <div className={`space-y-6 ${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-white/10 rounded-xl">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/10 rounded-xl">
+                        <feature.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal">
+                        {feature.title}
+                      </h2>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal">
-                      {feature.title}
-                    </h2>
+
+                    <p className="text-lg opacity-80 leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
 
-                  <p className="text-lg opacity-80">
-                    {feature.description}
-                  </p>
-
-                  <ul className="space-y-3">
-                    {feature.benefits.map((benefit, benefitIndex) => (
-                      <li key={benefitIndex} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-base">{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium opacity-90">You'll Experience:</h3>
+                    <ul className="space-y-3">
+                      {feature.benefits.map((benefit, benefitIndex) => (
+                        <li key={benefitIndex} className="flex items-start gap-3">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <Check className="h-5 w-5 text-primary" />
+                          </div>
+                          <span className="text-base leading-relaxed">{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
                   {index === 0 && (
                     <div className="pt-4">
                       <Button
                         asChild
                         variant="outline"
-                        className="bg-transparent border-white text-white hover:bg-white hover:text-black"
+                        className="bg-transparent border-white text-white hover:bg-white hover:text-black transition-all duration-300"
                       >
                         <Link to="/auth">
-                          Try It Now
+                          Start Growing Your Audience
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
@@ -292,10 +299,33 @@ function Features() {
 
                 {/* Simulator */}
                 <div className={`${index % 2 === 1 ? "lg:col-start-1" : ""}`}>
-                  {feature.simulator && renderSimulator(feature.simulator)}
+                  {feature.simulator && (
+                    <div className="relative">
+                      {renderSimulator(feature.simulator)}
+                      <div className="absolute -top-3 -right-3 bg-primary text-white text-xs font-medium px-2 py-1 rounded-full">
+                        Live Demo
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Bottom CTA for benefits section */}
+          <div className="text-center mt-16 pt-8 border-t border-white/20">
+            <p className="text-lg opacity-80 mb-6">
+              Ready to experience these benefits for yourself?
+            </p>
+            <Button
+              asChild
+              className="bg-white text-black hover:bg-white/90 px-8 py-6 text-lg rounded-2xl font-medium"
+            >
+              <Link to="/auth">
+                Start Your Free Trial
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
