@@ -19,6 +19,7 @@ import Analytics from "./pages/Analytics";
 import SettingsPage from "./pages/Settings";
 import SubscriptionPlans from "./pages/SubscriptionPlans";
 import UserSubscriptions from "./pages/UserSubscriptions";
+import Contact from "./pages/Contact";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -96,6 +97,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <ProtectedRoute>
+                    <Contact />
                   </ProtectedRoute>
                 }
               />

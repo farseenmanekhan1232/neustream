@@ -267,6 +267,35 @@ export const adminApi = {
   updateUserSubscription: async (userId, subscriptionData) => {
     const response = await api.put(`/api/admin/user-subscriptions/${userId}`, subscriptionData);
     return response.data;
+  },
+
+  // ============================================
+  // CONTACT SUBMISSION MANAGEMENT
+  // ============================================
+
+  // Get all contact submissions
+  getContactSubmissions: async (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    const response = await api.get(`/api/contact?${queryParams}`);
+    return response.data;
+  },
+
+  // Get contact submission by ID
+  getContactSubmission: async (submissionId) => {
+    const response = await api.get(`/api/contact/${submissionId}`);
+    return response.data;
+  },
+
+  // Update contact submission
+  updateContactSubmission: async (submissionId, updateData) => {
+    const response = await api.patch(`/api/contact/${submissionId}`, updateData);
+    return response.data;
+  },
+
+  // Add response to contact submission
+  addContactResponse: async (submissionId, responseData) => {
+    const response = await api.post(`/api/contact/${submissionId}/responses`, responseData);
+    return response.data;
   }
 };
 

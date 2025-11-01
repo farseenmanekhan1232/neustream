@@ -13,6 +13,7 @@ const adminRoutes = require("./routes/admin");
 const subscriptionRoutes = require("./routes/subscriptions");
 const paymentRoutes = require("./routes/payments");
 const chatRoutes = require("./routes/chat");
+const contactRoutes = require("./routes/contact");
 const posthogService = require("./services/posthog");
 
 const app = express();
@@ -70,6 +71,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {

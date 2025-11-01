@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, MessageSquare, HelpCircle, Github, Twitter } from "lucide-react";
+import { apiService } from "@/services/api";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -30,13 +31,14 @@ export default function Contact() {
     setSubmitStatus("");
 
     try {
-      // Here you would typically send the form data to your backend
-      // For now, we'll simulate a successful submission
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await apiService.post("/contact", formData);
 
       setSubmitStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
+
+      console.log("Contact submission successful:", response);
     } catch (error) {
+      console.error("Contact submission error:", error);
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
