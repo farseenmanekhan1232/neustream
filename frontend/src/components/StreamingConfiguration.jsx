@@ -60,7 +60,6 @@ import ChatConnectorSetup from "./ChatConnectorSetup";
 import StreamConfig from "./StreamConfig";
 import PlatformSelector from "./PlatformSelector";
 import DestinationConfig from "./DestinationConfig";
-import StreamingSessionManager from "./StreamingSessionManager";
 
 // Platform configuration
 const platformConfig = {
@@ -835,9 +834,6 @@ function StreamingConfiguration() {
               )}
             </CardContent>
           </Card>
-
-          {/* Streaming Session Management */}
-          <StreamingSessionManager />
         </div>
         <div className="lg:col-span-1">
           {/* Chat Connectors Section */}

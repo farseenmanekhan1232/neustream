@@ -1,34 +1,52 @@
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   Outlet,
 } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Landing from "./pages/Landing";
-import Auth from "./pages/Auth";
-import AboutUs from "./pages/AboutUs";
-import Contact from "./pages/Contact";
-import FAQ from "./pages/FAQ";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import DashboardLayout from "./components/DashboardLayout";
-import DashboardOverview from "./components/DashboardOverview";
-import StreamingConfiguration from "./components/StreamingConfiguration";
-import StreamPreviewPage from "./components/StreamPreviewPage";
-import SubscriptionManagement from "./components/SubscriptionManagement";
-import PublicChatPage from "./components/PublicChatPage";
-import SetupGuide from "./pages/SetupGuide";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Features from "./pages/Features";
-import SettingsPage from "./components/SettingsPage";
+import { Loader2 } from "lucide-react";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 import { ThemeProvider } from "./components/theme-provider";
+
+// Lazy loaded components for code splitting
+const Landing = lazy(() => import("./pages/Landing"));
+const Auth = lazy(() => import("./pages/Auth"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const Contact = lazy(() => import("./pages/Contact"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Features = lazy(() => import("./pages/Features"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const SetupGuide = lazy(() => import("./pages/SetupGuide"));
+const PublicChatPage = lazy(() => import("./components/PublicChatPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Dashboard components (also lazy loaded)
+const DashboardLayout = lazy(() => import("./components/DashboardLayout"));
+const DashboardOverview = lazy(() => import("./components/DashboardOverview"));
+const StreamingConfiguration = lazy(() => import("./components/StreamingConfiguration"));
+const StreamPreviewPage = lazy(() => import("./components/StreamPreviewPage"));
+const SubscriptionManagement = lazy(() => import("./components/SubscriptionManagement"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Settings = lazy(() => import("./pages/Settings"));
+
+// Loading component for lazy loading
+const LazyLoading = ({ message = "Loading..." }) => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -63,72 +81,215 @@ function AppContent() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-
-      {/* Public pages */}
-      <Route path="/about" element={<AboutUs />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/faq" element={<FAQ />} />
-      <Route path="/help" element={<SetupGuide />} />
-      <Route path="/features" element={<Features />} />
-
-      {/* Blog routes */}
-      <Route path="/blog" element={<Blog />} />
-      <Route path="/blog/:slug" element={<BlogPost />} />
-
-      {/* Public legal pages */}
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsOfService />} />
-
-      {/* Public chat route for OBS integration */}
-      <Route path="/chat/:sourceId" element={<PublicChatPage />} />
-
-      {/* Auth routes - redirect authenticated users to dashboard */}
-      <Route
-        path="/auth"
-        element={
-          <ProtectedRoute requireAuth={false}>
-            <Auth />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Dashboard routes - require authentication */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute requireAuth={true}>
-            <DashboardLayout>
-              <Outlet />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="streaming" element={<StreamingConfiguration />} />
-        <Route path="destinations" element={<StreamingConfiguration />} />
-        <Route path="preview" element={<StreamPreviewPage />} />
-        <Route path="subscription" element={<SubscriptionManagement />} />
+    <Suspense fallback={<LazyLoading />}>
+      <Routes>
+        {/* Landing page */}
         <Route
-          path="analytics"
+          path="/"
           element={
-            <div className="w-full px-6 py-6 space-y-6  mx-auto">
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-normal mb-4">Analytics</h2>
-                <p className="text-muted-foreground">
-                  Coming soon! Track your stream performance and viewer
-                  engagement.
-                </p>
-              </div>
-            </div>
+            <Suspense fallback={<LazyLoading message="Loading home..." />}>
+              <Landing />
+            </Suspense>
           }
         />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Public pages */}
+        <Route
+          path="/about"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <AboutUs />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <Contact />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/faq"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <FAQ />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/features"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <Features />
+            </Suspense>
+          }
+        />
+
+        {/* Help and setup */}
+        <Route
+          path="/help"
+          element={
+            <Suspense fallback={<LazyLoading message="Loading guide..." />}>
+              <SetupGuide />
+            </Suspense>
+          }
+        />
+
+        {/* Blog routes */}
+        <Route
+          path="/blog"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <Blog />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/:slug"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <BlogPost />
+            </Suspense>
+          }
+        />
+
+        {/* Legal pages */}
+        <Route
+          path="/privacy"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <PrivacyPolicy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <TermsOfService />
+            </Suspense>
+          }
+        />
+
+        {/* Public utilities */}
+        <Route
+          path="/chat/:sourceId"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <PublicChatPage />
+            </Suspense>
+          }
+        />
+
+        {/* Authentication */}
+        <Route
+          path="/auth"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Suspense fallback={<LazyLoading message="Loading sign in..." />}>
+                <Auth />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected dashboard routes */}
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute requireAuth={true}>
+              <Suspense fallback={<LazyLoading message="Loading dashboard..." />}>
+                <DashboardLayout>
+                  <Outlet />
+                </DashboardLayout>
+              </Suspense>
+            </ProtectedRoute>
+          }
+        >
+          {/* Dashboard index */}
+          <Route
+            index
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <DashboardOverview />
+              </Suspense>
+            }
+          />
+
+          {/* Streaming configuration */}
+          <Route
+            path="streaming"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <StreamingConfiguration />
+              </Suspense>
+            }
+          />
+
+          {/* Destinations (alias for streaming) */}
+          <Route
+            path="destinations"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <StreamingConfiguration />
+              </Suspense>
+            }
+          />
+
+          {/* Stream preview */}
+          <Route
+            path="preview"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <StreamPreviewPage />
+              </Suspense>
+            }
+          />
+
+          {/* Subscription management */}
+          <Route
+            path="subscription"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <SubscriptionManagement />
+              </Suspense>
+            }
+          />
+
+          {/* Analytics */}
+          <Route
+            path="analytics"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <Analytics />
+              </Suspense>
+            }
+          />
+
+          {/* Settings */}
+          <Route
+            path="settings"
+            element={
+              <Suspense fallback={<LazyLoading />}>
+                <Settings />
+              </Suspense>
+            }
+          />
+        </Route>
+
+        {/* 404 Not Found */}
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<LazyLoading />}>
+              <NotFound />
+            </Suspense>
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
 

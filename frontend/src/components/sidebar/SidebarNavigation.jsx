@@ -14,92 +14,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Circle, LayoutDashboard, MonitorSpeaker, Radio, Crown, BarChart3, Settings, HelpCircle } from "lucide-react";
+import { Circle } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { usePostHog } from "@/hooks/usePostHog";
-
-const navigationGroups = [
-  {
-    title: "Streaming",
-    items: [
-      {
-        id: "overview",
-        label: "Overview",
-        icon: LayoutDashboard,
-        path: "/dashboard",
-        description: "View your streaming setup",
-        keywords: ["home", "main", "dashboard", "overview"],
-        shortcut: "1",
-      },
-      {
-        id: "streaming",
-        label: "Configuration",
-        icon: MonitorSpeaker,
-        path: "/dashboard/streaming",
-        description: "Manage sources and destinations",
-        keywords: ["config", "setup", "sources", "destinations", "streaming"],
-        shortcut: "2",
-      },
-      {
-        id: "preview",
-        label: "Stream Preview",
-        icon: Radio,
-        path: "/dashboard/preview",
-        description: "Monitor live streams and chat",
-        keywords: ["preview", "live", "stream", "monitor"],
-        shortcut: "3",
-        showLiveIndicator: true,
-      },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      {
-        id: "subscription",
-        label: "Subscription",
-        icon: Crown,
-        path: "/dashboard/subscription",
-        description: "Manage your subscription plan",
-        keywords: ["subscription", "plan", "billing", "payment"],
-        shortcut: "4",
-      },
-      {
-        id: "analytics",
-        label: "Analytics",
-        icon: BarChart3,
-        path: "/dashboard/analytics",
-        description: "Track performance metrics",
-        keywords: ["analytics", "metrics", "statistics", "performance"],
-        shortcut: "5",
-        badge: "Soon",
-      },
-      {
-        id: "settings",
-        label: "Settings",
-        icon: Settings,
-        path: "/dashboard/settings",
-        description: "Configure your account",
-        keywords: ["settings", "preferences", "configuration", "account"],
-        shortcut: "6",
-      },
-    ],
-  },
-  {
-    title: "Support",
-    items: [
-      {
-        id: "help",
-        label: "Setup Guide",
-        icon: HelpCircle,
-        path: "/help",
-        description: "Get help and setup instructions",
-        keywords: ["help", "guide", "tutorial", "setup", "support"],
-        shortcut: "7",
-      },
-    ],
-  },
-];
+import { SIDEBAR_NAVIGATION_GROUPS } from "@/config/routes";
 
 function SidebarNavigation({ searchQuery, isStreaming }) {
   const location = useLocation();
@@ -108,19 +26,19 @@ function SidebarNavigation({ searchQuery, isStreaming }) {
 
   // Filter navigation items based on search
   const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return navigationGroups;
+    if (!searchQuery.trim()) return SIDEBAR_NAVIGATION_GROUPS;
 
     const query = searchQuery.toLowerCase();
-    return navigationGroups
+    return SIDEBAR_NAVIGATION_GROUPS
       .map((group) => ({
         ...group,
         items: group.items.filter(
           (item) =>
-            item.label.toLowerCase().includes(query) ||
+            item.title.toLowerCase().includes(query) ||
             item.description.toLowerCase().includes(query) ||
-            item.keywords.some((keyword) =>
+            (item.keywords && item.keywords.some((keyword) =>
               keyword.toLowerCase().includes(query)
-            )
+            ))
         ),
       }))
       .filter((group) => group.items.length > 0);
@@ -130,10 +48,11 @@ function SidebarNavigation({ searchQuery, isStreaming }) {
 
   const handleNavigation = useCallback(
     (item) => {
-      trackUIInteraction(`nav_${item.id}`, "click", {
+      const itemId = item.path.split('/').pop() || 'overview';
+      trackUIInteraction(`nav_${itemId}`, "click", {
         from_page: location.pathname,
         to_page: item.path,
-        item_label: item.label,
+        item_label: item.title,
       });
     },
     [trackUIInteraction, location.pathname]
@@ -163,11 +82,12 @@ function SidebarNavigation({ searchQuery, isStreaming }) {
           )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {group.items.map((item) => {
+              {group.items.map((item, index) => {
                 const IconComponent = item.icon;
+                const itemId = item.path.split('/').pop() || 'overview';
 
                 return (
-                  <SidebarMenuItem key={item.id}>
+                  <SidebarMenuItem key={itemId}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <SidebarMenuButton
@@ -176,8 +96,8 @@ function SidebarNavigation({ searchQuery, isStreaming }) {
                           onClick={() => handleNavigation(item)}
                         >
                           <Link to={item.path}>
-                            <IconComponent className="h-4 w-4" />
-                            <span>{item.label}</span>
+                            {IconComponent && <IconComponent className="h-4 w-4" />}
+                            <span>{item.title}</span>
 
                             {/* Live indicator for preview page */}
                             {item.showLiveIndicator && isStreaming && (
