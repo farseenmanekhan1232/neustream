@@ -69,66 +69,6 @@ function Landing() {
       });
     }
 
-    // Add streaming quality based on plan name
-    if (plan.name.toLowerCase() === "free") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "720p HD streaming quality",
-      });
-    } else if (plan.name.toLowerCase() === "pro") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "1080p Full HD streaming quality",
-      });
-    } else if (plan.name.toLowerCase() === "business") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "4K Ultra HD streaming quality",
-      });
-    }
-
     // Add analytics feature
     if (plan.name.toLowerCase() === "free") {
       features.push({
@@ -364,6 +304,23 @@ function Landing() {
                   ),
                 )}
               </div>
+            </div>
+
+            <div className="mt-6">
+              <a
+                href="https://www.producthunt.com/products/neustream?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-neustream"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1033369&theme=light&t=1762067006843"
+                  alt="Neustream - Multi&#0045;platform&#0032;streaming | Product Hunt"
+                  style={{ width: "250px", height: "54px" }}
+                  width="250"
+                  height="54"
+                  className="mx-auto"
+                />
+              </a>
             </div>
           </div>
         </div>
