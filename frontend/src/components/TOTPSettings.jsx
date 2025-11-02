@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Shield, Smartphone, Key, AlertTriangle, CheckCircle, XCircle, Copy, Download, Eye, EyeOff } from "lucide-react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ const TOTPSettings = () => {
   const [setupDialogOpen, setSetupDialogOpen] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [setupData, setSetupData] = useState(null);
+  const [qrCodeDataURL, setQrCodeDataURL] = useState("");
   const [disableDialogOpen, setDisableDialogOpen] = useState(false);
   const [disableCode, setDisableCode] = useState("");
   const [backupCodesDialogOpen, setBackupCodesDialogOpen] = useState(false);
@@ -36,8 +38,26 @@ const TOTPSettings = () => {
   // Setup TOTP mutation
   const setupTOTPMutation = useMutation({
     mutationFn: () => totpService.setupTOTP(),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setSetupData(data);
+
+      // Generate QR code from the OTPAuth URL
+      try {
+        const qrDataUrl = await QRCode.toDataURL(data.qrCodeURL, {
+          width: 200,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataURL(qrDataUrl);
+      } catch (qrError) {
+        console.error('Error generating QR code:', qrError);
+        toast.error('Failed to generate QR code');
+        return;
+      }
+
       setSetupDialogOpen(true);
     },
     onError: (error) => {
@@ -241,11 +261,11 @@ const TOTPSettings = () => {
           </DialogHeader>
 
           <div className="space-y-4">
-            {setupData?.qrCodeUrl && (
+            {qrCodeDataURL && (
               <div className="flex flex-col items-center space-y-3">
                 <div className="p-4 bg-white rounded-lg border">
                   <img
-                    src={setupData.qrCodeUrl}
+                    src={qrCodeDataURL}
                     alt="TOTP QR Code"
                     className="w-48 h-48"
                   />
@@ -280,6 +300,7 @@ const TOTPSettings = () => {
                 setSetupDialogOpen(false);
                 setVerificationCode("");
                 setSetupData(null);
+                setQrCodeDataURL("");
               }}
               disabled={verifyTOTPMutation.isLoading}
             >
