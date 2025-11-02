@@ -25,6 +25,7 @@ import SetupGuide from "./pages/SetupGuide";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Features from "./pages/Features";
+import SettingsPage from "./components/SettingsPage";
 import { usePostHog } from "./hooks/usePostHog";
 import { useEffect } from "react";
 import { ThemeProvider } from "./components/theme-provider";
@@ -123,20 +124,7 @@ function AppContent() {
             </div>
           }
         />
-        <Route
-          path="settings"
-          element={
-            <div className="w-full px-6 py-6 space-y-6  mx-auto">
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-normal mb-4">Settings</h2>
-                <p className="text-muted-foreground">
-                  Account settings coming soon! Manage your profile, streaming
-                  preferences, and integrations.
-                </p>
-              </div>
-            </div>
-          }
-        />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
