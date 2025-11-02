@@ -1,4 +1,4 @@
-import api from './api';
+import { apiService } from './api';
 
 /**
  * TOTP Service for Two-Factor Authentication
@@ -11,7 +11,7 @@ import api from './api';
  */
 export const getTOTPStatus = async () => {
   try {
-    const response = await api.get('/totp/status');
+    const response = await apiService.get('/totp/status');
     return response.data;
   } catch (error) {
     console.error('Failed to get TOTP status:', error);
@@ -26,7 +26,7 @@ export const getTOTPStatus = async () => {
  */
 export const setupTOTP = async () => {
   try {
-    const response = await api.post('/totp/setup');
+    const response = await apiService.post('/totp/setup');
     return response.data;
   } catch (error) {
     console.error('Failed to setup TOTP:', error);
@@ -42,7 +42,7 @@ export const setupTOTP = async () => {
  */
 export const verifyTOTP = async (code, secret) => {
   try {
-    const response = await api.post('/totp/verify', { code, secret });
+    const response = await apiService.post('/totp/verify', { code, secret });
     return response.data;
   } catch (error) {
     console.error('Failed to verify TOTP:', error);
@@ -57,7 +57,7 @@ export const verifyTOTP = async (code, secret) => {
  */
 export const disableTOTP = async (code) => {
   try {
-    const response = await api.post('/totp/disable', { code });
+    const response = await apiService.post('/totp/disable', { code });
     return response.data;
   } catch (error) {
     console.error('Failed to disable TOTP:', error);
@@ -72,7 +72,7 @@ export const disableTOTP = async (code) => {
  */
 export const generateBackupCodes = async (code) => {
   try {
-    const response = await api.post('/totp/backup-codes', { code });
+    const response = await apiService.post('/totp/backup-codes', { code });
     return response.data;
   } catch (error) {
     console.error('Failed to generate backup codes:', error);
@@ -88,7 +88,7 @@ export const generateBackupCodes = async (code) => {
  */
 export const startStreamingSession = async (code, durationHours = 4) => {
   try {
-    const response = await api.post('/streaming/sessions/start', {
+    const response = await apiService.post('/streaming/sessions/start', {
       code,
       durationHours
     });
@@ -105,7 +105,7 @@ export const startStreamingSession = async (code, durationHours = 4) => {
  */
 export const stopStreamingSession = async () => {
   try {
-    const response = await api.post('/streaming/sessions/stop');
+    const response = await apiService.post('/streaming/sessions/stop');
     return response.data;
   } catch (error) {
     console.error('Failed to stop streaming session:', error);
@@ -119,7 +119,7 @@ export const stopStreamingSession = async () => {
  */
 export const getActiveSessions = async () => {
   try {
-    const response = await api.get('/streaming/sessions');
+    const response = await apiService.get('/streaming/sessions');
     return response.data;
   } catch (error) {
     console.error('Failed to get active sessions:', error);
@@ -134,7 +134,7 @@ export const getActiveSessions = async () => {
  */
 export const emergencyStopStreaming = async (backupCode) => {
   try {
-    const response = await api.post('/streaming/emergency/stop', { backupCode });
+    const response = await apiService.post('/streaming/emergency/stop', { backupCode });
     return response.data;
   } catch (error) {
     console.error('Failed to emergency stop streaming:', error);

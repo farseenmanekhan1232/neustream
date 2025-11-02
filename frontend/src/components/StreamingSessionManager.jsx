@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Play, Stop, Clock, Shield, AlertTriangle, Key, RefreshCw } from "lucide-react";
+import { Play, Square, Clock, Shield, AlertTriangle, Key, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ const StreamingSessionManager = ({ onSessionChange }) => {
   // State for session management
   const [startSessionDialogOpen, setStartSessionDialogOpen] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [emergencyStopDialogOpen, setEmergencyStopDialogOpen] = useState(false);
+  const [emergencySquareDialogOpen, setEmergencySquareDialogOpen] = useState(false);
   const [emergencyCode, setEmergencyCode] = useState("");
   const [sessionDuration, setSessionDuration] = useState(4); // Default 4 hours
 
@@ -63,7 +63,7 @@ const StreamingSessionManager = ({ onSessionChange }) => {
     },
   });
 
-  // Stop streaming session mutation
+  // Square streaming session mutation
   const stopSessionMutation = useMutation({
     mutationFn: () => totpService.stopStreamingSession(),
     onSuccess: () => {
@@ -81,13 +81,13 @@ const StreamingSessionManager = ({ onSessionChange }) => {
   });
 
   // Emergency stop mutation
-  const emergencyStopMutation = useMutation({
-    mutationFn: (backupCode) => totpService.emergencyStopStreaming(backupCode),
+  const emergencySquareMutation = useMutation({
+    mutationFn: (backupCode) => totpService.emergencySquareStreaming(backupCode),
     onSuccess: (data) => {
-      setEmergencyStopDialogOpen(false);
+      setEmergencySquareDialogOpen(false);
       setEmergencyCode("");
       queryClient.invalidateQueries(["streaming-sessions"]);
-      toast.success(`Stopped ${data.stoppedSessions} active sessions`);
+      toast.success(`Squareped ${data.stoppedSessions} active sessions`);
 
       // Notify parent component
       if (onSessionChange) {
@@ -115,16 +115,16 @@ const StreamingSessionManager = ({ onSessionChange }) => {
     startSessionMutation.mutate({ code: verificationCode, durationHours: sessionDuration });
   };
 
-  const handleStopSession = () => {
+  const handleSquareSession = () => {
     stopSessionMutation.mutate();
   };
 
-  const handleEmergencyStop = () => {
+  const handleEmergencySquare = () => {
     if (!emergencyCode || emergencyCode.length !== 16) {
       toast.error("Please enter a valid backup code");
       return;
     }
-    emergencyStopMutation.mutate(emergencyCode);
+    emergencySquareMutation.mutate(emergencyCode);
   };
 
   // Calculate time remaining for active session
@@ -201,11 +201,11 @@ const StreamingSessionManager = ({ onSessionChange }) => {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={handleStopSession}
+                  onClick={handleSquareSession}
                   disabled={stopSessionMutation.isLoading}
                 >
-                  <Stop className="h-4 w-4 mr-2" />
-                  Stop Session
+                  <Square className="h-4 w-4 mr-2" />
+                  Square Session
                 </Button>
               ) : (
                 <Button
@@ -222,11 +222,11 @@ const StreamingSessionManager = ({ onSessionChange }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setEmergencyStopDialogOpen(true)}
-                  disabled={emergencyStopMutation.isLoading}
+                  onClick={() => setEmergencySquareDialogOpen(true)}
+                  disabled={emergencySquareMutation.isLoading}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2" />
-                  Emergency Stop
+                  Emergency Square
                 </Button>
               )}
             </div>
@@ -237,7 +237,7 @@ const StreamingSessionManager = ({ onSessionChange }) => {
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 Two-factor authentication is required to start secure streaming sessions.
-                Enable it in <a href="/dashboard/settings" className="underline">Settings > Security</a>.
+                Enable it in <a href="/dashboard/settings" className="underline">Settings {"&gt;"} Security</a>.
               </AlertDescription>
             </Alert>
           )}
@@ -361,11 +361,11 @@ const StreamingSessionManager = ({ onSessionChange }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Emergency Stop Dialog */}
-      <Dialog open={emergencyStopDialogOpen} onOpenChange={setEmergencyStopDialogOpen}>
+      {/* Emergency Square Dialog */}
+      <Dialog open={emergencySquareDialogOpen} onOpenChange={setEmergencySquareDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Emergency Stop</DialogTitle>
+            <DialogTitle>Emergency Square</DialogTitle>
             <DialogDescription>
               Use a backup code to immediately stop all streaming sessions.
             </DialogDescription>
@@ -387,7 +387,7 @@ const StreamingSessionManager = ({ onSessionChange }) => {
                 placeholder="XXXX-XXXX-XXXX-XXXX"
                 value={emergencyCode}
                 onChange={(e) => setEmergencyCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
-                disabled={emergencyStopMutation.isLoading}
+                disabled={emergencySquareMutation.isLoading}
               />
               <p className="text-xs text-muted-foreground">
                 Enter one of your backup codes (16 characters with dashes)
@@ -399,19 +399,19 @@ const StreamingSessionManager = ({ onSessionChange }) => {
             <Button
               variant="outline"
               onClick={() => {
-                setEmergencyStopDialogOpen(false);
+                setEmergencySquareDialogOpen(false);
                 setEmergencyCode("");
               }}
-              disabled={emergencyStopMutation.isLoading}
+              disabled={emergencySquareMutation.isLoading}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
-              onClick={handleEmergencyStop}
-              disabled={emergencyStopMutation.isLoading || !emergencyCode}
+              onClick={handleEmergencySquare}
+              disabled={emergencySquareMutation.isLoading || !emergencyCode}
             >
-              {emergencyStopMutation.isLoading ? "Stopping..." : "Emergency Stop"}
+              {emergencySquareMutation.isLoading ? "Squareping..." : "Emergency Square"}
             </Button>
           </DialogFooter>
         </DialogContent>
