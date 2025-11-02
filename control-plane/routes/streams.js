@@ -2,9 +2,11 @@ const express = require("express");
 const Database = require("../lib/database");
 const { authenticateToken, optionalAuth } = require("../middleware/auth");
 const posthogService = require("../services/posthog");
+const SessionService = require("../services/sessionService");
 
 const router = express.Router();
 const db = new Database();
+const sessionService = new SessionService();
 
 // Get user's stream info - requires authentication
 router.get("/info", authenticateToken, async (req, res) => {
@@ -74,52 +76,102 @@ router.get("/forwarding/:streamKey", async (req, res) => {
     let userId = null;
     let destinations = [];
 
-    // First, try to find the stream key in stream_sources table (new architecture)
-    const sources = await db.query(
-      `SELECT s.*, u.email FROM stream_sources s
-       JOIN users u ON s.user_id = u.id
-       WHERE s.stream_key = $1 AND s.is_active = true`,
-      [streamKey]
-    );
+    // First, check if this stream key has an active session
+    const session = await sessionService.getSessionByStreamKey(streamKey);
+    if (session && sessionService.isSessionValid(session)) {
+      // Session exists - use pre-authorized configuration
+      console.log(`Using session-based forwarding for stream key: ${streamKey}`);
 
-    if (sources.length > 0) {
-      // Found in stream_sources table (new architecture)
-      sourceInfo = sources[0];
-      userId = sourceInfo.user_id;
+      // Extract user ID and destinations from session
+      userId = session.userId;
+      const sessionStreamKeys = session.streamKeys;
 
-      // Get destinations for this specific source
-      destinations = await db.query(
-        `SELECT platform, rtmp_url, stream_key FROM source_destinations
-         WHERE source_id = $1 AND is_active = true
-         ORDER BY created_at`,
-        [sourceInfo.id]
-      );
+      // Get the specific stream key configuration from session
+      if (sessionStreamKeys[streamKey]) {
+        const streamConfig = sessionStreamKeys[streamKey];
 
-      console.log(
-        `Forwarding config for source: ${sourceInfo.name} (${destinations.length} destinations)`
-      );
+        if (streamConfig.type === 'source') {
+          // Get source info
+          const sources = await db.query(
+            `SELECT s.*, u.email FROM stream_sources s
+             JOIN users u ON s.user_id = u.id
+             WHERE s.id = $1`,
+            [streamConfig.sourceId]
+          );
+          sourceInfo = sources[0];
+
+          // Get destinations for this source
+          destinations = await db.query(
+            `SELECT platform, rtmp_url, stream_key FROM source_destinations
+             WHERE source_id = $1 AND is_active = true
+             ORDER BY created_at`,
+            [streamConfig.sourceId]
+          );
+        } else if (streamConfig.type === 'legacy') {
+          // Legacy user - get user info
+          const users = await db.query(
+            "SELECT id, email FROM users WHERE id = $1",
+            [userId]
+          );
+
+          // Get destinations for this user
+          destinations = await db.query(
+            "SELECT platform, rtmp_url, stream_key FROM destinations WHERE user_id = $1 AND is_active = true",
+            [userId]
+          );
+        }
+      }
     } else {
-      // Fallback to legacy users table for backward compatibility
-      const users = await db.query(
-        "SELECT id, email FROM users WHERE stream_key = $1",
+      // No active session - use traditional authentication
+      console.log(`No active session for stream key: ${streamKey}, using traditional auth`);
+
+      // First, try to find the stream key in stream_sources table (new architecture)
+      const sources = await db.query(
+        `SELECT s.*, u.email FROM stream_sources s
+         JOIN users u ON s.user_id = u.id
+         WHERE s.stream_key = $1 AND s.is_active = true`,
         [streamKey]
       );
 
-      if (users.length === 0) {
-        return res.status(404).json({ error: "Stream key not found" });
+      if (sources.length > 0) {
+        // Found in stream_sources table (new architecture)
+        sourceInfo = sources[0];
+        userId = sourceInfo.user_id;
+
+        // Get destinations for this specific source
+        destinations = await db.query(
+          `SELECT platform, rtmp_url, stream_key FROM source_destinations
+           WHERE source_id = $1 AND is_active = true
+           ORDER BY created_at`,
+          [sourceInfo.id]
+        );
+
+        console.log(
+          `Forwarding config for source: ${sourceInfo.name} (${destinations.length} destinations)`
+        );
+      } else {
+        // Fallback to legacy users table for backward compatibility
+        const users = await db.query(
+          "SELECT id, email FROM users WHERE stream_key = $1",
+          [streamKey]
+        );
+
+        if (users.length === 0) {
+          return res.status(404).json({ error: "Stream key not found" });
+        }
+
+        userId = users[0].id;
+
+        // Get destinations for this user (legacy system)
+        destinations = await db.query(
+          "SELECT platform, rtmp_url, stream_key FROM destinations WHERE user_id = $1 AND is_active = true",
+          [userId]
+        );
+
+        console.log(
+          `Forwarding config for legacy user: ${users[0].email} (${destinations.length} destinations)`
+        );
       }
-
-      userId = users[0].id;
-
-      // Get destinations for this user (legacy system)
-      destinations = await db.query(
-        "SELECT platform, rtmp_url, stream_key FROM destinations WHERE user_id = $1 AND is_active = true",
-        [userId]
-      );
-
-      console.log(
-        `Forwarding config for legacy user: ${users[0].email} (${destinations.length} destinations)`
-      );
     }
 
     // Build RTMP push configuration

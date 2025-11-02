@@ -15,6 +15,8 @@ const paymentRoutes = require("./routes/payments");
 const chatRoutes = require("./routes/chat");
 const contactRoutes = require("./routes/contact");
 const blogRoutes = require("./routes/blog");
+const streamingRoutes = require("./routes/streaming");
+const totpRoutes = require("./routes/totp");
 const posthogService = require("./services/posthog");
 
 const app = express();
@@ -74,6 +76,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/blog", blogRoutes);
+app.use("/api/streaming", streamingRoutes);
+app.use("/api/totp", totpRoutes);
 
 // Analytics middleware
 app.use((req, res, next) => {
