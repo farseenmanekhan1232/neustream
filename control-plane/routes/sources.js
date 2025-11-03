@@ -441,6 +441,18 @@ router.post("/:sourceId/destinations", authenticateToken, canCreateDestination, 
         .json({ error: "Platform, RTMP URL, and stream key are required" });
     }
 
+    // Security: Prevent using Neustream stream keys as destinations
+    const isNeustreamStreamKey = await db.query(
+      "SELECT id FROM stream_sources WHERE stream_key = $1 UNION SELECT id FROM users WHERE stream_key = $1",
+      [streamKey]
+    );
+
+    if (isNeustreamStreamKey.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "Cannot use Neustream stream keys as destinations. Please use external platform stream keys only." });
+    }
+
     // Create destination for this source
     const result = await db.run(
       "INSERT INTO source_destinations (source_id, platform, rtmp_url, stream_key) VALUES ($1, $2, $3, $4) RETURNING *",

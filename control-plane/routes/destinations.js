@@ -31,6 +31,18 @@ router.post("/", authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
   try {
+    // Security: Prevent using Neustream stream keys as destinations
+    const isNeustreamStreamKey = await db.query(
+      "SELECT id FROM stream_sources WHERE stream_key = $1 UNION SELECT id FROM users WHERE stream_key = $1",
+      [streamKey]
+    );
+
+    if (isNeustreamStreamKey.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "Cannot use Neustream stream keys as destinations. Please use external platform stream keys only." });
+    }
+
     const result = await db.run(
       "INSERT INTO destinations (user_id, platform, rtmp_url, stream_key) VALUES ($1, $2, $3, $4) RETURNING *",
       [userId, platform, rtmpUrl, streamKey]
@@ -49,6 +61,20 @@ router.put("/:id", authenticateToken, handleGenericIdParam('destinations'), asyn
   const { platform, rtmpUrl, streamKey, isActive } = req.body;
 
   try {
+    // Security: Prevent using Neustream stream keys as destinations
+    if (streamKey) {
+      const isNeustreamStreamKey = await db.query(
+        "SELECT id FROM stream_sources WHERE stream_key = $1 UNION SELECT id FROM users WHERE stream_key = $1",
+        [streamKey]
+      );
+
+      if (isNeustreamStreamKey.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "Cannot use Neustream stream keys as destinations. Please use external platform stream keys only." });
+      }
+    }
+
     // Ensure the destination belongs to the authenticated user
     const result = await db.run(
       "UPDATE destinations SET platform = $1, rtmp_url = $2, stream_key = $3, is_active = $4 WHERE id = $5 AND user_id = $6 RETURNING *",
