@@ -203,7 +203,7 @@ function LiveChatSimulator() {
   }, []); // Empty dependency array - only run once
 
   return (
-    <Card className="h-[500px] flex flex-col bg-white text-black border-0 rounded-xl overflow-hidden">
+    <Card className="h-[500px] flex flex-col bg-white text-black border-0 rounded-xl overflow-hidden max-w-5xl">
       <CardHeader className="pb-3 flex-shrink-0 bg-white ">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center">

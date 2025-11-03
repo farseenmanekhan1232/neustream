@@ -252,7 +252,7 @@ function Features() {
 
             <div className="space-y-4 max-w-3xl">
               <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
-                Every Feature You Need to
+                Every Feature You Need to{" "}
                 <TextHighlighter {...highlightConfig}>
                   Stream Like a Pro
                 </TextHighlighter>
