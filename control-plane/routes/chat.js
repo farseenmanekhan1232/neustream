@@ -5,6 +5,7 @@ const Database = require("../lib/database");
 const { authenticateToken } = require("../middleware/auth");
 const posthogService = require("../services/posthog");
 const { handleGenericIdParam } = require("../middleware/idHandler");
+const { canCreateChatConnector } = require("../middleware/planValidation");
 
 const router = express.Router();
 const db = new Database();
@@ -48,6 +49,7 @@ router.post(
   "/sources/:sourceId/connectors",
   authenticateToken,
   handleGenericIdParam('stream_sources'),
+  canCreateChatConnector,
   async (req, res) => {
     const { sourceId } = req.params;
     const { platform, connectorType, config } = req.body;
@@ -275,6 +277,7 @@ router.get(
 router.get(
   "/connectors/:platform/oauth/start",
   authenticateToken,
+  canCreateChatConnector,
   async (req, res) => {
     const { platform } = req.params;
     const { sourceId, redirectUrl } = req.query;

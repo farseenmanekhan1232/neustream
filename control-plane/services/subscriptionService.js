@@ -27,21 +27,14 @@ class SubscriptionService {
         FROM user_subscriptions us
         JOIN subscription_plans sp ON us.plan_id = sp.id
         WHERE us.user_id = $1 AND us.status = 'active'
+        AND us.current_period_end > NOW()
         ORDER BY us.created_at DESC
         LIMIT 1
       `, [userId]);
 
       if (result.length === 0) {
-        // Return default free plan
-        const freePlan = await this.getPlanByName('Free');
-        const processedPlan = await currencyService.processPlanWithCurrency(freePlan, currency);
-        return {
-          ...processedPlan,
-          status: 'active',
-          billing_cycle: 'monthly',
-          current_period_start: new Date(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-        };
+        // Return default free plan with limited features
+        return await this.getFreePlanWithLimitedFeatures(currency);
       }
 
       const subscription = result[0];
@@ -53,6 +46,27 @@ class SubscriptionService {
       };
     } catch (error) {
       console.error('Error getting user subscription:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get free plan with limited features for expired subscriptions
+   */
+  async getFreePlanWithLimitedFeatures(currency = 'USD') {
+    try {
+      const freePlan = await this.getPlanByName('Free');
+      const processedPlan = await currencyService.processPlanWithCurrency(freePlan, currency);
+      return {
+        ...processedPlan,
+        status: 'active',
+        billing_cycle: 'monthly',
+        current_period_start: new Date(),
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        is_expired_subscription: true
+      };
+    } catch (error) {
+      console.error('Error getting free plan with limited features:', error);
       throw error;
     }
   }
@@ -114,12 +128,14 @@ class SubscriptionService {
         limits: {
           max_sources: subscription.max_sources,
           max_destinations: subscription.max_destinations,
-          max_streaming_hours_monthly: subscription.max_streaming_hours_monthly
+          max_streaming_hours_monthly: subscription.max_streaming_hours_monthly,
+          max_chat_connectors: subscription.features?.chat_connectors || 1
         },
         current_usage: {
           sources_count: limits.current_sources_count || 0,
           destinations_count: limits.current_destinations_count || 0,
-          streaming_hours: limits.current_month_streaming_hours || 0
+          streaming_hours: limits.current_month_streaming_hours || 0,
+          chat_connectors_count: limits.current_chat_connectors_count || 0
         },
         features: subscription.features
       };
@@ -138,7 +154,12 @@ class SubscriptionService {
         'SELECT * FROM plan_limits_tracking WHERE user_id = $1',
         [userId]
       );
-      return result[0] || { current_sources_count: 0, current_destinations_count: 0, current_month_streaming_hours: 0 };
+      return result[0] || {
+        current_sources_count: 0,
+        current_destinations_count: 0,
+        current_month_streaming_hours: 0,
+        current_chat_connectors_count: 0
+      };
     } catch (error) {
       console.error('Error getting user limits:', error);
       throw error;
@@ -202,6 +223,58 @@ class SubscriptionService {
     } catch (error) {
       console.error('Error checking streaming allowance:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Check if user can create a new chat connector
+   */
+  async canCreateChatConnector(userId) {
+    try {
+      const subscription = await this.getUserSubscription(userId);
+      const limits = await this.getUserLimits(userId);
+      const maxChatConnectors = subscription.features?.chat_connectors || 1;
+
+      return {
+        allowed: limits.current_chat_connectors_count < maxChatConnectors,
+        current: limits.current_chat_connectors_count,
+        max: maxChatConnectors,
+        remaining: maxChatConnectors - limits.current_chat_connectors_count
+      };
+    } catch (error) {
+      console.error('Error checking chat connector creation:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if user has an active paid subscription
+   */
+  async hasActivePaidSubscription(userId) {
+    try {
+      const subscription = await this.getUserSubscription(userId);
+      return !subscription.is_expired_subscription && subscription.plan_name !== 'Free';
+    } catch (error) {
+      console.error('Error checking active paid subscription:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get users with expired subscriptions
+   */
+  async getUsersWithExpiredSubscriptions() {
+    try {
+      const result = await this.db.query(`
+        SELECT DISTINCT us.user_id
+        FROM user_subscriptions us
+        WHERE us.status = 'active'
+        AND us.current_period_end < NOW()
+      `);
+      return result.map(row => row.user_id);
+    } catch (error) {
+      console.error('Error getting users with expired subscriptions:', error);
+      return [];
     }
   }
 

@@ -125,9 +125,18 @@ wsServer.setChatConnectorService(chatConnectorService);
 app.set("chatConnectorService", chatConnectorService);
 console.log("Chat connector service initialized");
 
+// Initialize Subscription Cleanup Service
+const subscriptionCleanupService = require("./services/subscriptionCleanupService");
+subscriptionCleanupService.start();
+console.log("Subscription cleanup service started");
+
 // Graceful shutdown
 const gracefulShutdown = async () => {
   console.log("Received shutdown signal, shutting down gracefully...");
+
+  // Stop subscription cleanup service
+  subscriptionCleanupService.stop();
+  console.log("Subscription cleanup service stopped");
 
   // Close server
   server.close(() => {

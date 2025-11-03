@@ -127,10 +127,38 @@ const hasFeature = (feature) => {
   };
 };
 
+/**
+ * Middleware to check if user can create a new chat connector
+ */
+const canCreateChatConnector = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const canCreate = await subscriptionService.canCreateChatConnector(userId);
+
+    if (!canCreate.allowed) {
+      return res.status(403).json({
+        error: 'Chat connector limit exceeded',
+        message: `You have reached the maximum number of chat connectors allowed by your plan (${canCreate.current}/${canCreate.max})`,
+        current: canCreate.current,
+        limit: canCreate.max,
+        upgrade_url: '/billing/upgrade',
+        code: 'CHAT_CONNECTOR_LIMIT_EXCEEDED'
+      });
+    }
+
+    req.planLimits = { canCreateChatConnector: canCreate };
+    next();
+  } catch (error) {
+    console.error('Plan validation error (chat connector creation):', error);
+    res.status(500).json({ error: 'Failed to validate plan limits' });
+  }
+};
+
 module.exports = {
   canCreateSource,
   canCreateDestination,
   canStream,
   getUserPlanInfo,
-  hasFeature
+  hasFeature,
+  canCreateChatConnector
 };

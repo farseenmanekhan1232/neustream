@@ -524,6 +524,73 @@ class ChatConnectorService {
       console.error(`Failed to initialize connectors for source ${sourceId}:`, error);
     }
   }
+
+  /**
+   * Disconnect all chat connectors for a user
+   */
+  async disconnectUserConnectors(userId) {
+    try {
+      const userConnectors = await this.db.query(`
+        SELECT cc.* FROM chat_connectors cc
+        JOIN stream_sources ss ON cc.source_id = ss.id
+        WHERE ss.user_id = $1 AND cc.is_active = true
+      `, [userId]);
+
+      console.log(`Disconnecting ${userConnectors.length} chat connectors for user ${userId}`);
+
+      for (const connector of userConnectors) {
+        await this.stopConnector(connector.id);
+        await this.db.run(
+          'UPDATE chat_connectors SET is_active = false WHERE id = $1',
+          [connector.id]
+        );
+        console.log(`Disconnected chat connector ${connector.id} for user ${userId}`);
+      }
+
+      return userConnectors.length;
+    } catch (error) {
+      console.error(`Failed to disconnect chat connectors for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gracefully disconnect connectors for users with expired subscriptions
+   * Keeps the most recently used connector active for free tier
+   */
+  async disconnectExpiredSubscriptionConnectors(userId) {
+    try {
+      const userConnectors = await this.db.query(`
+        SELECT cc.* FROM chat_connectors cc
+        JOIN stream_sources ss ON cc.source_id = ss.id
+        WHERE ss.user_id = $1 AND cc.is_active = true
+        ORDER BY cc.updated_at DESC
+      `, [userId]);
+
+      if (userConnectors.length === 0) {
+        return 0;
+      }
+
+      console.log(`Gracefully disconnecting ${userConnectors.length - 1} chat connectors for expired subscription user ${userId}`);
+
+      // Keep the most recently used connector active
+      const connectorsToDisconnect = userConnectors.slice(1);
+
+      for (const connector of connectorsToDisconnect) {
+        await this.stopConnector(connector.id);
+        await this.db.run(
+          'UPDATE chat_connectors SET is_active = false WHERE id = $1',
+          [connector.id]
+        );
+        console.log(`Gracefully disconnected chat connector ${connector.id} for user ${userId}`);
+      }
+
+      return connectorsToDisconnect.length;
+    } catch (error) {
+      console.error(`Failed to gracefully disconnect chat connectors for user ${userId}:`, error);
+      throw error;
+    }
+  }
 }
 
 module.exports = ChatConnectorService;
