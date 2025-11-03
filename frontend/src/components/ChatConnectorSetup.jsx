@@ -182,7 +182,7 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
     <Card>
       <CardTitle>{""}</CardTitle>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-4 mt-4">
           <div>
             <span className="relative">
               <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
