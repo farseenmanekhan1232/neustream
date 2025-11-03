@@ -99,9 +99,9 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   const currentUsage = subscriptionData?.current_usage;
   const limits = subscriptionData?.limits;
   const subscription = subscriptionData?.subscription;
-  const canCreateConnector = chatConnectorLimits?.allowed ?? true;
-  const remainingConnectors = chatConnectorLimits?.remaining ?? 1;
-  const currentConnectors = chatConnectorLimits?.current ?? 0;
+  const canCreateConnector = chatConnectorLimits?.allowed ?? (connectors.length < 1);
+  const remainingConnectors = chatConnectorLimits?.remaining ?? (1 - connectors.length);
+  const currentConnectors = chatConnectorLimits?.current ?? connectors.length;
   const maxConnectors = chatConnectorLimits?.max ?? 1;
 
   // Mutation for starting OAuth flow
@@ -141,6 +141,8 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["chatConnectors", sourceId]);
+      queryClient.invalidateQueries(["chatConnectorLimits"]);
+      queryClient.invalidateQueries(["subscriptionUsage"]);
     },
   });
 
