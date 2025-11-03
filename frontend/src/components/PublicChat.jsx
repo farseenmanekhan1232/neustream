@@ -387,7 +387,7 @@ function PublicChat({
       ) : (
         messages.filter(shouldShowSystemMessage).map((message) => (
           <div key={message.id} className={messageClass}>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-start justify-start space-x-1">
               {message.platform && (
                 <span className="text-muted-foreground">
                   {getPlatformIcon(message.platform)}
