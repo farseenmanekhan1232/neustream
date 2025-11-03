@@ -12,7 +12,7 @@ import {
 import { apiService } from "../services/api";
 import { Twitch, Youtube, Instagram, Facebook, Settings } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { Card } from "./ui/card";
+import { Card, CardContent, CardTitle } from "./ui/card";
 
 const PLATFORMS = [
   {
@@ -180,94 +180,97 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
 
   return (
     <Card>
-      <div className="space-y-4">
-        <div>
-          <span className="relative">
-            <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
-            <Badge
-              className={
-                "absolute right-0 top-0 bg-white text-black rounded-full text-sm"
-              }
-            >
-              beta
-            </Badge>
-          </span>
-          <p className="text-sm text-muted-foreground">
-            Connect streaming platforms to aggregate chat messages in your
-            stream preview
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          {PLATFORMS.map((platform) => {
-            const { status, connector } = getPlatformStatus(platform.id);
-            const isConnected = status === "connected";
-            const isAvailable = status === "available";
-            const isComingSoon = status === "coming-soon";
-
-            return (
-              <div
-                key={platform.id}
-                className={`flex items-center justify-between p-3 rounded-lg border ${
-                  isConnected
-                    ? "bg-green-50 border-green-200"
-                    : isComingSoon
-                      ? "bg-muted/30 border-muted"
-                      : "border-border hover:bg-muted/50"
-                }`}
+      <CardTitle>{""}</CardTitle>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <span className="relative">
+              <h3 className="text-lg font-semibold mb-1">Chat Connectors</h3>
+              <Badge
+                className={
+                  "absolute right-0 top-0 bg-white text-black rounded-full text-sm"
+                }
               >
-                <div className="flex items-center space-x-3">
-                  <platform.icon className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{platform.name}</span>
-                      {isConnected && (
-                        <span className="text-xs text-green-600 font-medium">
-                          Connected
-                        </span>
-                      )}
-                      {isComingSoon && (
-                        <span className="text-xs text-muted-foreground">
-                          Soon
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {platform.description}
-                    </p>
-                  </div>
-                </div>
+                beta
+              </Badge>
+            </span>
+            <p className="text-sm text-muted-foreground">
+              Connect streaming platforms to aggregate chat messages in your
+              stream preview
+            </p>
+          </div>
 
-                {isAvailable && !isConnected && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleConnectPlatform(platform.id)}
-                    disabled={isConnecting}
-                  >
-                    {isConnecting ? "Connecting..." : "Connect"}
-                  </Button>
-                )}
-                {isConnected && connector && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDisconnectPlatform(connector.id)}
-                    disabled={deleteConnectorMutation.isLoading}
-                  >
-                    Disconnect
-                  </Button>
-                )}
-                {isComingSoon && (
-                  <Button size="sm" variant="ghost" disabled>
-                    Soon
-                  </Button>
-                )}
-              </div>
-            );
-          })}
+          <div className="space-y-2">
+            {PLATFORMS.map((platform) => {
+              const { status, connector } = getPlatformStatus(platform.id);
+              const isConnected = status === "connected";
+              const isAvailable = status === "available";
+              const isComingSoon = status === "coming-soon";
+
+              return (
+                <div
+                  key={platform.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    isConnected
+                      ? "bg-green-50 border-green-200"
+                      : isComingSoon
+                        ? "bg-muted/30 border-muted"
+                        : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <platform.icon className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{platform.name}</span>
+                        {isConnected && (
+                          <span className="text-xs text-green-600 font-medium">
+                            Connected
+                          </span>
+                        )}
+                        {isComingSoon && (
+                          <span className="text-xs text-muted-foreground">
+                            Soon
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {platform.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isAvailable && !isConnected && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleConnectPlatform(platform.id)}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting ? "Connecting..." : "Connect"}
+                    </Button>
+                  )}
+                  {isConnected && connector && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDisconnectPlatform(connector.id)}
+                      disabled={deleteConnectorMutation.isLoading}
+                    >
+                      Disconnect
+                    </Button>
+                  )}
+                  {isComingSoon && (
+                    <Button size="sm" variant="ghost" disabled>
+                      Soon
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
