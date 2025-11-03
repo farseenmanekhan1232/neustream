@@ -19,17 +19,19 @@ function PublicChat({
   showHeader = true,
   backgroundColor = "default",
   transparent = false,
-  rawMode = false
+  rawMode = false,
 }) {
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
-  const [hasReceivedWebSocketMessages, setHasReceivedWebSocketMessages] = useState(false);
+  const [hasReceivedWebSocketMessages, setHasReceivedWebSocketMessages] =
+    useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const systemMessageCache = useRef(new Map());
   const messageIdsRef = useRef(new Set());
   const currentSourceIdRef = useRef(null);
+  const userColorCache = useRef(new Map());
 
   // Fetch initial chat messages from public endpoint
   useEffect(() => {
@@ -38,7 +40,7 @@ function PublicChat({
     const fetchPublicMessages = async () => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/chat/public/sources/${sourceId}/messages`
+          `${API_BASE_URL}/api/chat/public/sources/${sourceId}/messages`,
         );
 
         if (!response.ok) {
@@ -60,13 +62,18 @@ function PublicChat({
     if (!sourceId) return;
 
     // Prevent reconnection if we're already connected to the same source
-    if (socketRef.current?.connected && currentSourceIdRef.current === sourceId) {
+    if (
+      socketRef.current?.connected &&
+      currentSourceIdRef.current === sourceId
+    ) {
       return;
     }
 
     // Clean up previous connection if source changed
     if (socketRef.current && currentSourceIdRef.current !== sourceId) {
-      socketRef.current.emit("leave_chat", { sourceId: currentSourceIdRef.current });
+      socketRef.current.emit("leave_chat", {
+        sourceId: currentSourceIdRef.current,
+      });
       socketRef.current.disconnect();
       socketRef.current = null;
       setMessages([]);
@@ -119,7 +126,9 @@ function PublicChat({
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.emit("leave_chat", { sourceId: currentSourceIdRef.current });
+        socketRef.current.emit("leave_chat", {
+          sourceId: currentSourceIdRef.current,
+        });
         socketRef.current.disconnect();
         socketRef.current = null;
         currentSourceIdRef.current = null;
@@ -151,14 +160,65 @@ function PublicChat({
       .slice(0, 2);
   };
 
+  const getUserColor = (authorName) => {
+    if (userColorCache.current.has(authorName)) {
+      return userColorCache.current.get(authorName);
+    }
+
+    const colors = [
+      "text-red-500",
+      "text-blue-500",
+      "text-green-500",
+      "text-purple-500",
+      "text-yellow-500",
+      "text-pink-500",
+      "text-indigo-500",
+      "text-orange-500",
+      "text-teal-500",
+      "text-cyan-500",
+      "text-lime-500",
+      "text-emerald-500",
+      "text-violet-500",
+      "text-fuchsia-500",
+      "text-rose-500",
+      "text-sky-500",
+    ];
+
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    userColorCache.current.set(authorName, randomColor);
+    return randomColor;
+  };
+
   const getPlatformIcon = (platform) => {
     const icons = {
-      twitch: "🎮",
-      youtube: "📺",
-      facebook: "📘",
-      custom: "🔗",
+      twitch: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+        </svg>
+      ),
+      youtube: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+        </svg>
+      ),
+      facebook: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+        </svg>
+      ),
+      custom: (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+        </svg>
+      ),
     };
-    return icons[platform] || "💬";
+    return (
+      icons[platform] || (
+        <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+        </svg>
+      )
+    );
   };
 
   // Helper function to add messages with deduplication
@@ -169,7 +229,7 @@ function PublicChat({
 
     setMessages((prev) => {
       const filteredMessages = newMessages.filter(
-        (message) => message.id && !messageIdsRef.current.has(message.id)
+        (message) => message.id && !messageIdsRef.current.has(message.id),
       );
 
       if (filteredMessages.length === 0) {
@@ -205,20 +265,32 @@ function PublicChat({
 
   // Filter repetitive system connection messages
   const shouldShowSystemMessage = (message) => {
-    if (message.messageType !== 'system' || message.authorName !== 'System') {
+    if (message.messageType !== "system" || message.authorName !== "System") {
       return true;
     }
 
     const messageText = message.messageText;
 
     const connectionPatterns = [
-      { pattern: /connected to.*youtube chat.*via real-time grpc streaming/i, platform: 'youtube', type: 'grpc' },
-      { pattern: /connected to.*youtube chat.*via real-time streaming/i, platform: 'youtube', type: 'streaming' },
-      { pattern: /connected to.*twitch chat/i, platform: 'twitch', type: 'irc' }
+      {
+        pattern: /connected to.*youtube chat.*via real-time grpc streaming/i,
+        platform: "youtube",
+        type: "grpc",
+      },
+      {
+        pattern: /connected to.*youtube chat.*via real-time streaming/i,
+        platform: "youtube",
+        type: "streaming",
+      },
+      {
+        pattern: /connected to.*twitch chat/i,
+        platform: "twitch",
+        type: "irc",
+      },
     ];
 
     const connectionInfo = connectionPatterns.find(({ pattern }) =>
-      pattern.test(messageText)
+      pattern.test(messageText),
     );
 
     if (connectionInfo) {
@@ -226,7 +298,7 @@ function PublicChat({
       const now = Date.now();
       const lastSeen = systemMessageCache.current.get(cacheKey);
 
-      if (lastSeen && (now - lastSeen) < 300000) {
+      if (lastSeen && now - lastSeen < 300000) {
         return false;
       }
 
@@ -247,20 +319,19 @@ function PublicChat({
 
   // Determine container styles based on props
   const containerClass = rawMode
-    ? `h-full overflow-y-auto space-y-3 ${transparent ? '' : 'p-4'}`
-    : "absolute inset-0 overflow-y-auto p-4 space-y-3";
+    ? `h-full overflow-y-auto space-y-1 ${transparent ? "" : "p-4"}`
+    : "absolute inset-0 overflow-y-auto p-4 space-y-1";
 
-  const messageClass = rawMode
-    ? "flex space-x-3"
-    : "flex space-x-3";
+  const messageClass = rawMode ? "flex space-x-3" : "flex space-x-3";
 
-  const authorClass = rawMode
-    ? "text-sm font-medium text-white"
-    : "text-sm font-medium";
+  const getAuthorClass = (authorName, rawMode) => {
+    const baseClass = rawMode ? "text-lg font-medium" : "text-lg font-medium";
+    return `${baseClass} ${getUserColor(authorName)}`;
+  };
 
   const messageTextClass = rawMode
-    ? "text-sm break-words text-white"
-    : "text-sm break-words";
+    ? "text-lg break-words text-white"
+    : "text-lg break-words";
 
   const timeClass = rawMode
     ? "text-xs text-gray-300"
@@ -277,31 +348,21 @@ function PublicChat({
             </div>
           </div>
         ) : (
-          messages
-            .filter(shouldShowSystemMessage)
-            .map((message) => (
-              <div key={message.id} className={messageClass}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className={authorClass}>
-                      {message.authorName}
-                    </span>
-                    {message.platform && (
-                      <span className="text-xs text-gray-400">
-                        [{message.platform}]
-                      </span>
-                    )}
-                    <span className={timeClass}>
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <p className={messageTextClass}>{message.messageText}</p>
-                </div>
+          messages.filter(shouldShowSystemMessage).map((message) => (
+            <div key={message.id} className={messageClass}>
+              <div className="flex items-center space-x-2">
+                {message.platform && (
+                  <span className="text-gray-400">
+                    {getPlatformIcon(message.platform)}
+                  </span>
+                )}
+                <span className={getAuthorClass(message.authorName, true)}>
+                  {message.authorName}:
+                </span>
+                <p className={messageTextClass}>{message.messageText}</p>
               </div>
-            ))
+            </div>
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -310,93 +371,43 @@ function PublicChat({
 
   // Render normal mode with card
   return (
-    <Card className="h-full flex flex-col">
-      {showHeader && (
-        <CardHeader className="pb-3 flex-shrink-0">
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center">
-              <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-              Live Chat
-            </span>
-            <div className="flex items-center space-x-2">
-              <Badge
-                variant={isConnected ? "default" : "secondary"}
-                className={isConnected ? "bg-green-500" : ""}
-              >
-                {isConnected ? "Connected" : "Connecting..."}
-              </Badge>
-              <Badge variant="outline" className="flex items-center text-xs">
-                <Users className="h-3 w-3 mr-1" />
-                {viewerCount}
-              </Badge>
+    <div className={containerClass}>
+      {messages.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="h-8 w-8 text-muted-foreground" />
             </div>
-          </CardTitle>
-          <CardDescription>
-            Real-time chat from all connected platforms
-          </CardDescription>
-        </CardHeader>
-      )}
-
-      <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
-        <div className={containerClass}>
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">No Messages Yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect chat platforms to see messages here
-                </p>
-              </div>
-            </div>
-          ) : (
-            messages
-              .filter(shouldShowSystemMessage)
-              .map((message) => (
-                <div key={message.id} className={messageClass}>
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {getAuthorInitials(message.authorName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={authorClass}>
-                        {message.authorName}
-                      </span>
-                      {message.platform && (
-                        <Badge
-                          variant="outline"
-                          className={`text-xs capitalize ${getPlatformColor(
-                            message.platform
-                          )}`}
-                        >
-                          {getPlatformIcon(message.platform)} {message.platform}
-                        </Badge>
-                      )}
-                      <span className={timeClass}>
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <p className={messageTextClass}>{message.messageText}</p>
-                    {message.messageType !== "text" && (
-                      <Badge variant="secondary" className="mt-1 text-xs">
-                        {message.messageType}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))
-          )}
-          <div ref={messagesEndRef} />
+            <h3 className="text-lg font-semibold mb-2">No Messages Yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Connect chat platforms to see messages here
+            </p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      ) : (
+        messages.filter(shouldShowSystemMessage).map((message) => (
+          <div key={message.id} className={messageClass}>
+            <div className="flex items-center space-x-2">
+              {message.platform && (
+                <span className="text-muted-foreground">
+                  {getPlatformIcon(message.platform)}
+                </span>
+              )}
+              <span className={getAuthorClass(message.authorName, false)}>
+                {message.authorName}:
+              </span>
+              <p className={messageTextClass}>{message.messageText}</p>
+              {message.messageType !== "text" && (
+                <Badge variant="secondary" className="text-lg">
+                  {message.messageType}
+                </Badge>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+      <div ref={messagesEndRef} />
+    </div>
   );
 }
 
