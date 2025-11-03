@@ -214,6 +214,27 @@ function Landing() {
       });
     }
 
+    // Add chat connectors feature
+    const chatConnectorsCount = plan.features?.chat_connectors || 1;
+    features.push({
+      icon: (
+        <svg
+          className="h-4 w-4 text-primary"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      ),
+      text: `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? 's' : ''} (Twitch, YouTube, etc.)`,
+    });
+
     return features;
   };
 

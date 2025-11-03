@@ -115,6 +115,19 @@ export const subscriptionService = {
   },
 
   /**
+   * Check if user can create a chat connector
+   */
+  async canCreateChatConnector() {
+    try {
+      const response = await apiService.get('/subscriptions/limits/chat-connectors');
+      return response.data;
+    } catch (error) {
+      console.error('Error checking chat connector limits:', error);
+      return { allowed: true, current: 0, max: 1, remaining: 1 };
+    }
+  },
+
+  /**
    * Update user's subscription (for testing/admin purposes)
    */
   async updateSubscription(planId, billingCycle = 'monthly') {

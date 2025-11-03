@@ -10,7 +10,8 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { apiService } from "../services/api";
-import { Twitch, Youtube, Instagram, Facebook, Settings } from "lucide-react";
+import { subscriptionService } from "../services/subscription";
+import { Twitch, Youtube, Instagram, Facebook, Settings, Info, Crown } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardTitle } from "./ui/card";
 
@@ -78,7 +79,30 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
     enabled: !!sourceId,
   });
 
+  // Fetch subscription usage for chat connectors
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ["subscriptionUsage"],
+    queryFn: async () => {
+      return await subscriptionService.getMySubscription();
+    },
+  });
+
+  // Check chat connector limits
+  const { data: chatConnectorLimits, isLoading: limitsLoading } = useQuery({
+    queryKey: ["chatConnectorLimits"],
+    queryFn: async () => {
+      return await subscriptionService.canCreateChatConnector();
+    },
+  });
+
   const connectors = connectorsData?.connectors || [];
+  const currentUsage = subscriptionData?.current_usage;
+  const limits = subscriptionData?.limits;
+  const subscription = subscriptionData?.subscription;
+  const canCreateConnector = chatConnectorLimits?.allowed ?? true;
+  const remainingConnectors = chatConnectorLimits?.remaining ?? 1;
+  const currentConnectors = chatConnectorLimits?.current ?? 0;
+  const maxConnectors = chatConnectorLimits?.max ?? 1;
 
   // Mutation for starting OAuth flow
   const startOAuthMutation = useMutation({
@@ -121,6 +145,11 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   });
 
   const handleConnectPlatform = async (platform) => {
+    if (!canCreateConnector) {
+      alert(`You've reached your chat connector limit (${currentConnectors}/${maxConnectors}). Please upgrade your plan to add more chat connectors.`);
+      return;
+    }
+
     setIsConnecting(true);
     try {
       await startOAuthMutation.mutateAsync(platform);
@@ -151,7 +180,9 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
     };
   };
 
-  if (connectorsLoading) {
+  const isLoading = connectorsLoading || subscriptionLoading || limitsLoading;
+
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div>
@@ -198,6 +229,26 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
               Connect streaming platforms to aggregate chat messages in your
               stream preview
             </p>
+
+            {/* Plan Information */}
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Crown className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    {subscription?.plan_name || 'Free'} Plan
+                  </span>
+                </div>
+                <div className="text-sm text-blue-700">
+                  {currentConnectors} / {maxConnectors} connectors used
+                </div>
+              </div>
+              {!canCreateConnector && (
+                <div className="mt-2 text-xs text-blue-600">
+                  You've reached your chat connector limit. <a href="/dashboard/subscription" className="underline font-medium">Upgrade your plan</a> to add more connectors.
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -245,9 +296,9 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
                       size="sm"
                       variant="outline"
                       onClick={() => handleConnectPlatform(platform.id)}
-                      disabled={isConnecting}
+                      disabled={isConnecting || !canCreateConnector}
                     >
-                      {isConnecting ? "Connecting..." : "Connect"}
+                      {isConnecting ? "Connecting..." : !canCreateConnector ? "Limit Reached" : "Connect"}
                     </Button>
                   )}
                   {isConnected && connector && (
