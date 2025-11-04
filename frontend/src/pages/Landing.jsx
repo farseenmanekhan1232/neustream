@@ -313,60 +313,7 @@ function Landing() {
               </div>
             </div>
 
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-6">
-              <a
-                href="https://www.producthunt.com/products/neustream?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-neustream"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transform transition-transform hover:scale-105"
-              >
-                <img
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1033369&theme=light&t=1762067006843"
-                  alt="Neustream - Multi&#0045;platform&#0032;streaming | Product Hunt"
-                  style={{ width: "250px", height: "54px" }}
-                  width="250"
-                  height="54"
-                />
-              </a>
-              <a
-                href="https://peerlist.io/farseen/project/neustream--multiplatform-streaming"
-                target="_blank"
-                rel="noreferrer"
-                className="transform transition-transform hover:scale-105"
-              >
-                <img
-                  src="https://peerlist.io/api/v1/projects/embed/PRJHKKDDN7MNQBRKD1ORNA9KDB6B8G?showUpvote=true&theme=light"
-                  alt="Neustream - Multi-Platform Streaming"
-                  style={{ width: "auto", height: "54px" }}
-                />
-              </a>
-              <a
-                href="https://shipybara.com/projects/neustream"
-                target="_blank"
-                rel="noopener"
-                className="transform transition-transform hover:scale-105"
-              >
-                <img
-                  src="https://shipybara.com/images/badges/shipybara-badge-light.svg"
-                  alt="Featured on Shipybara"
-                  width="150"
-                  height="54"
-                />
-              </a>
-              <a
-                href="https://startupfa.me/s/neustream?utm_source=neustream.app"
-                target="_blank"
-                className="transform transition-transform hover:scale-105"
-              >
-                <img
-                  src="https://startupfa.me/badges/featured/default.webp"
-                  alt="NeuStream - Featured on Startup Fame"
-                  width="171"
-                  height="54"
-                />
-              </a>
             </div>
-          </div>
         </div>
         <img
           src="/hero.png"
