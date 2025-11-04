@@ -70,7 +70,7 @@ function DashboardOverview() {
       activeSources,
       totalDestinationsAcrossSources: sources.reduce(
         (sum, source) => sum + parseInt(source.destinations_count || 0, 10),
-        0
+        0,
       ),
       streamInfo: data.streamInfo,
       subscriptionData: data.subscriptionData,
@@ -113,11 +113,11 @@ function DashboardOverview() {
         totalDestinationsAcrossSources={totalDestinationsAcrossSources}
       />
 
-      {/* Subscription Status */}
-      <SubscriptionStatus subscriptionData={subscriptionData} />
-
       {/* Quick Actions */}
       <QuickActions />
+
+      {/* Subscription Status */}
+      <SubscriptionStatus subscriptionData={subscriptionData} />
 
       {/* Additional sections can be added here as separate components */}
     </div>
