@@ -340,6 +340,19 @@ function Landing() {
                   style={{ width: "auto", height: "54px" }}
                 />
               </a>
+              <a
+                href="https://shipybara.com/projects/neustream"
+                target="_blank"
+                rel="noopener"
+                className="transform transition-transform hover:scale-105"
+              >
+                <img
+                  src="https://shipybara.com/images/badges/shipybara-badge-light.svg"
+                  alt="Featured on Shipybara"
+                  width="150"
+                  height="54"
+                />
+              </a>
             </div>
           </div>
         </div>
