@@ -41,199 +41,98 @@ function Landing() {
   // Handle both direct data and wrapped response structures
   const plans = plansData?.data?.plans || plansData?.plans || plansData || [];
 
-  // Helper function to format plan features based on plan data
+  // Helper function to get plan description and best for information
+  const getPlanInfo = (plan) => {
+    const planName = plan.name.toLowerCase();
+
+    const planInfo = {
+      free: {
+        description:
+          "Perfect starting point for content creators exploring multistreaming",
+        bestFor:
+          "Beginners testing multistreaming, hobby streamers, and those trying out the platform",
+        features: [
+          { icon: "🎯", text: "Stream to 2 platforms simultaneously" },
+          { icon: "📊", text: "Basic analytics dashboard" },
+          { icon: "💬", text: "1 chat connector" },
+          { icon: "⏰", text: "10 hours streaming monthly" },
+          { icon: "🆘", text: "Community support" },
+          { icon: "✨", text: "NeuStream branding" },
+        ],
+      },
+      pro: {
+        description:
+          "Most popular choice for serious content creators and growing streamers",
+        bestFor:
+          "Regular streamers, content creators expanding their reach, and small stream teams",
+        features: [
+          { icon: "🚀", text: "Stream to 5 platforms simultaneously" },
+          { icon: "📈", text: "Advanced analytics & insights" },
+          { icon: "💬", text: "3 chat connectors" },
+          { icon: "⏰", text: "50 hours streaming monthly" },
+          { icon: "🎥", text: "Up to 2 streaming sources" },
+          { icon: "⚡", text: "Priority support" },
+          { icon: "🎨", text: "Custom branding options" },
+        ],
+      },
+      business: {
+        description:
+          "Comprehensive solution for professional streaming operations and teams",
+        bestFor:
+          "Professional streamers, production companies, esports teams, and large content creators",
+        features: [
+          { icon: "🌟", text: "Stream to 10+ platforms simultaneously" },
+          { icon: "📊", text: "Advanced analytics & insights" },
+          { icon: "💬", text: "5 chat connectors" },
+          { icon: "⏰", text: "200 hours streaming monthly" },
+          { icon: "🎥", text: "Up to 5 streaming sources" },
+          { icon: "🛡️", text: "24/7 dedicated support" },
+          { icon: "🎨", text: "Full custom branding" },
+          { icon: "👥", text: "Team collaboration features" },
+          { icon: "🔒", text: "Enhanced security & privacy" },
+        ],
+      },
+    };
+
+    return planInfo[planName] || planInfo.free;
+  };
+
+  // Helper function to format plan features based on plan data (fallback for dynamic plans)
   const getPlanFeatures = (plan) => {
-    const features = [];
+    const planInfo = getPlanInfo(plan);
+    const features = [...planInfo.features];
 
-    // Add streaming platforms feature
-    if (plan.max_destinations) {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: `Stream to ${plan.max_destinations} platform${
-          plan.max_destinations > 1 ? "s" : ""
-        } simultaneously`,
-      });
+    // Override with actual plan data if available
+    if (plan.max_destinations && plan.name.toLowerCase() !== "free") {
+      features[0] = {
+        icon: "🚀",
+        text: `Stream to ${plan.max_destinations} platform${plan.max_destinations > 1 ? "s" : ""} simultaneously`,
+      };
     }
 
-    // Add analytics feature
-    if (plan.name.toLowerCase() === "free") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "Basic analytics dashboard",
-      });
-    } else {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "Advanced analytics & insights",
-      });
-    }
-
-    // Add support feature
-    if (plan.name.toLowerCase() === "free") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "Community support",
-      });
-    } else if (plan.name.toLowerCase() === "pro") {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "Priority support",
-      });
-    } else {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: "24/7 dedicated support",
-      });
-    }
-
-    // Add sources feature
-    if (plan.max_sources > 1) {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: `Up to ${plan.max_sources} streaming sources`,
-      });
-    }
-
-    // Add monthly hours
     if (plan.max_streaming_hours_monthly) {
-      features.push({
-        icon: (
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ),
-        text: `${plan.max_streaming_hours_monthly} hours monthly`,
-      });
+      const hoursFeature = features.find((f) =>
+        f.text.includes("hours streaming"),
+      );
+      if (hoursFeature) {
+        hoursFeature.text = `${plan.max_streaming_hours_monthly} hours streaming monthly`;
+      }
     }
 
-    // Add chat connectors feature
+    if (plan.max_sources > 1) {
+      const sourcesFeature = features.find((f) =>
+        f.text.includes("streaming sources"),
+      );
+      if (sourcesFeature) {
+        sourcesFeature.text = `Up to ${plan.max_sources} streaming sources`;
+      }
+    }
+
     const chatConnectorsCount = plan.features?.chat_connectors || 1;
-    features.push({
-      icon: (
-        <svg
-          className="h-4 w-4 text-primary"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      ),
-      text: `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? 's' : ''} (Twitch, YouTube, etc.)`,
-    });
+    const chatFeature = features.find((f) => f.text.includes("chat connector"));
+    if (chatFeature) {
+      chatFeature.text = `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? "s" : ""} (Twitch, YouTube, etc.)`;
+    }
 
     return features;
   };
@@ -589,13 +488,30 @@ function Landing() {
       {/* Subscription Plans Section */}
       <section className="section-padding py-20 lg:py-24">
         <div className="container-custom">
-          <div className="text-center max-w-4xl mx-auto mb-20">
+          <div className="text-center max-w-5xl mx-auto mb-20">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-8 leading-tight">
               Choose Your <span className="underline font-medium">Plan</span>
             </h2>
-            <p className="text-xl lg:text-2xl leading-relaxed">
-              Start multistreaming with flexible pricing. No hidden fees.
+            <p className="text-xl lg:text-2xl leading-relaxed mb-8">
+              Start multistreaming with flexible pricing designed for creators
+              at every level. No hidden fees, cancel anytime.
             </p>
+
+            {/* Social Proof */}
+            <div className="flex flex-wrap justify-center items-center gap-8 text-base opacity-90">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🚀</span>
+                <span>10,000+ Streamers Trust NeuStream</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⭐</span>
+                <span>4.9/5 Customer Rating</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🌍</span>
+                <span>Global Streaming Support</span>
+              </div>
+            </div>
           </div>
 
           {plansLoading ? (
@@ -632,15 +548,19 @@ function Landing() {
             <div className="grid gap-8 lg:gap-12 md:grid-cols-3 max-w-6xl mx-auto">
               {plans.map((plan) => {
                 const features = getPlanFeatures(plan);
+                const planInfo = getPlanInfo(plan);
                 const isProPlan = plan.name.toLowerCase() === "pro";
+                const planName = plan.name.toLowerCase();
 
                 return (
                   <div
                     key={plan.id}
                     className={`feature-card relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border transition-all duration-300 hover:bg-white/10 hover:scale-105 ${
                       isProPlan
-                        ? "border-primary shadow-2xl shadow-primary/20"
-                        : "border-white/10"
+                        ? "border-primary shadow-2xl shadow-primary/20 ring-2 ring-primary/20"
+                        : planName === "business"
+                          ? "border-white/20 ring-2 ring-white/10"
+                          : "border-white/10"
                     }`}
                   >
                     {isProPlan && (
@@ -651,16 +571,38 @@ function Landing() {
                       </div>
                     )}
                     <div className="text-center space-y-6">
-                      <div className="space-y-3">
-                        <h3 className="text-2xl sm:text-3xl font-normal">
-                          {plan.name}
-                        </h3>
-                        <p className="text-lg opacity-80">
-                          {plan.description ||
-                            `Perfect for ${plan.name.toLowerCase()} users`}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <h3 className="text-2xl sm:text-3xl font-normal">
+                            {plan.name}
+                          </h3>
+                          {planName === "free" && (
+                            <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
+                              Free Forever
+                            </span>
+                          )}
+                          {planName === "business" && (
+                            <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-medium">
+                              Enterprise
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-lg leading-relaxed opacity-90">
+                          {planInfo.description}
                         </p>
+
+                        {/* Best For Section */}
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                          <p className="text-sm font-medium mb-2 opacity-70">
+                            Best For:
+                          </p>
+                          <p className="text-sm leading-relaxed">
+                            {planInfo.bestFor}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-2">
+
+                      <div className="space-y-2 py-4 border-t border-white/10">
                         <div className="text-4xl font-normal">
                           {plan.formatted_price_monthly ||
                             formatPrice(plan.price_monthly)}
@@ -669,33 +611,50 @@ function Landing() {
                           </span>
                         </div>
                         {plan.price_yearly && (
-                          <p className="text-base opacity-80">
-                            {plan.formatted_price_yearly ||
-                              formatPrice(plan.price_yearly)}{" "}
-                            billed annually
-                          </p>
+                          <div className="flex items-center justify-center gap-2">
+                            <p className="text-sm opacity-80">
+                              {plan.formatted_price_yearly ||
+                                formatPrice(plan.price_yearly)}{" "}
+                              billed annually
+                            </p>
+                            <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs font-medium">
+                              Save 20%
+                            </span>
+                          </div>
                         )}
                       </div>
-                      <ul className="space-y-4 text-base">
+
+                      <ul className="space-y-3 text-base text-left">
                         {features.map((feature, index) => (
                           <li key={index} className="flex items-start gap-3">
-                            <span className="mt-1">{feature.icon}</span>
-                            <span>{feature.text}</span>
+                            <span className="mt-0.5 text-lg">
+                              {feature.icon}
+                            </span>
+                            <span className="flex-1">{feature.text}</span>
                           </li>
                         ))}
                       </ul>
+
                       <Button
                         variant={isProPlan ? "default" : "outline"}
-                        className="w-full h-14 text-lg rounded-2xl font-medium"
+                        className="w-full h-14 text-lg rounded-2xl font-medium transition-all duration-300 hover:scale-105"
                         asChild
                       >
                         <Link
                           to="/auth"
                           className={isProPlan ? "text-white" : "text-black"}
                         >
-                          Start Free Trial
+                          {planName === "free"
+                            ? "Get Started Free"
+                            : "Start Free Trial"}
                         </Link>
                       </Button>
+
+                      {planName !== "free" && (
+                        <p className="text-xs opacity-70 text-center">
+                          14-day free trial • No credit card required
+                        </p>
+                      )}
                     </div>
                   </div>
                 );
@@ -708,58 +667,60 @@ function Landing() {
           )}
 
           <div className="text-center mt-20">
-            <p className="text-lg mb-8">
-              All plans include a 14-day free trial. No credit card required.
+            <p className="text-xl mb-12 font-medium">
+              Start risk-free with our 14-day trial. No credit card required.
             </p>
-            <div className="flex flex-wrap justify-center gap-8 text-base mb-12">
-              <span className="flex items-center gap-3 bg-white/5 backdrop-blur-sm px-6 py-3 rounded-full border border-white/10">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                Cancel anytime
-              </span>
-              <span className="flex items-center gap-3 bg-white/5 backdrop-blur-sm px-6 py-3 rounded-full border border-white/10">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                Secure payment processing
-              </span>
-              <span className="flex items-center gap-3 bg-white/5 backdrop-blur-sm px-6 py-3 rounded-full border border-white/10">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                30-day money-back guarantee
-              </span>
+
+            {/* Trust Badges */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-3xl mx-auto">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="flex justify-center mb-3">
+                  <span className="text-3xl">🛡️</span>
+                </div>
+                <h4 className="font-medium mb-2">30-Day Money Back</h4>
+                <p className="text-sm opacity-80">
+                  Full refund if you're not satisfied
+                </p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="flex justify-center mb-3">
+                  <span className="text-3xl">🔒</span>
+                </div>
+                <h4 className="font-medium mb-2">Secure Payments</h4>
+                <p className="text-sm opacity-80">
+                  SSL encrypted payment processing
+                </p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="flex justify-center mb-3">
+                  <span className="text-3xl">🎯</span>
+                </div>
+                <h4 className="font-medium mb-2">Cancel Anytime</h4>
+                <p className="text-sm opacity-80">
+                  No contracts or hidden fees
+                </p>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="mb-12">
+              <p className="text-sm opacity-70 mb-4">
+                Accepted Payment Methods:
+              </p>
+              <div className="flex justify-center items-center gap-4 flex-wrap">
+                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
+                  💳 Credit Card
+                </span>
+                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
+                  🏦 Bank Transfer
+                </span>
+                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
+                  💰 PayPal
+                </span>
+                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
+                  ₿ Crypto
+                </span>
+              </div>
             </div>
             <div className="mt-12 pt-8 border-t border-white/20">
               <p className="text-sm opacity-70">
