@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Globe } from "lucide-react";
+import { ArrowRight, Globe, Check, Radio, BarChart3, MessageCircle, Clock, Users, Zap, Palette, Shield, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
@@ -47,49 +47,45 @@ function Landing() {
 
     const planInfo = {
       free: {
-        description:
-          "Perfect starting point for content creators exploring multistreaming",
+        description: plan.description || "Perfect starting point for content creators exploring multistreaming",
         bestFor:
           "Beginners testing multistreaming, hobby streamers, and those trying out the platform",
         features: [
-          { icon: "🎯", text: "Stream to 2 platforms simultaneously" },
-          { icon: "📊", text: "Basic analytics dashboard" },
-          { icon: "💬", text: "1 chat connector" },
-          { icon: "⏰", text: "10 hours streaming monthly" },
-          { icon: "🆘", text: "Community support" },
-          { icon: "✨", text: "NeuStream branding" },
+          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
+          { icon: <BarChart3 className="w-5 h-5" />, text: "Basic analytics dashboard" },
+          { icon: <MessageCircle className="w-5 h-5" />, text: "1 chat connector" },
+          { icon: <Clock className="w-5 h-5" />, text: "35 hours streaming monthly" },
+          { icon: <Users className="w-5 h-5" />, text: "Community support" },
         ],
       },
       pro: {
-        description:
-          "Most popular choice for serious content creators and growing streamers",
+        description: plan.description || "Most popular choice for serious content creators and growing streamers",
         bestFor:
           "Regular streamers, content creators expanding their reach, and small stream teams",
         features: [
-          { icon: "🚀", text: "Stream to 5 platforms simultaneously" },
-          { icon: "📈", text: "Advanced analytics & insights" },
-          { icon: "💬", text: "3 chat connectors" },
-          { icon: "⏰", text: "50 hours streaming monthly" },
-          { icon: "🎥", text: "Up to 2 streaming sources" },
-          { icon: "⚡", text: "Priority support" },
-          { icon: "🎨", text: "Custom branding options" },
+          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
+          { icon: <BarChart3 className="w-5 h-5" />, text: "Advanced analytics & insights" },
+          { icon: <MessageCircle className="w-5 h-5" />, text: "3 chat connectors" },
+          { icon: <Clock className="w-5 h-5" />, text: "1000 hours streaming monthly" },
+          { icon: <Users className="w-5 h-5" />, text: "Up to 2 streaming sources" },
+          { icon: <Zap className="w-5 h-5" />, text: "Priority support" },
+          { icon: <Palette className="w-5 h-5" />, text: "Custom branding options" },
         ],
       },
       business: {
-        description:
-          "Comprehensive solution for professional streaming operations and teams",
+        description: plan.description || "Comprehensive solution for professional streaming operations and teams",
         bestFor:
           "Professional streamers, production companies, esports teams, and large content creators",
         features: [
-          { icon: "🌟", text: "Stream to 10+ platforms simultaneously" },
-          { icon: "📊", text: "Advanced analytics & insights" },
-          { icon: "💬", text: "5 chat connectors" },
-          { icon: "⏰", text: "200 hours streaming monthly" },
-          { icon: "🎥", text: "Up to 5 streaming sources" },
-          { icon: "🛡️", text: "24/7 dedicated support" },
-          { icon: "🎨", text: "Full custom branding" },
-          { icon: "👥", text: "Team collaboration features" },
-          { icon: "🔒", text: "Enhanced security & privacy" },
+          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
+          { icon: <BarChart3 className="w-5 h-5" />, text: "Enterprise analytics & insights" },
+          { icon: <MessageCircle className="w-5 h-5" />, text: "10 chat connectors" },
+          { icon: <Clock className="w-5 h-5" />, text: "5000 hours streaming monthly" },
+          { icon: <Users className="w-5 h-5" />, text: "Up to 5 streaming sources" },
+          { icon: <Shield className="w-5 h-5" />, text: "24/7 dedicated support" },
+          { icon: <Palette className="w-5 h-5" />, text: "Full custom branding" },
+          { icon: <Users className="w-5 h-5" />, text: "Team collaboration features" },
+          { icon: <Shield className="w-5 h-5" />, text: "Enhanced security & privacy" },
         ],
       },
     };
@@ -103,9 +99,9 @@ function Landing() {
     const features = [...planInfo.features];
 
     // Override with actual plan data if available
-    if (plan.max_destinations && plan.name.toLowerCase() !== "free") {
+    if (plan.max_destinations) {
       features[0] = {
-        icon: "🚀",
+        icon: <Radio className="w-5 h-5" />,
         text: `Stream to ${plan.max_destinations} platform${plan.max_destinations > 1 ? "s" : ""} simultaneously`,
       };
     }
@@ -128,10 +124,21 @@ function Landing() {
       }
     }
 
-    const chatConnectorsCount = plan.features?.chat_connectors || 1;
-    const chatFeature = features.find((f) => f.text.includes("chat connector"));
-    if (chatFeature) {
-      chatFeature.text = `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? "s" : ""} (Twitch, YouTube, etc.)`;
+    // Parse chat connectors from plan features array
+    let chatConnectorsCount = 1;
+    if (plan.features && Array.isArray(plan.features)) {
+      const chatFeature = plan.features.find(f => f.includes("Chat Connectors:"));
+      if (chatFeature) {
+        const match = chatFeature.match(/Chat Connectors:\s*(\d+)/);
+        if (match) {
+          chatConnectorsCount = parseInt(match[1]);
+        }
+      }
+    }
+
+    const chatConnectorFeature = features.find((f) => f.text.includes("chat connector"));
+    if (chatConnectorFeature) {
+      chatConnectorFeature.text = `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? "s" : ""} (Twitch, YouTube, etc.)`;
     }
 
     return features;
@@ -270,10 +277,10 @@ function Landing() {
             <div className="space-y-8 order-2 lg:order-1">
               <div className="space-y-8">
                 <div className="space-y-6">
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal leading-tight">
+                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight">
                     Best performance by default
                   </h2>
-                  <p className="text-xl leading-relaxed">
+                  <p className="text-2xl leading-relaxed">
                     NeuStream offloads video encoding to the cloud, keeping your
                     machine fast and responsive. No CPU spikes, no dropped
                     frames, no{" "}
@@ -282,7 +289,7 @@ function Landing() {
                     </TextHighlighter>
                     .
                   </p>
-                  <p className="text-xl leading-relaxed">
+                  <p className="text-2xl leading-relaxed">
                     Our distributed infrastructure ensures{" "}
                     <TextHighlighter {...highlightConfig}>
                       99.9% uptime
@@ -302,10 +309,10 @@ function Landing() {
             <div className="lg:col-span-1 space-y-16">
               <div className="grid  gap-12">
                 <div className="space-y-6">
-                  <h3 className="text-2xl sm:text-3xl font-normal leading-tight">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
                     Respectful by design
                   </h3>
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-xl leading-relaxed">
                     NeuStream never interrupts your workflow. No unexpected
                     tabs, popups, or restarts. Everything just works, keeping
                     you in{" "}
@@ -317,10 +324,10 @@ function Landing() {
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-2xl sm:text-3xl font-normal leading-tight">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
                     Fast, efficient, and reliable
                   </h3>
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-xl leading-relaxed">
                     Our cloud architecture delivers smooth streaming that never
                     slows down, even during long sessions. NeuStream is one of
                     the{" "}
@@ -344,15 +351,15 @@ function Landing() {
       <section id="features" className="section-padding py-20 lg:py-24">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto mb-20">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-8 leading-tight">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Everything you need for professional streaming
             </h2>
-            <p className="text-xl lg:text-2xl opacity-90 leading-relaxed">
+            <p className="text-2xl lg:text-3xl opacity-90 leading-relaxed">
               Stream like a pro across all platforms with our powerful features.
             </p>
             <Link
               to="/features"
-              className="inline-flex items-center mt-6 text-lg hover:opacity-80 transition-opacity"
+              className="inline-flex items-center mt-6 text-xl hover:opacity-80 transition-opacity"
             >
               Explore all features <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
@@ -361,10 +368,10 @@ function Landing() {
             <div className="space-y-12">
               <div className="space-y-10">
                 <div className="space-y-6">
-                  <h3 className="text-2xl sm:text-3xl font-normal leading-tight">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
                     Works with all streaming software
                   </h3>
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-xl leading-relaxed">
                     Compatible with{" "}
                     <TextHighlighter {...highlightConfig}>
                       OBS Studio, Streamlabs, XSplit
@@ -374,10 +381,10 @@ function Landing() {
                   </p>
                 </div>
                 <div className="space-y-6">
-                  <h3 className="text-2xl sm:text-3xl font-normal leading-tight">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
                     Secure by default
                   </h3>
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-xl leading-relaxed">
                     NeuStream enforces{" "}
                     <TextHighlighter {...highlightConfig}>
                       secure connections
@@ -393,10 +400,10 @@ function Landing() {
               </div>
 
               <div className="space-y-6">
-                <h3 className="text-2xl sm:text-3xl font-normal leading-tight">
+                <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
                   Clean, simple interface
                 </h3>
-                <p className="text-lg leading-relaxed">
+                <p className="text-xl leading-relaxed">
                   Our{" "}
                   <TextHighlighter {...highlightConfig}>
                     minimalistic design
@@ -425,10 +432,10 @@ function Landing() {
       <section className="section-padding py-20 lg:py-24">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto mb-20">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-8 leading-tight">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Built for creators, by creators
             </h2>
-            <p className="text-xl lg:text-2xl leading-relaxed">
+            <p className="text-2xl lg:text-3xl leading-relaxed">
               We built NeuStream to provide an{" "}
               <TextHighlighter {...highlightConfig}>
                 honest, reliable, performance-focused streaming experience
@@ -440,8 +447,10 @@ function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
             <div className="text-center space-y-6 group">
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl font-normal mb-4">Gamers</h3>
-                <p className="text-lg leading-relaxed">
+                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
+                  Gamers
+                </h3>
+                <p className="text-xl leading-relaxed">
                   Stream without FPS drops or performance impact. Maintain your
                   competitive edge while{" "}
                   <TextHighlighter {...highlightConfig}>
@@ -454,10 +463,10 @@ function Landing() {
 
             <div className="text-center space-y-6 group">
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl font-normal mb-4">
+                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
                   Content creators
                 </h3>
-                <p className="text-lg leading-relaxed">
+                <p className="text-xl leading-relaxed">
                   Reach wider audiences with one stream.{" "}
                   <TextHighlighter {...highlightConfig}>
                     Focus on creating content
@@ -469,10 +478,10 @@ function Landing() {
 
             <div className="text-center space-y-6 group">
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <h3 className="text-xl sm:text-2xl font-normal mb-4">
+                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
                   Mobile creators
                 </h3>
-                <p className="text-lg leading-relaxed">
+                <p className="text-xl leading-relaxed">
                   Stream from anywhere with our{" "}
                   <TextHighlighter {...highlightConfig}>
                     reliable cloud infrastructure
@@ -489,29 +498,13 @@ function Landing() {
       <section className="section-padding py-20 lg:py-24">
         <div className="container-custom">
           <div className="text-center max-w-5xl mx-auto mb-20">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-8 leading-tight">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Choose Your <span className="underline font-medium">Plan</span>
             </h2>
-            <p className="text-xl lg:text-2xl leading-relaxed mb-8">
+            <p className="text-2xl lg:text-3xl leading-relaxed mb-8">
               Start multistreaming with flexible pricing designed for creators
               at every level. No hidden fees, cancel anytime.
             </p>
-
-            {/* Social Proof */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-base opacity-90">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🚀</span>
-                <span>10,000+ Streamers Trust NeuStream</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">⭐</span>
-                <span>4.9/5 Customer Rating</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🌍</span>
-                <span>Global Streaming Support</span>
-              </div>
-            </div>
           </div>
 
           {plansLoading ? (
@@ -573,61 +566,61 @@ function Landing() {
                     <div className="text-center space-y-6">
                       <div className="space-y-4">
                         <div className="flex items-center justify-center gap-3">
-                          <h3 className="text-2xl sm:text-3xl font-normal">
+                          <h3 className="text-3xl sm:text-4xl font-normal">
                             {plan.name}
                           </h3>
                           {planName === "free" && (
-                            <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
+                            <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-base font-medium">
                               Free Forever
                             </span>
                           )}
                           {planName === "business" && (
-                            <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-medium">
+                            <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-base font-medium">
                               Enterprise
                             </span>
                           )}
                         </div>
-                        <p className="text-lg leading-relaxed opacity-90">
+                        <p className="text-xl leading-relaxed opacity-90">
                           {planInfo.description}
                         </p>
 
                         {/* Best For Section */}
                         <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                          <p className="text-sm font-medium mb-2 opacity-70">
+                          <p className="text-base font-medium mb-2 opacity-70">
                             Best For:
                           </p>
-                          <p className="text-sm leading-relaxed">
+                          <p className="text-base leading-relaxed">
                             {planInfo.bestFor}
                           </p>
                         </div>
                       </div>
 
                       <div className="space-y-2 py-4 border-t border-white/10">
-                        <div className="text-4xl font-normal">
+                        <div className="text-5xl font-normal">
                           {plan.formatted_price_monthly ||
                             formatPrice(plan.price_monthly)}
-                          <span className="text-lg font-normal opacity-80">
+                          <span className="text-xl font-normal opacity-80">
                             /month
                           </span>
                         </div>
                         {plan.price_yearly && (
                           <div className="flex items-center justify-center gap-2">
-                            <p className="text-sm opacity-80">
+                            <p className="text-base opacity-80">
                               {plan.formatted_price_yearly ||
                                 formatPrice(plan.price_yearly)}{" "}
                               billed annually
                             </p>
-                            <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs font-medium">
+                            <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm font-medium">
                               Save 20%
                             </span>
                           </div>
                         )}
                       </div>
 
-                      <ul className="space-y-3 text-base text-left">
+                      <ul className="space-y-3 text-lg text-left">
                         {features.map((feature, index) => (
                           <li key={index} className="flex items-start gap-3">
-                            <span className="mt-0.5 text-lg">
+                            <span className="mt-0.5 text-xl">
                               {feature.icon}
                             </span>
                             <span className="flex-1">{feature.text}</span>
@@ -637,7 +630,7 @@ function Landing() {
 
                       <Button
                         variant={isProPlan ? "default" : "outline"}
-                        className="w-full h-14 text-lg rounded-2xl font-medium transition-all duration-300 hover:scale-105"
+                        className="w-full h-14 text-xl rounded-2xl font-medium transition-all duration-300 hover:scale-105"
                         asChild
                       >
                         <Link
@@ -651,7 +644,7 @@ function Landing() {
                       </Button>
 
                       {planName !== "free" && (
-                        <p className="text-xs opacity-70 text-center">
+                        <p className="text-sm opacity-70 text-center">
                           14-day free trial • No credit card required
                         </p>
                       )}
@@ -667,15 +660,11 @@ function Landing() {
           )}
 
           <div className="text-center mt-20">
-            <p className="text-xl mb-12 font-medium">
-              Start risk-free with our 14-day trial. No credit card required.
-            </p>
-
             {/* Trust Badges */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-3xl mx-auto">
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex justify-center mb-3">
-                  <span className="text-3xl">🛡️</span>
+                  <Shield className="w-8 h-8" />
                 </div>
                 <h4 className="font-medium mb-2">30-Day Money Back</h4>
                 <p className="text-sm opacity-80">
@@ -684,7 +673,7 @@ function Landing() {
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex justify-center mb-3">
-                  <span className="text-3xl">🔒</span>
+                  <Shield className="w-8 h-8" />
                 </div>
                 <h4 className="font-medium mb-2">Secure Payments</h4>
                 <p className="text-sm opacity-80">
@@ -693,7 +682,7 @@ function Landing() {
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex justify-center mb-3">
-                  <span className="text-3xl">🎯</span>
+                  <Check className="w-8 h-8" />
                 </div>
                 <h4 className="font-medium mb-2">Cancel Anytime</h4>
                 <p className="text-sm opacity-80">
@@ -702,26 +691,6 @@ function Landing() {
               </div>
             </div>
 
-            {/* Payment Methods */}
-            <div className="mb-12">
-              <p className="text-sm opacity-70 mb-4">
-                Accepted Payment Methods:
-              </p>
-              <div className="flex justify-center items-center gap-4 flex-wrap">
-                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  💳 Credit Card
-                </span>
-                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  🏦 Bank Transfer
-                </span>
-                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  💰 PayPal
-                </span>
-                <span className="bg-white/10 px-4 py-2 rounded-lg text-sm">
-                  ₿ Crypto
-                </span>
-              </div>
-            </div>
             <div className="mt-12 pt-8 border-t border-white/20">
               <p className="text-sm opacity-70">
                 By using our service, you agree to our{" "}
@@ -742,10 +711,10 @@ function Landing() {
       <section className="section-padding py-20 lg:py-24">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-normal mb-8 leading-tight">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Ready to try NeuStream?
             </h2>
-            <p className="text-xl lg:text-2xl mb-12 leading-relaxed">
+            <p className="text-2xl lg:text-3xl mb-12 leading-relaxed">
               Reach more viewers across platforms while keeping your local
               performance intact.{" "}
               <TextHighlighter {...highlightConfig}>
@@ -755,17 +724,17 @@ function Landing() {
             </p>{" "}
             <Button
               asChild
-              className="w-full sm:w-min mx-auto text-lg py-8 px-12 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl relative transition-all hover:scale-105"
+              className="w-full sm:w-min mx-auto text-xl py-8 px-12 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl relative transition-all hover:scale-105"
             >
               <Link to="/auth">
                 Start Streaming Free
-                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-pulse">
+                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-base font-bold px-3 py-1.5 rounded-full animate-pulse">
                   LIVE
                 </span>
               </Link>
             </Button>
             <div className="mt-16 pt-8 border-t border-white/20">
-              <p className="text-sm opacity-70">
+              <p className="text-base opacity-70">
                 By signing up, you agree to our{" "}
                 <Link to="/privacy" className="underline hover:opacity-80">
                   Privacy Policy
