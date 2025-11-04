@@ -3,23 +3,15 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Crown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UsageMeter from "@/components/UsageMeter";
 
-const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }) {
+const SubscriptionStatus = memo(function SubscriptionStatus({
+  subscriptionData,
+}) {
   if (!subscriptionData) return null;
 
-  const {
-    subscription,
-    limits,
-    current_usage,
-    features
-  } = subscriptionData;
+  const { subscription, limits, current_usage, features } = subscriptionData;
 
   return (
     <Card className="border-border bg-card">
@@ -30,11 +22,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
             {subscription.plan_name} Plan
           </span>
           <Badge
-            variant={
-              subscription.status === "active"
-                ? "default"
-                : "secondary"
-            }
+            variant={subscription.status === "active" ? "default" : "secondary"}
             className="text-xs"
           >
             {subscription.status}
@@ -43,7 +31,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Compact Usage Overview */}
-        <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="flex gap-3 text-center">
           <div className="space-y-1">
             <div className="text-lg font-medium text-primary">
               {current_usage.sources_count}/{limits.max_sources}
@@ -56,12 +44,6 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
             </div>
             <div className="text-xs text-muted-foreground">Destinations</div>
           </div>
-          <div className="space-y-1">
-            <div className="text-lg font-medium text-primary">
-              {Number(current_usage.streaming_hours || 0).toFixed(0)}/{limits.max_streaming_hours_monthly}h
-            </div>
-            <div className="text-xs text-muted-foreground">Hours</div>
-          </div>
         </div>
 
         {/* Compact Usage Meters */}
@@ -71,7 +53,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
             current={current_usage.streaming_hours}
             max={limits.max_streaming_hours_monthly}
             unit="h"
-            compact={true}
+            // compact={true}
           />
         </div>
 
@@ -80,8 +62,11 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
           <div className="text-xs text-muted-foreground">
             {subscription.current_period_end
               ? `Renews ${new Date(
-                  subscription.current_period_end
-                ).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                  subscription.current_period_end,
+                ).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                })}`
               : "No active subscription"}
           </div>
           <Button variant="ghost" size="sm" asChild className="h-7 px-2">
