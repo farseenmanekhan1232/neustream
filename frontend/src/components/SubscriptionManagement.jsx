@@ -214,64 +214,51 @@ function SubscriptionManagement() {
 
   return (
     <div className="w-full px-6 py-6 space-y-6  mx-auto">
-      {/* Current Plan Header */}
-      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center justify-between">
-            <span className="flex items-center">
-              <Crown className="h-6 w-6 mr-2 text-primary" />
+      {/* Current Plan Header - Compact Version */}
+      <Card className="border-border bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-primary" />
               {currentPlan?.plan_name} Plan
             </span>
             <Badge
               variant={
                 currentPlan?.status === "active" ? "default" : "secondary"
               }
+              className="text-xs"
             >
               {currentPlan?.status}
             </Badge>
           </CardTitle>
-          <CardDescription>
-            Manage your subscription and view usage statistics
-          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="text-center">
-              <div className="text-2xl font-normal text-primary">
-                {currentLimits?.max_sources}
+        <CardContent className="space-y-3">
+          {/* Compact Usage Overview */}
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="space-y-1">
+              <div className="text-lg font-medium text-primary">
+                {currentUsage?.sources_count}/{currentLimits?.max_sources}
               </div>
-              <div className="text-sm text-muted-foreground">Max Sources</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {currentUsage?.sources_count} used
-              </div>
+              <div className="text-xs text-muted-foreground">Sources</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-normal text-primary">
-                {currentLimits?.max_destinations}
+            <div className="space-y-1">
+              <div className="text-lg font-medium text-primary">
+                {currentUsage?.destinations_count}/{currentLimits?.max_destinations}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Max Destinations
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {currentUsage?.destinations_count} used
-              </div>
+              <div className="text-xs text-muted-foreground">Destinations</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-normal text-primary">
-                {currentLimits?.max_streaming_hours_monthly}h
+            <div className="space-y-1">
+              <div className="text-lg font-medium text-primary">
+                {currentUsage?.streaming_hours?.toFixed(0)}/{currentLimits?.max_streaming_hours_monthly}h
               </div>
-              <div className="text-sm text-muted-foreground">Monthly Hours</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {currentUsage?.streaming_hours} hours used
-              </div>
+              <div className="text-xs text-muted-foreground">Hours</div>
             </div>
           </div>
 
           {currentPlan?.current_period_end && (
-            <div className="mt-4 flex items-center justify-center text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4 mr-2" />
-              Renews on{" "}
-              {new Date(currentPlan.current_period_end).toLocaleDateString()}
+            <div className="flex items-center justify-center text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3 mr-1" />
+              Renews {new Date(currentPlan.current_period_end).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
             </div>
           )}
         </CardContent>
