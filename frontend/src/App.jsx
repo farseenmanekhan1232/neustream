@@ -32,9 +32,13 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Dashboard components (also lazy loaded)
 const DashboardLayout = lazy(() => import("./components/DashboardLayout"));
 const DashboardOverview = lazy(() => import("./components/DashboardOverview"));
-const StreamingConfiguration = lazy(() => import("./components/StreamingConfiguration"));
+const StreamingConfiguration = lazy(
+  () => import("./components/StreamingConfiguration"),
+);
 const StreamPreviewPage = lazy(() => import("./components/StreamPreviewPage"));
-const SubscriptionManagement = lazy(() => import("./components/SubscriptionManagement"));
+const SubscriptionManagement = lazy(
+  () => import("./components/SubscriptionManagement"),
+);
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Settings = lazy(() => import("./pages/Settings"));
 
@@ -84,14 +88,7 @@ function AppContent() {
     <Suspense fallback={<LazyLoading />}>
       <Routes>
         {/* Landing page */}
-        <Route
-          path="/"
-          element={
-            <Suspense fallback={<LazyLoading message="Loading home..." />}>
-              <Landing />
-            </Suspense>
-          }
-        />
+        <Route path="/" element={<Landing />} />
 
         {/* Public pages */}
         <Route
@@ -200,7 +197,9 @@ function AppContent() {
           path="/dashboard/*"
           element={
             <ProtectedRoute requireAuth={true}>
-              <Suspense fallback={<LazyLoading message="Loading dashboard..." />}>
+              <Suspense
+                fallback={<LazyLoading message="Loading dashboard..." />}
+              >
                 <DashboardLayout>
                   <Outlet />
                 </DashboardLayout>
