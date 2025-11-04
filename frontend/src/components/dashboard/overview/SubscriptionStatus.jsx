@@ -58,7 +58,7 @@ const SubscriptionStatus = memo(function SubscriptionStatus({ subscriptionData }
           </div>
           <div className="space-y-1">
             <div className="text-lg font-medium text-primary">
-              {current_usage.streaming_hours?.toFixed(0)}/{limits.max_streaming_hours_monthly}h
+              {Number(current_usage.streaming_hours || 0).toFixed(0)}/{limits.max_streaming_hours_monthly}h
             </div>
             <div className="text-xs text-muted-foreground">Hours</div>
           </div>

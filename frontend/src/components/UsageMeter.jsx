@@ -5,6 +5,11 @@ function UsageMeter({ label, current, max, unit, className = "", compact = false
   const currentNum = parseFloat(current) || 0;
   const maxNum = parseFloat(max) || 0;
 
+  // Ensure we have valid numbers
+  if (isNaN(currentNum) || isNaN(maxNum)) {
+    console.warn(`UsageMeter: Invalid values - current: ${current}, max: ${max}`);
+  }
+
   const percentage = maxNum > 0 ? Math.min((currentNum / maxNum) * 100, 100) : 0;
   const remaining = maxNum - currentNum;
 
