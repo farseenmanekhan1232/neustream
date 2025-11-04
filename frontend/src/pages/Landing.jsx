@@ -1,6 +1,19 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Globe, Check, Radio, BarChart3, MessageCircle, Clock, Users, Zap, Palette, Shield, Star } from "lucide-react";
+import {
+  ArrowRight,
+  Globe,
+  Check,
+  Radio,
+  BarChart3,
+  MessageCircle,
+  Clock,
+  Users,
+  Zap,
+  Palette,
+  Shield,
+  Star,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import Header from "../components/Header";
@@ -47,45 +60,108 @@ function Landing() {
 
     const planInfo = {
       free: {
-        description: plan.description || "Perfect starting point for content creators exploring multistreaming",
+        description:
+          plan.description ||
+          "Perfect starting point for content creators exploring multistreaming",
         bestFor:
           "Beginners testing multistreaming, hobby streamers, and those trying out the platform",
         features: [
-          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
-          { icon: <BarChart3 className="w-5 h-5" />, text: "Basic analytics dashboard" },
-          { icon: <MessageCircle className="w-5 h-5" />, text: "1 chat connector" },
-          { icon: <Clock className="w-5 h-5" />, text: "35 hours streaming monthly" },
+          {
+            icon: <Radio className="w-5 h-5" />,
+            text: "Stream to platforms simultaneously",
+          },
+          {
+            icon: <BarChart3 className="w-5 h-5" />,
+            text: "Basic analytics dashboard",
+          },
+          {
+            icon: <MessageCircle className="w-5 h-5" />,
+            text: "1 chat connector",
+          },
+          {
+            icon: <Clock className="w-5 h-5" />,
+            text: "35 hours streaming monthly",
+          },
           { icon: <Users className="w-5 h-5" />, text: "Community support" },
         ],
       },
       pro: {
-        description: plan.description || "Most popular choice for serious content creators and growing streamers",
+        description:
+          plan.description ||
+          "Most popular choice for serious content creators and growing streamers",
         bestFor:
           "Regular streamers, content creators expanding their reach, and small stream teams",
         features: [
-          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
-          { icon: <BarChart3 className="w-5 h-5" />, text: "Advanced analytics & insights" },
-          { icon: <MessageCircle className="w-5 h-5" />, text: "3 chat connectors" },
-          { icon: <Clock className="w-5 h-5" />, text: "1000 hours streaming monthly" },
-          { icon: <Users className="w-5 h-5" />, text: "Up to 2 streaming sources" },
+          {
+            icon: <Radio className="w-5 h-5" />,
+            text: "Stream to platforms simultaneously",
+          },
+          {
+            icon: <BarChart3 className="w-5 h-5" />,
+            text: "Advanced analytics & insights",
+          },
+          {
+            icon: <MessageCircle className="w-5 h-5" />,
+            text: "3 chat connectors",
+          },
+          {
+            icon: <Clock className="w-5 h-5" />,
+            text: "1000 hours streaming monthly",
+          },
+          {
+            icon: <Users className="w-5 h-5" />,
+            text: "Up to 2 streaming sources",
+          },
           { icon: <Zap className="w-5 h-5" />, text: "Priority support" },
-          { icon: <Palette className="w-5 h-5" />, text: "Custom branding options" },
+          {
+            icon: <Palette className="w-5 h-5" />,
+            text: "Custom branding options",
+          },
         ],
       },
       business: {
-        description: plan.description || "Comprehensive solution for professional streaming operations and teams",
+        description:
+          plan.description ||
+          "Comprehensive solution for professional streaming operations and teams",
         bestFor:
           "Professional streamers, production companies, esports teams, and large content creators",
         features: [
-          { icon: <Radio className="w-5 h-5" />, text: "Stream to platforms simultaneously" },
-          { icon: <BarChart3 className="w-5 h-5" />, text: "Enterprise analytics & insights" },
-          { icon: <MessageCircle className="w-5 h-5" />, text: "10 chat connectors" },
-          { icon: <Clock className="w-5 h-5" />, text: "5000 hours streaming monthly" },
-          { icon: <Users className="w-5 h-5" />, text: "Up to 5 streaming sources" },
-          { icon: <Shield className="w-5 h-5" />, text: "24/7 dedicated support" },
-          { icon: <Palette className="w-5 h-5" />, text: "Full custom branding" },
-          { icon: <Users className="w-5 h-5" />, text: "Team collaboration features" },
-          { icon: <Shield className="w-5 h-5" />, text: "Enhanced security & privacy" },
+          {
+            icon: <Radio className="w-5 h-5" />,
+            text: "Stream to platforms simultaneously",
+          },
+          {
+            icon: <BarChart3 className="w-5 h-5" />,
+            text: "Enterprise analytics & insights",
+          },
+          {
+            icon: <MessageCircle className="w-5 h-5" />,
+            text: "10 chat connectors",
+          },
+          {
+            icon: <Clock className="w-5 h-5" />,
+            text: "5000 hours streaming monthly",
+          },
+          {
+            icon: <Users className="w-5 h-5" />,
+            text: "Up to 5 streaming sources",
+          },
+          {
+            icon: <Shield className="w-5 h-5" />,
+            text: "24/7 dedicated support",
+          },
+          {
+            icon: <Palette className="w-5 h-5" />,
+            text: "Full custom branding",
+          },
+          {
+            icon: <Users className="w-5 h-5" />,
+            text: "Team collaboration features",
+          },
+          {
+            icon: <Shield className="w-5 h-5" />,
+            text: "Enhanced security & privacy",
+          },
         ],
       },
     };
@@ -127,7 +203,9 @@ function Landing() {
     // Parse chat connectors from plan features array
     let chatConnectorsCount = 1;
     if (plan.features && Array.isArray(plan.features)) {
-      const chatFeature = plan.features.find(f => f.includes("Chat Connectors:"));
+      const chatFeature = plan.features.find((f) =>
+        f.includes("Chat Connectors:"),
+      );
       if (chatFeature) {
         const match = chatFeature.match(/Chat Connectors:\s*(\d+)/);
         if (match) {
@@ -136,7 +214,9 @@ function Landing() {
       }
     }
 
-    const chatConnectorFeature = features.find((f) => f.text.includes("chat connector"));
+    const chatConnectorFeature = features.find((f) =>
+      f.text.includes("chat connector"),
+    );
     if (chatConnectorFeature) {
       chatConnectorFeature.text = `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? "s" : ""} (Twitch, YouTube, etc.)`;
     }
@@ -444,9 +524,9 @@ function Landing() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
-            <div className="text-center space-y-6 group">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto items-stretch">
+            <div className="text-center space-y-6 group flex flex-col">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
                 <h3 className="text-2xl sm:text-3xl font-normal mb-4">
                   Gamers
                 </h3>
@@ -461,8 +541,8 @@ function Landing() {
               </div>
             </div>
 
-            <div className="text-center space-y-6 group">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+            <div className="text-center space-y-6 group flex flex-col">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
                 <h3 className="text-2xl sm:text-3xl font-normal mb-4">
                   Content creators
                 </h3>
@@ -476,8 +556,8 @@ function Landing() {
               </div>
             </div>
 
-            <div className="text-center space-y-6 group">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+            <div className="text-center space-y-6 group flex flex-col">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
                 <h3 className="text-2xl sm:text-3xl font-normal mb-4">
                   Mobile creators
                 </h3>
