@@ -94,7 +94,7 @@ function SubscriptionManagement() {
       // Create payment order
       const orderData = await subscriptionService.createPaymentOrder(
         planId,
-        billingCycle
+        billingCycle,
       );
 
       // Initialize Razorpay
@@ -111,18 +111,18 @@ function SubscriptionManagement() {
             const verifyResponse = await subscriptionService.verifyPayment(
               response.razorpay_order_id,
               response.razorpay_payment_id,
-              response.razorpay_signature
+              response.razorpay_signature,
             );
 
             if (verifyResponse.success) {
               toast.success(
-                "Payment successful! Your subscription has been upgraded."
+                "Payment successful! Your subscription has been upgraded.",
               );
               queryClient.invalidateQueries(["subscription", user.id]);
               setSelectedPlan(null);
             } else {
               toast.error(
-                "Payment verification failed. Please contact support."
+                "Payment verification failed. Please contact support.",
               );
             }
           } catch (error) {
@@ -214,56 +214,6 @@ function SubscriptionManagement() {
 
   return (
     <div className="w-full px-6 py-6 space-y-6  mx-auto">
-      {/* Current Plan Header - Compact Version */}
-      <Card className="border-border bg-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Crown className="h-4 w-4 text-primary" />
-              {currentPlan?.plan_name} Plan
-            </span>
-            <Badge
-              variant={
-                currentPlan?.status === "active" ? "default" : "secondary"
-              }
-              className="text-xs"
-            >
-              {currentPlan?.status}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Compact Usage Overview */}
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="space-y-1">
-              <div className="text-lg font-medium text-primary">
-                {currentUsage?.sources_count}/{currentLimits?.max_sources}
-              </div>
-              <div className="text-xs text-muted-foreground">Sources</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-lg font-medium text-primary">
-                {currentUsage?.destinations_count}/{currentLimits?.max_destinations}
-              </div>
-              <div className="text-xs text-muted-foreground">Destinations</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-lg font-medium text-primary">
-                {Number(currentUsage?.streaming_hours || 0).toFixed(0)}/{currentLimits?.max_streaming_hours_monthly}h
-              </div>
-              <div className="text-xs text-muted-foreground">Hours</div>
-            </div>
-          </div>
-
-          {currentPlan?.current_period_end && (
-            <div className="flex items-center justify-center text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3 mr-1" />
-              Renews {new Date(currentPlan.current_period_end).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Tabs for different sections */}
       <Tabs defaultValue="plans" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -277,15 +227,21 @@ function SubscriptionManagement() {
           {/* Billing Cycle Toggle */}
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center justify-center space-x-4 p-6 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-              <span className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}>
+              <span
+                className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}
+              >
                 Monthly
               </span>
               <Switch
                 checked={billingCycle === "yearly"}
-                onCheckedChange={(checked) => setBillingCycle(checked ? "yearly" : "monthly")}
+                onCheckedChange={(checked) =>
+                  setBillingCycle(checked ? "yearly" : "monthly")
+                }
               />
               <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}
+                >
                   Yearly
                 </span>
                 <Badge className="bg-green-500 text-white text-xs animate-pulse">
@@ -298,13 +254,23 @@ function SubscriptionManagement() {
             <div className="text-center max-w-2xl">
               {billingCycle === "yearly" ? (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium mb-2">🎉 Great choice! You're saving 20%</p>
-                  <p className="text-xs text-green-600">Yearly billing gives you the best value and uninterrupted service all year long.</p>
+                  <p className="text-sm text-green-800 font-medium mb-2">
+                    🎉 Great choice! You're saving 20%
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Yearly billing gives you the best value and uninterrupted
+                    service all year long.
+                  </p>
                 </div>
               ) : (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 font-medium mb-2">💡 Switch to yearly and save 20%</p>
-                  <p className="text-xs text-blue-600">Get 2 months free when you choose annual billing. Plus, you'll lock in your current rate.</p>
+                  <p className="text-sm text-blue-800 font-medium mb-2">
+                    💡 Switch to yearly and save 20%
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Get 2 months free when you choose annual billing. Plus,
+                    you'll lock in your current rate.
+                  </p>
                 </div>
               )}
             </div>
@@ -317,7 +283,8 @@ function SubscriptionManagement() {
                 plan.name.toLowerCase();
               const price = getPlanPrice(plan);
               const features = getPlanFeatures(plan.name);
-              const displayPrice = billingCycle === "yearly" ? price.yearly : price.monthly;
+              const displayPrice =
+                billingCycle === "yearly" ? price.yearly : price.monthly;
               const savingsPercentage = 20; // You can calculate this dynamically if needed
 
               return (
@@ -348,7 +315,9 @@ function SubscriptionManagement() {
                     <div className="space-y-3">
                       <div className="flex items-baseline space-x-2">
                         <div className="text-3xl font-normal">
-                          {plan.name.toLowerCase() === "free" ? "Free" : displayPrice}
+                          {plan.name.toLowerCase() === "free"
+                            ? "Free"
+                            : displayPrice}
                         </div>
                         {plan.name.toLowerCase() !== "free" && (
                           <span className="text-sm font-normal text-muted-foreground">
@@ -358,23 +327,28 @@ function SubscriptionManagement() {
                       </div>
 
                       {/* Show savings for yearly billing */}
-                      {billingCycle === "yearly" && plan.name.toLowerCase() !== "free" && (
-                        <div className="flex items-center space-x-2">
-                          <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                            Save {savingsPercentage}%
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Equivalent to {price.monthly}/month
-                          </span>
-                        </div>
-                      )}
+                      {billingCycle === "yearly" &&
+                        plan.name.toLowerCase() !== "free" && (
+                          <div className="flex items-center space-x-2">
+                            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                              Save {savingsPercentage}%
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Equivalent to {price.monthly}/month
+                            </span>
+                          </div>
+                        )}
 
                       {/* Show comparison for monthly billing */}
-                      {billingCycle === "monthly" && plan.name.toLowerCase() !== "free" && (
-                        <div className="text-xs text-muted-foreground">
-                          <span>Or {price.yearly} billed annually (Save {savingsPercentage}%)</span>
-                        </div>
-                      )}
+                      {billingCycle === "monthly" &&
+                        plan.name.toLowerCase() !== "free" && (
+                          <div className="text-xs text-muted-foreground">
+                            <span>
+                              Or {price.yearly} billed annually (Save{" "}
+                              {savingsPercentage}%)
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -456,22 +430,24 @@ function SubscriptionManagement() {
                     </div>
                     <div className="flex justify-between">
                       <span>Billing Cycle:</span>
-                      <span className="font-medium capitalize">{billingCycle}</span>
+                      <span className="font-medium capitalize">
+                        {billingCycle}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Price:</span>
                       <span className="font-medium">
                         {selectedPlan.name.toLowerCase() === "free"
                           ? "Free"
-                          : `${billingCycle === "yearly" ? getPlanPrice(selectedPlan).yearly : getPlanPrice(selectedPlan).monthly}/${billingCycle === "yearly" ? "year" : "month"}`
-                        }
+                          : `${billingCycle === "yearly" ? getPlanPrice(selectedPlan).yearly : getPlanPrice(selectedPlan).monthly}/${billingCycle === "yearly" ? "year" : "month"}`}
                       </span>
                     </div>
-                    {billingCycle === "yearly" && selectedPlan.name.toLowerCase() !== "free" && (
-                      <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-                        You're saving 20% with yearly billing!
-                      </div>
-                    )}
+                    {billingCycle === "yearly" &&
+                      selectedPlan.name.toLowerCase() !== "free" && (
+                        <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                          You're saving 20% with yearly billing!
+                        </div>
+                      )}
                   </div>
 
                   {selectedPlan.name.toLowerCase() === "free" ? (
@@ -527,8 +503,8 @@ function SubscriptionManagement() {
                     processPaymentMutation.isLoading
                       ? "Processing..."
                       : selectedPlan.name.toLowerCase() === "free"
-                      ? "Switch to Free"
-                      : "Proceed to Payment"}
+                        ? "Switch to Free"
+                        : "Proceed to Payment"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -633,7 +609,7 @@ function SubscriptionManagement() {
                                 (month.hours /
                                   currentLimits?.max_streaming_hours_monthly) *
                                   100,
-                                100
+                                100,
                               )}%`,
                             }}
                           ></div>
@@ -697,7 +673,7 @@ function SubscriptionManagement() {
                       <p className="font-medium">Next Billing Date</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(
-                          currentPlan.current_period_end
+                          currentPlan.current_period_end,
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -741,15 +717,9 @@ function SubscriptionManagement() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <Button variant="outline" asChild>
-              <a href="/help" target="_blank" rel="noopener noreferrer">
-                <Users className="h-4 w-4 mr-2" />
-                View Help Center
-              </a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="mailto:support@neustream.app">
+              <a href="mailto:farseen@neustream.app">
                 <Shield className="h-4 w-4 mr-2" />
-                Contact Support
+                Contact Support ( farseen@neustream.app )
               </a>
             </Button>
           </div>
