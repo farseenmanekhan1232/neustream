@@ -353,6 +353,18 @@ function Landing() {
                   height="54"
                 />
               </a>
+              <a
+                href="https://startupfa.me/s/neustream?utm_source=neustream.app"
+                target="_blank"
+                className="transform transition-transform hover:scale-105"
+              >
+                <img
+                  src="https://startupfa.me/badges/featured/default.webp"
+                  alt="NeuStream - Featured on Startup Fame"
+                  width="171"
+                  height="54"
+                />
+              </a>
             </div>
           </div>
         </div>
