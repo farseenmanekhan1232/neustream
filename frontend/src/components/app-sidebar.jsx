@@ -75,17 +75,22 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   return (
-    <Sidebar collapsible="offcanvas" variant="inset" {...props}>
+    <Sidebar
+    variant="sidebar"
+    {...props}
+  >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
+            <SidebarMenuButton size="lg" asChild>
               <a href="/dashboard">
-                <IconVideo className="!size-5" />
-                <span className="text-base font-semibold">NeuStream</span>
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <IconVideo className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">NeuStream</span>
+                  <span className="truncate text-xs">Streaming Platform</span>
+                </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

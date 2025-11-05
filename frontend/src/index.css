@@ -399,9 +399,6 @@ h3 {
   --sidebar-accent-foreground: oklch(0.3791 0.1378 265.5222);
   --sidebar-border: oklch(0.9276 0.0058 264.5313);
   --sidebar-ring: oklch(0.6397 0.172 36.4421);
-  --font-sans: Inter, sans-serif;
-  --font-serif: Source Serif 4, serif;
-  --font-mono: JetBrains Mono, monospace;
   --radius: 0.75rem;
   --shadow-x: 0px;
   --shadow-y: 1px;

@@ -1,34 +1,34 @@
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { Toaster } from "sonner";
+import React from "react";
+import { Outlet } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
-import DashboardContent from "@/components/dashboard/DashboardContent";
-import ErrorBoundary from "@/components/dashboard/ErrorBoundary";
 
-function DashboardLayout() {
+export default function DashboardLayout() {
   return (
-    <ErrorBoundary>
-      <SidebarProvider
-        style={{
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        }}
-      >
-        <AppSidebar variant="inset" />
-        <SidebarInset>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">
-            <div className="@container/main flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                <DashboardContent />
-              </div>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "18rem",
+          "--sidebar-width-icon": "3rem",
+        }
+      }
+    >
+      <div className="flex h-screen">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-all duration-200 ease-in-out">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <h1 className="text-lg font-semibold">Dashboard</h1>
             </div>
-          </div>
-        </SidebarInset>
-        <Toaster position="top-right" richColors closeButton />
-      </SidebarProvider>
-    </ErrorBoundary>
+          </header>
+          <main className="flex-1 overflow-auto p-4">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
-
-export default DashboardLayout;
