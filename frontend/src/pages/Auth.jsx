@@ -115,8 +115,8 @@ function Auth() {
   return (
     <div className=" min-h-screen bg-teal-gradient">
       <Header />
-      <main className="section-padding">
-        <div className="container-custom">
+      <main className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center space-y-8 max-w-md mx-auto">
             <Card className="w-full">
               <CardHeader className="text-center">

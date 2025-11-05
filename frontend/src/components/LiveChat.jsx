@@ -10,6 +10,8 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button";
 import { MessageCircle, Users, ExternalLink, Copy } from "lucide-react";
 import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -289,8 +291,8 @@ function LiveChat({
 
   // Determine container styles based on props
   const containerClass = rawMode
-    ? `h-full overflow-y-auto space-y-3 ${transparent ? '' : 'p-4'}`
-    : "absolute inset-0 overflow-y-auto p-4 space-y-3";
+    ? `h-full space-y-3 ${transparent ? '' : 'p-4'}`
+    : "absolute inset-0 p-4 space-y-3";
 
   const messageClass = rawMode
     ? "flex space-x-3"
@@ -323,42 +325,44 @@ function LiveChat({
   // Render raw mode (minimal styling for OBS)
   if (rawMode) {
     return (
-      <div className={containerClass}>
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <p className="text-gray-400">No messages yet</p>
-            </div>
-          </div>
-        ) : (
-          messages
-            .filter(shouldShowSystemMessage)
-            .map((message) => (
-              <div key={message.id} className={messageClass}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className={authorClass}>
-                      {message.authorName}
-                    </span>
-                    {message.platform && (
-                      <span className="text-xs text-gray-400">
-                        [{message.platform}]
-                      </span>
-                    )}
-                    <span className={timeClass}>
-                      {new Date(message.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <p className={messageTextClass}>{message.messageText}</p>
-                </div>
+      <ScrollArea className={containerClass}>
+        <div className="space-y-3">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <p className="text-gray-400">No messages yet</p>
               </div>
-            ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+            </div>
+          ) : (
+            messages
+              .filter(shouldShowSystemMessage)
+              .map((message) => (
+                <div key={message.id} className={messageClass}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className={authorClass}>
+                        {message.authorName}
+                      </span>
+                      {message.platform && (
+                        <span className="text-xs text-gray-400">
+                          [{message.platform}]
+                        </span>
+                      )}
+                      <span className={timeClass}>
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className={messageTextClass}>{message.messageText}</p>
+                  </div>
+                </div>
+              ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
     );
   }
 
@@ -373,19 +377,21 @@ function LiveChat({
               Live Chat
             </span>
             <div className="flex items-center space-x-2">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   const popoutUrl = `${window.location.origin}/chat/${sourceId}`;
                   window.open(popoutUrl, '_blank', 'width=400,height=600');
                 }}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
                 title="Pop out chat for OBS"
               >
                 <ExternalLink className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={copyOBSLink}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
                 title="Copy OBS browser source URL"
               >
                 {copyFeedback ? (
@@ -393,7 +399,7 @@ function LiveChat({
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
               <Badge
                 variant={isConnected ? "default" : "secondary"}
                 className={isConnected ? "bg-green-500" : ""}
@@ -414,63 +420,65 @@ function LiveChat({
 
       <CardContent className="flex-1 flex flex-col p-0 min-h-0 relative">
         {/* Chat Messages Area - Fixed height container */}
-        <div className={containerClass}>
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="h-8 w-8 text-muted-foreground" />
+        <ScrollArea className={containerClass}>
+          <div className="space-y-3">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageCircle className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">No Messages Yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Connect chat platforms to see messages here
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">No Messages Yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect chat platforms to see messages here
-                </p>
               </div>
-            </div>
-          ) : (
-            messages
-              .filter(shouldShowSystemMessage) // Filter out repetitive system messages
-              .map((message) => (
-                <div key={message.id} className={messageClass}>
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {getAuthorInitials(message.authorName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={authorClass}>
-                        {message.authorName}
-                      </span>
-                      {message.platform && (
-                        <Badge
-                          variant="outline"
-                          className={`text-xs capitalize ${getPlatformColor(
-                            message.platform
-                          )}`}
-                        >
-                          {getPlatformIcon(message.platform)} {message.platform}
+            ) : (
+              messages
+                .filter(shouldShowSystemMessage) // Filter out repetitive system messages
+                .map((message) => (
+                  <div key={message.id} className={messageClass}>
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="text-xs">
+                        {getAuthorInitials(message.authorName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className={authorClass}>
+                          {message.authorName}
+                        </span>
+                        {message.platform && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs capitalize ${getPlatformColor(
+                              message.platform
+                            )}`}
+                          >
+                            {getPlatformIcon(message.platform)} {message.platform}
+                          </Badge>
+                        )}
+                        <span className={timeClass}>
+                          {new Date(message.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className={messageTextClass}>{message.messageText}</p>
+                      {message.messageType !== "text" && (
+                        <Badge variant="secondary" className="mt-1 text-xs">
+                          {message.messageType}
                         </Badge>
                       )}
-                      <span className={timeClass}>
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
                     </div>
-                    <p className={messageTextClass}>{message.messageText}</p>
-                    {message.messageType !== "text" && (
-                      <Badge variant="secondary" className="mt-1 text-xs">
-                        {message.messageType}
-                      </Badge>
-                    )}
                   </div>
-                </div>
-              ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+                ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

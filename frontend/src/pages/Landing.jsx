@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  Globe,
   Check,
   Radio,
   BarChart3,
@@ -12,7 +11,6 @@ import {
   Zap,
   Palette,
   Shield,
-  Star,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -261,8 +259,8 @@ function Landing() {
       <Header />
 
       {/* Hero Section */}
-      <section className="section-padding">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12">
             <div className="inline-flex items-center">
               <img
@@ -323,8 +321,8 @@ function Landing() {
       </section>
 
       {/* Performance & Privacy Section */}
-      <section className="section-padding py-20 lg:py-24">
-        <div className="container-custom">
+      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             <div className="space-y-8 order-2 lg:order-1">
               <div className="space-y-8">
@@ -481,8 +479,8 @@ function Landing() {
         </div>
       </section>
       {/* Target Audience Section */}
-      <section className="section-padding py-20 lg:py-24">
-        <div className="container-custom">
+      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto mb-20">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Built for creators, by creators
@@ -547,8 +545,8 @@ function Landing() {
       </section>
 
       {/* Subscription Plans Section */}
-      <section className="section-padding py-20 lg:py-24">
-        <div className="container-custom">
+      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-5xl mx-auto mb-20">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Choose Your <span className="underline font-medium">Plan</span>
@@ -564,7 +562,7 @@ function Landing() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="feature-card animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10"
+                  className="animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg"
                 >
                   <div className="text-center space-y-6">
                     <div className="h-10 bg-white/20 rounded w-3/4 mx-auto"></div>
@@ -600,7 +598,7 @@ function Landing() {
                 return (
                   <div
                     key={plan.id}
-                    className={`feature-card relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border transition-all duration-300 hover:bg-white/10 hover:scale-105 ${
+                    className={`relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg ${
                       isProPlan
                         ? "border-primary shadow-2xl shadow-primary/20 ring-2 ring-primary/20"
                         : planName === "business"
@@ -760,8 +758,8 @@ function Landing() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="section-padding py-20 lg:py-24">
-        <div className="container-custom">
+      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
               Ready to try NeuStream?

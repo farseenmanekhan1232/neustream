@@ -6,12 +6,18 @@ import {
   VolumeX,
   Maximize,
   PictureInPicture,
-  Loader2,
   Wifi,
   WifiOff,
   AlertCircle,
+  VideoOff,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Card, CardContent } from "./ui/card";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Spinner } from "./ui/spinner";
+import { Progress } from "./ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 const StreamPreview = ({ streamKey, isActive }) => {
   const videoRef = useRef(null);
@@ -26,6 +32,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
   const [showControls, setShowControls] = useState(false);
   const [streamHealth, setStreamHealth] = useState("unknown"); // 'healthy', 'unhealthy', 'unknown'
   const [retryCount, setRetryCount] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Construct HLS URL - use nginx SSL proxy on port 443
   const hlsUrl = `https://stream.neustream.app/hls/live/${streamKey}/index.m3u8`;
@@ -99,6 +106,12 @@ const StreamPreview = ({ streamKey, isActive }) => {
   // Set timeout and health monitoring
   useEffect(() => {
     if (isLoading && isActive) {
+      // Reset and start progress animation
+      setLoadingProgress(0);
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => Math.min(prev + 5, 90));
+      }, 200);
+
       // Start health check after 2 seconds
       healthCheckRef.current = setTimeout(async () => {
         const isHealthy = await checkHlsHealth();
@@ -109,6 +122,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
             "Stream health check failed. The stream may not be fully processed yet."
           );
           setIsLoading(false);
+          clearInterval(progressInterval);
         }
       }, 2000);
 
@@ -119,7 +133,12 @@ const StreamPreview = ({ streamKey, isActive }) => {
         );
         setIsLoading(false);
         setStreamHealth("unhealthy");
+        clearInterval(progressInterval);
       }, 20000); // 20 second timeout (increased from 15s)
+
+      return () => {
+        clearInterval(progressInterval);
+      };
     }
 
     return () => {
@@ -180,6 +199,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
           hls.attachMedia(video);
 
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            setLoadingProgress(100);
             setIsLoading(false);
             setStreamHealth("healthy");
             // Auto-start with muted playback
@@ -276,6 +296,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
           // Safari native HLS support
           video.src = hlsUrl;
           video.addEventListener("loadedmetadata", () => {
+            setLoadingProgress(100);
             setIsLoading(false);
             setStreamHealth("healthy");
             video.play().catch((err) => {
@@ -354,10 +375,42 @@ const StreamPreview = ({ streamKey, isActive }) => {
     if (!video) return;
 
     if (video.paused) {
-      video.play().then(() => setIsPlaying(true));
+      video.play().then(() => setIsPlaying(true)).catch(err => {
+        console.error("Play failed:", err);
+      });
     } else {
       video.pause();
       setIsPlaying(false);
+    }
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e) => {
+    if (!videoRef.current) return;
+
+    switch (e.key) {
+      case ' ':
+      case 'k':
+        e.preventDefault();
+        togglePlay();
+        break;
+      case 'm':
+        e.preventDefault();
+        toggleMute();
+        break;
+      case 'f':
+        e.preventDefault();
+        toggleFullscreen();
+        break;
+      case 'p':
+        e.preventDefault();
+        togglePiP();
+        break;
+      case 'Escape':
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        }
+        break;
     }
   };
 
@@ -419,232 +472,344 @@ const StreamPreview = ({ streamKey, isActive }) => {
 
   if (!isActive) {
     return (
-      <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <div className="h-12 w-12 mx-auto mb-4 opacity-50">
-            <svg
-              className="w-full h-full"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
+      <Card className="aspect-video bg-muted">
+        <CardContent className="h-full flex items-center justify-center p-6">
+          <div className="text-center text-muted-foreground">
+            <VideoOff className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="font-medium">Stream is offline</p>
+            <p className="text-sm">Start streaming to see preview</p>
           </div>
-          <p>Stream is offline</p>
-          <p className="text-sm">Start streaming to see preview</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div
-      className="relative group aspect-video bg-black rounded-lg overflow-hidden"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
-    >
+    <TooltipProvider>
+      <Card
+        className="relative group aspect-video bg-black overflow-hidden border-0"
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="application"
+        aria-label="Stream preview player"
+      >
+        <CardContent className="p-0 h-full">
+          <div
+            className="relative h-full"
+            onMouseEnter={() => setShowControls(true)}
+            onMouseLeave={() => setShowControls(false)}
+          >
       {/* Video Element */}
-      <video
-        ref={videoRef}
-        className="w-full h-full object-contain"
-        playsInline
-        muted={isMuted}
-        onClick={togglePlay}
-      />
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain"
+              playsInline
+              muted={isMuted}
+              onClick={togglePlay}
+              aria-label="Stream video player"
+              role="application"
+            />
 
       {/* Loading Indicator */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-center text-white">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p>Loading stream...</p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+          <Card className="max-w-sm w-full mx-4 bg-black/90 border-border">
+            <CardContent className="p-6">
+              <div className="text-center text-white space-y-4">
+                <Spinner size="xl" className="mx-auto" />
+                <div className="space-y-3" role="status" aria-live="polite">
+                  <p className="font-medium">Loading stream...</p>
+                  <Progress
+                    value={loadingProgress}
+                    className="w-full h-2"
+                    aria-label={`Loading progress: ${loadingProgress}%`}
+                    aria-valuenow={loadingProgress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {loadingProgress < 30 ? "Connecting to stream..." :
+                     loadingProgress < 60 ? "Loading media..." :
+                     loadingProgress < 90 ? "Buffering..." : "Almost ready..."}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Error Message */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-center text-white p-4 max-w-md">
-            <div className="flex items-center justify-center mb-4">
-              {error.type?.includes("NETWORK") ||
-              error.type?.includes("TIMEOUT") ? (
-                <WifiOff className="h-8 w-8 text-red-400" />
-              ) : error.type?.includes("404") ||
-                error.type?.includes("NOT_FOUND") ? (
-                <AlertCircle className="h-8 w-8 text-yellow-400" />
-              ) : (
-                <AlertCircle className="h-8 w-8 text-red-400" />
-              )}
-            </div>
-            <p className="text-red-400 mb-4 text-sm">
-              {error.message || error}
-            </p>
-
-            {/* Stream Health Indicator */}
-            {streamHealth !== "unknown" && (
-              <div className="flex items-center justify-center mb-3 text-xs">
-                {streamHealth === "healthy" ? (
-                  <div className="flex items-center text-green-400">
-                    <Wifi className="h-3 w-3 mr-1" />
-                    Stream connection healthy
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 p-4">
+          <Card className="max-w-md w-full">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Alert variant="destructive">
+                  <div className="flex items-center justify-center mb-2">
+                    {error.type?.includes("NETWORK") ||
+                    error.type?.includes("TIMEOUT") ? (
+                      <WifiOff className="h-8 w-8" />
+                    ) : error.type?.includes("404") ||
+                      error.type?.includes("NOT_FOUND") ? (
+                      <AlertCircle className="h-8 w-8" />
+                    ) : (
+                      <AlertCircle className="h-8 w-8" />
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center text-yellow-400">
-                    <WifiOff className="h-3 w-3 mr-1" />
-                    Stream connection unhealthy
+                  <AlertDescription className="text-sm text-center">
+                    {error.message || error}
+                  </AlertDescription>
+                </Alert>
+
+                {/* Stream Health Indicator */}
+                {streamHealth !== "unknown" && (
+                  <div className="flex justify-center">
+                    <Badge
+                      variant={streamHealth === "healthy" ? "default" : "secondary"}
+                      className="px-3 py-1"
+                    >
+                      {streamHealth === "healthy" ? (
+                        <div className="flex items-center">
+                          <Wifi className="h-3 w-3 mr-1" />
+                          Stream connection healthy
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <WifiOff className="h-3 w-3 mr-1" />
+                          Stream connection unhealthy
+                        </div>
+                      )}
+                    </Badge>
                   </div>
                 )}
+
+                <div className="flex gap-2 justify-center" role="group" aria-label="Error actions">
+                  {error.retryable !== false && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRetry}
+                      className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      aria-label={`${retryCount > 0 ? `Retry loading stream (attempt ${retryCount})` : 'Retry loading stream'}`}
+                    >
+                      {retryCount > 0 ? `Retry (${retryCount})` : "Retry Loading"}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setError(null)}
+                    className="focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    aria-label="Dismiss error message"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+
+                {/* Contextual help based on error type */}
+                <Alert className="bg-muted border-muted">
+                  <AlertDescription className="text-xs text-muted-foreground">
+                    {error.type?.includes("404") && (
+                      <>
+                        The stream may still be starting up. HLS processing can take
+                        up to 30 seconds after beginning to broadcast.
+                      </>
+                    )}
+                    {error.type?.includes("NETWORK") && (
+                      <>
+                        Check your internet connection and browser console for CORS
+                        errors.
+                      </>
+                    )}
+                    {error.type?.includes("TIMEOUT") && (
+                      <>
+                        The stream may be slow to respond or your connection may be
+                        unstable.
+                      </>
+                    )}
+                    {!error.type && (
+                      <>
+                        Make sure your streaming software (OBS, Streamlabs, etc.) is
+                        actively broadcasting to the correct RTMP URL.
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
               </div>
-            )}
-
-            <div className="flex gap-2 justify-center">
-              {error.retryable !== false && (
-                <Button variant="outline" size="sm" onClick={handleRetry}>
-                  {retryCount > 0 ? `Retry (${retryCount})` : "Retry Loading"}
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={() => setError(null)}>
-                Dismiss
-              </Button>
-            </div>
-
-            {/* Contextual help based on error type */}
-            <p className="text-xs text-gray-400 mt-4">
-              {error.type?.includes("404") && (
-                <>
-                  The stream may still be starting up. HLS processing can take
-                  up to 30 seconds after beginning to broadcast.
-                </>
-              )}
-              {error.type?.includes("NETWORK") && (
-                <>
-                  Check your internet connection and browser console for CORS
-                  errors.
-                </>
-              )}
-              {error.type?.includes("TIMEOUT") && (
-                <>
-                  The stream may be slow to respond or your connection may be
-                  unstable.
-                </>
-              )}
-              {!error.type && (
-                <>
-                  Make sure your streaming software (OBS, Streamlabs, etc.) is
-                  actively broadcasting to the correct RTMP URL.
-                </>
-              )}
-            </p>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Video Controls */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div className="flex items-center justify-between text-white">
-          {/* Left Controls */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={togglePlay}
-              className="text-white hover:text-white hover:bg-white/20"
+            <div
+              className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
+                showControls ? "opacity-100" : "opacity-0"
+              }`}
+              role="toolbar"
+              aria-label="Video player controls"
             >
-              {isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
+              <div className="flex items-center justify-between text-white">
+                {/* Left Controls */}
+                <div className="flex items-center space-x-2" role="group" aria-label="Playback controls">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={togglePlay}
+                        className="text-white hover:text-white hover:bg-white/20 focus:ring-2 focus:ring-white/50"
+                        aria-label={isPlaying ? "Pause stream" : "Play stream"}
+                        aria-pressed={isPlaying}
+                      >
+                        {isPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isPlaying ? "Pause" : "Play"}</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMute}
-              className="text-white hover:text-white hover:bg-white/20"
-            >
-              {isMuted ? (
-                <VolumeX className="h-4 w-4" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleMute}
+                        className="text-white hover:text-white hover:bg-white/20 focus:ring-2 focus:ring-white/50"
+                        aria-label={isMuted ? "Unmute stream" : "Mute stream"}
+                        aria-pressed={isMuted}
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isMuted ? "Unmute" : "Mute"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={togglePiP}
-              className="text-white hover:text-white hover:bg-white/20"
-              title="Picture in Picture"
-            >
-              <PictureInPicture className="h-4 w-4" />
-            </Button>
+                {/* Right Controls */}
+                <div className="flex items-center space-x-2" role="group" aria-label="Display controls">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={togglePiP}
+                        className="text-white hover:text-white hover:bg-white/20 focus:ring-2 focus:ring-white/50"
+                        aria-label="Picture in Picture mode"
+                      >
+                        <PictureInPicture className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Picture in Picture</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleFullscreen}
-              className="text-white hover:text-white hover:bg-white/20"
-              title="Fullscreen"
-            >
-              <Maximize className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleFullscreen}
+                        className="text-white hover:text-white hover:bg-white/20 focus:ring-2 focus:ring-white/50"
+                        aria-label="Fullscreen mode"
+                      >
+                        <Maximize className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Fullscreen</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </div>
 
       {/* Live Indicator with Health Status */}
-      <div className="absolute top-4 left-4">
-        <div className="flex items-center space-x-2 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-          <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
-          <span>LIVE</span>
-          {streamHealth !== "unknown" && (
-            <div className="flex items-center ml-2">
-              {streamHealth === "healthy" ? (
-                <Wifi
-                  className="h-3 w-3 text-green-300"
-                  title="Stream connection healthy"
-                />
-              ) : (
-                <WifiOff
-                  className="h-3 w-3 text-yellow-300 animate-pulse"
-                  title="Stream connection issues"
-                />
-              )}
+            <div className="absolute top-4 left-4" aria-live="polite" aria-label="Stream status">
+              <Badge
+                variant="destructive"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm font-medium"
+                aria-label="Live stream"
+              >
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="h-2 w-2 bg-white rounded-full animate-pulse"
+                    aria-hidden="true"
+                  ></div>
+                  <span>LIVE</span>
+                  {streamHealth !== "unknown" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className="flex items-center ml-2 cursor-help"
+                          aria-label={`Stream connection: ${streamHealth}`}
+                        >
+                          {streamHealth === "healthy" ? (
+                            <Wifi
+                              className="h-3 w-3 text-green-300"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <WifiOff
+                              className="h-3 w-3 text-yellow-300 animate-pulse"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {streamHealth === "healthy"
+                            ? "Stream connection healthy"
+                            : "Stream connection issues"
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </Badge>
+            </div>
+
+          {/* Click to play overlay (when paused) */}
+          {!isPlaying && !isLoading && !error && (
+            <div
+              className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/30"
+              onClick={togglePlay}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  togglePlay();
+                }
+              }}
+              aria-label="Click to play stream"
+            >
+              <div className="text-white text-center">
+                <div className="h-16 w-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                  <Play className="h-8 w-8 ml-1" />
+                </div>
+                <p className="font-medium">Click to play</p>
+              </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Click to play overlay (when paused) */}
-      {!isPlaying && !isLoading && !error && (
-        <div
-          className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/30"
-          onClick={togglePlay}
-        >
-          <div className="text-white text-center">
-            <div className="h-16 w-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
-              <Play className="h-8 w-8 ml-1" />
-            </div>
-            <p>Click to play</p>
           </div>
-        </div>
-      )}
-    </div>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
 

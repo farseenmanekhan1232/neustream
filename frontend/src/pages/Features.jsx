@@ -239,8 +239,8 @@ function Features() {
       <Header />
 
       {/* Hero Section */}
-      <section className="section-padding">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8 md:space-y-10">
             <div className="inline-flex items-center">
               <img
@@ -282,8 +282,8 @@ function Features() {
       </section>
 
       {/* Featured Simulators Section */}
-      <section className="section-padding">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="space-y-16">
             {featuredSimulators.map((feature, index) => (
               <div
@@ -346,8 +346,8 @@ function Features() {
       </section>
 
       {/* Additional Features Grid */}
-      <section className="section-padding bg-white/5">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8 bg-white/5">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Complete Streaming Toolkit
@@ -391,8 +391,8 @@ function Features() {
       </section>
 
       {/* Platform Integration Section */}
-      <section className="section-padding bg-white/5">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8 bg-white/5">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Seamless Platform Integration
@@ -432,8 +432,8 @@ function Features() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="section-padding">
-        <div className="container-custom">
+      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-normal mb-4">
               Ready to Experience Professional Streaming?
