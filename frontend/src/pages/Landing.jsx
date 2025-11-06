@@ -401,7 +401,7 @@ function Landing() {
       <section id="features" className="section-padding py-20 lg:py-24">
         <div className="container-custom">
           <div className="text-center max-w-4xl mx-auto mb-20">
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
+            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight text-center mx-auto">
               Everything you need for professional streaming
             </h2>
             <p className="text-2xl lg:text-3xl opacity-90 leading-relaxed">
