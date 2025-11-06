@@ -46,8 +46,8 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: oklch(0.2156 0.0161 269.7337);
-    --input: oklch(0.2356 0.0161 269.7337);
+    --border: oklch(0.189 0.0105 269.7337);
+    --input: oklch(0.199 0.0105 269.7337);
     --ring: 142.4 71.8% 29.2%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -440,8 +440,8 @@ h3 {
   --accent-foreground: oklch(0.8823 0.0571 254.1284);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.2156 0.0161 269.7337);
-  --input: oklch(0.2356 0.0161 269.7337);
+  --border: oklch(0.189 0.0105 269.7337);
+  --input: oklch(0.199 0.0105 269.7337);
   --ring: oklch(0.6397 0.172 36.4421);
   --chart-1: oklch(0.7156 0.0605 248.6845);
   --chart-2: oklch(0.7693 0.0876 34.1875);
