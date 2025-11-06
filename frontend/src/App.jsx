@@ -130,8 +130,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           >
-            {/* Dashboard index */}
-            <Route index element={<DashboardOverview />} />
+            {/* Dashboard index - Stream Preview as main view */}
+            <Route index element={<StreamPreviewPage />} />
 
             {/* Streaming configuration */}
             <Route path="streaming" element={<StreamingConfiguration />} />

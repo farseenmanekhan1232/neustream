@@ -95,12 +95,21 @@ export const ROUTE_CONFIG = {
   dashboard: {
     overview: {
       path: "/dashboard",
-      component: "DashboardOverview",
-      title: "Dashboard",
-      description: "View your streaming setup",
-      icon: LayoutDashboard,
-      keywords: ["home", "main", "dashboard", "overview"],
+      component: "StreamPreviewPage",
+      title: "Stream Preview",
+      description: "Monitor your live streams and engage with your audience",
+      icon: Radio,
+      keywords: [
+        "preview",
+        "live",
+        "stream",
+        "monitor",
+        "home",
+        "main",
+        "dashboard",
+      ],
       shortcut: "1",
+      showLiveIndicator: true,
     },
     streaming: {
       path: "/dashboard/streaming",
@@ -119,16 +128,6 @@ export const ROUTE_CONFIG = {
       icon: MonitorSpeaker,
       keywords: ["destinations", "platforms", "streaming"],
       shortcut: "2",
-    },
-    preview: {
-      path: "/dashboard/preview",
-      component: "StreamPreviewPage",
-      title: "Stream Preview",
-      description: "Monitor live streams and chat",
-      icon: Radio,
-      keywords: ["preview", "live", "stream", "monitor"],
-      shortcut: "3",
-      showLiveIndicator: true,
     },
     subscription: {
       path: "/dashboard/subscription",
@@ -165,11 +164,7 @@ export const ROUTE_CONFIG = {
 export const SIDEBAR_NAVIGATION_GROUPS = [
   {
     title: "Streaming",
-    items: [
-      ROUTE_CONFIG.dashboard.overview,
-      ROUTE_CONFIG.dashboard.streaming,
-      ROUTE_CONFIG.dashboard.preview,
-    ],
+    items: [ROUTE_CONFIG.dashboard.overview, ROUTE_CONFIG.dashboard.streaming],
   },
   {
     title: "Account",

@@ -42,25 +42,20 @@ const data = {
       icon: IconBroadcast,
     },
     {
-      title: "Stream Preview",
-      url: "/dashboard/preview",
-      icon: IconPlayerPlay,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: IconChartBar,
-    },
-    {
       title: "Subscription",
       url: "/dashboard/subscription",
       icon: IconCreditCard,
     },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: IconSettings,
-    },
+    // {
+    //   title: "Analytics",
+    //   url: "/dashboard/analytics",
+    //   icon: IconChartBar,
+    // },
+    // {
+    //   title: "Settings",
+    //   url: "/dashboard/settings",
+    //   icon: IconSettings,
+    // },
   ],
   navSecondary: [
     {
