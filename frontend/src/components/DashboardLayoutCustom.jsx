@@ -18,6 +18,8 @@ import {
   IconBroadcast,
   IconMicrophone,
   IconMenu2,
+  IconCreditCard,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +42,19 @@ const data = {
       icon: IconBroadcast,
     },
     {
+      title: "Stream Preview",
+      url: "/dashboard/preview",
+      icon: IconPlayerPlay,
+    },
+    {
       title: "Analytics",
       url: "/dashboard/analytics",
       icon: IconChartBar,
+    },
+    {
+      title: "Subscription",
+      url: "/dashboard/subscription",
+      icon: IconCreditCard,
     },
     {
       title: "Settings",
@@ -53,13 +65,8 @@ const data = {
   navSecondary: [
     {
       title: "Help & Support",
-      url: "/dashboard/help",
+      url: "/help",
       icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "/dashboard/search",
-      icon: IconSearch,
     },
   ],
 };
@@ -68,8 +75,9 @@ function NavMain({ items, className, currentPath }) {
   return (
     <nav className={cn("grid gap-1 px-2", className)}>
       {items.map((item) => {
-        const isActive = item.url === currentPath ||
-                        (item.url === "/dashboard" && currentPath === "/dashboard");
+        const isActive =
+          item.url === currentPath ||
+          (item.url === "/dashboard" && currentPath === "/dashboard");
         return (
           <Button
             key={item.title}
@@ -233,11 +241,7 @@ export default function DashboardLayout() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto p-4">
-          {isLoading ? (
-            <PageSkeleton />
-          ) : (
-            <Outlet />
-          )}
+          {isLoading ? <PageSkeleton /> : <Outlet />}
         </main>
       </div>
     </div>
