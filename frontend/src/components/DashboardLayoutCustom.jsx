@@ -3,6 +3,16 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   IconVideo,
   IconChartBar,
@@ -20,15 +30,12 @@ import {
   IconMenu2,
   IconCreditCard,
   IconPlayerPlay,
+  IconLogout,
+  IconUser,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
 const data = {
-  user: {
-    name: "NeuStream User",
-    email: "user@neustream.app",
-    avatar: "/logo.png",
-  },
   navMain: [
     {
       title: "Overview",
@@ -80,7 +87,7 @@ function NavMain({ items, className, currentPath }) {
             size="sm"
             className={cn(
               "w-full justify-start gap-2 text-sm transition-colors",
-              isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+              isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
             )}
             asChild
           >
@@ -116,18 +123,69 @@ function NavSecondary({ items, className }) {
   );
 }
 
-function NavUser({ user }) {
+function NavUser({ user, onLogout }) {
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      return user.displayName.charAt(0).toUpperCase();
+    }
+    return user?.email?.charAt(0).toUpperCase() || "U";
+  };
+
   return (
     <div className="px-2 py-1">
-      <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm">
-        <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-          <IconVideo className="size-4" />
-        </div>
-        <div className="grid flex-1 text-left text-sm leading-tight">
-          <span className="truncate font-medium">{user.name}</span>
-          <span className="truncate text-xs">{user.email}</span>
-        </div>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 p-2 h-auto rounded-lg hover:bg-sidebar-accent"
+          >
+            <Avatar className="h-8 w-8">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.displayName || user.email}
+                  className="rounded-full"
+                />
+              ) : (
+                <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                  {getUserInitials()}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">
+                {user?.displayName || "User"}
+              </span>
+              <span className="truncate text-xs text-sidebar-foreground/70">
+                {user?.email}
+              </span>
+            </div>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" side="right">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {user?.displayName || "User"}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/settings" className="flex items-center">
+              <IconSettings className="mr-2 h-4 w-4" />
+              <span>Account Settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onLogout}>
+            <IconLogout className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
@@ -166,6 +224,7 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     // Show skeleton when route changes
@@ -185,15 +244,17 @@ export default function DashboardLayout() {
       <div
         className={cn(
           "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out",
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+          sidebarOpen ? "w-64" : "w-0 overflow-hidden",
         )}
       >
         {/* Sidebar Header */}
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <IconVideo className="size-4" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="NeuStream"
+              className="h-8 w-8 rounded-lg"
+            />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">NeuStream</span>
               <span className="truncate text-xs">Streaming Platform</span>
@@ -214,7 +275,7 @@ export default function DashboardLayout() {
 
         {/* Sidebar Footer */}
         <div className="border-t border-sidebar-border p-2">
-          <NavUser user={data.user} />
+          <NavUser user={user} onLogout={logout} />
         </div>
       </div>
 
