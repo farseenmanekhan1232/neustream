@@ -21,12 +21,14 @@ webrtcAddress: :8889
 logLevel: info
 logDestinations: [stdout]
 
-# Paths Configuration - Dynamic routing
+# Paths Configuration
 paths:
-  # Default path - all streams use this
-  # MediaMTX will handle internal routing efficiently
-  all:
-    runOnReady: /opt/neustream/on_stream_ready.sh
-    runOnNotReady: /opt/neustream/on_stream_unpublish.sh
+  # Default path for incoming streams
+  live:
+    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
+    runOnNotReady: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
 
-  # No need for separate catch-all - 'all' handles everything
+  # Catch-all for any stream key
+  all_others:
+    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
+    runOnNotReady: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
