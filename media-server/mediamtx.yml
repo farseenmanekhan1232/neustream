@@ -1,17 +1,19 @@
 # MediaMTX Configuration for Neustream
+# Optimized for multi-destination streaming without FFmpeg
+
 api: yes
 apiAddress: :9997
 
-# RTMP Configuration
+# RTMP Configuration (Input)
 rtmp: yes
 rtmpAddress: :1935
 
-# HLS Configuration (optional - for playback)
+# HLS Configuration (for playback)
 hls: yes
 hlsAddress: :8888
 hlsVariant: lowLatency
 
-# WebRTC Configuration (optional - for low latency playback)
+# WebRTC Configuration (for low latency playback)
 webrtc: yes
 webrtcAddress: :8889
 
@@ -19,14 +21,12 @@ webrtcAddress: :8889
 logLevel: info
 logDestinations: [stdout]
 
-# Paths Configuration
+# Paths Configuration - Dynamic routing
 paths:
-  # Default path for incoming streams
-  live:
-    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
-    runOnNotReady: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
+  # Default path - all streams use this
+  # MediaMTX will handle internal routing efficiently
+  all:
+    runOnReady: /opt/neustream/on_stream_ready.sh
+    runOnNotReady: /opt/neustream/on_stream_unpublish.sh
 
-  # Catch-all for any stream key
-  all_others:
-    runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
-    runOnNotReady: /opt/neustream/on_stream_unpublish.sh $MTX_PATH
+  # No need for separate catch-all - 'all' handles everything

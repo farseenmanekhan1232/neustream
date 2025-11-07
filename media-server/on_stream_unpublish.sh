@@ -1,128 +1,79 @@
 #!/bin/bash
-
 set -e
 
-# MediaMTX passes the path as MTX_PATH environment variable, not as argument
-STREAM_PATH=${MTX_PATH:-$1}
+# MediaMTX passes the path as MTX_PATH environment variable
+STREAM_PATH=${MTX_PATH}
 if [ -z "$STREAM_PATH" ]; then
-  echo "❌ No stream path provided (MTX_PATH is empty and no argument given)"
+  echo "❌ No stream path provided (MTX_PATH is empty)"
   exit 1
 fi
 STREAM_KEY=$(basename "$STREAM_PATH")
 
-echo "=== Stream Ended ==="
+echo "=== Stream Ended (MediaMTX Native Mode) ==="
 echo "Stream Key: $STREAM_KEY"
 echo "Stream Path: $STREAM_PATH"
 echo "Timestamp: $(date)"
 
 # Notify control-plane
-echo "Notifying control-plane of stream end..."
-curl -s -X POST -d "name=$STREAM_KEY" https://api.neustream.app/api/auth/stream-end
+echo "📢 Notifying control-plane of stream end..."
+curl -s -X POST -d "name=$STREAM_KEY" https://api.neustream.app/api/auth/stream-end || true
 
-# Get source information to determine correct PID file
-echo "Fetching stream information for cleanup..."
-FORWARDING_CONFIG=$(curl -s "https://api.neustream.app/api/streams/forwarding/$STREAM_KEY" 2>/dev/null || echo '{"sourceId":null}')
-
-SOURCE_ID=$(echo "$FORWARDING_CONFIG" | /usr/bin/jq -r '.sourceId // empty' 2>/dev/null || echo)
+# Get source information (for logging)
+echo "📋 Fetching stream information..."
+FORWARDING_CONFIG=$(curl -s "https://api.neustream.app/api/streams/forwarding/$STREAM_KEY" 2>/dev/null || echo '{"destinations": []}')
+DESTINATIONS_COUNT=$(echo "$FORWARDING_CONFIG" | /usr/bin/jq -r '.destinations | length' 2>/dev/null || echo "0")
 
 echo "📊 Stream Cleanup Information:"
 echo "  - Stream Key: $STREAM_KEY"
-echo "  - Source ID: ${SOURCE_ID:-N/A}"
+echo "  - Destinations to clean up: $DESTINATIONS_COUNT"
 
-# Determine potential PID files to clean up
-PID_FILES_TO_CLEAN=()
+# Clean up MediaMTX paths that were created for this stream
+# In the new approach, we created paths like: {STREAM_KEY}_dest1, {STREAM_KEY}_dest2, etc.
 
-if [ -n "$SOURCE_ID" ] && [ "$SOURCE_ID" != "null" ]; then
-  # Multi-source naming convention
-  SOURCE_PID_FILE="/tmp/ffmpeg-source-${SOURCE_ID}-${STREAM_KEY}.pid"
-  SOURCE_LOG_FILE="/tmp/ffmpeg-source-${SOURCE_ID}-${STREAM_KEY}.log"
-  PID_FILES_TO_CLEAN+=("$SOURCE_PID_FILE")
-  echo "📁 Looking for source-based PID file: $SOURCE_PID_FILE"
+if [ -n "$DESTINATIONS_COUNT" ] && [ "$DESTINATIONS_COUNT" != "null" ] && [ "$DESTINATIONS_COUNT" -gt 0 ]; then
+  echo "🧹 Cleaning up MediaMTX destination paths..."
+
+  DESTINATION_INDEX=0
+  while [ "$DESTINATION_INDEX" -lt "$DESTINATIONS_COUNT" ]; do
+    DESTINATION_INDEX=$((DESTINATION_INDEX + 1))
+    DEST_PATH="${STREAM_KEY}_dest${DESTINATION_INDEX}"
+
+    echo "  🗑️  Removing MediaMTX path: $DEST_PATH"
+
+    # Use MediaMTX API to remove the path
+    curl -s -X DELETE "http://localhost:9997/v3/paths/delete/$DEST_PATH" > /dev/null || true
+
+    echo "     ✅ Removed path: $DEST_PATH"
+  done
 else
-  echo "📁 No source ID found, will try legacy naming"
+  echo "ℹ️  No destinations to clean up"
 fi
 
-# Always try legacy naming as fallback
-LEGACY_PID_FILE="/tmp/ffmpeg-$STREAM_KEY.pid"
-LEGACY_LOG_FILE="/tmp/ffmpeg-$STREAM_KEY.log"
-PID_FILES_TO_CLEAN+=("$LEGACY_PID_FILE")
-echo "📁 Looking for legacy PID file: $LEGACY_PID_FILE"
+# Also clean up any orphaned paths (defensive cleanup)
+echo "🔍 Checking for orphaned MediaMTX paths..."
+ORPHANED_PATHS=$(curl -s http://localhost:9997/v3/paths/list | /usr/bin/jq -r ".items[] | select(.name | test(\"^${STREAM_KEY}_dest[0-9]+$\")) | .name" 2>/dev/null || echo "")
 
-# Stop FFmpeg forwarding process(es)
-echo "🛑 Stopping FFmpeg forwarding processes..."
-
-PROCESSES_KILLED=0
-
-for pid_file in "${PID_FILES_TO_CLEAN[@]}"; do
-  if [ -f "$pid_file" ]; then
-    pid=$(cat "$pid_file")
-    echo "📋 Found PID file: $pid_file with PID: $pid"
-
-    if kill -0 "$pid" 2>/dev/null; then
-      echo "🔪 Terminating FFmpeg process $pid"
-      kill "$pid"
-      PROCESSES_KILLED=$((PROCESSES_KILLED + 1))
-
-      # Wait a moment for graceful shutdown
-      sleep 3
-
-      # Check if process is still running and force kill if needed
-      if kill -0 "$pid" 2>/dev/null; then
-        echo "⚡ Force killing FFmpeg process $pid"
-        kill -9 "$pid"
-      else
-        echo "✅ FFmpeg process $pid terminated gracefully"
-      fi
-    else
-      echo "⚠️  PID $pid from $pid_file is not running"
+if [ -n "$ORPHANED_PATHS" ]; then
+  echo "⚠️  Found orphaned paths, cleaning up..."
+  echo "$ORPHANED_PATHS" | while read -r path; do
+    if [ -n "$path" ]; then
+      echo "  🗑️  Removing orphaned path: $path"
+      curl -s -X DELETE "http://localhost:9997/v3/paths/delete/$path" > /dev/null || true
     fi
-
-    # Clean up PID file
-    rm -f "$pid_file"
-    echo "🗑️  Removed PID file: $pid_file"
-  else
-    echo "📭 PID file not found: $pid_file"
-  fi
-done
-
-# Clean up any remaining FFmpeg processes for this stream (fallback)
-echo "🧹 Performing fallback cleanup for any remaining FFmpeg processes..."
-REMAINING_PROCESSES=$(pgrep -f "ffmpeg.*$STREAM_KEY" 2>/dev/null || true)
-
-if [ -n "$REMAINING_PROCESSES" ]; then
-  echo "⚠️  Found remaining FFmpeg processes: $REMAINING_PROCESSES"
-  echo "$REMAINING_PROCESSES" | xargs -r kill -TERM
-  sleep 2
-  echo "$REMAINING_PROCESSES" | xargs -r kill -9 2>/dev/null || true
-  echo "🧹 Forced cleanup completed"
+  done
 else
-  echo "✅ No remaining FFmpeg processes found"
+  echo "✅ No orphaned paths found"
 fi
 
-# Clean up temporary files
-echo "🗑️  Cleaning up temporary files..."
+# No FFmpeg processes to kill anymore!
+echo "✅ No FFmpeg cleanup needed (using MediaMTX native routing)"
 
-# Clean up destination temp files
-rm -f "/tmp/ffmpeg_destinations_$STREAM_KEY.txt" 2>/dev/null || true
-
-# Clean up log files (optional - keep for debugging)
-# rm -f "$SOURCE_LOG_FILE" "$LEGACY_LOG_FILE" 2>/dev/null || true
-
-# Clean up any other temp files
-rm -f "/tmp/ffmpeg_${STREAM_KEY}_*.tmp" 2>/dev/null || true
-
-echo "✅ Temporary files cleaned up"
-
-# Log stream end to system log for monitoring
-if [ -n "$SOURCE_ID" ] && [ "$SOURCE_ID" != "null" ]; then
-  logger -t neustream "Stream ended: key=$STREAM_KEY source_id=$SOURCE_ID processes_killed=$PROCESSES_KILLED"
-else
-  logger -t neustream "Stream ended: key=$STREAM_KEY legacy=true processes_killed=$PROCESSES_KILLED"
-fi
+# Log stream end
+logger -t neustream "Stream ended: key=$STREAM_KEY method=mediamtx-native destinations=$DESTINATIONS_COUNT"
 
 echo "📊 Cleanup Summary:"
-echo "  - Processes Killed: $PROCESSES_KILLED"
-echo "  - Source ID: ${SOURCE_ID:-Legacy}"
+echo "  - Method: MediaMTX API (no FFmpeg)"
+echo "  - Paths Cleaned: $DESTINATIONS_COUNT"
 echo "  - Stream Key: $STREAM_KEY"
 
-echo "=== Stream Cleanup Complete ==="
+echo "=== MediaMTX Native Stream Cleanup Complete ==="
