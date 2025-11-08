@@ -13,6 +13,9 @@ import {
   Shield,
   CreditCard,
   Calendar,
+  CheckCircle,
+  AlertCircle,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,8 +28,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "../contexts/AuthContext";
 import { subscriptionService } from "../services/subscription";
 import { useCurrency } from "../contexts/CurrencyContext";
@@ -199,12 +202,13 @@ function SubscriptionManagement() {
 
   if (subscriptionLoading || plansLoading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+      <div className="w-full px-6 py-6 space-y-6 mx-auto">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
           <div className="grid gap-6 md:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 bg-gray-200 rounded"></div>
+              <div key={i} className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
         </div>
@@ -212,499 +216,551 @@ function SubscriptionManagement() {
     );
   }
 
-  return (
-    <div className="w-full px-6 py-6 space-y-6  mx-auto">
-      {/* Tabs for different sections */}
-      <Tabs defaultValue="plans" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="plans">Available Plans</TabsTrigger>
-          <TabsTrigger value="usage">Usage History</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
+  // Calculate usage percentages
+  const sourceUsagePercent = currentUsage && currentLimits
+    ? (currentUsage.sources_count / currentLimits.max_sources) * 100
+    : 0;
+  const destinationUsagePercent = currentUsage && currentLimits
+    ? (currentUsage.destinations_count / currentLimits.max_destinations) * 100
+    : 0;
+  const streamingUsagePercent = currentUsage && currentLimits
+    ? (currentUsage.streaming_hours / currentLimits.max_streaming_hours_monthly) * 100
+    : 0;
 
-        {/* Available Plans Tab */}
-        <TabsContent value="plans" className="space-y-6">
-          {/* Billing Cycle Toggle */}
-          <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-center justify-center space-x-4 p-6 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-              <span
-                className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}
+  return (
+    <div className="w-full px-6 py-6 space-y-6 mx-auto bg-background">
+      {/* Header Section */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Subscription & Billing
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your plan, update billing details, and view invoices.
+        </p>
+      </div>
+
+      {/* Current Plan & Recommendation Section */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Current Plan Card */}
+        <Card className="border-border bg-card">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Crown className="h-5 w-5 text-teal-500" />
+                Current Plan
+              </CardTitle>
+              <Badge
+                variant={currentPlan?.status === "active" ? "default" : "secondary"}
+                className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20"
               >
-                Monthly
-              </span>
-              <Switch
-                checked={billingCycle === "yearly"}
-                onCheckedChange={(checked) =>
-                  setBillingCycle(checked ? "yearly" : "monthly")
-                }
-              />
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}
-                >
-                  Yearly
-                </span>
-                <Badge className="bg-green-500 text-white text-xs animate-pulse">
-                  Save 20%
-                </Badge>
+                Active
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground">
+                {currentPlan?.plan_name || "Free"} Plan
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {currentPlan?.billing_cycle === "yearly" ? "Annual" : "Monthly"} billing
+              </p>
+            </div>
+
+            {/* Usage Progress */}
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Streaming Hours</span>
+                  <span className="font-medium text-foreground">
+                    {currentUsage?.streaming_hours || 0}/{currentLimits?.max_streaming_hours_monthly || 0}h
+                  </span>
+                </div>
+                <Progress
+                  value={Math.min(streamingUsagePercent, 100)}
+                  className="h-2 bg-muted"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Sources</span>
+                    <span className="font-medium text-foreground">
+                      {currentUsage?.sources_count || 0}/{currentLimits?.max_sources || 0}
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(sourceUsagePercent, 100)}
+                    className="h-1.5 bg-muted"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Destinations</span>
+                    <span className="font-medium text-foreground">
+                      {currentUsage?.destinations_count || 0}/{currentLimits?.max_destinations || 0}
+                    </span>
+                  </div>
+                  <Progress
+                    value={Math.min(destinationUsagePercent, 100)}
+                    className="h-1.5 bg-muted"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Billing Benefits */}
-            <div className="text-center max-w-2xl">
-              {billingCycle === "yearly" ? (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium mb-2">
-                    🎉 Great choice! You're saving 20%
-                  </p>
-                  <p className="text-xs text-green-600">
-                    Yearly billing gives you the best value and uninterrupted
-                    service all year long.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 font-medium mb-2">
-                    💡 Switch to yearly and save 20%
-                  </p>
-                  <p className="text-xs text-blue-600">
-                    Get 2 months free when you choose annual billing. Plus,
-                    you'll lock in your current rate.
-                  </p>
-                </div>
+            {/* Renewal Info */}
+            {currentPlan?.current_period_end && (
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">
+                  Your plan renews on{" "}
+                  {new Date(currentPlan.current_period_end).toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-2">
+              {currentPlan?.plan_name?.toLowerCase() !== "free" && (
+                <Button variant="outline" size="sm" className="flex-1">
+                  Cancel Subscription
+                </Button>
               )}
+              <Button variant="ghost" size="sm" asChild className="flex-1">
+                <Link to="/dashboard/streaming">
+                  Manage Sources
+                  <ArrowRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Recommendation Card */}
+        <Card className="border-teal-500/30 bg-teal-500/5 lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-teal-500/20 text-teal-600 dark:text-teal-400 border-teal-500/30">
+                <Star className="h-3 w-3 mr-1" />
+                RECOMMENDED FOR YOU
+              </Badge>
+            </div>
+            <CardTitle className="text-lg">Creator Pro Plan</CardTitle>
+            <CardDescription>
+              Based on your usage patterns, we recommend upgrading to Creator Pro for better performance and more features.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-teal-500" />
+                <span>Unlimited streaming hours</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-teal-500" />
+                <span>Up to 5 sources and 10 destinations</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-teal-500" />
+                <span>Priority support and advanced analytics</span>
+              </div>
+            </div>
+            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+              Keep Current Plan
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Billing Cycle Toggle */}
+      <div className="flex flex-col items-center space-y-4">
+        <div className="flex items-center justify-center space-x-4 p-6 bg-gradient-to-r from-teal-500/10 to-teal-600/5 rounded-xl border border-teal-500/20">
+          <span
+            className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}
+          >
+            Monthly
+          </span>
+          <Switch
+            checked={billingCycle === "yearly"}
+            onCheckedChange={(checked) =>
+              setBillingCycle(checked ? "yearly" : "monthly")
+            }
+          />
+          <div className="flex items-center space-x-2">
+            <span
+              className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              Yearly
+            </span>
+            <Badge className="bg-emerald-500 text-white text-xs">
+              Save 20%
+            </Badge>
           </div>
+        </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {plans.map((plan) => {
-              const isCurrentPlan =
-                currentPlan?.plan_name?.toLowerCase() ===
-                plan.name.toLowerCase();
-              const price = getPlanPrice(plan);
-              const features = getPlanFeatures(plan.name);
-              const displayPrice =
-                billingCycle === "yearly" ? price.yearly : price.monthly;
-              const savingsPercentage = 20; // You can calculate this dynamically if needed
+        {/* Billing Benefits */}
+        <div className="text-center max-w-2xl">
+          {billingCycle === "yearly" ? (
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+              <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium mb-2">
+                🎉 Great choice! You're saving 20%
+              </p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-300">
+                Yearly billing gives you the best value and uninterrupted
+                service all year long.
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-2">
+                💡 Switch to yearly and save 20%
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-300">
+                Get 2 months free when you choose annual billing. Plus,
+                you'll lock in your current rate.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
-              return (
-                <Card
-                  key={plan.id}
-                  className={`relative border-primary/30 bg-primary/5 ${
-                    isCurrentPlan ? "ring-2 ring-primary" : ""
-                  }`}
-                >
-                  {isCurrentPlan && (
-                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary">Current Plan</Badge>
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle className="text-xl flex items-center justify-between">
-                      <span>{plan.name}</span>
-                      {plan.name.toLowerCase() === "free" && (
-                        <Star className="h-5 w-5 text-yellow-500" />
-                      )}
-                      {plan.name.toLowerCase() === "pro" && (
-                        <Zap className="h-5 w-5 text-primary" />
-                      )}
-                      {plan.name.toLowerCase() === "business" && (
-                        <Shield className="h-5 w-5 text-purple-500" />
-                      )}
-                    </CardTitle>
-                    <div className="space-y-3">
-                      <div className="flex items-baseline space-x-2">
-                        <div className="text-3xl font-normal">
-                          {plan.name.toLowerCase() === "free"
-                            ? "Free"
-                            : displayPrice}
-                        </div>
-                        {plan.name.toLowerCase() !== "free" && (
-                          <span className="text-sm font-normal text-muted-foreground">
-                            /{billingCycle === "yearly" ? "year" : "month"}
-                          </span>
-                        )}
-                      </div>
+      {/* Available Plans */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-foreground">Available Plans</h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {plans.map((plan) => {
+            const isCurrentPlan =
+              currentPlan?.plan_name?.toLowerCase() ===
+              plan.name.toLowerCase();
+            const price = getPlanPrice(plan);
+            const features = getPlanFeatures(plan.name);
+            const displayPrice =
+              billingCycle === "yearly" ? price.yearly : price.monthly;
+            const savingsPercentage = 20;
 
-                      {/* Show savings for yearly billing */}
-                      {billingCycle === "yearly" &&
-                        plan.name.toLowerCase() !== "free" && (
-                          <div className="flex items-center space-x-2">
-                            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                              Save {savingsPercentage}%
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              Equivalent to {price.monthly}/month
-                            </span>
-                          </div>
-                        )}
-
-                      {/* Show comparison for monthly billing */}
-                      {billingCycle === "monthly" &&
-                        plan.name.toLowerCase() !== "free" && (
-                          <div className="text-xs text-muted-foreground">
-                            <span>
-                              Or {price.yearly} billed annually (Save{" "}
-                              {savingsPercentage}%)
-                            </span>
-                          </div>
-                        )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Plan Limits */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Sources:</span>
-                        <span className="font-medium">{plan.max_sources}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Destinations:</span>
-                        <span className="font-medium">
-                          {plan.max_destinations}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Streaming Hours:</span>
-                        <span className="font-medium">
-                          {plan.max_streaming_hours_monthly}h
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Features */}
-                    <div className="space-y-2">
-                      {features.map((feature, index) => {
-                        const FeatureIcon = feature.icon;
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-2 text-sm"
-                          >
-                            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                            <FeatureIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span>{feature.name}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    {isCurrentPlan ? (
-                      <Button className="w-full" variant="outline" disabled>
-                        Current Plan
-                      </Button>
-                    ) : (
-                      <Button
-                        className="w-full"
-                        onClick={() => setSelectedPlan(plan)}
-                        disabled={updateSubscriptionMutation.isLoading}
-                      >
-                        {updateSubscriptionMutation.isLoading &&
-                        selectedPlan?.id === plan.id
-                          ? "Upgrading..."
-                          : "Upgrade Plan"}
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Plan Upgrade Confirmation Modal */}
-          {selectedPlan && (
-            <Card className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <Card className="w-full max-w-md">
+            return (
+              <Card
+                key={plan.id}
+                className={`relative border-border bg-card ${
+                  isCurrentPlan ? "ring-2 ring-teal-500" : ""
+                }`}
+              >
+                {isCurrentPlan && (
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-teal-500 text-white">Current Plan</Badge>
+                  </div>
+                )}
                 <CardHeader>
-                  <CardTitle>Upgrade to {selectedPlan.name}</CardTitle>
-                  <CardDescription>
-                    You are about to upgrade your subscription plan
-                  </CardDescription>
+                  <CardTitle className="text-xl flex items-center justify-between">
+                    <span>{plan.name}</span>
+                    {plan.name.toLowerCase() === "free" && (
+                      <Star className="h-5 w-5 text-yellow-500" />
+                    )}
+                    {plan.name.toLowerCase() === "pro" && (
+                      <Zap className="h-5 w-5 text-teal-500" />
+                    )}
+                    {plan.name.toLowerCase() === "business" && (
+                      <Shield className="h-5 w-5 text-purple-500" />
+                    )}
+                  </CardTitle>
+                  <div className="space-y-3">
+                    <div className="flex items-baseline space-x-2">
+                      <div className="text-3xl font-normal text-foreground">
+                        {plan.name.toLowerCase() === "free"
+                          ? "Free"
+                          : displayPrice}
+                      </div>
+                      {plan.name.toLowerCase() !== "free" && (
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /{billingCycle === "yearly" ? "year" : "month"}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Show savings for yearly billing */}
+                    {billingCycle === "yearly" &&
+                      plan.name.toLowerCase() !== "free" && (
+                        <div className="flex items-center space-x-2">
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs">
+                            Save {savingsPercentage}%
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            Equivalent to {price.monthly}/month
+                          </span>
+                        </div>
+                      )}
+
+                    {/* Show comparison for monthly billing */}
+                    {billingCycle === "monthly" &&
+                      plan.name.toLowerCase() !== "free" && (
+                        <div className="text-xs text-muted-foreground">
+                          <span>
+                            Or {price.yearly} billed annually (Save{" "}
+                            {savingsPercentage}%)
+                          </span>
+                        </div>
+                      )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
+                  {/* Plan Limits */}
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>New Plan:</span>
-                      <span className="font-medium">{selectedPlan.name}</span>
+                      <span className="text-muted-foreground">Sources:</span>
+                      <span className="font-medium text-foreground">{plan.max_sources}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Billing Cycle:</span>
-                      <span className="font-medium capitalize">
-                        {billingCycle}
+                      <span className="text-muted-foreground">Destinations:</span>
+                      <span className="font-medium text-foreground">
+                        {plan.max_destinations}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Price:</span>
-                      <span className="font-medium">
-                        {selectedPlan.name.toLowerCase() === "free"
-                          ? "Free"
-                          : `${billingCycle === "yearly" ? getPlanPrice(selectedPlan).yearly : getPlanPrice(selectedPlan).monthly}/${billingCycle === "yearly" ? "year" : "month"}`}
+                      <span className="text-muted-foreground">Streaming Hours:</span>
+                      <span className="font-medium text-foreground">
+                        {plan.max_streaming_hours_monthly}h
                       </span>
                     </div>
-                    {billingCycle === "yearly" &&
-                      selectedPlan.name.toLowerCase() !== "free" && (
-                        <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-                          You're saving 20% with yearly billing!
-                        </div>
-                      )}
                   </div>
 
-                  {selectedPlan.name.toLowerCase() === "free" ? (
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        This is a free plan. Your subscription will be updated
-                        immediately.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        You will be redirected to a secure payment page to
-                        complete your purchase. Your subscription will be
-                        activated immediately after successful payment.
-                      </p>
-                    </div>
-                  )}
+                  {/* Features */}
+                  <div className="space-y-2">
+                    {features.map((feature, index) => {
+                      const FeatureIcon = feature.icon;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
+                        >
+                          <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                          <FeatureIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-foreground">{feature.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </CardContent>
-                <CardFooter className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setSelectedPlan(null)}
-                    disabled={
-                      updateSubscriptionMutation.isLoading ||
-                      processPaymentMutation.isLoading
-                    }
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={() => {
-                      if (selectedPlan.name.toLowerCase() === "free") {
-                        updateSubscriptionMutation.mutate({
-                          planId: selectedPlan.id,
-                          billingCycle: billingCycle,
-                        });
-                      } else {
-                        processPaymentMutation.mutate({
-                          planId: selectedPlan.id,
-                          billingCycle: billingCycle,
-                        });
-                      }
-                    }}
-                    disabled={
-                      updateSubscriptionMutation.isLoading ||
-                      processPaymentMutation.isLoading
-                    }
-                  >
-                    {updateSubscriptionMutation.isLoading ||
-                    processPaymentMutation.isLoading
-                      ? "Processing..."
-                      : selectedPlan.name.toLowerCase() === "free"
-                        ? "Switch to Free"
-                        : "Proceed to Payment"}
-                  </Button>
+                <CardFooter>
+                  {isCurrentPlan ? (
+                    <Button className="w-full" variant="outline" disabled>
+                      Current Plan
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                      onClick={() => setSelectedPlan(plan)}
+                      disabled={updateSubscriptionMutation.isLoading}
+                    >
+                      {updateSubscriptionMutation.isLoading &&
+                      selectedPlan?.id === plan.id
+                        ? "Upgrading..."
+                        : "Upgrade Plan"}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
-            </Card>
-          )}
-        </TabsContent>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* Usage History Tab */}
-        <TabsContent value="usage" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Recent Streaming Sessions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  Recent Streaming Sessions
-                </CardTitle>
-                <CardDescription>
-                  Your last 10 streaming sessions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {historyLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-12 bg-gray-200 rounded animate-pulse"
-                      ></div>
-                    ))}
-                  </div>
-                ) : streamingHistory && streamingHistory.length > 0 ? (
-                  <div className="space-y-3">
-                    {streamingHistory.slice(0, 10).map((session, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium">
-                            {session.source_name || "Legacy Stream"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(session.started_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">
-                            {Math.floor(session.duration_seconds / 3600)}h{" "}
-                            {Math.floor((session.duration_seconds % 3600) / 60)}
-                            m
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {session.destinations_count} destinations
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No streaming sessions found</p>
-                    <p className="text-sm mt-2">
-                      Start streaming to see your usage history here
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Monthly Usage Breakdown */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Monthly Usage</CardTitle>
-                <CardDescription>Streaming hours per month</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {breakdownLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div
-                        key={i}
-                        className="h-8 bg-gray-200 rounded animate-pulse"
-                      ></div>
-                    ))}
-                  </div>
-                ) : usageBreakdown && usageBreakdown.length > 0 ? (
-                  <div className="space-y-3">
-                    {usageBreakdown.map((month, index) => (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span>{month.month}</span>
-                          <span className="font-medium">
-                            {month.hours} hours
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full"
-                            style={{
-                              width: `${Math.min(
-                                (month.hours /
-                                  currentLimits?.max_streaming_hours_monthly) *
-                                  100,
-                                100,
-                              )}%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No usage data available</p>
-                    <p className="text-sm mt-2">
-                      Usage data will appear after you start streaming
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Billing Tab */}
-        <TabsContent value="billing" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Billing Information</CardTitle>
-              <CardDescription>
-                Manage your subscription and view payment history
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <CreditCard className="h-5 w-5 text-green-500" />
-                  <div>
-                    <p className="font-medium text-green-800">
-                      Secure Payment Processing
-                    </p>
-                    <p className="text-sm text-green-600">
-                      All payments are processed securely through Razorpay. Your
-                      payment information is never stored on our servers.
-                    </p>
-                  </div>
-                </div>
+      {/* Usage & Billing History Section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Streaming Sessions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              Recent Streaming Sessions
+            </CardTitle>
+            <CardDescription>
+              Your last 10 streaming sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {historyLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                  ></div>
+                ))}
               </div>
-
+            ) : streamingHistory && streamingHistory.length > 0 ? (
               <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Current Plan</p>
-                    <p className="text-sm text-muted-foreground">
-                      {currentPlan?.plan_name}
-                    </p>
-                  </div>
-                  <Badge variant="outline">Active</Badge>
-                </div>
-
-                {currentPlan?.current_period_end && (
-                  <div className="flex justify-between items-center p-3 border rounded-lg">
+                {streamingHistory.slice(0, 10).map((session, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                  >
                     <div>
-                      <p className="font-medium">Next Billing Date</p>
+                      <p className="font-medium text-foreground">
+                        {session.source_name || "Legacy Stream"}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(
-                          currentPlan.current_period_end,
-                        ).toLocaleDateString()}
+                        {new Date(session.started_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div className="text-right">
+                      <p className="font-medium text-foreground">
+                        {Math.floor(session.duration_seconds / 3600)}h{" "}
+                        {Math.floor((session.duration_seconds % 3600) / 60)}m
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {session.destinations_count} destinations
+                      </p>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Payment History</CardTitle>
-              <CardDescription>
-                Your recent subscription payments
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No payment history yet</p>
+                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No streaming sessions found</p>
                 <p className="text-sm mt-2">
-                  Your payment history will appear here after you make your
-                  first payment
+                  Start streaming to see your usage history here
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Monthly Usage Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+              Monthly Usage
+            </CardTitle>
+            <CardDescription>Streaming hours per month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {breakdownLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            ) : usageBreakdown && usageBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {usageBreakdown.map((month, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{month.month}</span>
+                      <span className="font-medium text-foreground">
+                        {month.hours} hours
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-teal-500 h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (month.hours /
+                              currentLimits?.max_streaming_hours_monthly) *
+                              100,
+                            100,
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No usage data available</p>
+                <p className="text-sm mt-2">
+                  Usage data will appear after you start streaming
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Billing Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-muted-foreground" />
+            Billing Information
+          </CardTitle>
+          <CardDescription>
+            Manage your subscription and view payment history
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-emerald-800 dark:text-emerald-200">
+                  Secure Payment Processing
+                </p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                  All payments are processed securely through Razorpay. Your
+                  payment information is never stored on our servers.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex justify-between items-center p-3 border border-border rounded-lg">
+              <div>
+                <p className="font-medium text-foreground">Current Plan</p>
+                <p className="text-sm text-muted-foreground">
+                  {currentPlan?.plan_name}
+                </p>
+              </div>
+              <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20">
+                Active
+              </Badge>
+            </div>
+
+            {currentPlan?.current_period_end && (
+              <div className="flex justify-between items-center p-3 border border-border rounded-lg">
+                <div>
+                  <p className="font-medium text-foreground">Next Billing Date</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(currentPlan.current_period_end).toLocaleDateString()}
+                  </p>
+                </div>
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+
+            <div className="flex justify-between items-center p-3 border border-border rounded-lg md:col-span-2">
+              <div>
+                <p className="font-medium text-foreground">Payment Method</p>
+                <p className="text-sm text-muted-foreground">
+                  Visa ending in 1234
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  Update Payment
+                </Button>
+                <Button variant="outline" size="sm">
+                  View Invoices
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Support Section */}
       <Card>
@@ -725,6 +781,105 @@ function SubscriptionManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Plan Upgrade Confirmation Modal */}
+      {selectedPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle>Upgrade to {selectedPlan.name}</CardTitle>
+              <CardDescription>
+                You are about to upgrade your subscription plan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">New Plan:</span>
+                  <span className="font-medium text-foreground">{selectedPlan.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Billing Cycle:</span>
+                  <span className="font-medium text-foreground capitalize">
+                    {billingCycle}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Price:</span>
+                  <span className="font-medium text-foreground">
+                    {selectedPlan.name.toLowerCase() === "free"
+                      ? "Free"
+                      : `${billingCycle === "yearly" ? getPlanPrice(selectedPlan).yearly : getPlanPrice(selectedPlan).monthly}/${billingCycle === "yearly" ? "year" : "month"}`}
+                  </span>
+                </div>
+                {billingCycle === "yearly" &&
+                  selectedPlan.name.toLowerCase() !== "free" && (
+                    <div className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                      You're saving 20% with yearly billing!
+                    </div>
+                  )}
+              </div>
+
+              {selectedPlan.name.toLowerCase() === "free" ? (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    This is a free plan. Your subscription will be updated
+                    immediately.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    You will be redirected to a secure payment page to
+                    complete your purchase. Your subscription will be
+                    activated immediately after successful payment.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex space-x-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedPlan(null)}
+                disabled={
+                  updateSubscriptionMutation.isLoading ||
+                  processPaymentMutation.isLoading
+                }
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
+                onClick={() => {
+                  if (selectedPlan.name.toLowerCase() === "free") {
+                    updateSubscriptionMutation.mutate({
+                      planId: selectedPlan.id,
+                      billingCycle: billingCycle,
+                    });
+                  } else {
+                    processPaymentMutation.mutate({
+                      planId: selectedPlan.id,
+                      billingCycle: billingCycle,
+                    });
+                  }
+                }}
+                disabled={
+                  updateSubscriptionMutation.isLoading ||
+                  processPaymentMutation.isLoading
+                }
+              >
+                {updateSubscriptionMutation.isLoading ||
+                processPaymentMutation.isLoading
+                  ? "Processing..."
+                  : selectedPlan.name.toLowerCase() === "free"
+                    ? "Switch to Free"
+                    : "Proceed to Payment"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
