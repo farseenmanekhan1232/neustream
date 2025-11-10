@@ -14,7 +14,7 @@ function Header() {
   const isActivePath = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-header-teal-gradient">
+    <header className="w-full bg-header-teal-gradient">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">

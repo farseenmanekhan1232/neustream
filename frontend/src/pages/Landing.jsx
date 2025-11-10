@@ -22,6 +22,7 @@ import MetricsDisplay from "../components/MetricsDisplay";
 import LiveChatSimulator from "../components/LiveChatSimulator";
 import StreamConfigSimulator from "../components/StreamConfigSimulator";
 import { useCurrency } from "../contexts/CurrencyContext";
+import CamcorderViewfinder from "../components/fancy/CamcorderViewfinder";
 
 function Landing() {
   // Use currency context
@@ -256,221 +257,231 @@ function Landing() {
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app" />
       </Helmet>
-      <Header />
 
-      {/* Hero Section */}
-      <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12">
-            <div className="inline-flex items-center">
-              <img
-                src="/logo.png"
-                alt="Neustream Logo"
-                className="h-24 w-24 -mb-8 animate-oscillate"
-              />
-            </div>
-
-            <div className="space-y-6 max-w-4xl">
-              <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
-                Stream to All Platforms.
-                <br />
-                <TextHighlighter {...highlightConfig}>
-                  No Performance Hit.
-                </TextHighlighter>
-              </div>
-              <p className="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
-                Multistream to YouTube, Twitch, Facebook, and more from one
-                place. Cloud encoding keeps your machine fast.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-6 w-full max-w-md">
-              <Button
-                asChild
-                className="w-full min-h-[52px] text-lg py-7 px-10 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl relative transition-all hover:scale-105"
-              >
-                <Link to="/auth">
-                  Start Streaming Free
-                  <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-pulse">
-                    LIVE
-                  </span>
-                </Link>
-              </Button>
-              <p className="text-sm opacity-75">
-                No credit card required • 14-day trial
-              </p>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 opacity-90">
-              {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
-                (platform) => (
-                  <div
-                    key={platform}
-                    className="text-lg md:text-xl font-medium text-shadow-md"
-                  >
-                    {platform}
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
+      {/* Marketing Content Wrapper - Contains header + all marketing sections */}
+      <div className="relative">
+        {/* Camcorder Viewfinder - Sticky full-screen overlay */}
+        <div className="sticky top-0 z-[100]">
+          <CamcorderViewfinder />
         </div>
-        <img
-          src="/hero.png"
-          alt="Integration"
-          className="max-md:hidden w-full max-w-6xl mx-auto rounded-3xl mt-12 px-4 sm:px-0 shadow-2xl"
-        />
-      </section>
 
-      {/* Core Value Props Section */}
-      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight mb-12">
-              Built for Speed and Privacy
-            </h2>
-          </div>
+        {/* Header - Inside the wrapper and covered by viewfinder */}
+        <Header />
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-            <div className="space-y-8">
-              <MetricsDisplay />
-              <StreamConfigSimulator />
-            </div>
-
-            <div className="space-y-8 flex flex-col justify-center">
-              <div className="space-y-4">
-                <h3 className="text-2xl sm:text-3xl font-normal">
-                  Cloud Encoding
-                </h3>
-                <p className="text-xl leading-relaxed">
-                  No CPU spikes. No dropped frames. 99.9% uptime.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-2xl sm:text-3xl font-normal">
-                  No Interruptions
-                </h3>
-                <p className="text-xl leading-relaxed">
-                  Zero popups. Zero restarts. Just streaming.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-2xl sm:text-3xl font-normal">
-                  Secure by Default
-                </h3>
-                <p className="text-xl leading-relaxed">
-                  Enterprise-grade security. End-to-end protection.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto mb-20">
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
-              Works with Your Setup
-            </h2>
-            <p className="text-2xl lg:text-3xl opacity-90 leading-relaxed">
-              Compatible with OBS, Streamlabs, XSplit, and any RTMP software.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-            <div className="space-y-8">
-              <div className="space-y-6">
-                <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                  Minimalistic Design
-                </h3>
-                <p className="text-xl leading-relaxed">
-                  Clean interface that keeps you focused on what matters—your
-                  content.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                  Encrypted & Secure
-                </h3>
-                <p className="text-xl leading-relaxed">
-                  Enterprise-grade security protects your stream keys and
-                  connections.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center">
-              <div className="relative">
+        {/* Hero Section */}
+        <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12">
+              <div className="inline-flex items-center">
                 <img
-                  src="/obs.png"
-                  alt="Streaming Software Integration"
-                  className="w-full max-w-lg rounded-3xl shadow-2xl"
+                  src="/logo.png"
+                  alt="Neustream Logo"
+                  className="h-24 w-24 -mb-8 animate-oscillate"
                 />
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent rounded-3xl"></div>
+              </div>
+
+              <div className="space-y-6 max-w-4xl">
+                <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
+                  Stream to All Platforms.
+                  <br />
+                  <TextHighlighter {...highlightConfig}>
+                    No Performance Hit.
+                  </TextHighlighter>
+                </div>
+                <p className="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
+                  Multistream to YouTube, Twitch, Facebook, and more from one
+                  place. Cloud encoding keeps your machine fast.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-6 w-full max-w-md">
+                <Button
+                  asChild
+                  className="w-full min-h-[52px] text-lg py-7 px-10 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl relative transition-all hover:scale-105"
+                >
+                  <Link to="/auth">
+                    Start Streaming Free
+                    <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-pulse">
+                      LIVE
+                    </span>
+                  </Link>
+                </Button>
+                <p className="text-sm opacity-75">
+                  No credit card required • 14-day trial
+                </p>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 opacity-90">
+                {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
+                  (platform) => (
+                    <div
+                      key={platform}
+                      className="text-lg md:text-xl font-medium text-shadow-md"
+                    >
+                      {platform}
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      {/* How It Works Section */}
-      <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto mb-20">
-            <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
-              How It Works
-            </h2>
-          </div>
+          <img
+            src="/hero.png"
+            alt="Integration"
+            className="max-md:hidden w-full max-w-6xl mx-auto rounded-3xl mt-12 px-4 sm:px-0 shadow-2xl"
+          />
+        </section>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
-            <div className="text-center space-y-4">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-3xl font-bold">1</span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
-                  Connect Your Software
-                </h3>
-                <p className="text-lg">
-                  Link OBS, Streamlabs, or any RTMP software
-                </p>
-              </div>
+        {/* Core Value Props Section */}
+        <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-4xl mx-auto mb-16">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight mb-12">
+                Built for Speed and Privacy
+              </h2>
             </div>
 
-            <div className="text-center space-y-4">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-3xl font-bold">2</span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
-                  Add Platforms
-                </h3>
-                <p className="text-lg">
-                  Select YouTube, Twitch, Facebook, and more
-                </p>
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+              <div className="space-y-8">
+                <MetricsDisplay />
+                <StreamConfigSimulator />
               </div>
-            </div>
 
-            <div className="text-center space-y-4">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-3xl font-bold">3</span>
+              <div className="space-y-8 flex flex-col justify-center">
+                <div className="space-y-4">
+                  <h3 className="text-2xl sm:text-3xl font-normal">
+                    Cloud Encoding
+                  </h3>
+                  <p className="text-xl leading-relaxed">
+                    No CPU spikes. No dropped frames. 99.9% uptime.
+                  </p>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
-                  Go Live
-                </h3>
-                <p className="text-lg">
-                  Stream to all platforms simultaneously
-                </p>
+
+                <div className="space-y-4">
+                  <h3 className="text-2xl sm:text-3xl font-normal">
+                    No Interruptions
+                  </h3>
+                  <p className="text-xl leading-relaxed">
+                    Zero popups. Zero restarts. Just streaming.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-2xl sm:text-3xl font-normal">
+                    Secure by Default
+                  </h3>
+                  <p className="text-xl leading-relaxed">
+                    Enterprise-grade security. End-to-end protection.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-4xl mx-auto mb-20">
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
+                Works with Your Setup
+              </h2>
+              <p className="text-2xl lg:text-3xl opacity-90 leading-relaxed">
+                Compatible with OBS, Streamlabs, XSplit, and any RTMP software.
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+              <div className="space-y-8">
+                <div className="space-y-6">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
+                    Minimalistic Design
+                  </h3>
+                  <p className="text-xl leading-relaxed">
+                    Clean interface that keeps you focused on what matters—your
+                    content.
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
+                    Encrypted & Secure
+                  </h3>
+                  <p className="text-xl leading-relaxed">
+                    Enterprise-grade security protects your stream keys and
+                    connections.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  <img
+                    src="/obs.png"
+                    alt="Streaming Software Integration"
+                    className="w-full max-w-lg rounded-3xl shadow-2xl"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent rounded-3xl"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        {/* How It Works Section */}
+        <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-4xl mx-auto mb-20">
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
+                How It Works
+              </h2>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+              <div className="text-center space-y-4">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                  <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                    <span className="text-3xl font-bold">1</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                    Connect Your Software
+                  </h3>
+                  <p className="text-lg">
+                    Link OBS, Streamlabs, or any RTMP software
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center space-y-4">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                  <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                    <span className="text-3xl font-bold">2</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                    Add Platforms
+                  </h3>
+                  <p className="text-lg">
+                    Select YouTube, Twitch, Facebook, and more
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center space-y-4">
+                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                  <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                    <span className="text-3xl font-bold">3</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                    Go Live
+                  </h3>
+                  <p className="text-lg">
+                    Stream to all platforms simultaneously
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* Subscription Plans Section */}
       <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
