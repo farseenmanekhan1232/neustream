@@ -259,9 +259,9 @@ function Landing() {
       </Helmet>
 
       {/* Marketing Content Wrapper - Contains header + all marketing sections */}
-      <div className="relative">
+      <div className="relative -mt-[100vh]">
         {/* Camcorder Viewfinder - Sticky full-screen overlay */}
-        <div className="sticky top-0 z-[100]">
+        <div className="sticky top-0 z-[100] min-h-screen min-lg:opacity-60">
           <CamcorderViewfinder />
         </div>
 
@@ -271,7 +271,7 @@ function Landing() {
         {/* Hero Section */}
         <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12">
+            <div className="flex flex-col items-center text-center space-y-8 sm:space-y-10 md:space-y-12 max-lg:py-[10vh]">
               <div className="inline-flex items-center">
                 <img
                   src="/logo.png"
@@ -297,7 +297,7 @@ function Landing() {
               <div className="flex flex-col gap-6 w-full max-w-md">
                 <Button
                   asChild
-                  className="w-full min-h-[52px] text-lg py-7 px-10 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl relative transition-all hover:scale-105"
+                  className="w-full min-h-[52px] text-lg py-7 px-10 bg-white text-black rounded-3xl font-light hover:bg-white shadow-2xl transition-all hover:scale-105 relative"
                 >
                   <Link to="/auth">
                     Start Streaming Free
@@ -537,7 +537,7 @@ function Landing() {
                 return (
                   <div
                     key={plan.id}
-                    className={`relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg ${
+                    className={` bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg ${
                       isProPlan
                         ? "border-primary shadow-2xl shadow-primary/20 ring-2 ring-primary/20"
                         : planName === "business"

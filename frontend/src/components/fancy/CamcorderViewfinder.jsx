@@ -63,7 +63,7 @@ const CamcorderViewfinder = () => {
   // Mobile View - Smartphone Camera UI
   if (isMobile) {
     return (
-      <div className="absolute inset-0 min-h-screen pointer-events-none z-[60]">
+      <div className="absolute inset-0 pointer-events-none z-[60]">
         {/* Vignette overlay for smartphone camera effect */}
         <div
           className="absolute inset-0"
@@ -144,7 +144,7 @@ const CamcorderViewfinder = () => {
 
   // Desktop View - Camcorder Viewfinder UI
   return (
-    <div className="absolute inset-0 min-h-screen pointer-events-none z-[60]">
+    <div className="absolute inset-0 pointer-events-none z-[60]">
       {/* Vignette overlay for viewfinder effect */}
       <div
         className="absolute inset-0"
