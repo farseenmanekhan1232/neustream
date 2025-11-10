@@ -74,7 +74,7 @@ const CamcorderViewfinder = () => {
         />
 
         {/*REC Indicator - Top Center */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2">
+        <div className="absolute top-10 right-5 -translate-x-1/2">
           <motion.div
             className="flex items-center gap-2"
             animate={{
@@ -93,25 +93,6 @@ const CamcorderViewfinder = () => {
           </motion.div>
         </div>
 
-        {/* Camera Controls - Left Side */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-6">
-          {/* Flash Control */}
-          <div className="flex flex-col items-center gap-1">
-            {isFlashOn ? (
-              <Zap className="w-6 h-6 text-white" />
-            ) : (
-              <ZapOff className="w-6 h-6 text-white/40" />
-            )}
-            <span className="text-white/60 text-xs">AUTO</span>
-          </div>
-
-          {/* Camera Switch */}
-          <div className="flex flex-col items-center gap-1">
-            <RotateCcw className="w-6 h-6 text-white" />
-            <span className="text-white/60 text-xs">0.6x</span>
-          </div>
-        </div>
-
         {/* Camera Modes - Bottom */}
         <div className="absolute bottom-28 left-0 right-0">
           <div className="flex justify-center items-center gap-8">
@@ -126,7 +107,7 @@ const CamcorderViewfinder = () => {
         {/* Shutter Button - Bottom Center */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-red-600" />
+            <div className="w-8 h-8 bg-red-700 rounded-[3px] " />
           </div>
         </div>
 
