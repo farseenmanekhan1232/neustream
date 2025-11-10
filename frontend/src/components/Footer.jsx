@@ -7,7 +7,8 @@ function Footer() {
   const currentYear = new Date().getFullYear();
 
   const FooterLink = ({ href, to, children, className = "" }) => {
-    const baseClasses = "text-muted-foreground hover:text-foreground transition-colors text-sm";
+    const baseClasses =
+      "text-muted-foreground hover:text-foreground transition-colors text-sm";
     const combinedClasses = `${baseClasses} ${className}`;
 
     if (to) {
@@ -46,7 +47,9 @@ function Footer() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Techmorph Technology</h3>
+            <h3 className="text-lg font-semibold text-black/50">
+              Techmorph Technology
+            </h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Revolutionizing multi-platform streaming with advanced
               computational offloading technology. Empowering content creators
@@ -56,7 +59,7 @@ function Footer() {
 
           {/* Platform Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Platform</h3>
+            <h3 className="text-lg font-semibold text-black/50">Platform</h3>
             <ul className="space-y-3">
               <li>
                 <FooterLink to="/">Home</FooterLink>
@@ -72,7 +75,7 @@ function Footer() {
 
           {/* Company Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Company</h3>
+            <h3 className="text-lg font-semibold text-black/50">Company</h3>
             <ul className="space-y-3">
               <li>
                 <FooterLink to="/about">About Us</FooterLink>
@@ -88,7 +91,7 @@ function Footer() {
 
           {/* Legal Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Legal</h3>
+            <h3 className="text-lg font-semibold text-black/50">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <FooterLink to="/privacy">Privacy Policy</FooterLink>

@@ -104,16 +104,16 @@ export default function BlogPost() {
   // Get category color
   const getCategoryColor = (category) => {
     const colors = {
-      "streaming-guides": "bg-red-500",
-      "platform-updates": "bg-blue-500",
-      "equipment-reviews": "bg-green-500",
-      "growth-tips": "bg-yellow-500",
-      "technical-tutorials": "bg-purple-500",
+      "streaming-guides": "bg-emerald-500",
+      "platform-updates": "bg-primary",
+      "equipment-reviews": "bg-blue-500",
+      "growth-tips": "bg-amber-500",
+      "technical-tutorials": "bg-violet-500",
       "industry-news": "bg-cyan-500",
-      "success-stories": "bg-pink-500",
+      "success-stories": "bg-rose-500",
       "neustream-features": "bg-indigo-500",
     };
-    return colors[category?.slug] || "bg-gray-500";
+    return colors[category?.slug] || "bg-muted";
   };
 
   if (isLoading) {

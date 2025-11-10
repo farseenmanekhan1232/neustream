@@ -210,11 +210,11 @@ function SubscriptionManagement() {
     return (
       <div className="w-full px-6 py-6 space-y-6 mx-auto">
         <div className="animate-pulse space-y-6">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+          <div className="h-10 bg-muted rounded w-1/3"></div>
+          <div className="h-8 bg-muted rounded w-2/3"></div>
           <div className="grid gap-6 md:grid-cols-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div key={i} className="h-96 bg-muted rounded"></div>
             ))}
           </div>
         </div>
@@ -426,7 +426,7 @@ function SubscriptionManagement() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                  className="h-12 bg-muted rounded animate-pulse"
                 ></div>
               ))}
             </div>

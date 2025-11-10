@@ -108,6 +108,11 @@
     --color-teal-start: #009a65;
     --color-teal-middle: #00b86b;
     --color-teal-end: #00db75;
+
+    /* Dark mode teal gradient colors */
+    --color-teal-start-dark: #00a870;
+    --color-teal-middle-dark: #00c77a;
+    --color-teal-end-dark: #00e085;
 }
 
 /* Teal gradient background for landing page */
@@ -122,6 +127,15 @@
     background-size: cover;
 }
 
+.dark .bg-teal-gradient {
+    background: linear-gradient(
+        180deg,
+        var(--color-teal-start-dark) 10%,
+        var(--color-teal-middle-dark) 50%,
+        var(--color-teal-end-dark) 100%
+    );
+}
+
 /* Header teal gradient */
 .bg-header-teal-gradient {
     background: linear-gradient(
@@ -130,6 +144,14 @@
         transparent
     );
     backdrop-filter: blur(8px);
+}
+
+.dark .bg-header-teal-gradient {
+    background: linear-gradient(
+        to bottom,
+        var(--color-teal-start-dark),
+        transparent
+    );
 }
 
 /* Custom heading improvements */

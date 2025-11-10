@@ -147,16 +147,16 @@ export default function Contact() {
                 </Button>
 
                 {submitStatus === "success" && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md dark:bg-green-900/20 dark:border-green-800">
-                    <p className="text-green-800 dark:text-green-200 text-sm">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md dark:bg-emerald-900/20 dark:border-emerald-800">
+                    <p className="text-emerald-800 dark:text-emerald-200 text-sm">
                       Thank you for your message! We'll get back to you soon.
                     </p>
                   </div>
                 )}
 
                 {submitStatus === "error" && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/20 dark:border-red-800">
-                    <p className="text-red-800 dark:text-red-200 text-sm">
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md dark:bg-destructive/20">
+                    <p className="text-destructive dark:text-destructive-foreground text-sm">
                       Oops! Something went wrong. Please try again later.
                     </p>
                   </div>

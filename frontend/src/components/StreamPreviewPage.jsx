@@ -197,9 +197,9 @@ function StreamPreviewPage() {
 
               <div className="flex-1 text-center">
                 <div className="flex items-center justify-center space-x-2">
-                  <MonitorSpeaker className="h-4 w-4 text-green-500" />
+                  <MonitorSpeaker className="h-4 w-4 text-emerald-500" />
                   <span className="font-medium">{selectedSource.name}</span>
-                  <Badge variant="default" className="bg-green-500">
+                  <Badge variant="default" className="bg-emerald-500">
                     LIVE
                   </Badge>
                 </div>
@@ -255,7 +255,7 @@ function StreamPreviewPage() {
                   {selectedSource.name}
                 </span>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="default" className="bg-green-500">
+                  <Badge variant="default" className="bg-emerald-500">
                     <div className="h-2 w-2 bg-white rounded-full animate-pulse mr-2"></div>
                     LIVE
                   </Badge>
@@ -333,8 +333,8 @@ function StreamPreviewPage() {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <MonitorSpeaker className="h-5 w-5 text-green-500" />
+                    <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                      <MonitorSpeaker className="h-5 w-5 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
@@ -342,7 +342,7 @@ function StreamPreviewPage() {
                         {source.id === selectedSource.id ? (
                           <Badge
                             variant="default"
-                            className="text-xs bg-green-500"
+                            className="text-xs bg-emerald-500"
                           >
                             Current
                           </Badge>
