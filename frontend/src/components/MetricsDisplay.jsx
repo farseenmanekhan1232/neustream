@@ -4,7 +4,7 @@ const MetricsDisplay = () => {
   const [metrics, setMetrics] = useState({
     cpu: 15,
     fps: 60,
-    bitrate: 4500,
+    bitrate: 4800,
   });
 
   const [isActive, setIsActive] = useState(false);
@@ -13,7 +13,7 @@ const MetricsDisplay = () => {
     // Start the simulation after a short delay to avoid immediate animation
     const startTimer = setTimeout(() => {
       setIsActive(true);
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(startTimer);
   }, []);
@@ -24,16 +24,16 @@ const MetricsDisplay = () => {
     const interval = setInterval(() => {
       setMetrics((prev) => ({
         // CPU: 8-25% range with realistic fluctuations
-        cpu: Math.max(8, Math.min(25, prev.cpu + (Math.random() - 0.5) * 6)),
+        cpu: Math.max(8, Math.min(12, prev.cpu + (Math.random() - 0.5) * 6)),
         // FPS: 58-62 range (very stable, minimal variation)
         fps: Math.max(58, Math.min(62, 60 + (Math.random() - 0.5) * 2)),
         // Bitrate: 4200-4800 kbps range with gradual changes
         bitrate: Math.max(
-          4200,
-          Math.min(4800, prev.bitrate + (Math.random() - 0.5) * 200),
+          4800,
+          Math.min(6500, prev.bitrate + (Math.random() - 0.5) * 200),
         ),
       }));
-    }, 1500); // Update every 1.5 seconds for smooth, realistic changes
+    }, 500); // Update every 1.5 seconds for smooth, realistic changes
 
     return () => clearInterval(interval);
   }, [isActive]);
@@ -73,7 +73,7 @@ const MetricsDisplay = () => {
         <div
           className={`h-full ${colorClass.replace("bg-", "bg-opacity-80 bg-")} transition-all duration-1000 ease-out`}
           style={{
-            width: `${Math.min(100, (value / (label === "CPU" ? 30 : label === "FPS" ? 70 : 6000)) * 100)}%`,
+            width: `${Math.min(100, (value / (label === "CPU Usage" ? 100 : label === "Frame Rate" ? 70 : 6000)) * 100)}%`,
           }}
         ></div>
       </div>

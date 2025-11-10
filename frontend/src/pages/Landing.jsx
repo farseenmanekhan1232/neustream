@@ -272,11 +272,16 @@ function Landing() {
 
             <div className="space-y-6 max-w-4xl">
               <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-tighter leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
-                Streaming Without{" "}
+                Stream to All Platforms.
+                <br />
                 <TextHighlighter {...highlightConfig}>
-                  Performance Compromises
+                  No Performance Hit.
                 </TextHighlighter>
               </div>
+              <p className="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
+                Multistream to YouTube, Twitch, Facebook, and more from one
+                place. Cloud encoding keeps your machine fast.
+              </p>
             </div>
 
             <div className="flex flex-col gap-6 w-full max-w-md">
@@ -291,27 +296,24 @@ function Landing() {
                   </span>
                 </Link>
               </Button>
-            </div>
-
-            <div className="space-y-4">
-              <p className="opacity-90 text-base md:text-lg font-light">
-                Seamlessly integrate with your favorite platforms
+              <p className="text-sm opacity-75">
+                No credit card required • 14-day trial
               </p>
-              <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 opacity-90">
-                {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
-                  (platform) => (
-                    <div
-                      key={platform}
-                      className="text-lg md:text-xl font-medium text-shadow-md"
-                    >
-                      {platform}
-                    </div>
-                  ),
-                )}
-              </div>
             </div>
 
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 opacity-90">
+              {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
+                (platform) => (
+                  <div
+                    key={platform}
+                    className="text-lg md:text-xl font-medium text-shadow-md"
+                  >
+                    {platform}
+                  </div>
+                ),
+              )}
             </div>
+          </div>
         </div>
         <img
           src="/hero.png"
@@ -320,78 +322,48 @@ function Landing() {
         />
       </section>
 
-      {/* Performance & Privacy Section */}
+      {/* Core Value Props Section */}
       <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-4xl mx-auto mb-16">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight mb-12">
+              Built for Speed and Privacy
+            </h2>
+          </div>
+
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-            <div className="space-y-8 order-2 lg:order-1">
-              <div className="space-y-8">
-                <div className="space-y-6">
-                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight">
-                    Best performance by default
-                  </h2>
-                  <p className="text-2xl leading-relaxed">
-                    NeuStream offloads video encoding to the cloud, keeping your
-                    machine fast and responsive. No CPU spikes, no dropped
-                    frames, no{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      performance compromises
-                    </TextHighlighter>
-                    .
-                  </p>
-                  <p className="text-2xl leading-relaxed">
-                    Our distributed infrastructure ensures{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      99.9% uptime
-                    </TextHighlighter>{" "}
-                    with advanced controls for bitrate and resolution when you
-                    need them.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-8 order-1 lg:order-2">
+            <div className="space-y-8">
               <MetricsDisplay />
               <StreamConfigSimulator />
             </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 mt-25 lg:mt-40 gap-5 lg:gap-10 ">
-            <div className="lg:col-span-1 space-y-16">
-              <div className="grid  gap-12">
-                <div className="space-y-6">
-                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                    Respectful by design
-                  </h3>
-                  <p className="text-xl leading-relaxed">
-                    NeuStream never interrupts your workflow. No unexpected
-                    tabs, popups, or restarts. Everything just works, keeping
-                    you in{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      full control
-                    </TextHighlighter>
-                    .
-                  </p>
-                </div>
 
-                <div className="space-y-6">
-                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                    Fast, efficient, and reliable
-                  </h3>
-                  <p className="text-xl leading-relaxed">
-                    Our cloud architecture delivers smooth streaming that never
-                    slows down, even during long sessions. NeuStream is one of
-                    the{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      most efficient multistreaming solutions
-                    </TextHighlighter>{" "}
-                    with minimal resource usage.
-                  </p>
-                </div>
+            <div className="space-y-8 flex flex-col justify-center">
+              <div className="space-y-4">
+                <h3 className="text-2xl sm:text-3xl font-normal">
+                  Cloud Encoding
+                </h3>
+                <p className="text-xl leading-relaxed">
+                  No CPU spikes. No dropped frames. 99.9% uptime.
+                </p>
               </div>
-            </div>
 
-            <div className="lg:col-span-1 ">
-              <LiveChatSimulator />
+              <div className="space-y-4">
+                <h3 className="text-2xl sm:text-3xl font-normal">
+                  No Interruptions
+                </h3>
+                <p className="text-xl leading-relaxed">
+                  Zero popups. Zero restarts. Just streaming.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-2xl sm:text-3xl font-normal">
+                  Secure by Default
+                </h3>
+                <p className="text-xl leading-relaxed">
+                  Enterprise-grade security. End-to-end protection.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -402,65 +374,32 @@ function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto mb-20">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
-              Everything you need for professional streaming
+              Works with Your Setup
             </h2>
             <p className="text-2xl lg:text-3xl opacity-90 leading-relaxed">
-              Stream like a pro across all platforms with our powerful features.
+              Compatible with OBS, Streamlabs, XSplit, and any RTMP software.
             </p>
-            <Link
-              to="/features"
-              className="inline-flex items-center mt-6 text-xl hover:opacity-80 transition-opacity"
-            >
-              Explore all features <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
           </div>
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
-            <div className="space-y-12">
-              <div className="space-y-10">
-                <div className="space-y-6">
-                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                    Works with all streaming software
-                  </h3>
-                  <p className="text-xl leading-relaxed">
-                    Compatible with{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      OBS Studio, Streamlabs, XSplit
-                    </TextHighlighter>
-                    , and any RTMP software. Secure, encrypted connections
-                    protect your stream keys with enterprise-grade security.
-                  </p>
-                </div>
-                <div className="space-y-6">
-                  <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                    Secure by default
-                  </h3>
-                  <p className="text-xl leading-relaxed">
-                    NeuStream enforces{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      secure connections
-                    </TextHighlighter>{" "}
-                    to all platforms with end-to-end protection. We collect only
-                    what's needed for reliable streaming, keeping your{" "}
-                    <TextHighlighter {...highlightConfig}>
-                      privacy and content control
-                    </TextHighlighter>{" "}
-                    as top priorities.
-                  </p>
-                </div>
+
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+            <div className="space-y-8">
+              <div className="space-y-6">
+                <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
+                  Minimalistic Design
+                </h3>
+                <p className="text-xl leading-relaxed">
+                  Clean interface that keeps you focused on what matters—your
+                  content.
+                </p>
               </div>
 
               <div className="space-y-6">
                 <h3 className="text-3xl sm:text-4xl font-normal leading-tight">
-                  Clean, simple interface
+                  Encrypted & Secure
                 </h3>
                 <p className="text-xl leading-relaxed">
-                  Our{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    minimalistic design
-                  </TextHighlighter>{" "}
-                  maximizes your content space while keeping all functionality
-                  accessible. Customize your dashboard to show only what
-                  matters. Smooth, reliable streaming without interruptions.
+                  Enterprise-grade security protects your stream keys and
+                  connections.
                 </p>
               </div>
             </div>
@@ -478,65 +417,54 @@ function Landing() {
           </div>
         </div>
       </section>
-      {/* Target Audience Section */}
+      {/* How It Works Section */}
       <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto mb-20">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
-              Built for creators, by creators
+              How It Works
             </h2>
-            <p className="text-2xl lg:text-3xl leading-relaxed">
-              We built NeuStream to provide an{" "}
-              <TextHighlighter {...highlightConfig}>
-                honest, reliable, performance-focused streaming experience
-              </TextHighlighter>{" "}
-              that we'd want to use ourselves.
-            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto items-stretch">
-            <div className="text-center space-y-6 group flex flex-col">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
-                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
-                  Gamers
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+            <div className="text-center space-y-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                  <span className="text-3xl font-bold">1</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                  Connect Your Software
                 </h3>
-                <p className="text-xl leading-relaxed">
-                  Stream without FPS drops or performance impact. Maintain your
-                  competitive edge while{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    multistreaming to all platforms
-                  </TextHighlighter>
-                  .
+                <p className="text-lg">
+                  Link OBS, Streamlabs, or any RTMP software
                 </p>
               </div>
             </div>
 
-            <div className="text-center space-y-6 group flex flex-col">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
-                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
-                  Content creators
+            <div className="text-center space-y-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                  <span className="text-3xl font-bold">2</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                  Add Platforms
                 </h3>
-                <p className="text-xl leading-relaxed">
-                  Reach wider audiences with one stream.{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    Focus on creating content
-                  </TextHighlighter>{" "}
-                  while we handle the technical complexity.
+                <p className="text-lg">
+                  Select YouTube, Twitch, Facebook, and more
                 </p>
               </div>
             </div>
 
-            <div className="text-center space-y-6 group flex flex-col">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300 flex-grow">
-                <h3 className="text-2xl sm:text-3xl font-normal mb-4">
-                  Mobile creators
+            <div className="text-center space-y-4">
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-full flex items-center justify-center">
+                  <span className="text-3xl font-bold">3</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-normal mb-3">
+                  Go Live
                 </h3>
-                <p className="text-xl leading-relaxed">
-                  Stream from anywhere with our{" "}
-                  <TextHighlighter {...highlightConfig}>
-                    reliable cloud infrastructure
-                  </TextHighlighter>{" "}
-                  backing you up.
+                <p className="text-lg">
+                  Stream to all platforms simultaneously
                 </p>
               </div>
             </div>
@@ -765,12 +693,10 @@ function Landing() {
               Ready to try NeuStream?
             </h2>
             <p className="text-2xl lg:text-3xl mb-12 leading-relaxed">
-              Reach more viewers across platforms while keeping your local
-              performance intact.{" "}
+              Start multistreaming today.{" "}
               <TextHighlighter {...highlightConfig}>
-                Start your streaming journey today
+                No credit card required.
               </TextHighlighter>
-              .
             </p>{" "}
             <Button
               asChild
@@ -783,7 +709,7 @@ function Landing() {
                 </span>
               </Link>
             </Button>
-            <div className="mt-16 pt-8 border-t border-white/20">
+            <div className="mt-12 pt-8 border-t border-white/20">
               <p className="text-base opacity-70">
                 By signing up, you agree to our{" "}
                 <Link to="/privacy" className="underline hover:opacity-80">
