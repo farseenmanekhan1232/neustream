@@ -57,8 +57,6 @@ const CamcorderViewfinder = () => {
 
   const batteryLevel = 85;
   const isRecording = true;
-  const isFlashOn = true;
-  const isFrontCamera = false;
 
   // Mobile View - Smartphone Camera UI
   if (isMobile) {
@@ -74,7 +72,7 @@ const CamcorderViewfinder = () => {
         />
 
         {/*REC Indicator - Top Center */}
-        <div className="absolute top-10 right-5 -translate-x-1/2">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2">
           <motion.div
             className="flex items-center gap-2"
             animate={{
@@ -107,7 +105,7 @@ const CamcorderViewfinder = () => {
         {/* Shutter Button - Bottom Center */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
-            <div className="w-8 h-8 bg-red-700 rounded-[3px] " />
+            <div className="w-12 h-12 rounded-full bg-red-600" />
           </div>
         </div>
 

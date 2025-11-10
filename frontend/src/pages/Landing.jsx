@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { subscriptionService } from "../services/subscription";
@@ -29,10 +28,6 @@ function Landing() {
   // Use currency context
   const { formatPrice } = useCurrency();
 
-  // State for CamcorderViewfinder visibility
-  const [showViewfinder, setShowViewfinder] = useState(true);
-  const lastScrollY = useRef(0);
-
   // TextHighlighter configuration
   const highlightConfig = {
     transition: { type: "spring", duration: 1, delay: 0.2, bounce: 0 },
@@ -42,41 +37,6 @@ function Landing() {
     triggerType: "inView",
     direction: "ltr",
   };
-
-  // Simple scroll-based viewfinder visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const threshold = 150; // Hide after scrolling 150px down
-      const showThreshold = 100; // Show when scrolled up within 100px of top
-
-      // Show at top or when scrolling up
-      if (currentScrollY < showThreshold || currentScrollY < lastScrollY.current) {
-        setShowViewfinder(true);
-      }
-      // Hide when scrolling down past threshold
-      else if (currentScrollY > threshold && currentScrollY > lastScrollY.current) {
-        setShowViewfinder(false);
-      }
-
-      lastScrollY.current = currentScrollY;
-    };
-
-    // Throttled scroll handler
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Fetch subscription plans from API
   const {
@@ -301,11 +261,7 @@ function Landing() {
       {/* Marketing Content Wrapper - Contains header + all marketing sections */}
       <div className="relative -mt-[100vh]">
         {/* Camcorder Viewfinder - Sticky full-screen overlay */}
-        <div
-          className={`sticky top-0 z-[100] min-h-screen min-lg:opacity-60 pointer-events-none transition-opacity duration-500 ease-in-out ${
-            showViewfinder ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        <div className="sticky top-0 z-[100] min-h-screen min-lg:opacity-60 pointer-events-none">
           <CamcorderViewfinder />
         </div>
 
