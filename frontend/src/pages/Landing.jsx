@@ -261,7 +261,7 @@ function Landing() {
       {/* Marketing Content Wrapper - Contains header + all marketing sections */}
       <div className="relative -mt-[100vh]">
         {/* Camcorder Viewfinder - Sticky full-screen overlay */}
-        <div className="sticky top-0 z-[100] min-h-screen min-lg:opacity-60 pointer-events-none">
+        <div className="sticky top-0 z-[100] min-h-svh min-lg:opacity-60 pointer-events-none">
           <CamcorderViewfinder />
         </div>
 
