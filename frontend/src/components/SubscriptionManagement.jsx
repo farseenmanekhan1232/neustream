@@ -16,6 +16,7 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "../contexts/AuthContext";
 import { subscriptionService } from "../services/subscription";
 import { useCurrency } from "../contexts/CurrencyContext";
@@ -40,6 +42,7 @@ function SubscriptionManagement() {
   const { formatPrice } = useCurrency();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("yearly"); // Default to yearly
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
 
   // Fetch current subscription
   const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
@@ -162,6 +165,9 @@ function SubscriptionManagement() {
   const currentUsage = subscriptionData?.current_usage;
   const plans = plansData?.data?.plans || plansData?.plans || plansData || [];
 
+  // Find Pro plan for recommendation
+  const proPlan = plans.find(p => p.name.toLowerCase() === "pro");
+
   const planFeatures = {
     free: [
       { name: "Basic Analytics", icon: TrendingUp },
@@ -223,8 +229,11 @@ function SubscriptionManagement() {
   const destinationUsagePercent = currentUsage && currentLimits
     ? (currentUsage.destinations_count / currentLimits.max_destinations) * 100
     : 0;
-  const streamingUsagePercent = currentUsage && currentLimits
-    ? (currentUsage.streaming_hours / currentLimits.max_streaming_hours_monthly) * 100
+  const streamingHours = currentUsage?.streaming_hours
+    ? parseFloat(currentUsage.streaming_hours.toString())
+    : 0;
+  const streamingUsagePercent = currentLimits
+    ? (streamingHours / currentLimits.max_streaming_hours_monthly) * 100
     : 0;
 
   return (
@@ -273,7 +282,7 @@ function SubscriptionManagement() {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">Streaming Hours</span>
                   <span className="font-medium text-foreground">
-                    {currentUsage?.streaming_hours || 0}/{currentLimits?.max_streaming_hours_monthly || 0}h
+                    {streamingHours.toFixed(2)}/{currentLimits?.max_streaming_hours_monthly || 0}h
                   </span>
                 </div>
                 <Progress
@@ -357,6 +366,25 @@ function SubscriptionManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Pricing */}
+            {proPlan && (
+              <div className="space-y-2">
+                <div className="flex items-baseline space-x-2">
+                  <div className="text-3xl font-bold text-foreground">
+                    {billingCycle === "yearly"
+                      ? formatPrice(proPlan.price_monthly)
+                      : formatPrice(proPlan.price_monthly)}
+                    <span className="text-lg text-muted-foreground">/month</span>
+                  </div>
+                </div>
+                {billingCycle === "yearly" && (
+                  <p className="text-sm text-muted-foreground">
+                    or {formatPrice(proPlan.price_yearly)} billed annually
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="grid gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-teal-500" />
@@ -371,394 +399,78 @@ function SubscriptionManagement() {
                 <span>Priority support and advanced analytics</span>
               </div>
             </div>
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-              Keep Current Plan
+            <Button
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={() => setShowPlanDialog(true)}
+            >
+              Upgrade Plan
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Billing Cycle Toggle */}
-      <div className="flex flex-col items-center space-y-4">
-        <div className="flex items-center justify-center space-x-4 p-6 bg-gradient-to-r from-teal-500/10 to-teal-600/5 rounded-xl border border-teal-500/20">
-          <span
-            className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}
-          >
-            Monthly
-          </span>
-          <Switch
-            checked={billingCycle === "yearly"}
-            onCheckedChange={(checked) =>
-              setBillingCycle(checked ? "yearly" : "monthly")
-            }
-          />
-          <div className="flex items-center space-x-2">
-            <span
-              className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}
-            >
-              Yearly
-            </span>
-            <Badge className="bg-emerald-500 text-white text-xs">
-              Save 20%
-            </Badge>
-          </div>
-        </div>
-
-        {/* Billing Benefits */}
-        <div className="text-center max-w-2xl">
-          {billingCycle === "yearly" ? (
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-              <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium mb-2">
-                🎉 Great choice! You're saving 20%
-              </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-300">
-                Yearly billing gives you the best value and uninterrupted
-                service all year long.
-              </p>
-            </div>
-          ) : (
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-2">
-                💡 Switch to yearly and save 20%
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-300">
-                Get 2 months free when you choose annual billing. Plus,
-                you'll lock in your current rate.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Available Plans */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-foreground">Available Plans</h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {plans.map((plan) => {
-            const isCurrentPlan =
-              currentPlan?.plan_name?.toLowerCase() ===
-              plan.name.toLowerCase();
-            const price = getPlanPrice(plan);
-            const features = getPlanFeatures(plan.name);
-            const displayPrice =
-              billingCycle === "yearly" ? price.yearly : price.monthly;
-            const savingsPercentage = 20;
-
-            return (
-              <Card
-                key={plan.id}
-                className={`relative border-border bg-card ${
-                  isCurrentPlan ? "ring-2 ring-teal-500" : ""
-                }`}
-              >
-                {isCurrentPlan && (
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-teal-500 text-white">Current Plan</Badge>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-xl flex items-center justify-between">
-                    <span>{plan.name}</span>
-                    {plan.name.toLowerCase() === "free" && (
-                      <Star className="h-5 w-5 text-yellow-500" />
-                    )}
-                    {plan.name.toLowerCase() === "pro" && (
-                      <Zap className="h-5 w-5 text-teal-500" />
-                    )}
-                    {plan.name.toLowerCase() === "business" && (
-                      <Shield className="h-5 w-5 text-purple-500" />
-                    )}
-                  </CardTitle>
-                  <div className="space-y-3">
-                    <div className="flex items-baseline space-x-2">
-                      <div className="text-3xl font-normal text-foreground">
-                        {plan.name.toLowerCase() === "free"
-                          ? "Free"
-                          : displayPrice}
-                      </div>
-                      {plan.name.toLowerCase() !== "free" && (
-                        <span className="text-sm font-normal text-muted-foreground">
-                          /{billingCycle === "yearly" ? "year" : "month"}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Show savings for yearly billing */}
-                    {billingCycle === "yearly" &&
-                      plan.name.toLowerCase() !== "free" && (
-                        <div className="flex items-center space-x-2">
-                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs">
-                            Save {savingsPercentage}%
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Equivalent to {price.monthly}/month
-                          </span>
-                        </div>
-                      )}
-
-                    {/* Show comparison for monthly billing */}
-                    {billingCycle === "monthly" &&
-                      plan.name.toLowerCase() !== "free" && (
-                        <div className="text-xs text-muted-foreground">
-                          <span>
-                            Or {price.yearly} billed annually (Save{" "}
-                            {savingsPercentage}%)
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Plan Limits */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sources:</span>
-                      <span className="font-medium text-foreground">{plan.max_sources}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Destinations:</span>
-                      <span className="font-medium text-foreground">
-                        {plan.max_destinations}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Streaming Hours:</span>
-                      <span className="font-medium text-foreground">
-                        {plan.max_streaming_hours_monthly}h
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Features */}
-                  <div className="space-y-2">
-                    {features.map((feature, index) => {
-                      const FeatureIcon = feature.icon;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                          <FeatureIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="text-foreground">{feature.name}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {isCurrentPlan ? (
-                    <Button className="w-full" variant="outline" disabled>
-                      Current Plan
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-                      onClick={() => setSelectedPlan(plan)}
-                      disabled={updateSubscriptionMutation.isLoading}
-                    >
-                      {updateSubscriptionMutation.isLoading &&
-                      selectedPlan?.id === plan.id
-                        ? "Upgrading..."
-                        : "Upgrade Plan"}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Usage & Billing History Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent Streaming Sessions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              Recent Streaming Sessions
-            </CardTitle>
-            <CardDescription>
-              Your last 10 streaming sessions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {historyLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            ) : streamingHistory && streamingHistory.length > 0 ? (
-              <div className="space-y-3">
-                {streamingHistory.slice(0, 10).map((session, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {session.source_name || "Legacy Stream"}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(session.started_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-foreground">
-                        {Math.floor(session.duration_seconds / 3600)}h{" "}
-                        {Math.floor((session.duration_seconds % 3600) / 60)}m
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {session.destinations_count} destinations
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No streaming sessions found</p>
-                <p className="text-sm mt-2">
-                  Start streaming to see your usage history here
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Monthly Usage Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-              Monthly Usage
-            </CardTitle>
-            <CardDescription>Streaming hours per month</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {breakdownLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div
-                    key={i}
-                    className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            ) : usageBreakdown && usageBreakdown.length > 0 ? (
-              <div className="space-y-3">
-                {usageBreakdown.map((month, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{month.month}</span>
-                      <span className="font-medium text-foreground">
-                        {month.hours} hours
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-teal-500 h-2 rounded-full transition-all"
-                        style={{
-                          width: `${Math.min(
-                            (month.hours /
-                              currentLimits?.max_streaming_hours_monthly) *
-                              100,
-                            100,
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No usage data available</p>
-                <p className="text-sm mt-2">
-                  Usage data will appear after you start streaming
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Billing Information */}
+      {/* Recent Streaming Sessions */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-muted-foreground" />
-            Billing Information
+            <Clock className="h-5 w-5 text-muted-foreground" />
+            Recent Streaming Sessions
           </CardTitle>
           <CardDescription>
-            Manage your subscription and view payment history
+            Your last 10 streaming sessions
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <Shield className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
-              <div>
-                <p className="font-medium text-emerald-800 dark:text-emerald-200">
-                  Secure Payment Processing
-                </p>
-                <p className="text-sm text-emerald-600 dark:text-emerald-300">
-                  All payments are processed securely through Razorpay. Your
-                  payment information is never stored on our servers.
-                </p>
-              </div>
+        <CardContent>
+          {historyLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                ></div>
+              ))}
             </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="flex justify-between items-center p-3 border border-border rounded-lg">
-              <div>
-                <p className="font-medium text-foreground">Current Plan</p>
-                <p className="text-sm text-muted-foreground">
-                  {currentPlan?.plan_name}
-                </p>
-              </div>
-              <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20">
-                Active
-              </Badge>
-            </div>
-
-            {currentPlan?.current_period_end && (
-              <div className="flex justify-between items-center p-3 border border-border rounded-lg">
-                <div>
-                  <p className="font-medium text-foreground">Next Billing Date</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(currentPlan.current_period_end).toLocaleDateString()}
-                  </p>
+          ) : streamingHistory && streamingHistory.data && streamingHistory.data.length > 0 ? (
+            <div className="space-y-3">
+              {streamingHistory.data.slice(0, 10).map((session, index) => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {session.source_name || "Legacy Stream"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(session.stream_start).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-foreground">
+                      {session.duration_minutes}m
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Session #{session.id}
+                    </p>
+                  </div>
                 </div>
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-              </div>
-            )}
-
-            <div className="flex justify-between items-center p-3 border border-border rounded-lg md:col-span-2">
-              <div>
-                <p className="font-medium text-foreground">Payment Method</p>
-                <p className="text-sm text-muted-foreground">
-                  Visa ending in 1234
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  Update Payment
-                </Button>
-                <Button variant="outline" size="sm">
-                  View Invoices
-                </Button>
-              </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No streaming sessions found</p>
+              <p className="text-sm mt-2">
+                Start streaming to see your usage history here
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -782,20 +494,221 @@ function SubscriptionManagement() {
         </CardContent>
       </Card>
 
-      {/* Plan Upgrade Confirmation Modal */}
-      {selectedPlan && (
+      {/* Fullscreen Plan Selection Dialog */}
+      <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
+        <DialogContent className="w-screen h-screen max-w-none m-0 p-0 rounded-none overflow-hidden">
+          <div className="flex flex-col h-full">
+            {/* Dialog Header */}
+            <DialogHeader className="p-6 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle className="text-2xl">Choose Your Plan</DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Select the plan that best fits your needs
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPlanDialog(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+
+            {/* Dialog Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Billing Cycle Toggle */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center justify-center space-x-4 p-4 bg-gradient-to-r from-teal-500/10 to-teal-600/5 rounded-xl border border-teal-500/20">
+                  <span
+                    className={`text-sm font-medium ${billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground"}`}
+                  >
+                    Monthly
+                  </span>
+                  <Switch
+                    checked={billingCycle === "yearly"}
+                    onCheckedChange={(checked) =>
+                      setBillingCycle(checked ? "yearly" : "monthly")
+                    }
+                  />
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`text-sm font-medium ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground"}`}
+                    >
+                      Yearly
+                    </span>
+                    <Badge className="bg-emerald-500 text-white text-xs">
+                      Save 20%
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="text-center max-w-2xl">
+                  {billingCycle === "yearly" ? (
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                      <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium">
+                        🎉 Great choice! You're saving 20%
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                        💡 Switch to yearly and save 20%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Plans Grid */}
+              <div className="grid gap-6 md:grid-cols-3">
+                {plans.map((plan) => {
+                  const isCurrentPlan =
+                    currentPlan?.plan_name?.toLowerCase() ===
+                    plan.name.toLowerCase();
+                  const price = getPlanPrice(plan);
+                  const features = getPlanFeatures(plan.name);
+                  const savingsPercentage = 20;
+
+                  return (
+                    <Card
+                      key={plan.id}
+                      className={`relative border-border bg-card ${
+                        isCurrentPlan ? "ring-2 ring-teal-500" : ""
+                      }`}
+                    >
+                      {isCurrentPlan && (
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                          <Badge className="bg-teal-500 text-white">Current Plan</Badge>
+                        </div>
+                      )}
+                      <CardHeader>
+                        <CardTitle className="text-xl flex items-center justify-between">
+                          <span>{plan.name}</span>
+                          {plan.name.toLowerCase() === "free" && (
+                            <Star className="h-5 w-5 text-yellow-500" />
+                          )}
+                          {plan.name.toLowerCase() === "pro" && (
+                            <Zap className="h-5 w-5 text-teal-500" />
+                          )}
+                          {plan.name.toLowerCase() === "business" && (
+                            <Shield className="h-5 w-5 text-purple-500" />
+                          )}
+                        </CardTitle>
+                        <div className="space-y-3">
+                          <div className="flex items-baseline space-x-2">
+                            <div className="text-3xl font-bold text-foreground">
+                              {plan.name.toLowerCase() === "free"
+                                ? "Free"
+                                : formatPrice(plan.price_monthly)}
+                              <span className="text-lg text-muted-foreground">/month</span>
+                            </div>
+                          </div>
+
+                          {plan.name.toLowerCase() !== "free" && (
+                            <p className="text-sm text-muted-foreground">
+                              or {formatPrice(plan.price_yearly)} billed annually
+                            </p>
+                          )}
+
+                          {/* Show savings for yearly billing */}
+                          {billingCycle === "yearly" &&
+                            plan.name.toLowerCase() !== "free" && (
+                              <div className="flex items-center space-x-2">
+                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs">
+                                  Save {savingsPercentage}%
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Equivalent to {price.monthly}/month
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Plan Limits */}
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Sources:</span>
+                            <span className="font-medium text-foreground">{plan.max_sources}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Destinations:</span>
+                            <span className="font-medium text-foreground">
+                              {plan.max_destinations}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Streaming Hours:</span>
+                            <span className="font-medium text-foreground">
+                              {plan.max_streaming_hours_monthly}h
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Features */}
+                        <div className="space-y-2">
+                          {features.map((feature, index) => {
+                            const FeatureIcon = feature.icon;
+                            return (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2 text-sm"
+                              >
+                                <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                <FeatureIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="text-foreground">{feature.name}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        {isCurrentPlan ? (
+                          <Button className="w-full" variant="outline" disabled>
+                            Current Plan
+                          </Button>
+                        ) : (
+                          <Button
+                            className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+                            onClick={() => {
+                              setSelectedPlan(plan);
+                              setShowPlanDialog(false);
+                            }}
+                            disabled={updateSubscriptionMutation.isLoading}
+                          >
+                            {updateSubscriptionMutation.isLoading &&
+                            selectedPlan?.id === plan.id
+                              ? "Upgrading..."
+                              : "Select Plan"}
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan Confirmation Modal (shown after selecting a plan) */}
+      {selectedPlan && !showPlanDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4">
             <CardHeader>
-              <CardTitle>Upgrade to {selectedPlan.name}</CardTitle>
+              <CardTitle>Confirm Your Selection</CardTitle>
               <CardDescription>
-                You are about to upgrade your subscription plan
+                Review your plan selection
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">New Plan:</span>
+                  <span className="text-muted-foreground">Selected Plan:</span>
                   <span className="font-medium text-foreground">{selectedPlan.name}</span>
                 </div>
                 <div className="flex justify-between">
@@ -809,14 +722,14 @@ function SubscriptionManagement() {
                   <span className="font-medium text-foreground">
                     {selectedPlan.name.toLowerCase() === "free"
                       ? "Free"
-                      : `${billingCycle === "yearly" ? getPlanPrice(selectedPlan).yearly : getPlanPrice(selectedPlan).monthly}/${billingCycle === "yearly" ? "year" : "month"}`}
+                      : `${formatPrice(selectedPlan.price_monthly)}/month`}
                   </span>
                 </div>
                 {billingCycle === "yearly" &&
                   selectedPlan.name.toLowerCase() !== "free" && (
-                    <div className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-200 dark:border-emerald-800">
-                      You're saving 20% with yearly billing!
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      or {formatPrice(selectedPlan.price_yearly)} billed annually
+                    </p>
                   )}
               </div>
 
@@ -841,13 +754,16 @@ function SubscriptionManagement() {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => setSelectedPlan(null)}
+                onClick={() => {
+                  setSelectedPlan(null);
+                  setShowPlanDialog(true);
+                }}
                 disabled={
                   updateSubscriptionMutation.isLoading ||
                   processPaymentMutation.isLoading
                 }
               >
-                Cancel
+                Back
               </Button>
               <Button
                 className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
