@@ -183,6 +183,19 @@ class BlogService {
   }
 
   /**
+   * Get adjacent posts (previous and next)
+   */
+  async getAdjacentPosts(postId) {
+    const response = await fetch(`${API_BASE_URL}/api/blog/posts/${postId}/adjacent`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch adjacent posts: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  /**
    * Create a new blog post (requires authentication)
    */
   async createPost(postData, token) {
@@ -303,6 +316,41 @@ class BlogService {
         '@id': `https://neustream.app/blog/${post.slug}`
       }
     };
+  }
+
+  /**
+   * Retry a failed request
+   */
+  async retry(fn, maxRetries = 3, delay = 1000) {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        }
+      }
+    }
+    throw lastError;
+  }
+
+  /**
+   * Handle fetch errors with consistent error messages
+   */
+  handleError(error, context) {
+    console.error(`Blog service error (${context}):`, error);
+
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      return new Error('Network error. Please check your connection and try again.');
+    }
+
+    if (error.message.includes('Failed to fetch')) {
+      return new Error('Unable to connect to the server. Please try again later.');
+    }
+
+    return error;
   }
 }
 

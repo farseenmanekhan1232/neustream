@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import BlogCard from './BlogCard';
 import { Button } from '../ui/button';
 import { Loader2 } from 'lucide-react';
@@ -12,18 +12,46 @@ export default function BlogGrid({
   variant = 'default',
   showAuthor = true,
   showExcerpt = true,
-  columns = 3
+  columns = 3,
+  enableInfiniteScroll = false
 }) {
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!enableInfiniteScroll || !sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (
+          entry.isIntersecting &&
+          pagination?.hasNextPage &&
+          !isLoadingMore &&
+          !loading
+        ) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinelRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [pagination, isLoadingMore, loading, enableInfiniteScroll]);
 
   const handleLoadMore = async () => {
-    if (loadingMore || !onLoadMore) return;
+    if (isLoadingMore || !onLoadMore) return;
 
-    setLoadingMore(true);
+    setIsLoadingMore(true);
     try {
       await onLoadMore();
     } finally {
-      setLoadingMore(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -100,22 +128,22 @@ export default function BlogGrid({
       </div>
 
       {/* Loading More Indicator */}
-      {loadingMore && (
+      {isLoadingMore && (
         <div className="flex justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       )}
 
-      {/* Load More Button */}
-      {pagination && pagination.hasNextPage && onLoadMore && !loadingMore && (
+      {/* Load More Button (only show if not using infinite scroll) */}
+      {!enableInfiniteScroll && pagination && pagination.hasNextPage && onLoadMore && !isLoadingMore && (
         <div className="flex justify-center">
           <Button
             onClick={handleLoadMore}
             variant="outline"
-            disabled={loadingMore}
+            disabled={isLoadingMore}
             className="min-w-[140px]"
           >
-            {loadingMore ? (
+            {isLoadingMore ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Loading...
@@ -124,6 +152,13 @@ export default function BlogGrid({
               'Load More'
             )}
           </Button>
+        </div>
+      )}
+
+      {/* Infinite Scroll Sentinel */}
+      {enableInfiniteScroll && pagination?.hasNextPage && (
+        <div ref={sentinelRef} className="flex justify-center py-4">
+          {isLoadingMore && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
         </div>
       )}
 

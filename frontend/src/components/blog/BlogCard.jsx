@@ -1,32 +1,72 @@
-import { Link } from 'react-router-dom';
-import { Calendar, Clock, User, Eye } from 'lucide-react';
-import blogService from '../../services/blogService';
-import { Badge } from '../ui/badge';
+import { Link } from "react-router-dom";
+import { Calendar, Clock, User, Eye } from "lucide-react";
+import blogService from "../../services/blogService";
+import { Badge } from "../ui/badge";
+import { Skeleton } from "../ui/skeleton";
 
-export default function BlogCard({ post, variant = 'default', showAuthor = true, showExcerpt = true }) {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+export default function BlogCard({
+  post,
+  variant = "default",
+  showAuthor = true,
+  showExcerpt = true,
+  isLoading = false,
+}) {
+  // Loading skeleton
+  if (isLoading) {
+    if (variant === "compact") {
+      return (
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-3/4" />
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-card rounded-lg overflow-hidden">
+        <Skeleton className="aspect-video w-full" />
+        <div className="p-6 space-y-4">
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <div className="flex items-center justify-between pt-2 ">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            <Skeleton className="h-4 w-12" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getCategoryColor = (category) => {
     const colors = {
-      'streaming-guides': 'bg-red-500',
-      'platform-updates': 'bg-blue-500',
-      'equipment-reviews': 'bg-green-500',
-      'growth-tips': 'bg-yellow-500',
-      'technical-tutorials': 'bg-purple-500',
-      'industry-news': 'bg-cyan-500',
-      'success-stories': 'bg-pink-500',
-      'neustream-features': 'bg-indigo-500'
+      "streaming-guides": "bg-emerald-500",
+      "platform-updates": "bg-blue-500",
+      "equipment-reviews": "bg-blue-500",
+      "growth-tips": "bg-amber-500",
+      "technical-tutorials": "bg-violet-500",
+      "industry-news": "bg-cyan-500",
+      "success-stories": "bg-rose-500",
+      "neustream-features": "bg-indigo-500",
     };
-    return colors[category?.slug] || 'bg-gray-500';
+    return colors[category?.slug] || "bg-muted";
   };
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div className="group flex flex-col space-y-2">
         <Link
@@ -38,7 +78,7 @@ export default function BlogCard({ post, variant = 'default', showAuthor = true,
         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
           <span className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{formatDate(post.publishedAt)}</span>
+            <span>{blogService.formatDate(post.publishedAt)}</span>
           </span>
           {post.readTimeMinutes && (
             <span className="flex items-center space-x-1">
@@ -113,7 +153,7 @@ export default function BlogCard({ post, variant = 'default', showAuthor = true,
         )}
 
         {/* Meta Information */}
-        <div className="flex items-center justify-between pt-2 border-t">
+        <div className="flex items-center justify-between pt-2 ">
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             {showAuthor && post.author?.name && (
               <span className="flex items-center space-x-1">
@@ -123,12 +163,14 @@ export default function BlogCard({ post, variant = 'default', showAuthor = true,
             )}
             <span className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>{formatDate(post.publishedAt)}</span>
+              <span>{blogService.formatDate(post.publishedAt)}</span>
             </span>
             {post.readTimeMinutes && (
               <span className="flex items-center space-x-1">
                 <Clock className="w-3 h-3" />
-                <span>{blogService.formatReadingTime(post.readTimeMinutes)}</span>
+                <span>
+                  {blogService.formatReadingTime(post.readTimeMinutes)}
+                </span>
               </span>
             )}
           </div>

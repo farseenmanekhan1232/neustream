@@ -48,21 +48,39 @@ export default function BlogPost() {
     enabled: !!post,
   });
 
-  // Generate table of contents from content
+  // Fetch adjacent posts (previous and next)
+  const { data: adjacentData } = useQuery({
+    queryKey: ["blog-adjacent", post?.id],
+    queryFn: () => blogService.getAdjacentPosts(post.id),
+    enabled: !!post?.id,
+  });
+
+  // Add IDs to headings in HTML content
+  const addIdsToHeadings = (html) => {
+    if (!html) return html;
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    const headings = tempDiv.querySelectorAll("h2, h3, h4");
+
+    const toc = Array.from(headings).map((heading, index) => {
+      const id = `heading-${index}`;
+      const text = heading.textContent.trim();
+      const level = parseInt(heading.tagName.charAt(1));
+      // Add ID to the heading
+      heading.id = id;
+      return { id, text, level, element: heading };
+    });
+
+    setTableOfContents(toc);
+    return tempDiv.innerHTML;
+  };
+
+  // Process content and generate table of contents
   useEffect(() => {
     if (post?.contentHtml) {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = post.contentHtml;
-      const headings = tempDiv.querySelectorAll("h2, h3, h4");
-
-      const toc = Array.from(headings).map((heading, index) => ({
-        id: `heading-${index}`,
-        text: heading.textContent,
-        level: parseInt(heading.tagName.charAt(1)),
-        element: heading,
-      }));
-
-      setTableOfContents(toc);
+      const processedHtml = addIdsToHeadings(post.contentHtml);
+      // Store the processed HTML with IDs
+      post.contentHtml = processedHtml;
     }
   }, [post?.contentHtml]);
 
@@ -427,7 +445,7 @@ export default function BlogPost() {
                         <Button
                           variant="outline"
                           size="lg"
-                          className="border-white text-white hover:bg-white hover:text-teal-600 font-semibold px-8"
+                          className="border-white text-black/80 hover:bg-white hover:text-teal-600 font-semibold px-8"
                           onClick={() =>
                             window.open(
                               "https://neustream.app/#features",
@@ -463,6 +481,65 @@ export default function BlogPost() {
                 </div>
               </div>
             </article>
+
+            {/* Previous/Next Navigation */}
+            {adjacentData && (adjacentData.previous || adjacentData.next) && (
+              <div className="mt-16 pt-8 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Previous Post */}
+                  {adjacentData.previous && (
+                    <Link
+                      to={`/blog/${adjacentData.previous.slug}`}
+                      className="group flex items-start space-x-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-1">
+                          ← Previous Post
+                        </p>
+                        <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
+                          {adjacentData.previous.title}
+                        </h3>
+                      </div>
+                      {adjacentData.previous.featuredImage && (
+                        <div className="w-20 h-20 rounded overflow-hidden bg-muted flex-shrink-0">
+                          <img
+                            src={adjacentData.previous.featuredImage}
+                            alt={adjacentData.previous.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                    </Link>
+                  )}
+
+                  {/* Next Post */}
+                  {adjacentData.next && (
+                    <Link
+                      to={`/blog/${adjacentData.next.slug}`}
+                      className="group flex items-start space-x-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors md:text-right"
+                    >
+                      <div className="flex-1 order-2 md:order-1">
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Next Post →
+                        </p>
+                        <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
+                          {adjacentData.next.title}
+                        </h3>
+                      </div>
+                      {adjacentData.next.featuredImage && (
+                        <div className="w-20 h-20 rounded overflow-hidden bg-muted flex-shrink-0 order-1 md:order-2">
+                          <img
+                            src={adjacentData.next.featuredImage}
+                            alt={adjacentData.next.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Related Posts */}
             {relatedData?.posts && relatedData.posts.length > 0 && (
