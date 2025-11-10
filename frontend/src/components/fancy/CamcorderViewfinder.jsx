@@ -65,26 +65,16 @@ const CamcorderViewfinder = () => {
     return (
       <div className="absolute inset-0 min-h-screen pointer-events-none z-[60]">
         {/* Vignette overlay for smartphone camera effect */}
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.5) 100%)'
-        }} />
-
-        {/* Top Status Bar - Smartphone Style */}
-        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/60 to-transparent flex items-center justify-between px-6 pt-4">
-          {/* Time - Top Left */}
-          <div className="text-white font-mono text-sm font-semibold">
-            {formatTime(currentTime)}
-          </div>
-
-          {/* Battery & Signal - Top Right */}
-          <div className="flex items-center gap-2">
-            <Battery className="w-5 h-5 text-white" />
-            <span className="text-white text-sm">{batteryLevel}%</span>
-          </div>
-        </div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.5) 100%)",
+          }}
+        />
 
         {/*REC Indicator - Top Center */}
-        <div className="absolute top-20 left-1/2 -translate-x-1/2">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2">
           <motion.div
             className="flex items-center gap-2"
             animate={{
@@ -123,13 +113,12 @@ const CamcorderViewfinder = () => {
         </div>
 
         {/* Camera Modes - Bottom */}
-        <div className="absolute bottom-24 left-0 right-0">
+        <div className="absolute bottom-28 left-0 right-0">
           <div className="flex justify-center items-center gap-8">
             <div className="text-white/60 text-sm">PHOTO</div>
             <div className="text-white text-base font-semibold border-b-2 border-white pb-1">
               VIDEO
             </div>
-            <div className="text-white/60 text-sm">PORTRAIT</div>
             <div className="text-white/60 text-sm">MORE</div>
           </div>
         </div>
@@ -157,9 +146,13 @@ const CamcorderViewfinder = () => {
   return (
     <div className="absolute inset-0 min-h-screen pointer-events-none z-[60]">
       {/* Vignette overlay for viewfinder effect */}
-      <div className="absolute inset-0" style={{
-        background: 'radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%)'
-      }} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%)",
+        }}
+      />
 
       {/* 3x3 Grid Overlay */}
       <div className="absolute inset-0">

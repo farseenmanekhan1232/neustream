@@ -266,7 +266,7 @@ function Landing() {
         </div>
 
         {/* Header - Inside the wrapper and covered by viewfinder */}
-        <Header />
+        {/* <Header />*/}
 
         {/* Hero Section */}
         <section className="py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
