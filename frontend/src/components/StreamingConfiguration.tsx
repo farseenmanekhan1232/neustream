@@ -8,6 +8,7 @@ import {
   Pause,
   Settings,
   Copy,
+  Zap,
   Check,
   Eye,
   EyeOff,
@@ -43,6 +44,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -152,6 +154,7 @@ function StreamingConfiguration() {
   const destinations = destinationsData?.destinations || [];
   const currentSource = sources.find((s) => s.id === selectedSourceId);
   const isUsingSources = sources.length > 0;
+  const hasSources = sources.length > 0;
 
   // Auto-select first source if available and no source is selected
   useEffect(() => {
@@ -538,16 +541,33 @@ function StreamingConfiguration() {
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6  mx-auto">
+    <div className="w-full px-4 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-end">
-        <Button onClick={() => setShowAddSourceDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Source
-        </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-normal">Streaming Configuration</h1>
+          <p className="text-muted-foreground">
+            Configure your stream sources and destinations
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!hasSources && (
+            <Button
+              variant="default"
+              onClick={() => setShowQuickStartWizard(true)}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Quick Start
+            </Button>
+          )}
+          <Button onClick={() => setShowAddSourceDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Source
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4">
         <div className="lg:col-span-3 flex flex-col gap-3">
           {/* Current Source Selection */}
           {isUsingSources && (
@@ -696,45 +716,37 @@ function StreamingConfiguration() {
             </CardHeader>
             <CardContent>
               {!isUsingSources || !currentSource ? (
-                <div className="text-center py-12">
-                  <MonitorSpeaker className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    No Stream Source Available
-                  </h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Create a stream source first before you can configure
-                    destinations for multi-platform broadcasting.
-                  </p>
-                  <Button onClick={() => setShowAddSourceDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Source
-                  </Button>
-                </div>
+                <EmptyState
+                  icon="source"
+                  title="No Stream Source Available"
+                  description="Create a stream source first before you can configure destinations for multi-platform broadcasting."
+                  actionLabel="Create Your First Source"
+                  onAction={() => setShowAddSourceDialog(true)}
+                  secondaryActionLabel="Learn More"
+                  onSecondaryAction={() => {
+                    window.open("/help", "_blank");
+                  }}
+                />
               ) : destinations.length === 0 ? (
-                <div className="text-center py-12">
-                  <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    No Destinations Configured
-                  </h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Add streaming platforms to {currentSource.name} to start
-                    broadcasting to multiple destinations.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      if (!isUsingSources || !currentSource) {
-                        toast.error(
-                          "Create a stream source first before adding destinations",
-                        );
-                        return;
-                      }
-                      setShowAddDestinationDialog(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Destination
-                  </Button>
-                </div>
+                <EmptyState
+                  icon="platform"
+                  title="No Destinations Configured"
+                  description={`Add streaming platforms to ${currentSource.name} to start broadcasting to multiple destinations.`}
+                  actionLabel="Add Your First Destination"
+                  onAction={() => {
+                    if (!isUsingSources || !currentSource) {
+                      toast.error(
+                        "Create a stream source first before adding destinations",
+                      );
+                      return;
+                    }
+                    setShowAddDestinationDialog(true);
+                  }}
+                  secondaryActionLabel="View Integration Guide"
+                  onSecondaryAction={() => {
+                    window.open("/help", "_blank");
+                  }}
+                />
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {destinations.map((destination) => {

@@ -27,8 +27,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
 import StreamPreview from "./StreamPreview";
 import LiveChat from "./LiveChat";
+import OnboardingTour, { useOnboarding } from "./OnboardingTour";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
@@ -39,6 +41,7 @@ function StreamPreviewPage() {
   const [isMuted, setIsMuted] = useState(true);
   const [chatMessage, setChatMessage] = useState("");
   const { trackUIInteraction } = usePostHog();
+  const { showOnboarding, completeOnboarding } = useOnboarding();
 
   // Fetch stream sources
   const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
@@ -94,8 +97,35 @@ function StreamPreviewPage() {
     );
   }
 
-  // No active streams
+  // No active streams - Show encouraging message
   if (activeSources.length === 0) {
+    // Positive psychology messages (rotate based on time for variety)
+    const hour = new Date().getHours();
+    const messages = [
+      {
+        title: "Your stage is set!",
+        description:
+          "Everything's ready to go. When you start streaming from your broadcasting software, you'll see the magic happen here!",
+      },
+      {
+        title: "All systems ready! ",
+        description:
+          "Your stream is prepped and waiting. Time to create some amazing content!",
+      },
+      {
+        title: "Ready to shine bright! ",
+        description:
+          "The digital stage is yours. Start streaming whenever you're ready to put on a show!",
+      },
+      {
+        title: "The spotlight's on you! ",
+        description:
+          "Everything's configured and waiting. Your audience is eager to see what you'll create!",
+      },
+    ];
+
+    const message = messages[hour % messages.length];
+
     return (
       <div className="w-full px-6 py-6 space-y-6  mx-auto">
         <div className="space-y-6">
@@ -114,33 +144,27 @@ function StreamPreviewPage() {
             </Button>
           </div>
 
-          <Card className="p-12 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <MonitorSpeaker className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No Active Streams</h3>
-              <p className="text-muted-foreground mb-6">
-                Start streaming from your broadcasting software to see the
-                preview here.
-              </p>
-              <Button asChild>
-                <Link to="/dashboard/streaming">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configure Stream Sources
-                </Link>
-              </Button>
-            </div>
-          </Card>
+          <EmptyState
+            icon="stream"
+            title={message.title}
+            description={message.description}
+            actionLabel="Configure Stream Sources"
+            actionHref="/dashboard/streaming"
+            secondaryActionLabel="Quick Start Guide"
+            onSecondaryAction={() => {
+              // TODO: Open tutorial video
+              alert("Tutorial video coming soon!");
+            }}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-6 py-6 space-y-6 mx-auto min-h-0 flex flex-col">
+    <div className="w-full px-4 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 mx-auto min-h-0 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-3xl font-normal">Stream Preview</div>
           <p className="text-muted-foreground">
@@ -161,6 +185,66 @@ function StreamPreviewPage() {
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/* Mini Dashboard Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Active Streams</CardDescription>
+            <CardTitle className="text-2xl">{activeSources.length}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">
+              {sources.length - activeSources.length} inactive
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Current Viewers</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <Users className="h-5 w-5" />0
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Real-time count</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Stream Quality</CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <MonitorSpeaker className="h-5 w-5" />
+              1080p
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">60 fps</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Status</CardDescription>
+            <CardTitle className="text-2xl">
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-600"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-600 mr-2 animate-pulse" />
+                Live
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">
+              {selectedSource?.name || "No source selected"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Source Selector */}
@@ -367,6 +451,13 @@ function StreamPreviewPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Onboarding Tour for first-time users */}
+      <OnboardingTour
+        isOpen={showOnboarding}
+        onClose={() => {}}
+        onComplete={completeOnboarding}
+      />
     </div>
   );
 }

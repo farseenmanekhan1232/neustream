@@ -12,6 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   IconVideo,
@@ -32,6 +40,8 @@ import {
   IconPlayerPlay,
   IconLogout,
   IconUser,
+  IconPlus,
+  IconBell,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +82,43 @@ const data = {
     },
   ],
 };
+
+// Get page title and breadcrumb info based on current path
+function getPageInfo(pathname: string) {
+  const pathMap: Record<string, { title: string; breadcrumb: string; parent?: string }> = {
+    "/dashboard": {
+      title: "Stream Preview",
+      breadcrumb: "Dashboard",
+    },
+    "/dashboard/streaming": {
+      title: "Streaming Configuration",
+      breadcrumb: "Streaming",
+      parent: "Dashboard",
+    },
+    "/dashboard/subscription": {
+      title: "Subscription & Billing",
+      breadcrumb: "Subscription",
+      parent: "Dashboard",
+    },
+    "/dashboard/analytics": {
+      title: "Analytics",
+      breadcrumb: "Analytics",
+      parent: "Dashboard",
+    },
+    "/dashboard/settings": {
+      title: "Settings",
+      breadcrumb: "Settings",
+      parent: "Dashboard",
+    },
+  };
+
+  return (
+    pathMap[pathname] || {
+      title: "Dashboard",
+      breadcrumb: "Dashboard",
+    }
+  );
+}
 
 function NavMain({ items, className, currentPath }) {
   return (
@@ -221,10 +268,34 @@ function PageSkeleton() {
 }
 
 export default function DashboardLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed on mobile
   const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const pageInfo = getPageInfo(location.pathname);
+
+  // Auto-collapse sidebar on mobile when route changes
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call once on mount
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     // Show skeleton when route changes
@@ -240,11 +311,21 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex h-screen bg-background">
+      {/* Sidebar Overlay for Mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(
-          "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out fixed lg:relative z-50 h-full",
           sidebarOpen ? "w-64" : "w-0 overflow-hidden",
+          "lg:w-64 lg:translate-x-0",
+          !sidebarOpen && "-translate-x-full lg:translate-x-0",
         )}
       >
         {/* Sidebar Header */}
@@ -282,21 +363,68 @@ export default function DashboardLayout() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background">
+        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background px-4">
           <Button
             variant="ghost"
             size="sm"
-            className="ml-2"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             <IconMenu2 className="h-4 w-4" />
           </Button>
+
           <Separator orientation="vertical" className="h-4" />
-          <h1 className="text-lg font-semibold">Dashboard</h1>
+
+          {/* Breadcrumb */}
+          <Breadcrumb>
+            <BreadcrumbList>
+              {pageInfo.parent && (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/dashboard" className="flex items-center gap-1">
+                        <IconDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{pageInfo.breadcrumb}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+              {!pageInfo.parent && (
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="flex items-center gap-1">
+                    <IconDashboard className="h-4 w-4" />
+                    {pageInfo.breadcrumb}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          <div className="flex-1" />
+
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard/streaming">
+                <IconPlus className="h-4 w-4 mr-2" />
+                Add Source
+              </Link>
+            </Button>
+
+            <Button variant="ghost" size="icon" className="relative">
+              <IconBell className="h-4 w-4" />
+              {/* Notification badge */}
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
+            </Button>
+          </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4">
+        <main className="flex-1 overflow-auto p-6">
           {isLoading ? <PageSkeleton /> : <Outlet />}
         </main>
       </div>
