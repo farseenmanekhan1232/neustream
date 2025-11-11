@@ -45,16 +45,6 @@ interface LazyLoadingProps {
   message?: string;
 }
 
-// Loading component for lazy loading
-const LazyLoading = ({ message = "Loading..." }: LazyLoadingProps) => (
-  <div className="min-h-screen bg-teal-gradient text-white flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <Loader2 className="h-8 w-8 animate-spin mx-auto text-white" />
-      <p className="text-white/80">{message}</p>
-    </div>
-  </div>
-);
-
 const queryClient = new QueryClient();
 
 // Main app component with auth provider
@@ -77,75 +67,73 @@ function AppContent() {
   }, [user, identifyUser, resetUser]);
 
   return (
-    <Suspense fallback={<LazyLoading />}>
-      <Routes>
-        {/* Main route with Layout wrapper */}
-        <Route path="/" element={<Layout />}>
-          {/* Landing page - no auth loading needed */}
-          <Route index element={<Landing />} />
+    <Routes>
+      {/* Main route with Layout wrapper */}
+      <Route path="/" element={<Layout />}>
+        {/* Landing page - no auth loading needed */}
+        <Route index element={<Landing />} />
 
-          {/* Public pages */}
-          <Route path="about" element={<AboutUs />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="faq" element={<FAQ />} />
-          <Route path="features" element={<Features />} />
-          <Route path="help" element={<SetupGuide />} />
+        {/* Public pages */}
+        <Route path="about" element={<AboutUs />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="faq" element={<FAQ />} />
+        <Route path="features" element={<Features />} />
+        <Route path="help" element={<SetupGuide />} />
 
-          {/* Blog routes */}
-          <Route path="blog" element={<Blog />} />
-          <Route path="blog/:slug" element={<BlogPost />} />
+        {/* Blog routes */}
+        <Route path="blog" element={<Blog />} />
+        <Route path="blog/:slug" element={<BlogPost />} />
 
-          {/* Legal pages */}
-          <Route path="privacy" element={<PrivacyPolicy />} />
-          <Route path="terms" element={<TermsOfService />} />
+        {/* Legal pages */}
+        <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="terms" element={<TermsOfService />} />
 
-          {/* Public utilities */}
-          <Route path="chat/:sourceId" element={<PublicChatPage />} />
+        {/* Public utilities */}
+        <Route path="chat/:sourceId" element={<PublicChatPage />} />
 
-          {/* Authentication */}
-          <Route
-            path="auth"
-            element={
-              <ProtectedRoute requireAuth={false}>
-                <Auth />
-              </ProtectedRoute>
-            }
-          />
+        {/* Authentication */}
+        <Route
+          path="auth"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Auth />
+            </ProtectedRoute>
+          }
+        />
 
-          {/* Protected dashboard routes */}
-          <Route
-            path="dashboard"
-            element={
-              <ProtectedRoute requireAuth={true}>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            {/* Dashboard index - Stream Preview as main view */}
-            <Route index element={<StreamPreviewPage />} />
+        {/* Protected dashboard routes */}
+        <Route
+          path="dashboard"
+          element={
+            <ProtectedRoute requireAuth={true}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Dashboard index - Stream Preview as main view */}
+          <Route index element={<StreamPreviewPage />} />
 
-            {/* Streaming configuration */}
-            <Route path="streaming" element={<StreamingConfiguration />} />
-            <Route path="destinations" element={<StreamingConfiguration />} />
+          {/* Streaming configuration */}
+          <Route path="streaming" element={<StreamingConfiguration />} />
+          <Route path="destinations" element={<StreamingConfiguration />} />
 
-            {/* Stream preview */}
-            <Route path="preview" element={<StreamPreviewPage />} />
+          {/* Stream preview */}
+          <Route path="preview" element={<StreamPreviewPage />} />
 
-            {/* Subscription management */}
-            <Route path="subscription" element={<SubscriptionManagement />} />
+          {/* Subscription management */}
+          <Route path="subscription" element={<SubscriptionManagement />} />
 
-            {/* Analytics */}
-            <Route path="analytics" element={<Analytics />} />
+          {/* Analytics */}
+          <Route path="analytics" element={<Analytics />} />
 
-            {/* Settings */}
-            <Route path="settings" element={<Settings />} />
-          </Route>
-
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
+          {/* Settings */}
+          <Route path="settings" element={<Settings />} />
         </Route>
-      </Routes>
-    </Suspense>
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   );
 }
 
