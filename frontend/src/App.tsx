@@ -47,10 +47,10 @@ interface LazyLoadingProps {
 
 // Loading component for lazy loading
 const LazyLoading = ({ message = "Loading..." }: LazyLoadingProps) => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="text-center">
-      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-      <p className="text-muted-foreground">{message}</p>
+  <div className="min-h-screen bg-teal-gradient text-white flex items-center justify-center">
+    <div className="text-center space-y-4">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto text-white" />
+      <p className="text-white/80">{message}</p>
     </div>
   </div>
 );
@@ -59,7 +59,7 @@ const queryClient = new QueryClient();
 
 // Main app component with auth provider
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const { identifyUser, resetUser } = usePostHog();
 
   // Handle user identification for PostHog
@@ -76,23 +76,12 @@ function AppContent() {
     }
   }, [user, identifyUser, resetUser]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Suspense fallback={<LazyLoading />}>
       <Routes>
         {/* Main route with Layout wrapper */}
         <Route path="/" element={<Layout />}>
-          {/* Landing page */}
+          {/* Landing page - no auth loading needed */}
           <Route index element={<Landing />} />
 
           {/* Public pages */}

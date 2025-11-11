@@ -501,21 +501,45 @@ function Landing() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg"
+                  className="animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10"
                 >
                   <div className="text-center space-y-6">
-                    <div className="h-10 bg-white/20 rounded w-3/4 mx-auto"></div>
-                    <div className="h-6 bg-white/20 rounded w-1/2 mx-auto"></div>
-                    <div className="h-8 bg-white/20 rounded w-1/3 mx-auto"></div>
-                    <div className="space-y-4">
-                      {[1, 2, 3, 4].map((j) => (
+                    {/* Plan name */}
+                    <div className="h-10 bg-white/20 rounded-xl w-3/4 mx-auto"></div>
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <div className="h-4 bg-white/20 rounded w-full"></div>
+                      <div className="h-4 bg-white/20 rounded w-5/6 mx-auto"></div>
+                    </div>
+                    {/* Best For box */}
+                    <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+                      <div className="h-3 bg-white/15 rounded w-16 mx-auto mb-2"></div>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-white/20 rounded w-full"></div>
+                        <div className="h-3 bg-white/20 rounded w-4/5 mx-auto"></div>
+                      </div>
+                    </div>
+                    {/* Price */}
+                    <div className="space-y-2 py-4 border-t border-white/10">
+                      <div className="h-12 bg-white/20 rounded w-2/3 mx-auto"></div>
+                      <div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
+                    </div>
+                    {/* Features */}
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((j) => (
                         <div
                           key={j}
-                          className="h-6 bg-white/20 rounded w-full"
-                        ></div>
+                          className="flex items-start gap-3"
+                        >
+                          <div className="h-5 w-5 bg-white/20 rounded-full mt-0.5"></div>
+                          <div className="h-4 bg-white/20 rounded flex-1"></div>
+                        </div>
                       ))}
                     </div>
-                    <div className="h-14 bg-white/20 rounded w-full"></div>
+                    {/* Button */}
+                    <div className="h-14 bg-white/20 rounded-2xl w-full"></div>
+                    {/* Trial text */}
+                    <div className="h-3 bg-white/20 rounded w-3/4 mx-auto"></div>
                   </div>
                 </div>
               ))}
