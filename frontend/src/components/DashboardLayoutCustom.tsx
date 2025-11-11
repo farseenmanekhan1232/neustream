@@ -63,16 +63,16 @@ const data = {
       url: "/dashboard/subscription",
       icon: IconCreditCard,
     },
-    // {
-    //   title: "Analytics",
-    //   url: "/dashboard/analytics",
-    //   icon: IconChartBar,
-    // },
-    // {
-    //   title: "Settings",
-    //   url: "/dashboard/settings",
-    //   icon: IconSettings,
-    // },
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: IconChartBar,
+    },
+    {
+      title: "Settings",
+      url: "/dashboard/settings",
+      icon: IconSettings,
+    },
   ],
   navSecondary: [
     {
@@ -85,7 +85,10 @@ const data = {
 
 // Get page title and breadcrumb info based on current path
 function getPageInfo(pathname: string) {
-  const pathMap: Record<string, { title: string; breadcrumb: string; parent?: string }> = {
+  const pathMap: Record<
+    string,
+    { title: string; breadcrumb: string; parent?: string }
+  > = {
     "/dashboard": {
       title: "Stream Preview",
       breadcrumb: "Dashboard",
@@ -329,14 +332,14 @@ export default function DashboardLayout() {
         )}
       >
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
+        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4 bg-black/20">
           <Link to="/dashboard" className="flex items-center gap-2">
             <img
               src="/logo.png"
               alt="NeuStream"
               className="h-8 w-8 rounded-lg"
             />
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-left text-sm leading-tight text-white">
               <span className="truncate font-medium">NeuStream</span>
               <span className="truncate text-xs">Streaming Platform</span>
             </div>
