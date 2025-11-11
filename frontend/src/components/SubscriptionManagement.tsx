@@ -518,10 +518,10 @@ function SubscriptionManagement() {
 
       {/* Fullscreen Plan Selection Dialog */}
       <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
-        <DialogContent className="w-screen h-screen max-w-none m-0 p-0 rounded-none overflow-hidden">
+        <DialogContent className="!fixed !inset-0 !w-screen !h-screen !max-w-none !m-0 !p-0 !border-0 !rounded-none !left-0 !top-0 !translate-x-0 !translate-y-0 overflow-hidden">
           <div className="flex flex-col h-full">
             {/* Dialog Header */}
-            <DialogHeader className="p-6 border-b border-border">
+            <DialogHeader className="flex-shrink-0 p-6 border-b border-border">
               <div className="flex items-center justify-between">
                 <div>
                   <DialogTitle className="text-2xl">
@@ -542,7 +542,7 @@ function SubscriptionManagement() {
             </DialogHeader>
 
             {/* Dialog Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-y-contain">
               {/* Billing Cycle Toggle */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="flex items-center justify-center space-x-4 p-4 bg-gradient-to-r from-teal-500/10 to-teal-600/5 rounded-xl border border-teal-500/20">
