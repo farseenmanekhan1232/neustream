@@ -116,37 +116,39 @@ function Auth() {
     <div className="min-h-screen bg-teal-gradient relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse hidden sm:block"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000 hidden sm:block"></div>
+        {/* Mobile-optimized background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse sm:hidden"></div>
       </div>
 
-      <main className="relative py-12 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
+      <main className="relative py-8 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-20">
             {/* Left side - Branding */}
-            <div className="flex-1 max-w-xl text-center lg:text-left text-white">
-              <div className="inline-flex items-center justify-center w-24 h-24 mb-8 bg-white/10 rounded-3xl backdrop-blur-sm border border-white/20">
+            <div className="flex-1 max-w-xl text-center lg:text-left text-white order-2 lg:order-1">
+              <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 bg-white/10 rounded-2xl sm:rounded-3xl backdrop-blur-sm border border-white/20">
                 <img
                   src="/logo.png"
                   alt="NeuStream Logo"
-                  className="w-16 h-16 animate-oscillate"
+                  className="w-12 h-12 sm:w-16 sm:h-16 animate-oscillate"
                 />
               </div>
-              <h1 className="text-5xl md:text-6xl font-normal tracking-tight mb-6 leading-tight">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-normal tracking-tight mb-4 sm:mb-6 leading-tight">
                 Welcome to{" "}
                 <span className="font-medium bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                   NeuStream
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl font-light opacity-90 mb-8 leading-relaxed">
+              <p className="text-lg sm:text-xl md:text-2xl font-light opacity-90 mb-6 sm:mb-8 leading-relaxed">
                 The professional multistreaming platform for content creators
               </p>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 sm:w-4 sm:h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -160,20 +162,20 @@ function Auth() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-lg">
+                    <h3 className="font-medium text-base sm:text-lg">
                       Stream to multiple platforms
                     </h3>
-                    <p className="opacity-80">
+                    <p className="opacity-80 text-sm sm:text-base">
                       Broadcast to YouTube, Twitch, Facebook, and more
                       simultaneously
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 sm:w-4 sm:h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -187,19 +189,19 @@ function Auth() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-lg">
+                    <h3 className="font-medium text-base sm:text-lg">
                       No performance impact
                     </h3>
-                    <p className="opacity-80">
+                    <p className="opacity-80 text-sm sm:text-base">
                       Cloud encoding keeps your machine fast and responsive
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg
-                      className="w-4 h-4"
+                      className="w-3 h-3 sm:w-4 sm:h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -213,10 +215,10 @@ function Auth() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-lg">
+                    <h3 className="font-medium text-base sm:text-lg">
                       Enterprise-grade security
                     </h3>
-                    <p className="opacity-80">
+                    <p className="opacity-80 text-sm sm:text-base">
                       Your stream keys and connections are always protected
                     </p>
                   </div>
@@ -224,7 +226,7 @@ function Auth() {
               </div>
 
               <div className="mt-8 pt-8 border-t border-white/20">
-                <p className="text-sm opacity-70">
+                <p className="text-xs sm:text-sm opacity-70">
                   Trusted by{" "}
                   <span className="font-medium text-white">10,000+</span>{" "}
                   content creators worldwide
@@ -233,7 +235,7 @@ function Auth() {
             </div>
 
             {/* Right side - Auth form */}
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 max-w-md order-1 lg:order-2">
               <Card className="w-full shadow-2xl border-0 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl">
