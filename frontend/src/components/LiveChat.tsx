@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { io } from "socket.io-client";
 import {
   Card,
@@ -13,7 +12,6 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
 import { MessageCircle, Users, ExternalLink, Copy } from "lucide-react";
-import { apiService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
 const API_BASE_URL =
@@ -38,22 +36,16 @@ function LiveChat({
   const systemMessageCache = useRef(new Map()); // Cache for system messages to prevent duplicates
   const messageIdsRef = useRef(new Set()); // Track message IDs to prevent duplicates
   const currentSourceIdRef = useRef(null); // Track current source to prevent unnecessary reconnections
-
-  // Fetch initial chat messages
-  const { data: messagesData, isLoading: messagesLoading } = useQuery({
-    queryKey: ["chatMessages", sourceId],
-    queryFn: async () => {
-      const response = await apiService.get(
-        `/chat/sources/${sourceId}/messages`,
-      );
-      return response;
-    },
-    enabled: !!sourceId,
-  });
+  const [isLoading, setIsLoading] = useState(true); // Track loading state
 
   // Initialize WebSocket connection
   useEffect(() => {
     if (!sourceId) return;
+
+    // Set loading timeout (fallback in case no messages arrive)
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
 
     // Prevent reconnection if we're already connected to the same source
     if (
@@ -112,12 +104,14 @@ function LiveChat({
       console.log("Received chat history:", data.messages.length);
       setMessagesWithTracking(data.messages || []);
       setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
+      setIsLoading(false); // Stop loading once we receive history
     });
 
     socket.on("new_message", (message) => {
       console.log("New message received:", message);
       addMessagesWithDeduplication(message);
       setHasReceivedWebSocketMessages(true); // Mark that we have WebSocket messages
+      if (isLoading) setIsLoading(false); // Stop loading on first message
     });
 
     socket.on("error", (error) => {
@@ -125,6 +119,7 @@ function LiveChat({
     });
 
     return () => {
+      clearTimeout(loadingTimeout); // Clear loading timeout
       if (socketRef.current) {
         socketRef.current.emit("leave_chat", {
           sourceId: currentSourceIdRef.current,
@@ -140,13 +135,6 @@ function LiveChat({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Initialize messages from API (only if we haven't received WebSocket messages)
-  useEffect(() => {
-    if (messagesData?.messages && !hasReceivedWebSocketMessages) {
-      setMessagesWithTracking(messagesData.messages);
-    }
-  }, [messagesData, hasReceivedWebSocketMessages]);
 
   const getPlatformColor = (platform) => {
     const colors = {
@@ -285,7 +273,7 @@ function LiveChat({
     return true; // Show other system messages (including errors)
   };
 
-  if (messagesLoading) {
+  if (isLoading) {
     return (
       <Card className="h-full flex flex-col">
         <CardHeader className="pb-3 flex-shrink-0">

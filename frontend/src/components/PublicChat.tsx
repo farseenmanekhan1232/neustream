@@ -26,6 +26,7 @@ function PublicChat({
   const [viewerCount, setViewerCount] = useState(0);
   const [hasReceivedWebSocketMessages, setHasReceivedWebSocketMessages] =
     useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
   const systemMessageCache = useRef(new Map());
@@ -33,33 +34,15 @@ function PublicChat({
   const currentSourceIdRef = useRef(null);
   const userColorCache = useRef(new Map());
 
-  // Fetch initial chat messages from public endpoint
-  useEffect(() => {
-    if (!sourceId) return;
-
-    const fetchPublicMessages = async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/chat/public/sources/${sourceId}/messages`,
-        );
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch messages: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setMessagesWithTracking(data.messages || []);
-      } catch (error) {
-        console.error("Failed to fetch public chat messages:", error);
-      }
-    };
-
-    fetchPublicMessages();
-  }, [sourceId]);
 
   // Initialize WebSocket connection (public access)
   useEffect(() => {
     if (!sourceId) return;
+
+    // Set loading timeout (fallback in case no messages arrive)
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
 
     // Prevent reconnection if we're already connected to the same source
     if (
@@ -112,12 +95,14 @@ function PublicChat({
       console.log("Received public chat history:", data.messages?.length);
       setMessagesWithTracking(data.messages || []);
       setHasReceivedWebSocketMessages(true);
+      setIsLoading(false); // Stop loading once we receive history
     });
 
     socket.on("new_message", (message) => {
       console.log("New public message received:", message);
       addMessagesWithDeduplication(message);
       setHasReceivedWebSocketMessages(true);
+      if (isLoading) setIsLoading(false); // Stop loading on first message
     });
 
     socket.on("error", (error) => {
@@ -125,6 +110,7 @@ function PublicChat({
     });
 
     return () => {
+      clearTimeout(loadingTimeout); // Clear loading timeout
       if (socketRef.current) {
         socketRef.current.emit("leave_chat", {
           sourceId: currentSourceIdRef.current,
