@@ -38,55 +38,38 @@ router.post("/sessions/start", authenticateToken, async (req, res) => {
       });
     }
 
-    // Get user's stream keys and destinations
-    const [sources, destinations] = await Promise.all([
-      // Get user's stream sources
-      db.query(
-        `SELECT s.id, s.name, s.stream_key
-         FROM stream_sources s
-         WHERE s.user_id = $1 AND s.is_active = true`,
-        [userId]
-      ),
-      // Get user's destinations
-      db.query(
-        `SELECT d.id, d.platform, d.rtmp_url, d.stream_key
-         FROM destinations d
-         WHERE d.user_id = $1 AND d.is_active = true`,
-        [userId]
-      )
-    ]);
+    // Get user's stream sources
+    const sources = await db.query(
+      `SELECT s.id, s.name, s.stream_key
+       FROM stream_sources s
+       WHERE s.user_id = $1 AND s.is_active = true`,
+      [userId]
+    );
 
     // Build stream keys object
     const streamKeys = {};
 
-    // Add source stream keys
+    // Add source stream keys with their destinations
     for (const source of sources) {
+      // Get destinations for this source
+      const sourceDestinations = await db.query(
+        `SELECT platform, rtmp_url, stream_key
+         FROM source_destinations
+         WHERE source_id = $1 AND is_active = true
+         ORDER BY created_at`,
+        [source.id]
+      );
+
       streamKeys[source.stream_key] = {
         type: 'source',
         sourceId: source.id,
         sourceName: source.name,
-        destinations: []
-      };
-    }
-
-    // Add destination stream keys (for legacy compatibility)
-    for (const dest of destinations) {
-      // For legacy users without sources
-      if (sources.length === 0) {
-        // Use user's main stream key
-        const userStreamKey = req.user.streamKey;
-        if (!streamKeys[userStreamKey]) {
-          streamKeys[userStreamKey] = {
-            type: 'legacy',
-            destinations: []
-          };
-        }
-        streamKeys[userStreamKey].destinations.push({
+        destinations: sourceDestinations.map(dest => ({
           platform: dest.platform,
           rtmpUrl: dest.rtmp_url,
           streamKey: dest.stream_key
-        });
-      }
+        }))
+      };
     }
 
     // Create session

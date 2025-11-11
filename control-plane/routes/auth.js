@@ -26,58 +26,33 @@ router.post("/stream", async (req, res) => {
     let sourceInfo = null;
     let userId = null;
 
-    // First, try to find the stream key in stream_sources table (new architecture)
+    // Find the stream key in stream_sources table
     const sources = await db.query(
       "SELECT s.*, u.email FROM stream_sources s JOIN users u ON s.user_id = u.id WHERE s.stream_key = $1 AND s.is_active = true",
       [streamKey],
     );
 
-    if (sources.length > 0) {
-      // Found in stream_sources table (new architecture)
-      sourceInfo = sources[0];
-      userId = sourceInfo.user_id;
-
-      console.log(
-        `Stream authenticated via stream_sources: user=${sourceInfo.email}, source=${sourceInfo.name}`,
+    if (sources.length === 0) {
+      // Stream key not found
+      posthogService.trackStreamEvent(
+        "anonymous",
+        streamKey,
+        "stream_auth_failed",
+        {
+          reason: "invalid_stream_key",
+          attempted_table: "stream_sources",
+        },
       );
-    } else {
-      // Fallback to legacy users table for backward compatibility
-      const users = await db.query(
-        "SELECT id, email FROM users WHERE stream_key = $1",
-        [streamKey],
-      );
-
-      if (users.length > 0) {
-        // Found in users table (legacy architecture)
-        userId = users[0].id;
-
-        console.log(
-          `Stream authenticated via legacy users table: user=${users[0].email}`,
-        );
-
-        // For legacy streams, we don't have a source_id, but we still track them
-        posthogService.trackStreamEvent(
-          userId,
-          streamKey,
-          "legacy_stream_auth",
-          {
-            authentication_method: "legacy_users_table",
-          },
-        );
-      } else {
-        // Stream key not found anywhere
-        posthogService.trackStreamEvent(
-          "anonymous",
-          streamKey,
-          "stream_auth_failed",
-          {
-            reason: "invalid_stream_key",
-            attempted_tables: ["stream_sources", "users"],
-          },
-        );
-        return res.status(401).send("Invalid stream key");
-      }
+      return res.status(401).send("Invalid stream key");
     }
+
+    // Found the source
+    sourceInfo = sources[0];
+    userId = sourceInfo.user_id;
+
+    console.log(
+      `Stream authenticated via stream_sources: user=${sourceInfo.email}, source=${sourceInfo.name}`,
+    );
 
     // Check if there's already an active stream with this key
     const existingActiveStream = await db.query(
@@ -165,9 +140,7 @@ router.post("/stream", async (req, res) => {
     posthogService.trackStreamEvent(userId, streamKey, "stream_auth_success", {
       source_id: sourceInfo?.id,
       source_name: sourceInfo?.name,
-      authentication_method: sourceInfo
-        ? "stream_sources_table"
-        : "legacy_users_table",
+      authentication_method: "stream_sources_table",
       active_stream_id: result.id,
     });
 
@@ -226,12 +199,10 @@ router.post("/stream-end", async (req, res) => {
            destinations_count = COALESCE(
              (SELECT COUNT(*) FROM source_destinations sd
               WHERE sd.source_id = $1 AND sd.is_active = true),
-             (SELECT COUNT(*) FROM destinations d
-              WHERE d.user_id = $2 AND d.is_active = true),
              0
            )
-       WHERE stream_key = $3 AND ended_at IS NULL`,
-      [activeStream.source_id, activeStream.user_id, streamKey],
+       WHERE stream_key = $2 AND ended_at IS NULL`,
+      [activeStream.source_id, streamKey],
     );
 
     // Track stream end in usage tracking (only for new architecture with source_id)
@@ -251,14 +222,14 @@ router.post("/stream-end", async (req, res) => {
         source_id: activeStream.source_id,
         source_name: activeStream.source_name,
         duration_seconds: duration,
-        stream_type: activeStream.source_id ? "multi_source" : "legacy",
+        stream_type: "multi_source",
         active_stream_id: activeStream.id,
         user_email: activeStream.email,
       },
     );
 
     console.log(
-      `Stream ended: key=${streamKey}, user=${activeStream.email}, source=${activeStream.source_name || "legacy"}, duration=${duration}s`,
+      `Stream ended: key=${streamKey}, user=${activeStream.email}, source=${activeStream.source_name}, duration=${duration}s`,
     );
 
     res.status(200).send("OK");

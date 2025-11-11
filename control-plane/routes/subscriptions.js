@@ -166,6 +166,26 @@ router.get("/limits/streaming", authenticateToken, async (req, res) => {
 });
 
 /**
+ * Check if user can create a chat connector
+ */
+router.get("/limits/chat-connectors", authenticateToken, async (req, res) => {
+  try {
+    const canCreate = await subscriptionService.canCreateChatConnector(req.user.id);
+
+    res.json({
+      success: true,
+      data: canCreate,
+    });
+  } catch (error) {
+    console.error("Error checking chat connector limits:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to check chat connector limits",
+    });
+  }
+});
+
+/**
  * Update user's subscription (for testing/admin purposes)
  * In production, this would be handled by webhooks from payment provider
  */

@@ -7,7 +7,6 @@ require("dotenv").config();
 const { passport } = require("./config/oauth");
 const authRoutes = require("./routes/auth");
 const streamRoutes = require("./routes/streams");
-const destinationRoutes = require("./routes/destinations");
 const sourceRoutes = require("./routes/sources");
 const adminRoutes = require("./routes/admin");
 const subscriptionRoutes = require("./routes/subscriptions");
@@ -68,7 +67,6 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/streams", streamRoutes);
-app.use("/api/destinations", destinationRoutes);
 app.use("/api/sources", sourceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);

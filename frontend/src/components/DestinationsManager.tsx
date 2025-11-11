@@ -128,21 +128,8 @@ function DestinationsManager() {
       enabled: !!user && !!selectedSourceId,
     });
 
-  // Fetch legacy destinations (backward compatibility)
-  const { data: legacyDestinationsData, isLoading: legacyDestinationsLoading } =
-    useQuery({
-      queryKey: ["legacyDestinations", user?.id],
-      queryFn: async () => {
-        const response = await apiService.get("/destinations");
-        return response;
-      },
-      enabled:
-        !!user && (!selectedSourceId || sourcesData?.sources?.length === 0),
-    });
-
   const sources = sourcesData?.sources || [];
   const sourceDestinations = sourceDestinationsData?.destinations || [];
-  const legacyDestinations = legacyDestinationsData?.destinations || [];
 
   // Auto-select first source if available and no source is selected
   useEffect(() => {
@@ -153,28 +140,22 @@ function DestinationsManager() {
     }
   }, [sources, selectedSourceId, urlSourceId]);
 
-  // Get the current destinations based on what's selected
-  const destinations = selectedSourceId
-    ? sourceDestinations
-    : legacyDestinations;
+  const destinations = sourceDestinations;
   const currentSource = sources.find((s) => s.id === selectedSourceId);
   const isUsingSources = sources.length > 0;
 
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
-      let response;
-
-      if (selectedSourceId) {
-        // Add destination to specific source
-        response = await apiService.post(
-          `/sources/${selectedSourceId}/destinations`,
-          destination,
-        );
-      } else {
-        // Legacy destination (user-level)
-        response = await apiService.post("/destinations", destination);
+      if (!selectedSourceId) {
+        throw new Error("Please select a source first");
       }
+
+      // Add destination to specific source
+      const response = await apiService.post(
+        `/sources/${selectedSourceId}/destinations`,
+        destination,
+      );
 
       return response;
     },
@@ -193,12 +174,8 @@ function DestinationsManager() {
       });
       setShowAddForm(false);
 
-      // Invalidate appropriate queries
-      if (selectedSourceId) {
-        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-      } else {
-        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
-      }
+      // Invalidate queries
+      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
 
       toast.success("Destination added successfully!");
     },
@@ -216,17 +193,14 @@ function DestinationsManager() {
   // Delete destination mutation
   const deleteDestinationMutation = useMutation({
     mutationFn: async (id) => {
-      let response;
-
-      if (selectedSourceId) {
-        // Delete destination from specific source
-        response = await apiService.delete(
-          `/sources/${selectedSourceId}/destinations/${id}`,
-        );
-      } else {
-        // Legacy destination deletion
-        response = await apiService.delete(`/destinations/${id}`);
+      if (!selectedSourceId) {
+        throw new Error("Please select a source first");
       }
+
+      // Delete destination from specific source
+      const response = await apiService.delete(
+        `/sources/${selectedSourceId}/destinations/${id}`,
+      );
 
       return response;
     },
@@ -237,12 +211,8 @@ function DestinationsManager() {
         source_name: currentSource?.name,
       });
 
-      // Invalidate appropriate queries
-      if (selectedSourceId) {
-        queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-      } else {
-        queryClient.invalidateQueries(["legacyDestinations", user?.id]);
-      }
+      // Invalidate queries
+      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
 
       toast.success("Destination removed successfully!");
     },
@@ -305,8 +275,7 @@ function DestinationsManager() {
     return <DestinationsSkeleton />;
   }
 
-  const isLoading =
-    sourcesLoading || sourceDestinationsLoading || legacyDestinationsLoading;
+  const isLoading = sourcesLoading || sourceDestinationsLoading;
 
   if (isLoading) {
     return <DestinationsSkeleton />;
@@ -319,9 +288,7 @@ function DestinationsManager() {
         <div>
           <div className="text-3xl font-normal">Streaming Destinations</div>
           <p className="text-muted-foreground">
-            {isUsingSources
-              ? `Manage destinations for ${currentSource?.name || "selected source"}`
-              : "Manage your connected platforms and streaming endpoints"}
+            Manage destinations for {currentSource?.name || "selected source"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -395,33 +362,6 @@ function DestinationsManager() {
                     </Badge>
                   )}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Legacy User Warning */}
-      {!isUsingSources && (
-        <Card className="border-orange-200 bg-orange-50/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              <div>
-                <h3 className="font-medium text-orange-700">
-                  Legacy Destination Management
-                </h3>
-                <p className="text-sm text-orange-600 mt-1">
-                  You're using the legacy destination system. Consider creating
-                  stream sources for better organization and multi-source
-                  streaming capabilities.
-                </p>
-                <Button variant="outline" size="sm" className="mt-2" asChild>
-                  <Link to="/dashboard/sources">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Stream Sources
-                  </Link>
-                </Button>
               </div>
             </div>
           </CardContent>
