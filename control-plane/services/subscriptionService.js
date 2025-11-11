@@ -117,7 +117,12 @@ class SubscriptionService {
   parseFeatureValue(features, featureName) {
     if (!Array.isArray(features)) return null;
 
-    const feature = features.find(f => f.toLowerCase().startsWith(featureName.toLowerCase() + ':'));
+    // Case-insensitive search for feature name (e.g., "chat_connectors" matches "Chat Connectors")
+    const feature = features.find(f => {
+      const normalized = f.toLowerCase().replace(/\s+/g, ' ').trim();
+      const searchName = featureName.toLowerCase().replace(/_/g, ' ').trim();
+      return normalized.startsWith(searchName + ':');
+    });
     if (!feature) return null;
 
     const match = feature.match(/:\s*(\d+)/);
