@@ -111,6 +111,20 @@ class SubscriptionService {
   }
 
   /**
+   * Parse feature value from features array
+   * Features are stored as array of strings like: ["Chat Connectors: 2", "Support: community"]
+   */
+  parseFeatureValue(features, featureName) {
+    if (!Array.isArray(features)) return null;
+
+    const feature = features.find(f => f.toLowerCase().startsWith(featureName.toLowerCase() + ':'));
+    if (!feature) return null;
+
+    const match = feature.match(/:\s*(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  /**
    * Get user's current usage statistics
    */
   async getUserUsage(userId) {
@@ -129,7 +143,7 @@ class SubscriptionService {
           max_sources: subscription.max_sources,
           max_destinations: subscription.max_destinations,
           max_streaming_hours_monthly: subscription.max_streaming_hours_monthly,
-          max_chat_connectors: subscription.features?.chat_connectors || 1
+          max_chat_connectors: this.parseFeatureValue(subscription.features, 'chat_connectors') || 1
         },
         current_usage: {
           sources_count: limits.current_sources_count || 0,
@@ -233,7 +247,7 @@ class SubscriptionService {
     try {
       const subscription = await this.getUserSubscription(userId);
       const limits = await this.getUserLimits(userId);
-      const maxChatConnectors = subscription.features?.chat_connectors || 1;
+      const maxChatConnectors = this.parseFeatureValue(subscription.features, 'chat_connectors') || 1;
 
       return {
         allowed: limits.current_chat_connectors_count < maxChatConnectors,

@@ -108,9 +108,9 @@ function ChatConnectorSetup({ sourceId, sourceName }) {
   const limits = subscriptionData?.limits;
   const subscription = subscriptionData?.subscription;
   const canCreateConnector =
-    chatConnectorLimits?.allowed ?? connectors.length < 1;
+    chatConnectorLimits?.allowed ?? (connectors.length < (chatConnectorLimits?.max ?? 1));
   const remainingConnectors =
-    chatConnectorLimits?.remaining ?? 1 - connectors.length;
+    chatConnectorLimits?.remaining ?? Math.max(0, (chatConnectorLimits?.max ?? 1) - connectors.length);
   const currentConnectors = chatConnectorLimits?.current ?? connectors.length;
   const maxConnectors = chatConnectorLimits?.max ?? 1;
 
