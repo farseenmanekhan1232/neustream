@@ -551,15 +551,6 @@ function StreamingConfiguration() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {!hasSources && (
-            <Button
-              variant="default"
-              onClick={() => setShowQuickStartWizard(true)}
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Quick Start
-            </Button>
-          )}
           <Button onClick={() => setShowAddSourceDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Source

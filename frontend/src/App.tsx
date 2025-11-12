@@ -26,9 +26,7 @@ const PublicChatPage = lazy(() => import("./components/PublicChatPage.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 // Dashboard components (also lazy loaded)
-const DashboardLayout = lazy(
-  () => import("./components/DashboardLayoutCustom.jsx"),
-);
+const DashboardLayout = lazy(() => import("./components/DashboardLayout.jsx"));
 const StreamingConfiguration = lazy(
   () => import("./components/StreamingConfiguration.jsx"),
 );
