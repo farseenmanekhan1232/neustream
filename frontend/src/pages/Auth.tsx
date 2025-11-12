@@ -174,22 +174,10 @@ function Auth() {
 
       <main className="relative py-4 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8 lg:pt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Mobile: Single column layout with centered form */}
-          <div className="flex flex-col items-center justify-center lg:hidden gap-8">
-            {/* Auth form - Centered on mobile */}
-            <div className="w-full max-w-md order-1">
-              <Card className="w-full shadow-2xl border-0 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">
-                    {isLogin ? "Welcome Back" : "Create Account"}
-                  </CardTitle>
-                  <CardDescription>
-                    {isLogin
-                      ? "Sign in to your account to continue"
-                      : "Create a new account to get started"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-20">
+            {/* Left side - Branding (Desktop only) */}
+            <div className="flex-1 max-w-xl text-center lg:text-left text-white order-2 lg:order-1 hidden lg:block">
+              <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 bg-white/10 rounded-2xl sm:rounded-3xl backdrop-blur-sm border border-white/20">
                 <img
                   src="/logo.png"
                   alt="NeuStream Logo"
@@ -296,8 +284,8 @@ function Auth() {
               </div>
             </div>
 
-            {/* Auth form - Centered in desktop */}
-            <div className="col-span-2 max-w-md mx-auto order-1">
+            {/* Right side - Auth form */}
+            <div className="w-full max-w-md mx-auto order-1 lg:order-2 lg:flex-none lg:mx-0">
               <Card className="w-full shadow-2xl border-0 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl">
@@ -575,9 +563,6 @@ function Auth() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-
-          {/* Close mobile layout div */}
           </div>
         </div>
       </main>
