@@ -131,31 +131,68 @@ function StreamPreviewPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-3xl font-normal">Stream Preview</div>
+              <div className="text-3xl font-normal text-foreground text-primary-foreground">
+                Stream Preview
+              </div>
               <p className="text-muted-foreground">
                 Monitor your live streams and engage with your audience
               </p>
             </div>
-            <Button variant="outline" asChild>
-              <Link to="/dashboard/streaming">
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Link>
-            </Button>
           </div>
 
-          <EmptyState
-            icon="stream"
-            title={message.title}
-            description={message.description}
-            actionLabel="Configure Stream Sources"
-            actionHref="/dashboard/streaming"
-            secondaryActionLabel="Quick Start Guide"
-            onSecondaryAction={() => {
-              // TODO: Open tutorial video
-              alert("Tutorial video coming soon!");
-            }}
-          />
+          {/* Main Content Grid */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Stream Preview - Takes 2 columns */}
+            <div className="lg:col-span-2">
+              <EmptyState
+                icon="stream"
+                title={message.title}
+                description={message.description}
+                actionLabel="Configure Stream Sources"
+                actionHref="/dashboard/streaming"
+                secondaryActionLabel="Quick Start Guide"
+                onSecondaryAction={() => {
+                  window.open("/help", "_blank");
+                }}
+              />
+            </div>
+
+            {/* Live Chat Section - Empty State */}
+            <div className="lg:col-span-1">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center">
+                      <MessageCircle className="h-5 w-5 mr-2 text-primary" />
+                      Live Chat
+                    </span>
+                  </CardTitle>
+                  <CardDescription>
+                    Engage with your audience in real-time
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center justify-center h-[400px] text-center space-y-4">
+                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
+                    <MessageCircle className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">
+                      All your chats appear here
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-[250px]">
+                      Make sure to connect them
+                    </p>
+                  </div>
+                  <Button variant="default" asChild className="mt-4">
+                    <Link to="/dashboard/streaming">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configure Streams
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -166,7 +203,9 @@ function StreamPreviewPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-3xl font-normal">Stream Preview</div>
+          <div className="text-3xl font-normal text-foreground">
+            Stream Preview
+          </div>
           <p className="text-muted-foreground">
             Monitor your live streams and engage with your audience
           </p>

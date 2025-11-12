@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Info,
   X,
+  NavigationIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -247,7 +248,7 @@ function SubscriptionManagement() {
     <div className="w-full px-6 py-6 space-y-6 mx-auto bg-background">
       {/* Header Section */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-normal tracking-tight text-foreground">
           Subscription & Billing
         </h1>
         <p className="text-muted-foreground">
@@ -428,74 +429,6 @@ function SubscriptionManagement() {
         </Card>
       </div>
 
-      {/* Recent Streaming Sessions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5 text-muted-foreground" />
-            Recent Streaming Sessions
-          </CardTitle>
-          <CardDescription>Your last 10 streaming sessions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {historyLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 bg-muted rounded animate-pulse"
-                ></div>
-              ))}
-            </div>
-          ) : streamingHistory &&
-            streamingHistory.data &&
-            streamingHistory.data.length > 0 ? (
-            <div className="space-y-3">
-              {streamingHistory.data.slice(0, 10).map((session, index) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {session.source_name || "Legacy Stream"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(session.stream_start).toLocaleDateString(
-                        undefined,
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">
-                      {session.duration_minutes}m
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Session #{session.id}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No streaming sessions found</p>
-              <p className="text-sm mt-2">
-                Start streaming to see your usage history here
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Support Section */}
       <Card>
         <CardHeader>
@@ -505,12 +438,12 @@ function SubscriptionManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="">
             <Button variant="outline" asChild>
-              <a href="mailto:farseen@neustream.app">
+              <Link to="/contact">
                 <Shield className="h-4 w-4 mr-2" />
-                Contact Support ( farseen@neustream.app )
-              </a>
+                Contact Support
+              </Link>
             </Button>
           </div>
         </CardContent>

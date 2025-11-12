@@ -13,7 +13,7 @@ export default function Analytics() {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Analytics</h1>
+        <h1 className="text-3xl font-normal text-foreground">Analytics</h1>
         <p className="text-muted-foreground">
           Track your stream performance and viewer engagement
         </p>

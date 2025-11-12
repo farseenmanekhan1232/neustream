@@ -242,7 +242,7 @@ const AnalyticsPage = () => {
                       <p className="text-primary-foreground/80 text-sm">
                         Total Users
                       </p>
-                      <p className="text-3xl font-normal">
+                      <p className="text-3xl font-normal text-foreground">
                         {systemStats.users?.total_users || 0}
                       </p>
                       <p className="text-primary-foreground/80 text-xs mt-1">
@@ -258,7 +258,7 @@ const AnalyticsPage = () => {
                       <p className="text-success-foreground/80 text-sm">
                         Active Streams
                       </p>
-                      <p className="text-3xl font-normal">
+                      <p className="text-3xl font-normal text-foreground">
                         {systemStats.streams?.activeStreams || 0}
                       </p>
                       <p className="text-success-foreground/80 text-xs mt-1">
@@ -274,7 +274,7 @@ const AnalyticsPage = () => {
                       <p className="text-primary-foreground/80 text-sm">
                         Total Destinations
                       </p>
-                      <p className="text-3xl font-normal">
+                      <p className="text-3xl font-normal text-foreground">
                         {systemStats.destinations?.total_destinations || 0}
                       </p>
                       <p className="text-primary-foreground/80 text-xs mt-1">
@@ -290,7 +290,7 @@ const AnalyticsPage = () => {
                       <p className="text-warning-foreground/80 text-sm">
                         Recent Activity
                       </p>
-                      <p className="text-3xl font-normal">
+                      <p className="text-3xl font-normal text-foreground">
                         {systemStats.activity?.streams_started_24h || 0}
                       </p>
                       <p className="text-warning-foreground/80 text-xs mt-1">
@@ -481,7 +481,7 @@ const AnalyticsPage = () => {
                     <p className="text-2xl font-normal text-success">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.streams_completed || 0),
-                        0
+                        0,
                       ) || 0}
                     </p>
                   </CardContent>
@@ -493,7 +493,7 @@ const AnalyticsPage = () => {
                   <CardContent>
                     <p className="text-2xl font-normal text-primary">
                       {formatDuration(
-                        streamAnalytics.qualityMetrics?.avg_duration_seconds
+                        streamAnalytics.qualityMetrics?.avg_duration_seconds,
                       )}
                     </p>
                   </CardContent>
@@ -506,7 +506,7 @@ const AnalyticsPage = () => {
                     <p className="text-2xl font-normal text-primary/70">
                       {streamAnalytics.streamTrends?.reduce(
                         (acc, t) => acc + (t.unique_streamers || 0),
-                        0
+                        0,
                       ) || 0}
                     </p>
                   </CardContent>
@@ -587,7 +587,7 @@ const AnalyticsPage = () => {
                                 key={index}
                                 platform={platform}
                               />
-                            )
+                            ),
                           )}
                         </TableBody>
                       </Table>

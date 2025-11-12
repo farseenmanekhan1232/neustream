@@ -212,7 +212,7 @@ function NavUser({ user, onLogout }) {
             </div>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" side="right">
+        <DropdownMenuContent className="w-56 border-0" align="end" side="right">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
@@ -231,8 +231,8 @@ function NavUser({ user, onLogout }) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onLogout}>
-            <IconLogout className="mr-2 h-4 w-4" />
-            <span>Log out</span>
+            <IconLogout className="mr-2 h-4 w-4 " color="red" />
+            <span className="text-red-500">Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -336,7 +336,7 @@ export default function DashboardLayout() {
       >
         {/* Sidebar Header */}
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4 bg-green-700/80">
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <img
               src="/logo.png"
               alt="NeuStream"
@@ -375,7 +375,7 @@ export default function DashboardLayout() {
             size="sm"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            <IconMenu2 className="h-4 w-4" />
+            <IconMenu2 className="h-4 w-4 " color="white" />
           </Button>
 
           <Separator orientation="vertical" className="h-4" />
@@ -411,22 +411,6 @@ export default function DashboardLayout() {
           </Breadcrumb>
 
           <div className="flex-1" />
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/dashboard/streaming">
-                <IconPlus className="h-4 w-4 mr-2" />
-                Add Source
-              </Link>
-            </Button>
-
-            <Button variant="ghost" size="icon" className="relative">
-              <IconBell className="h-4 w-4" />
-              {/* Notification badge */}
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-            </Button>
-          </div>
         </header>
 
         {/* Main Content Area */}

@@ -16,6 +16,7 @@ import {
   Trash2,
   ExternalLink,
   RefreshCw,
+  MessageCircle,
   MonitorSpeaker,
   Youtube,
   Twitch,
@@ -545,7 +546,9 @@ function StreamingConfiguration() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-normal">Streaming Configuration</h1>
+          <h1 className="text-3xl font-normal text-foreground">
+            Streaming Configuration
+          </h1>
           <p className="text-muted-foreground">
             Configure your stream sources and destinations
           </p>
@@ -840,11 +843,47 @@ function StreamingConfiguration() {
         </div>
         <div className="lg:col-span-1">
           {/* Chat Connectors Section */}
-          {isUsingSources && currentSource && (
+          {isUsingSources && currentSource ? (
             <ChatConnectorSetup
               sourceId={currentSource.id}
               sourceName={currentSource.name}
             />
+          ) : (
+            /* Live Chat Section - Empty State */
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <MessageCircle className="h-5 w-5 mr-2 text-primary" />
+                    Live Chat
+                  </span>
+                </CardTitle>
+                <CardDescription>
+                  Engage with your audience in real-time
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center h-[400px] text-center space-y-4">
+                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
+                  <MessageCircle className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">
+                    All your chats appear here
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-[250px]">
+                    Add a source first
+                  </p>
+                </div>
+                <Button
+                  variant="default"
+                  onClick={() => setShowAddSourceDialog(true)}
+                  className="mt-4"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Source
+                </Button>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
