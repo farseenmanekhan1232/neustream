@@ -11,6 +11,8 @@ import {
   Zap,
   Palette,
   Shield,
+  Lock,
+  RefreshCw,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
@@ -501,45 +503,37 @@ function Landing() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10"
+                  className="animate-pulse bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 transition-all duration-300 hover:bg-white/10"
                 >
-                  <div className="text-center space-y-6">
+                  <div className="text-center space-y-4">
                     {/* Plan name */}
                     <div className="h-10 bg-white/20 rounded-xl w-3/4 mx-auto"></div>
                     {/* Description */}
                     <div className="space-y-2">
                       <div className="h-4 bg-white/20 rounded w-full"></div>
-                      <div className="h-4 bg-white/20 rounded w-5/6 mx-auto"></div>
-                    </div>
-                    {/* Best For box */}
-                    <div className="bg-white/10 rounded-xl p-4 border border-white/10">
-                      <div className="h-3 bg-white/15 rounded w-16 mx-auto mb-2"></div>
-                      <div className="space-y-2">
-                        <div className="h-3 bg-white/20 rounded w-full"></div>
-                        <div className="h-3 bg-white/20 rounded w-4/5 mx-auto"></div>
-                      </div>
+                      <div className="h-3 bg-white/20 rounded w-5/6 mx-auto italic opacity-70"></div>
                     </div>
                     {/* Price */}
-                    <div className="space-y-2 py-4 border-t border-white/10">
-                      <div className="h-12 bg-white/20 rounded w-2/3 mx-auto"></div>
-                      <div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
+                    <div className="py-3 border-t border-white/10">
+                      <div className="h-10 bg-white/20 rounded w-2/3 mx-auto"></div>
+                      <div className="h-3 bg-white/20 rounded w-1/2 mx-auto mt-2"></div>
                     </div>
                     {/* Features */}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {[1, 2, 3, 4, 5].map((j) => (
                         <div
                           key={j}
-                          className="flex items-start gap-3"
+                          className="flex items-start gap-2"
                         >
-                          <div className="h-5 w-5 bg-white/20 rounded-full mt-0.5"></div>
-                          <div className="h-4 bg-white/20 rounded flex-1"></div>
+                          <div className="h-4 w-4 bg-white/20 rounded-full mt-0.5"></div>
+                          <div className="h-3 bg-white/20 rounded flex-1"></div>
                         </div>
                       ))}
                     </div>
                     {/* Button */}
-                    <div className="h-14 bg-white/20 rounded-2xl w-full"></div>
+                    <div className="h-12 bg-white/20 rounded-xl w-full mt-2"></div>
                     {/* Trial text */}
-                    <div className="h-3 bg-white/20 rounded w-3/4 mx-auto"></div>
+                    <div className="h-3 bg-white/20 rounded w-2/3 mx-auto opacity-60"></div>
                   </div>
                 </div>
               ))}
@@ -561,7 +555,7 @@ function Landing() {
                 return (
                   <div
                     key={plan.id}
-                    className={` bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:shadow-lg ${
+                    className={`relative bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-[1.02] hover:shadow-lg active:scale-100 ${
                       isProPlan
                         ? "border-primary shadow-2xl shadow-primary/20 ring-2 ring-primary/20"
                         : planName === "business"
@@ -576,80 +570,73 @@ function Landing() {
                         </span>
                       </div>
                     )}
-                    <div className="text-center space-y-6">
-                      <div className="space-y-4">
+                    <div className="text-center space-y-4">
+                      {/* Plan Header */}
+                      <div className="space-y-3">
                         <div className="flex items-center justify-center gap-3">
                           <h3 className="text-3xl sm:text-4xl font-normal">
                             {plan.name}
                           </h3>
                           {planName === "free" && (
-                            <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-base font-medium">
+                            <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm font-medium">
                               Free Forever
                             </span>
                           )}
                           {planName === "business" && (
-                            <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-base font-medium">
+                            <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-medium">
                               Enterprise
                             </span>
                           )}
                         </div>
-                        <p className="text-xl leading-relaxed opacity-90">
+                        <p className="text-lg leading-relaxed opacity-90">
                           {planInfo.description}
                         </p>
-
-                        {/* Best For Section */}
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                          <p className="text-base font-medium mb-2 opacity-70">
-                            Best For:
-                          </p>
-                          <p className="text-base leading-relaxed">
-                            {planInfo.bestFor}
-                          </p>
-                        </div>
+                        <p className="text-sm opacity-70 italic">
+                          {planInfo.bestFor}
+                        </p>
                       </div>
 
-                      <div className="space-y-2 py-4 border-t border-white/10">
-                        <div className="text-5xl font-normal">
+                      {/* Pricing */}
+                      <div className="py-3 border-t border-white/10">
+                        <div className="text-4xl font-normal">
                           {plan.formatted_price_monthly ||
                             formatPrice(plan.price_monthly)}
-                          <span className="text-xl font-normal opacity-80">
-                            /month
-                          </span>
+                          <span className="text-lg opacity-80">/mo</span>
                         </div>
                         {plan.price_yearly && (
-                          <div className="flex items-center justify-center gap-2">
-                            <p className="text-base opacity-80">
-                              {plan.formatted_price_yearly ||
-                                formatPrice(plan.price_yearly)}{" "}
-                              billed annually
-                            </p>
-                            <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm font-medium">
+                          <div className="flex items-center justify-center gap-2 mt-2">
+                            <span className="text-sm opacity-80">
+                              ${Math.round(plan.price_yearly / 12)}/mo billed annually
+                            </span>
+                            <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs font-medium">
                               Save 20%
                             </span>
                           </div>
                         )}
                       </div>
 
-                      <ul className="space-y-3 text-lg text-left">
+                      {/* Features */}
+                      <ul className="space-y-2 text-left">
                         {features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <span className="mt-0.5 text-xl">
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="mt-0.5 text-primary">
                               {feature.icon}
                             </span>
-                            <span className="flex-1">{feature.text}</span>
+                            <span className="text-sm flex-1">{feature.text}</span>
                           </li>
                         ))}
                       </ul>
 
+                      {/* CTA Button */}
                       <Button
-                        variant={isProPlan ? "default" : "outline"}
-                        className="w-full h-14 text-xl rounded-2xl font-medium transition-all duration-300 hover:scale-105"
                         asChild
+                        className={`w-full h-12 text-lg rounded-xl font-medium transition-all duration-300 mt-2 ${
+                          isProPlan
+                            ? "bg-white text-black hover:bg-white/90 shadow-lg"
+                            : "bg-white/90 text-black hover:bg-white"
+                        }`}
                       >
-                        <Link
-                          to="/auth"
-                          className={isProPlan ? "text-white" : "text-black"}
-                        >
+                        <Link to="/auth">
                           {planName === "free"
                             ? "Get Started Free"
                             : "Start Free Trial"}
@@ -657,7 +644,7 @@ function Landing() {
                       </Button>
 
                       {planName !== "free" && (
-                        <p className="text-sm opacity-70 text-center">
+                        <p className="text-xs opacity-60">
                           14-day free trial • No credit card required
                         </p>
                       )}
@@ -677,7 +664,7 @@ function Landing() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-3xl mx-auto">
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex justify-center mb-3">
-                  <Shield className="w-8 h-8" />
+                  <RefreshCw className="w-8 h-8" />
                 </div>
                 <h4 className="font-medium mb-2">30-Day Money Back</h4>
                 <p className="text-sm opacity-80">
@@ -686,7 +673,7 @@ function Landing() {
               </div>
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex justify-center mb-3">
-                  <Shield className="w-8 h-8" />
+                  <Lock className="w-8 h-8" />
                 </div>
                 <h4 className="font-medium mb-2">Secure Payments</h4>
                 <p className="text-sm opacity-80">

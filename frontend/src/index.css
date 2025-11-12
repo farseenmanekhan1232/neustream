@@ -108,14 +108,14 @@
 
 @theme {
     /* Teal gradient colors for landing page - unique to this app */
-    --color-teal-start: #009a65;
-    --color-teal-middle: #00b86b;
-    --color-teal-end: #00db75;
+    --color-teal-start: #007a4e;
+    --color-teal-middle: #009460;
+    --color-teal-end: #00ae72;
 
     /* Dark mode teal gradient colors */
-    --color-teal-start-dark: #00a870;
-    --color-teal-middle-dark: #00c77a;
-    --color-teal-end-dark: #00e085;
+    --color-teal-start-dark: #007a4e;
+    --color-teal-middle-dark: #009460;
+    --color-teal-end-dark: #00ae72;
 }
 
 /* Teal gradient background for landing page */
