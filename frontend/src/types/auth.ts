@@ -18,8 +18,10 @@ export interface User {
 // }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
+  user?: User;
+  token?: string;
+  message?: string;
+  requiresVerification?: boolean;
 }
 
 export interface LoginCredentials {

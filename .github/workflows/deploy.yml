@@ -105,6 +105,12 @@ jobs:
             TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
             TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
             TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+            SMTP_HOST=${{secrets.SMTP_HOST}}
+            SMTP_PORT=${{secrets.SMTP_PORT}}
+            SMTP_SECURE=${{secrets.SMTP_SECURE}}
+            SMTP_USER=${{secrets.SMTP_USER}}
+            SMTP_PASS=${{secrets.SMTP_PASS}}
+            FROM_EMAIL=${{secrets.FROM_EMAIL}}
 
             CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
             FRONTEND_URL=https://neustream.app

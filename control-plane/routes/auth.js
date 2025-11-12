@@ -5,12 +5,49 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const posthogService = require("../services/posthog");
 const subscriptionService = require("../services/subscriptionService");
+const EmailService = require("../services/emailService");
+const { authenticateToken } = require("../middleware/auth");
 const { passport, generateToken, JWT_SECRET } = require("../config/oauth");
 
 const router = express.Router();
 
 // Create a shared database instance for all routes
 const db = new Database();
+
+// Create email service instance
+const emailService = new EmailService();
+
+// Helper function to resend verification email
+async function resendVerificationEmail(email) {
+  try {
+    // Check if user exists
+    const users = await db.query(
+      "SELECT id FROM users WHERE email = $1",
+      [email],
+    );
+
+    if (users.length === 0) {
+      return;
+    }
+
+    // Generate new verification token
+    const { token, expires } = emailService.generateVerificationToken();
+
+    // Update user with new token
+    await db.run(
+      "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE email = $3",
+      [token, expires, email],
+    );
+
+    // Send verification email
+    await emailService.sendVerificationEmail(email, token);
+
+    console.log(`Verification email resent to ${email}`);
+  } catch (error) {
+    console.error("Error resending verification email:", error);
+    throw error;
+  }
+}
 
 // Pre-connect to database when the module loads
 db.connect().catch((err) => {
@@ -252,21 +289,56 @@ router.post("/stream-end", async (req, res) => {
 router.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
   try {
+    // Check if user already exists
+    const existingUsers = await db.query(
+      "SELECT id, email_verified FROM users WHERE email = $1",
+      [email],
+    );
+
+    if (existingUsers.length > 0) {
+      const existingUser = existingUsers[0];
+      if (existingUser.email_verified) {
+        return res.status(400).json({ error: "Email already exists" });
+      } else {
+        // User exists but hasn't verified - send a new verification email
+        await resendVerificationEmail(email);
+        return res.status(200).json({
+          message: "Registration received. Please check your email to verify your account.",
+          requiresVerification: true,
+        });
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
     const streamKey = crypto.randomBytes(24).toString("hex");
+    const { token: emailVerificationToken, expires: emailVerificationExpires } =
+      emailService.generateVerificationToken();
 
     const result = await db.run(
-      "INSERT INTO users (email, password_hash, stream_key) VALUES ($1, $2, $3) RETURNING id, uuid, email, stream_key",
-      [email, passwordHash, streamKey],
+      `INSERT INTO users (email, password_hash, stream_key, email_verification_token, email_verification_expires)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, email, stream_key`,
+      [email, passwordHash, streamKey, emailVerificationToken, emailVerificationExpires],
     );
 
     const userId = result.id;
     const userUuid = result.uuid;
 
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(email, emailVerificationToken);
+      console.log(`Verification email sent to ${email}`);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Continue with registration even if email fails
+    }
+
     // Assign free plan to new user
     try {
-      // Get the free plan ID (assuming it's the first plan with name 'Free')
       const freePlan = await db.query(
         "SELECT id FROM subscription_plans WHERE name = $1 ORDER BY id LIMIT 1",
         ["Free"],
@@ -275,7 +347,6 @@ router.post("/register", async (req, res) => {
       if (freePlan.length > 0) {
         const freePlanId = freePlan[0].id;
 
-        // Create subscription for the new user
         await db.run(
           `INSERT INTO user_subscriptions (user_id, plan_id, status, current_period_start, current_period_end)
            VALUES ($1, $2, 'active', NOW(), NOW() + INTERVAL '30 days')`,
@@ -293,43 +364,23 @@ router.post("/register", async (req, res) => {
         "Failed to assign free plan to new user:",
         subscriptionError,
       );
-      // Continue with user creation even if subscription assignment fails
     }
 
-    // Track successful registration
-    posthogService.trackAuthEvent(userId, "user_registered");
+    // Track registration attempt
+    posthogService.trackAuthEvent(userId, "user_registered_unverified");
     posthogService.identifyUser(userId, {
       email: email,
       registered_at: new Date().toISOString(),
+      email_verified: false,
     });
 
-    // Generate JWT token for API authentication
-    const token = generateToken({
-      id: userId,
-      uuid: userUuid,
-      email: email,
-      displayName: null,
-      avatarUrl: null,
-      streamKey: streamKey,
-      oauthProvider: null,
-    });
-
-    res.json({
-      token,
-      user: {
-        id: userId,
-        uuid: userUuid,
-        email: email,
-        displayName: null,
-        avatarUrl: null,
-        streamKey: streamKey,
-        oauthProvider: null,
-      },
+    res.status(200).json({
+      message: "Registration successful. Please check your email to verify your account.",
+      requiresVerification: true,
     });
   } catch (error) {
     console.error("Registration error:", error);
 
-    // Provide more specific error messages
     if (error.code === "23505") {
       // Unique constraint violation
       res.status(400).json({ error: "Email already exists" });
@@ -348,7 +399,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const users = await db.query(
-      "SELECT id, uuid, email, password_hash, stream_key, display_name, avatar_url, oauth_provider FROM users WHERE email = $1",
+      "SELECT id, uuid, email, password_hash, stream_key, display_name, avatar_url, oauth_provider, email_verified FROM users WHERE email = $1",
       [email],
     );
 
@@ -361,6 +412,28 @@ router.post("/login", async (req, res) => {
     }
 
     const user = users[0];
+
+    // Check if email is verified
+    if (!user.email_verified) {
+      posthogService.trackAuthEvent(user.id, "login_failed", {
+        reason: "email_not_verified",
+        email: email,
+      });
+      return res.status(403).json({
+        error: "Email not verified",
+        requiresVerification: true,
+        message: "Please verify your email address before logging in.",
+      });
+    }
+
+    // Check if password is provided (OAuth users may not have password)
+    if (!user.password_hash) {
+      return res.status(400).json({
+        error: "Password not set",
+        message: "This account uses OAuth. Please log in with Google/Twitch.",
+      });
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
@@ -376,6 +449,7 @@ router.post("/login", async (req, res) => {
     posthogService.identifyUser(user.id, {
       email: user.email,
       last_login: new Date().toISOString(),
+      email_verified: true,
     });
 
     // Generate JWT token for API authentication
@@ -528,6 +602,244 @@ router.get(
     console.log("=== TWITCH OAUTH CALLBACK COMPLETE ===");
   },
 );
+
+// Email verification endpoint
+router.get("/verify-email/:token", async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Find user with this verification token
+    const users = await db.query(
+      "SELECT id, email, email_verification_expires FROM users WHERE email_verification_token = $1",
+      [token],
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ error: "Invalid verification token" });
+    }
+
+    const user = users[0];
+
+    // Check if token has expired
+    const now = new Date();
+    if (user.email_verification_expires && now > new Date(user.email_verification_expires)) {
+      return res.status(400).json({ error: "Verification token has expired" });
+    }
+
+    // Mark email as verified and clear verification token
+    await db.run(
+      "UPDATE users SET email_verified = TRUE, email_verification_token = NULL, email_verification_expires = NULL WHERE id = $1",
+      [user.id],
+    );
+
+    // Track email verification
+    posthogService.trackAuthEvent(user.id, "email_verified");
+    posthogService.identifyUser(user.id, {
+      email: user.email,
+      email_verified: true,
+      email_verified_at: new Date().toISOString(),
+    });
+
+    console.log(`Email verified for user: ${user.email}`);
+
+    // Redirect to frontend with success message
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/auth?verified=true`);
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({ error: "Email verification failed" });
+  }
+});
+
+// Resend verification email
+router.post("/resend-verification", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    const users = await db.query(
+      "SELECT id, email_verified FROM users WHERE email = $1",
+      [email],
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = users[0];
+
+    if (user.email_verified) {
+      return res.status(400).json({ error: "Email already verified" });
+    }
+
+    // Generate new verification token
+    const { token, expires } = emailService.generateVerificationToken();
+
+    // Update user with new token
+    await db.run(
+      "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE email = $3",
+      [token, expires, email],
+    );
+
+    // Send verification email
+    await emailService.sendVerificationEmail(email, token);
+
+    res.json({
+      message: "Verification email sent successfully",
+    });
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    res.status(500).json({ error: "Failed to resend verification email" });
+  }
+});
+
+// Forgot password - send reset email
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    // Check if user exists
+    const users = await db.query(
+      "SELECT id, email FROM users WHERE email = $1",
+      [email],
+    );
+
+    // Always return success to prevent email enumeration
+    if (users.length === 0) {
+      return res.json({
+        message: "If an account with that email exists, we've sent a password reset link.",
+      });
+    }
+
+    const user = users[0];
+
+    // Generate password reset token
+    const { token, expires } = emailService.generatePasswordResetToken();
+
+    // Store reset token
+    await db.run(
+      "UPDATE users SET password_reset_token = $1, password_reset_expires = $2 WHERE id = $3",
+      [token, expires, user.id],
+    );
+
+    // Send password reset email
+    await emailService.sendPasswordResetEmail(email, token);
+
+    res.json({
+      message: "If an account with that email exists, we've sent a password reset link.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: "Failed to process password reset request" });
+  }
+});
+
+// Reset password with token
+router.post("/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: "Token and new password are required" });
+  }
+
+  try {
+    // Find user with this reset token
+    const users = await db.query(
+      "SELECT id, email, password_reset_expires FROM users WHERE password_reset_token = $1",
+      [token],
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ error: "Invalid reset token" });
+    }
+
+    const user = users[0];
+
+    // Check if token has expired
+    const now = new Date();
+    if (user.password_reset_expires && now > new Date(user.password_reset_expires)) {
+      return res.status(400).json({ error: "Reset token has expired" });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    // Update password and clear reset token
+    await db.run(
+      "UPDATE users SET password_hash = $1, password_reset_token = NULL, password_reset_expires = NULL WHERE id = $2",
+      [passwordHash, user.id],
+    );
+
+    // Track password reset
+    posthogService.trackAuthEvent(user.id, "password_reset");
+
+    console.log(`Password reset successful for user: ${user.email}`);
+
+    res.json({
+      message: "Password reset successful. Please log in with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Password reset failed" });
+  }
+});
+
+// Change password (for logged-in users)
+router.put("/change-password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Current password and new password are required" });
+  }
+
+  try {
+    // Get user with password hash
+    const users = await db.query(
+      "SELECT id, password_hash FROM users WHERE id = $1",
+      [userId],
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = users[0];
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+
+    if (!isValidPassword) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    await db.run(
+      "UPDATE users SET password_hash = $1 WHERE id = $2",
+      [passwordHash, userId],
+    );
+
+    // Track password change
+    posthogService.trackAuthEvent(userId, "password_changed");
+
+    res.json({
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Failed to change password" });
+  }
+});
 
 // JWT token validation endpoint
 router.post("/validate-token", async (req, res) => {

@@ -90,7 +90,7 @@ class AuthService {
       body: JSON.stringify(credentials),
     });
 
-    if (response.user) {
+    if (response.user && response.token) {
       this.setToken(response.token);
       localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     }
@@ -104,10 +104,47 @@ class AuthService {
       body: JSON.stringify(credentials),
     });
 
-    if (response.user) {
-      this.setToken(response.token);
-      localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-    }
+    // Note: Registration now returns a message instead of token/user
+    // User must verify email before login
+    return response;
+  }
+
+  // Resend verification email
+  async resendVerification(email: string): Promise<AuthResponse> {
+    const response = await this.request("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+
+    return response;
+  }
+
+  // Forgot password - send reset email
+  async forgotPassword(email: string): Promise<AuthResponse> {
+    const response = await this.request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+
+    return response;
+  }
+
+  // Reset password with token
+  async resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
+    const response = await this.request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    return response;
+  }
+
+  // Change password (for logged-in users)
+  async changePassword(currentPassword: string, newPassword: string): Promise<AuthResponse> {
+    const response = await this.request("/auth/change-password", {
+      method: "PUT",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
 
     return response;
   }
