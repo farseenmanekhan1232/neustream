@@ -59,6 +59,17 @@ export const subscriptionService = {
       const response = await apiService.get(
         `/subscriptions/history?limit=${limit}`,
       );
+
+      // Transform snake_case to camelCase for the component
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.map((item: any) => ({
+          id: item.id,
+          startedAt: item.stream_start,
+          duration: item.duration_minutes,
+          sourceName: item.source_name,
+        }));
+      }
+
       return response.data;
     } catch (error) {
       console.error("Error fetching streaming history:", error);
