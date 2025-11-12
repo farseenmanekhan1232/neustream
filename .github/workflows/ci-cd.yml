@@ -87,6 +87,7 @@ jobs:
             DB_NAME=neustream
             DB_USER=neustream_user
             DB_PASSWORD=23k4j123k4ksdhfasiuhe
+            CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
 
             PORT=3000
             NODE_ENV=production

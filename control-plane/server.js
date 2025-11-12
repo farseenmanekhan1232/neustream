@@ -42,16 +42,22 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Configure CORS with separate handling for webhooks
+// Parse allowed origins from environment variable (comma-separated)
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+  : [
+      "http://localhost:5173",
+      "http://localhost:5174",
+    ];
+
 const corsOptions = {
-  origin: [
-    "https://neustream.app",
-    "https://neustream.app",
-    "https://admin.neustream.app",
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-razorpay-signature"],
 };
+
+console.log("CORS Allowed Origins:", allowedOrigins);
 
 // Apply CORS to all routes except webhooks
 app.use((req, res, next) => {
