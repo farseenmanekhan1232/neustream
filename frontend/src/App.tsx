@@ -13,6 +13,8 @@ const Layout = lazy(() => import("./components/Layout"));
 // Lazy loaded components for code splitting
 const Landing = lazy(() => import("./pages/Landing.jsx"));
 const Auth = lazy(() => import("./pages/Auth.jsx"));
+const EmailVerification = lazy(() => import("./pages/EmailVerification.tsx"));
+const PasswordReset = lazy(() => import("./pages/PasswordReset.tsx"));
 const AboutUs = lazy(() => import("./pages/AboutUs.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const FAQ = lazy(() => import("./pages/FAQ.jsx"));
@@ -95,6 +97,26 @@ function AppContent() {
           element={
             <ProtectedRoute requireAuth={false}>
               <Auth />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Email Verification */}
+        <Route
+          path="verify-email"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <EmailVerification />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Password Reset */}
+        <Route
+          path="reset-password"
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <PasswordReset />
             </ProtectedRoute>
           }
         />

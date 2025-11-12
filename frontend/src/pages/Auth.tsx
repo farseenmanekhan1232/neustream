@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../services/auth";
 import Header from "../components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +17,24 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] = useState(false);
+
+  // Test toast on component mount (remove in production)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("🧪 Testing if toast works...");
+      toast.success("Test: Toast is working!", { duration: 3000 });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     login,
@@ -30,6 +44,27 @@ function Auth() {
     error: authError,
     user,
   } = useAuth();
+
+  const { mutate: forgotPasswordMutation } = useMutation({
+    mutationFn: async (email: string) => {
+      console.log("🔐 Forgot password mutation started for:", email);
+      const result = await authService.forgotPassword(email);
+      console.log("✅ Forgot password mutation result:", result);
+      return result;
+    },
+    onSuccess: (result) => {
+      console.log("🎉 Forgot password SUCCESS:", result);
+      toast.success("Password reset email sent! Please check your inbox.");
+      setShowForgotPassword(false);
+      setForgotPasswordEmail("");
+      setIsSubmittingForgotPassword(false);
+    },
+    onError: (error: Error) => {
+      console.error("❌ Forgot password ERROR:", error);
+      setError(error.message || "Failed to send reset email");
+      setIsSubmittingForgotPassword(false);
+    },
+  });
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -58,17 +93,34 @@ function Auth() {
   const authMutation = useMutation({
     mutationFn: async (data) => {
       const { email, password } = data;
+      console.log(`🔐 Auth mutation started: ${isLogin ? "LOGIN" : "REGISTER"} for`, email);
       if (isLogin) {
-        return await login(email, password);
+        const result = await login(email, password);
+        console.log("✅ Login result:", result);
+        return result;
       } else {
-        return await register(email, password);
+        const result = await register(email, password);
+        console.log("✅ Register result:", result);
+        return result;
       }
     },
-    onSuccess: () => {
-      // Navigate to the page they were trying to access, or dashboard
+    onSuccess: (result) => {
+      console.log("🎉 Auth mutation SUCCESS:", result);
+      // Check if this was an email verification flow
+      if (result && result.requiresVerification) {
+        // Show success toast
+        console.log("📧 Showing registration success toast");
+        toast.success("Account created! Please check your email to verify your account.");
+        // Don't navigate - stay on auth page
+        return;
+      }
+
+      // Normal successful auth (shouldn't happen for registration)
+      console.log("🔄 Navigating to:", from);
       navigate(from, { replace: true });
     },
     onError: (error) => {
+      console.error("❌ Auth mutation ERROR:", error);
       setError(error.message || "Authentication failed");
     },
   });
@@ -110,10 +162,22 @@ function Auth() {
     setIsLogin(!isLogin);
     setError("");
     setFormData({ email: "", password: "" });
+    setShowForgotPassword(false);
+  };
+
+  const handleForgotPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      setError("Please enter your email address");
+      return;
+    }
+    setError(""); // Clear any previous errors
+    setIsSubmittingForgotPassword(true);
+    forgotPasswordMutation(forgotPasswordEmail);
   };
 
   return (
-    <div className="min-h-screen bg-teal-gradient relative overflow-hidden">
+    <div className="min-h-screen bg-teal-gradient relative">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse hidden sm:block"></div>
@@ -431,6 +495,89 @@ function Auth() {
                       )}
                     </Button>
                   </form>
+
+                  {/* Forgot Password Link */}
+                  {isLogin && !showForgotPassword && (
+                    <div className="text-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="text-sm text-primary hover:text-primary"
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setForgotPasswordEmail(formData.email);
+                          setError("");
+                        }}
+                        disabled={authMutation.isPending}
+                      >
+                        Forgot your password?
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Forgot Password Form */}
+                  {showForgotPassword && (
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <h3 className="text-lg font-medium">Reset Password</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Enter your email address and we'll send you a link to reset your password
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleForgotPassword} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="forgot-email">Email Address</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" />
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              value={forgotPasswordEmail}
+                              onChange={(e) => {
+                                setForgotPasswordEmail(e.target.value);
+                                if (error) setError("");
+                              }}
+                              placeholder="your@email.com"
+                              className="pl-10"
+                              required
+                              disabled={isSubmittingForgotPassword}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="submit"
+                            className="flex-1"
+                            disabled={isSubmittingForgotPassword}
+                          >
+                            {isSubmittingForgotPassword ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              "Send Reset Link"
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setShowForgotPassword(false);
+                              setForgotPasswordEmail("");
+                              setError("");
+                              setIsSubmittingForgotPassword(false);
+                            }}
+                            disabled={isSubmittingForgotPassword}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
 
                   {/* Toggle between login/register */}
                   <div className="text-center space-y-2">

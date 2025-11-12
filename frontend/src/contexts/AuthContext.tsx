@@ -169,11 +169,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const register = useCallback(
-    async (email: string, password: string): Promise<void> => {
+    async (email: string, password: string): Promise<{ requiresVerification?: boolean; message?: string }> => {
       try {
         setError(null);
         const response = await authService.register({ email, password });
-        setUser(response.user);
+
+        // Handle email verification flow
+        if (response.requiresVerification) {
+          // Don't set user - they need to verify email first
+          return {
+            requiresVerification: true,
+            message: response.message,
+          };
+        }
+
+        // Handle normal registration (shouldn't happen with email verification)
+        if (response.user && response.token) {
+          setUser(response.user);
+          return { requiresVerification: false };
+        }
+
+        return { requiresVerification: false };
       } catch (error) {
         setError((error as Error).message);
         throw error;
