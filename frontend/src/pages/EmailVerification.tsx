@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { authService } from "../services/auth";
 
 function EmailVerification() {
   const [searchParams] = useSearchParams();
@@ -24,20 +23,30 @@ function EmailVerification() {
 
       try {
         setStatus("loading");
-        const response = await authService.request("/auth/verify-email", {
-          method: "POST",
-          body: JSON.stringify({ token }),
+
+        // Make GET request with token in URL params (as expected by backend)
+        const response = await fetch(`${import.meta.env.VITE_API_BASE || "/api"}/auth/verify-email/${token}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
-        if (response.message) {
-          setStatus("success");
-          setMessage(response.message);
-          toast.success("Email verified successfully! You can now log in.");
-        } else {
-          setStatus("success");
-          setMessage("Your email has been verified successfully! You can now log in.");
-          toast.success("Email verified successfully!");
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: "Verification failed" }));
+          throw new Error(error.error || "Verification failed");
         }
+
+        const data = await response.json().catch(() => ({}));
+        setStatus("success");
+
+        if (data.message) {
+          setMessage(data.message);
+        } else {
+          setMessage("Your email has been verified successfully! You can now log in.");
+        }
+
+        toast.success("Email verified successfully! You can now log in.");
       } catch (error) {
         console.error("Email verification error:", error);
         setStatus("error");

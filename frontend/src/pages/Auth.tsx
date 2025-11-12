@@ -27,15 +27,6 @@ function Auth() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] = useState(false);
 
-  // Test toast on component mount (remove in production)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log("🧪 Testing if toast works...");
-      toast.success("Test: Toast is working!", { duration: 3000 });
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const {
     login,
     register,
@@ -47,22 +38,15 @@ function Auth() {
 
   const { mutate: forgotPasswordMutation } = useMutation({
     mutationFn: async (email: string) => {
-      console.log("🔐 Forgot password mutation started for:", email);
-      const result = await authService.forgotPassword(email);
-      console.log("✅ Forgot password mutation result:", result);
-      return result;
+      return await authService.forgotPassword(email);
     },
-    onSuccess: (result) => {
-      console.log("🎉 Forgot password SUCCESS:", result);
+    onSuccess: () => {
       toast.success("Password reset email sent! Please check your inbox.");
       setShowForgotPassword(false);
       setForgotPasswordEmail("");
-      setIsSubmittingForgotPassword(false);
     },
     onError: (error: Error) => {
-      console.error("❌ Forgot password ERROR:", error);
       setError(error.message || "Failed to send reset email");
-      setIsSubmittingForgotPassword(false);
     },
   });
   const location = useLocation();
@@ -93,34 +77,25 @@ function Auth() {
   const authMutation = useMutation({
     mutationFn: async (data) => {
       const { email, password } = data;
-      console.log(`🔐 Auth mutation started: ${isLogin ? "LOGIN" : "REGISTER"} for`, email);
       if (isLogin) {
-        const result = await login(email, password);
-        console.log("✅ Login result:", result);
-        return result;
+        return await login(email, password);
       } else {
-        const result = await register(email, password);
-        console.log("✅ Register result:", result);
-        return result;
+        return await register(email, password);
       }
     },
     onSuccess: (result) => {
-      console.log("🎉 Auth mutation SUCCESS:", result);
       // Check if this was an email verification flow
       if (result && result.requiresVerification) {
         // Show success toast
-        console.log("📧 Showing registration success toast");
         toast.success("Account created! Please check your email to verify your account.");
         // Don't navigate - stay on auth page
         return;
       }
 
       // Normal successful auth (shouldn't happen for registration)
-      console.log("🔄 Navigating to:", from);
       navigate(from, { replace: true });
     },
     onError: (error) => {
-      console.error("❌ Auth mutation ERROR:", error);
       setError(error.message || "Authentication failed");
     },
   });
@@ -171,13 +146,12 @@ function Auth() {
       setError("Please enter your email address");
       return;
     }
-    setError(""); // Clear any previous errors
     setIsSubmittingForgotPassword(true);
     forgotPasswordMutation(forgotPasswordEmail);
   };
 
   return (
-    <div className="min-h-screen bg-teal-gradient relative">
+    <div className="min-h-screen bg-teal-gradient relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse hidden sm:block"></div>
@@ -568,7 +542,6 @@ function Auth() {
                               setShowForgotPassword(false);
                               setForgotPasswordEmail("");
                               setError("");
-                              setIsSubmittingForgotPassword(false);
                             }}
                             disabled={isSubmittingForgotPassword}
                           >

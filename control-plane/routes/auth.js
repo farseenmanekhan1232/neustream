@@ -642,9 +642,11 @@ router.get("/verify-email/:token", async (req, res) => {
 
     console.log(`Email verified for user: ${user.email}`);
 
-    // Redirect to frontend with success message
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    res.redirect(`${frontendUrl}/auth?verified=true`);
+    // Return success response instead of redirecting
+    res.status(200).json({
+      message: "Your email has been verified successfully! You can now log in.",
+      email_verified: true,
+    });
   } catch (error) {
     console.error("Email verification error:", error);
     res.status(500).json({ error: "Email verification failed" });
