@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { Loader2 } from "lucide-react";
 import { usePostHog } from "./hooks/usePostHog";
 import { RouteAwareThemeProvider } from "./components/RouteAwareThemeProvider";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Main layout component
 const Layout = lazy(() => import("./components/Layout"));

@@ -46,9 +46,7 @@ ReactDOM.createRoot(rootElement).render(
           apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
           options={options}
         >
-          <ThemeProvider defaultTheme="light">
-            <App />
-          </ThemeProvider>
+          <App />
         </PostHogProvider>
       </HelmetProvider>
     </CurrencyProvider>
