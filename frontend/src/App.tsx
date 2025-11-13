@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Loader2 } from "lucide-react";
 import { usePostHog } from "./hooks/usePostHog";
-import { ThemeProvider } from "./components/theme-provider.jsx";
+import { RouteAwareThemeProvider } from "./components/RouteAwareThemeProvider";
 
 // Main layout component
 const Layout = lazy(() => import("./components/Layout"));
@@ -161,9 +161,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider defaultTheme="dark">
+        <ThemeProvider defaultTheme="system">
           <Router>
-            <AppContent />
+            <RouteAwareThemeProvider>
+              <AppContent />
+            </RouteAwareThemeProvider>
           </Router>
         </ThemeProvider>
       </AuthProvider>

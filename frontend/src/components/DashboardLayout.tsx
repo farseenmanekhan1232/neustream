@@ -44,7 +44,6 @@ import {
   IconBell,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "../contexts/ThemeContext";
 
 const data = {
   navMain: [
@@ -278,7 +277,6 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const pageInfo = getPageInfo(location.pathname);
 
-  const [theme, setTheme] = useTheme();
   // Auto-collapse sidebar on mobile when route changes
   useEffect(() => {
     if (window.innerWidth < 1024) {
