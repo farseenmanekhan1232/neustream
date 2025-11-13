@@ -44,6 +44,7 @@ import {
   IconBell,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "../contexts/ThemeContext";
 
 const data = {
   navMain: [
@@ -277,6 +278,7 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const pageInfo = getPageInfo(location.pathname);
 
+  const [theme, setTheme] = useTheme();
   // Auto-collapse sidebar on mobile when route changes
   useEffect(() => {
     if (window.innerWidth < 1024) {
@@ -342,9 +344,10 @@ export default function DashboardLayout() {
               alt="NeuStream"
               className="h-8 w-8 rounded-lg"
             />
-            <div className="grid flex-1 text-left text-sm leading-tight text-white">
-              <span className="truncate font-medium">NeuStream</span>
-              <span className="truncate text-xs">Streaming Platform</span>
+            <div className="grid flex-1 text-left text-lg leading-tight text-white">
+              <span className="truncate font-bold tracking-tighter">
+                neustream.
+              </span>
             </div>
           </Link>
         </div>

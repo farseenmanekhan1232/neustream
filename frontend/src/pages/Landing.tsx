@@ -263,7 +263,7 @@ function Landing() {
       {/* Marketing Content Wrapper - Contains header + all marketing sections */}
       <div className="relative -mt-[100vh]">
         {/* Camcorder Viewfinder - Sticky full-screen overlay */}
-        <div className="sticky top-0 z-[100] min-h-svh min-lg:opacity-60 pointer-events-none">
+        <div className="sticky top-0 z-[100] h-dvh min-lg:opacity-60 pointer-events-none">
           <CamcorderViewfinder />
         </div>
 
@@ -290,9 +290,11 @@ function Landing() {
                     No Performance Hit.
                   </TextHighlighter>
                 </div>
-                <p className="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
-                  Multistream to YouTube, Twitch, Facebook, and more from one
-                  place. Cloud encoding keeps your machine fast.
+                <p className="text-lg md:text-2xl font-light opacity-90 max-w-3xl mx-auto max-lg:tracking-tight max-lg:leading-5">
+                  Multistream to <strong className="italic">YouTube</strong>,{" "}
+                  <strong className="italic">Twitch</strong>,{" "}
+                  <strong className="italic">Facebook</strong>, and more from
+                  one place. Cloud encoding keeps your machine fast.
                 </p>
               </div>
 
@@ -303,39 +305,23 @@ function Landing() {
                 >
                   <Link to="/auth">
                     Start Streaming Free
-                    <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full animate-pulse">
-                      LIVE
+                    <span className="absolute -top-3 -right-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full ">
+                      <span className="animate-pulse">LIVE</span>
                     </span>
                   </Link>
                 </Button>
-                <p className="text-sm opacity-75">
-                  No credit card required • 14-day trial
-                </p>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 opacity-90">
-                {["Twitch", "YouTube", "Facebook", "TikTok", "Instagram"].map(
-                  (platform) => (
-                    <div
-                      key={platform}
-                      className="text-lg md:text-xl font-medium text-shadow-md"
-                    >
-                      {platform}
-                    </div>
-                  ),
-                )}
               </div>
             </div>
           </div>
           <img
             src="/hero.png"
             alt="Integration"
-            className="max-md:hidden w-full max-w-6xl mx-auto rounded-3xl mt-12 px-4 sm:px-0 shadow-2xl"
+            className="max-md:hidden w-full max-w-7xl mx-auto rounded-3xl lg:mt-12 px-4 sm:px-0 shadow-2xl"
           />
         </section>
 
         {/* Core Value Props Section */}
-        <section className="py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <section className="pb-20 pt-5 lg:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center max-w-4xl mx-auto mb-16">
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-normal leading-tight mb-12">
@@ -521,10 +507,7 @@ function Landing() {
                     {/* Features */}
                     <div className="space-y-2">
                       {[1, 2, 3, 4, 5].map((j) => (
-                        <div
-                          key={j}
-                          className="flex items-start gap-2"
-                        >
+                        <div key={j} className="flex items-start gap-2">
                           <div className="h-4 w-4 bg-white/20 rounded-full mt-0.5"></div>
                           <div className="h-3 bg-white/20 rounded flex-1"></div>
                         </div>
@@ -606,7 +589,8 @@ function Landing() {
                         {plan.price_yearly && (
                           <div className="flex items-center justify-center gap-2 mt-2">
                             <span className="text-sm opacity-80">
-                              ${Math.round(plan.price_yearly / 12)}/mo billed annually
+                              ${Math.round(plan.price_yearly / 12)}/mo billed
+                              annually
                             </span>
                             <span className="bg-green-500/20 text-green-300 px-2 py-0.5 rounded text-xs font-medium">
                               Save 20%
@@ -622,7 +606,9 @@ function Landing() {
                             <span className="mt-0.5 text-primary">
                               {feature.icon}
                             </span>
-                            <span className="text-sm flex-1">{feature.text}</span>
+                            <span className="text-sm flex-1">
+                              {feature.text}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -712,7 +698,8 @@ function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 leading-tight">
-              Ready to try NeuStream?
+              Ready to try{" "}
+              <span className="font-bold tracking-tighter">neustream.</span>?
             </h2>
             <p className="text-2xl lg:text-3xl mb-12 leading-relaxed">
               Start multistreaming today.{" "}
@@ -726,8 +713,8 @@ function Landing() {
             >
               <Link to="/auth">
                 Start Streaming Free
-                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-base font-bold px-3 py-1.5 rounded-full animate-pulse">
-                  LIVE
+                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-base font-bold px-3 py-1.5 rounded-full ">
+                  <span className="animate-pulse">LIVE</span>
                 </span>
               </Link>
             </Button>

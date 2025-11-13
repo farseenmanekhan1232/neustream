@@ -5,6 +5,7 @@ import "./index.css";
 import { PostHogProvider } from "posthog-js/react";
 import { HelmetProvider } from "react-helmet-async";
 import { CurrencyProvider } from "./contexts/CurrencyContext.jsx";
+import { ThemeProvider } from "./contexts/ThemeContext.js";
 
 interface PostHogOptions {
   api_host: string;
@@ -45,7 +46,9 @@ ReactDOM.createRoot(rootElement).render(
           apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
           options={options}
         >
-          <App />
+          <ThemeProvider defaultTheme="light">
+            <App />
+          </ThemeProvider>
         </PostHogProvider>
       </HelmetProvider>
     </CurrencyProvider>

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Battery, RotateCcw, Zap, ZapOff } from "lucide-react";
+import { Battery } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CamcorderViewfinder = () => {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -103,20 +104,25 @@ const CamcorderViewfinder = () => {
         </div>
 
         {/* Shutter Button - Bottom Center */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-red-600" />
+        <Link
+          to="/auth"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <div className="  bg-transparent">
+            <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
+              <div className="w-8 h-8 rounded-sm bg-red-600" />
+            </div>
           </div>
-        </div>
+        </Link>
 
         {/* Thumbnail - Bottom Left */}
-        <div className="absolute bottom-8 left-6">
+        <Link to={"/auth"} className="absolute bottom-8 left-6">
           <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/30">
             <div className="w-full h-full bg-gray-800 flex items-center justify-center">
               <span className="text-white text-xs">▶</span>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
     );
   }
@@ -129,12 +135,12 @@ const CamcorderViewfinder = () => {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%)",
+            "radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%)",
         }}
       />
 
       {/* 3x3 Grid Overlay */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 opacity-50">
         {/* Vertical lines */}
         <div className="absolute left-1/3 top-0 w-px h-full bg-white/50" />
         <div className="absolute left-2/3 top-0 w-px h-full bg-white/50" />
@@ -189,7 +195,7 @@ const CamcorderViewfinder = () => {
           }}
         >
           <div className="w-4 h-4 bg-red-600 rounded-full" />
-          <span className="text-red-600 font-bold text-2xl tracking-wider">
+          <span className="text-red-600 font-bold text-xl tracking-wider">
             REC
           </span>
         </motion.div>

@@ -25,7 +25,8 @@ function Auth() {
   const [error, setError] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-  const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] = useState(false);
+  const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] =
+    useState(false);
 
   const {
     login,
@@ -87,7 +88,9 @@ function Auth() {
       // Check if this was an email verification flow
       if (result && result.requiresVerification) {
         // Show success toast
-        toast.success("Account created! Please check your email to verify your account.");
+        toast.success(
+          "Account created! Please check your email to verify your account.",
+        );
         // Don't navigate - stay on auth page
         return;
       }
@@ -151,7 +154,7 @@ function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-teal-gradient relative overflow-hidden">
+    <div className="min-h-screen bg-teal-gradient relative overflow-hidden lg:flex justify-center items-center">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse hidden sm:block"></div>
@@ -176,7 +179,7 @@ function Auth() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-20">
             {/* Left side - Branding (Desktop only) */}
-            <div className="flex-1 max-w-xl text-center lg:text-left text-white order-2 lg:order-1 hidden lg:block">
+            <div className="flex-1 max-w-xl text-center lg:text-left text-white order-2 lg:order-1 hidden lg:block ">
               <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 bg-white/10 rounded-2xl sm:rounded-3xl backdrop-blur-sm border border-white/20">
                 <img
                   src="/logo.png"
@@ -186,9 +189,9 @@ function Auth() {
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-normal tracking-tight mb-4 sm:mb-6 leading-tight">
                 Welcome to{" "}
-                <span className="font-medium bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                  NeuStream
-                </span>
+                <div className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent font-bold tracking-tighter">
+                  neustream.
+                </div>
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl font-light opacity-90 mb-6 sm:mb-8 leading-relaxed">
                 The professional multistreaming platform for content creators
@@ -273,14 +276,6 @@ function Auth() {
                     </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-white/20">
-                <p className="text-xs sm:text-sm opacity-70">
-                  Trusted by{" "}
-                  <span className="font-medium text-white">10,000+</span>{" "}
-                  content creators worldwide
-                </p>
               </div>
             </div>
 
@@ -471,11 +466,15 @@ function Auth() {
                       <div className="text-center">
                         <h3 className="text-lg font-medium">Reset Password</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Enter your email address and we'll send you a link to reset your password
+                          Enter your email address and we'll send you a link to
+                          reset your password
                         </p>
                       </div>
 
-                      <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <form
+                        onSubmit={handleForgotPassword}
+                        className="space-y-4"
+                      >
                         <div className="space-y-2">
                           <Label htmlFor="forgot-email">Email Address</Label>
                           <div className="relative">
