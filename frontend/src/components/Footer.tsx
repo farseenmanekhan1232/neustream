@@ -205,7 +205,7 @@ function Footer() {
               </a>
             </div>
             <p className="text-sm text-muted-foreground">
-              © {currentYear} Techmorph Technology. All rights reserved.
+              © {currentYear} Neustream. All rights reserved.
             </p>
           </div>
 

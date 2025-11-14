@@ -44,10 +44,10 @@ export default function TermsOfService() {
               </h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  By accessing and using Techmorph Technology's Neustream
-                  service ("the Service"), you accept and agree to be bound by
-                  the terms and provision of this agreement. If you do not agree
-                  to abide by the above, please do not use this service.
+                  By accessing and using Neustream's service ("the Service"),
+                  you accept and agree to be bound by the terms and provision of
+                  this agreement. If you do not agree to abide by the above,
+                  please do not use this service.
                 </p>
               </div>
             </section>
@@ -58,10 +58,9 @@ export default function TermsOfService() {
               </h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  Techmorph Technology's Neustream service is a multistreaming
-                  platform that allows users to broadcast live video content
-                  simultaneously to multiple streaming platforms. The service
-                  includes:
+                  Neustream's service is a multistreaming platform that allows
+                  users to broadcast live video content simultaneously to
+                  multiple streaming platforms. The service includes:
                 </p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Multi-platform streaming capabilities</li>
@@ -151,10 +150,10 @@ export default function TermsOfService() {
                   Our Content
                 </h3>
                 <p>
-                  The Techmorph Technology's Neustream service, including its
-                  software, design, and content, is protected by intellectual
-                  property laws. You may not copy, modify, distribute, or create
-                  derivative works without our explicit permission.
+                  Neustream's service, including its software, design, and
+                  content, is protected by intellectual property laws. You may
+                  not copy, modify, distribute, or create derivative works
+                  without our explicit permission.
                 </p>
               </div>
             </section>
@@ -274,9 +273,9 @@ export default function TermsOfService() {
               </h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  To the maximum extent permitted by law, Techmorph Technology
-                  shall not be liable for any indirect, incidental, special, or
-                  consequential damages arising from your use of our service.
+                  To the maximum extent permitted by law, Neustream shall not be
+                  liable for any indirect, incidental, special, or consequential
+                  damages arising from your use of our service.
                 </p>
                 <p>
                   Our total liability for any claims relating to the service
@@ -291,8 +290,8 @@ export default function TermsOfService() {
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   These terms shall be governed by and construed in accordance
-                  with the laws of the jurisdiction where Techmorph Technology
-                  operates, without regard to its conflict of law provisions.
+                  with the laws of the jurisdiction where Neustream operates,
+                  without regard to its conflict of law provisions.
                 </p>
               </div>
             </section>

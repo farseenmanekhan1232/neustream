@@ -26,13 +26,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy code to Control Plane
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          cd control-plane
+          npm ci
+
+      - name: Build TypeScript
+        run: |
+          cd control-plane
+          npm run build
+
+      - name: Copy compiled code to Control Plane
         uses: appleboy/scp-action@v0.1.3
         with:
           host: ${{ secrets.CONTROL_PLANE_HOST }}
           username: ${{ secrets.CONTROL_PLANE_USERNAME }}
           key: ${{ secrets.CONTROL_PLANE_SSH_KEY }}
-          source: "control-plane/*"
+          source: "control-plane/dist/*"
           target: "/opt/neustream"
           strip_components: 1
 
@@ -51,10 +66,6 @@ jobs:
             if [ -f .env ]; then
               cp .env .env.backup
             fi
-
-            # Install dependencies
-            npm install --no-audit --no-fund
-
 
             # Create fresh environment file
             cat > .env << EOF
@@ -110,17 +121,8 @@ jobs:
             pm2 stop neustream-control-plane || true
 
             cd /opt/neustream
-            echo " Running Control Plane Migrations..."
 
-            # if node scripts/run-migrations.js; then
-            #   echo "✅ Control Plane Migration passed"
-            # else
-            #   echo "❌ Control Plane Migration failed - checking logs..."
-            #   pm2 logs neustream-control-plane --lines 20
-            #   exit 1
-            # fi
-
-            pm2 start server.js --name neustream-control-plane --env production
+            pm2 start dist/server.js --name neustream-control-plane --env production
 
             # Wait for service to be ready
             sleep 20
@@ -131,7 +133,7 @@ jobs:
               echo "✅ Control Plane health check passed"
             else
               echo "❌ Control Plane health check failed - checking logs..."
-              pm2 logs neustream-control-plane --lines 20
+              pm2 logs neustream-control-plane --lines 10
               exit 1
             fi
 
@@ -295,11 +297,11 @@ jobs:
             else
               echo "⚠️  RTMP port 1935 test failed (this may be normal - checking with alternative method)"
               # Fallback: check if process logs show RTMP listener is ready
-              if pm2 logs neustream-media-server --lines 20 | grep -q "RTMP.*listener opened on :1935"; then
+              if pm2 logs neustream-media-server --lines 10 | grep -q "RTMP.*listener opened on :1935"; then
                 echo "✅ RTMP port 1935 is confirmed in logs"
               else
                 echo "❌ RTMP port 1935 verification failed"
-                pm2 logs neustream-media-server --lines 20
+                pm2 logs neustream-media-server --lines 10
                 exit 1
               fi
             fi
