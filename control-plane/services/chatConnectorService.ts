@@ -4,6 +4,7 @@ import * as tmi from 'tmi.js';
 import YouTubeGrpcService from './youtubeGrpcService';
 import Database from '../lib/database';
 import { WebSocketServer } from 'ws';
+import EventSource from 'eventsource';
 
 // Type definitions
 export interface ChatConnectorConfig {
@@ -391,7 +392,6 @@ class ChatConnectorService {
 
     try {
       // Use EventSource for Server-Sent Events
-      const EventSource = require('eventsource');
       const eventSource = new EventSource(sseUrl);
 
       eventSource.onopen = () => {

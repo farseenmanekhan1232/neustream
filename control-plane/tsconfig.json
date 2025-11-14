@@ -6,7 +6,6 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
 
@@ -69,9 +68,7 @@
     /* Type Roots */
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": [
-    "**/*.ts"
-  ],
+  "include": ["**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",

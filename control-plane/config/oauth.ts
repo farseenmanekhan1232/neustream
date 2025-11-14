@@ -34,9 +34,10 @@ interface TokenPayload {
 }
 
 // Configure Passport Google OAuth strategy
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID || '',
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:3000/api/auth/google/callback"
 },
 async (_accessToken: string, _refreshToken: string, profile: any, done: (err: any, user?: OAuthUser | false) => void) => {
@@ -182,11 +183,15 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
     return done(error, undefined);
   }
 }));
+} else {
+  console.warn('Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET not set');
+}
 
 // Configure Passport Twitch OAuth strategy
+if (process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET) {
 passport.use(new TwitchStrategy({
-  clientID: process.env.TWITCH_CLIENT_ID || '',
-  clientSecret: process.env.TWITCH_CLIENT_SECRET || '',
+  clientID: process.env.TWITCH_CLIENT_ID,
+  clientSecret: process.env.TWITCH_CLIENT_SECRET,
   callbackURL: process.env.TWITCH_CALLBACK_URL || "http://localhost:3000/api/auth/twitch/callback",
   scope: ['user:read:email'] as any // Basic user profile + email
 },
@@ -335,6 +340,9 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
     return done(error, undefined);
   }
 }));
+} else {
+  console.warn('Twitch OAuth not configured - TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET not set');
+}
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {

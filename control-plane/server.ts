@@ -10,7 +10,6 @@ dotenv.config();
 
 // Import configuration and routes
 import { passport } from "./config/oauth";
-// Note: Using .js extensions for imports from JavaScript modules that haven't been converted yet
 import authRoutes from "./routes/auth.js";
 import streamRoutes from "./routes/streams.js";
 import sourceRoutes from "./routes/sources.js";
@@ -23,9 +22,11 @@ import blogRoutes from "./routes/blog.js";
 import streamingRoutes from "./routes/streaming.js";
 import totpRoutes from "./routes/totp.js";
 import posthogService from "./services/posthog.js";
+import ChatConnectorService from "./services/chatConnectorService.js";
+import subscriptionCleanupService from "./services/subscriptionCleanupService.js";
 
 // Import WebSocket server
-import WebSocketServer from "./lib/websocket";
+import WebSocketServer from "./lib/websocket.js";
 
 // Create Express application
 const app: Express = express();
@@ -143,10 +144,8 @@ console.log("WebSocket server initialized");
 
 // ===== Chat Connector Service Initialization =====
 
-// Import and initialize Chat Connector Service
-// Note: Using dynamic import for JavaScript module
-const ChatConnectorService = require("./services/chatConnectorService.js");
-const chatConnectorService = new (ChatConnectorService as any)(wsServer);
+// Initialize Chat Connector Service
+const chatConnectorService = new ChatConnectorService(wsServer);
 
 // Connect WebSocket server to Chat Connector Service
 wsServer.setChatConnectorService(chatConnectorService);
@@ -157,7 +156,6 @@ console.log("Chat connector service initialized");
 
 // ===== Subscription Cleanup Service Initialization =====
 
-const subscriptionCleanupService = require("./services/subscriptionCleanupService.js");
 subscriptionCleanupService.start();
 console.log("Subscription cleanup service started");
 

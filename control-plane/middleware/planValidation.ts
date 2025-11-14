@@ -6,10 +6,7 @@ import {
   CanCreateChatConnectorResult,
   UserUsage
 } from '../types/entities';
-
-// Note: subscriptionService is not yet converted to TypeScript
-// Will use require() for now and can be updated later
-const subscriptionService = require('../services/subscriptionService.js');
+import subscriptionService from '../services/subscriptionService';
 
 // Extend Express Request
 declare global {

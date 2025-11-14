@@ -1,5 +1,8 @@
 // Test script to verify chat connector paid plan implementation
 import subscriptionService from './services/subscriptionService';
+import * as planValidation from './middleware/planValidation';
+import * as chatRoutes from './routes/chat';
+import * as subscriptionCleanupService from './services/subscriptionCleanupService';
 
 async function testChatConnectorPlanImplementation(): Promise<void> {
   console.log('🧪 Testing Chat Connector Paid Plan Implementation...\n');
@@ -31,8 +34,6 @@ async function testChatConnectorPlanImplementation(): Promise<void> {
   // Test 2: Check if plan validation middleware exists
   console.log('\n2. Testing plan validation middleware...');
   try {
-    const planValidation = require('./middleware/planValidation');
-
     if ((planValidation as any).canCreateChatConnector) {
       console.log('   ✅ canCreateChatConnector middleware exists');
     } else {
@@ -46,7 +47,6 @@ async function testChatConnectorPlanImplementation(): Promise<void> {
   // Test 3: Check if chat routes have plan validation
   console.log('\n3. Testing chat route plan validation...');
   try {
-    const chatRoutes = require('./routes/chat');
     console.log('   ✅ Chat routes loaded successfully');
 
     // Note: We can't easily test middleware attachment without running the full app
@@ -59,8 +59,6 @@ async function testChatConnectorPlanImplementation(): Promise<void> {
   // Test 4: Check if subscription cleanup service exists
   console.log('\n4. Testing subscription cleanup service...');
   try {
-    const subscriptionCleanupService = require('./services/subscriptionCleanupService');
-
     if ((subscriptionCleanupService as any).start && (subscriptionCleanupService as any).stop) {
       console.log('   ✅ Subscription cleanup service methods exist');
     } else {

@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import crypto from "crypto";
 import { authenticateToken } from "../middleware/auth";
 import { detectCurrency, requireCurrencyContext, getCurrencyContext } from "../middleware/currencyMiddleware";
 import paymentService from "../services/paymentService";
@@ -133,7 +134,6 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req: R
     const webhookBody = req.body;
 
     // Verify webhook signature
-    const crypto = require('crypto');
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
       .update(JSON.stringify(webhookBody))

@@ -1,7 +1,7 @@
 // Note: These services are not yet converted to TypeScript
 // Will use require() for now and can be updated later
-const subscriptionService = require('./subscriptionService.js');
-const chatConnectorService = require('./chatConnectorService.js');
+import subscriptionService from './subscriptionService.js';
+import chatConnectorService from './chatConnectorService.js';
 
 /**
  * Subscription Cleanup Service

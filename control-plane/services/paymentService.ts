@@ -1,4 +1,5 @@
 import Razorpay from "razorpay";
+import crypto from "crypto";
 import Database from "../lib/database";
 import { PaymentOrder, RazorpayOrder, PaymentVerificationResult } from "../types/entities";
 
@@ -8,14 +9,23 @@ import { PaymentOrder, RazorpayOrder, PaymentVerificationResult } from "../types
  */
 class PaymentService {
   private db: Database;
-  private razorpay: Razorpay;
+  private razorpay: Razorpay | null;
+  private isEnabled: boolean;
 
   constructor() {
     this.db = new Database();
-    this.razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || "",
-      key_secret: process.env.RAZORPAY_KEY_SECRET || "",
-    });
+    this.isEnabled = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+
+    if (this.isEnabled) {
+      this.razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID!,
+        key_secret: process.env.RAZORPAY_KEY_SECRET!,
+      });
+      console.log('Razorpay payment service initialized');
+    } else {
+      this.razorpay = null;
+      console.log('Razorpay payment service disabled - missing API keys');
+    }
   }
 
   /**
@@ -65,6 +75,11 @@ class PaymentService {
       };
 
       console.log("📦 Creating Razorpay order:", orderOptions);
+
+      if (!this.razorpay) {
+        throw new Error('Payment service is not configured');
+      }
+
       const order = await this.razorpay.orders.create(orderOptions);
 
       // Store order in database
@@ -103,7 +118,6 @@ class PaymentService {
    */
   verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
     try {
-      const crypto = require("crypto");
       const expectedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
         .update(orderId + "|" + paymentId)
@@ -139,6 +153,10 @@ class PaymentService {
       const orderData = order[0];
 
       // Verify payment with Razorpay
+      if (!this.razorpay) {
+        throw new Error('Payment service is not configured');
+      }
+
       const payment = await this.razorpay.payments.fetch(paymentId);
 
       if (payment.status !== "captured") {
