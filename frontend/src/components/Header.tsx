@@ -24,7 +24,9 @@ function Header() {
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="NeuStream Logo" className="w-8 h-8 " />
-            <span className="text-xl font-normal">NeuStream</span>
+            <span className="text-2xl font-bold tracking-tighter">
+              neustream.
+            </span>
           </Link>
         </div>
 
