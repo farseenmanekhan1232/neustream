@@ -51,7 +51,7 @@ class SubscriptionService {
 
       if (result.length === 0) {
         // Return default free plan with limited features
-        return await this.getFreePlanWithLimitedFeatures(currency);
+        return await this.getFreePlanWithLimitedFeatures(userId, currency);
       }
 
       const subscription = result[0];
@@ -71,7 +71,7 @@ class SubscriptionService {
   /**
    * Get free plan with limited features for expired subscriptions
    */
-  async getFreePlanWithLimitedFeatures(currency: string = 'USD'): Promise<UserSubscription> {
+  async getFreePlanWithLimitedFeatures(userId: number, currency: string = 'USD'): Promise<UserSubscription> {
     try {
       const freePlan = await this.getPlanByName('Free');
       if (!freePlan) {
@@ -82,12 +82,23 @@ class SubscriptionService {
       // const processedPlan = await currencyService.processPlanWithCurrency(freePlan, currency);
 
       return {
-        ...freePlan,
+        user_id: userId,
+        plan_id: freePlan.id,
         status: 'active',
         billing_cycle: 'monthly',
         current_period_start: new Date(),
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        is_expired_subscription: true
+        is_expired_subscription: true,
+        plan_name: freePlan.name,
+        plan_description: freePlan.description,
+        price_monthly: freePlan.price_monthly,
+        price_yearly: freePlan.price_yearly,
+        price_monthly_inr: freePlan.price_monthly_inr,
+        price_yearly_inr: freePlan.price_yearly_inr,
+        max_sources: freePlan.max_sources,
+        max_destinations: freePlan.max_destinations,
+        max_streaming_hours_monthly: freePlan.max_streaming_hours_monthly,
+        features: freePlan.features
       } as UserSubscription;
     } catch (error) {
       console.error('Error getting free plan with limited features:', error);

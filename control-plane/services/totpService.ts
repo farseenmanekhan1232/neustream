@@ -23,7 +23,7 @@ authenticator.options = {
   step: 30, // 30-second windows
   window: 2, // Allow ±1 window for clock skew
   digits: 6, // Standard 6-digit codes
-  algorithm: 'sha1'
+  algorithm: 'sha1' as any
 };
 
 /**

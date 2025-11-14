@@ -108,7 +108,7 @@ router.post("/", authenticateToken, canCreateSource, async (req: Request, res: R
     }
 
     // Generate unique stream key
-    let streamKey: string;
+    let streamKey: string = '';
     let isUnique = false;
     let attempts = 0;
 
@@ -344,7 +344,7 @@ router.post("/:id/regenerate-key", authenticateToken, handleGenericIdParam('stre
     }
 
     // Generate unique stream key
-    let streamKey: string;
+    let streamKey: string = '';
     let isUnique = false;
     let attempts = 0;
 

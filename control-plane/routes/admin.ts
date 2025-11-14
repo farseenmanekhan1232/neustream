@@ -554,7 +554,7 @@ router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'
     }
 
     // Generate unique stream key
-    let streamKey: string;
+    let streamKey: string = '';
     let isUnique = false;
     let attempts = 0;
 
@@ -774,7 +774,7 @@ router.post("/users/:id/reset-stream-key", handleGenericIdParam('users'), async 
     }
 
     // Generate unique stream key
-    let streamKey: string;
+    let streamKey: string = '';
     let isUnique = false;
     let attempts = 0;
 
@@ -1292,7 +1292,8 @@ router.get("/settings/currency", authenticateToken, async (req: Request, res: Re
   try {
     const userId = (req as any).user.id;
     const preference = await currencyService.getUserCurrencyPreference(userId);
-    const currencyInfo = currencyService.getCurrencyInfo(preference);
+    const effectiveCurrency = await currencyService.determineEffectiveCurrency(userId, null);
+    const currencyInfo = currencyService.getCurrencyInfo(effectiveCurrency);
 
     res.json({
       success: true,
@@ -1322,7 +1323,7 @@ router.post("/settings/currency", authenticateToken, async (req: Request, res: R
 
     const updatedPreference = await currencyService.setUserCurrencyPreference(
       userId,
-      currency_preference
+      currency_preference as any
     );
 
     res.json({
@@ -1369,7 +1370,7 @@ router.post("/currency/exchange-rate", authenticateToken, async (req: Request, r
       return;
     }
 
-    await currencyService.updateExchangeRate(rate, from_currency, to_currency);
+    await currencyService.updateExchangeRate(rate, from_currency as any, to_currency as any);
 
     res.json({
       success: true,

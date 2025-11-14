@@ -191,7 +191,7 @@ class BlogService {
       .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
-      .trim(/-+/g);
+      .replace(/^-+|-+$/g, "");
 
     let slug = baseSlug;
     let counter = 1;

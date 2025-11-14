@@ -19,6 +19,12 @@ interface CurrencyRate {
   rate: number;
 }
 
+interface IpApiResponse {
+  status: string;
+  countryCode?: string;
+  currency?: string;
+}
+
 /**
  * Location Service
  * Detects user location from IP address with caching
@@ -66,6 +72,18 @@ class LocationService {
   }
 
   /**
+   * Type guard to check if data has the expected IpApiResponse structure
+   */
+  private isIpApiResponse(data: unknown): data is IpApiResponse {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'status' in data &&
+      typeof (data as IpApiResponse).status === 'string'
+    );
+  }
+
+  /**
    * Fetch location data from ip-api.com
    */
   async fetchFromApi(ipAddress: string): Promise<LocationData> {
@@ -83,14 +101,15 @@ class LocationService {
         throw new Error(`IP API returned ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
-      if (data.status !== 'success') {
+      // Type guard to ensure data has the expected structure
+      if (!this.isIpApiResponse(data) || data.status !== 'success') {
         return this.getDefaultLocation();
       }
 
       return {
-        countryCode: data.countryCode,
+        countryCode: data.countryCode || 'US',
         currency: data.currency || 'USD',
         isIndia: data.countryCode === 'IN',
         rate: data.currency === 'INR' ? await this.getExchangeRate() : 1

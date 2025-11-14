@@ -1,4 +1,5 @@
 import nodemailer, { Transporter } from "nodemailer";
+import crypto from "crypto";
 
 /**
  * Email service for sending verification and password reset emails

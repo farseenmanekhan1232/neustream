@@ -435,14 +435,14 @@ router.put("/posts/:id", authenticateToken, async (req: Request, res: Response):
     const post = existingPosts[0];
 
     // Allow update if user is author or admin (you might want to add admin role check)
-    if (post.author_id !== (req as any).user.id) {
+    if (post.author_id !== parseInt((req as any).user.id)) {
       res
         .status(403)
         .json({ error: "Not authorized to update this post" });
       return;
     }
 
-    await blogService.updatePost(postId, req.body);
+    await blogService.updatePost(postId as unknown as number, req.body);
 
     // Update categories if provided
     if (req.body.categories !== undefined) {
@@ -528,14 +528,14 @@ router.delete("/posts/:id", authenticateToken, async (req: Request, res: Respons
     const post = existingPosts[0];
 
     // Allow delete if user is author or admin
-    if (post.author_id !== (req as any).user.id) {
+    if (post.author_id !== parseInt((req as any).user.id)) {
       res
         .status(403)
         .json({ error: "Not authorized to delete this post" });
       return;
     }
 
-    await blogService.deletePost(postId);
+    await blogService.deletePost(postId as unknown as number);
     res.json({ message: "Blog post deleted successfully" });
   } catch (error) {
     console.error("Error deleting blog post:", error);

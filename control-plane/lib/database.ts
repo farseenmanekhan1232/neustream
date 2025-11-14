@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient } from 'pg';
 
 /**
  * Database connection and query management class
@@ -68,8 +68,8 @@ class Database {
   async query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
     const client = await this.pool.connect();
     try {
-      const result = await client.query(sql, params) as QueryResult<T>;
-      return result.rows;
+      const result = await client.query(sql, params);
+      return result.rows as T[];
     } finally {
       client.release();
     }
@@ -84,7 +84,7 @@ class Database {
   async run<T = any>(sql: string, params: any[] = []): Promise<T> {
     const client = await this.pool.connect();
     try {
-      const result = await client.query(sql, params) as QueryResult<T>;
+      const result = await client.query(sql, params);
       return (result.rows[0] || { id: (result.rows[0] as any)?.id, changes: result.rowCount }) as T;
     } finally {
       client.release();

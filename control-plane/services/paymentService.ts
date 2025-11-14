@@ -79,7 +79,7 @@ class PaymentService {
 
       return {
         id: order.id,
-        amount: order.amount,
+        amount: Number(order.amount),
         currency: order.currency,
         key: process.env.RAZORPAY_KEY_ID || "",
         name: "Neustream",

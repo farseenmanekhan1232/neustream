@@ -11,7 +11,7 @@ const db = new Database();
 // JWT secret for token generation
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-in-production';
 
-interface OAuthUser {
+export interface OAuthUser {
   id: number;
   uuid: string;
   email: string;
@@ -59,7 +59,7 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
       // Update user info from Google (in case it changed)
       await db.run(
         'UPDATE users SET display_name = $1, avatar_url = $2, oauth_email = $3 WHERE id = $4',
-        [profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, user.id]
+        [profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, user!.id]
       );
 
       // Track successful login
@@ -72,12 +72,12 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
       // });
 
       return done(null, {
-        id: user.id,
-        uuid: user.uuid,
-        email: user.email,
+        id: user!.id,
+        uuid: user!.uuid,
+        email: user!.email,
         displayName: profile.displayName,
         avatarUrl: profile.photos?.[0]?.value,
-        streamKey: user.stream_key || '',
+        streamKey: user!.stream_key || '',
         oauthProvider: 'google',
         isNewUser: false
       } as OAuthUser);
@@ -97,7 +97,7 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
       // This handles the case where someone signed up with Twitch and now wants to use Google
       await db.run(
         'UPDATE users SET oauth_provider = $1, oauth_id = $2, display_name = $3, avatar_url = $4, oauth_email = $5 WHERE id = $6',
-        ['google', profile.id, profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, existingUser.id]
+        ['google', profile.id, profile.displayName, profile.photos[0]?.value, profile.emails[0]?.value, existingUser!.id]
       );
 
       // Track account linking
@@ -111,12 +111,12 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
       // });
 
       return done(null, {
-        id: existingUser.id,
-        uuid: existingUser.uuid,
-        email: existingUser.email,
+        id: existingUser!.id,
+        uuid: existingUser!.uuid,
+        email: existingUser!.email,
         displayName: profile.displayName,
         avatarUrl: profile.photos?.[0]?.value,
-        streamKey: existingUser.stream_key || '',
+        streamKey: existingUser!.stream_key || '',
         oauthProvider: 'google',
         isNewUser: false,
         accountLinked: true
@@ -139,7 +139,7 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
       );
 
       if (freePlan.length > 0) {
-        const freePlanId = freePlan[0].id;
+        const freePlanId = freePlan[0]!.id;
 
         // Create subscription for the new user
         await db.run(
@@ -179,7 +179,7 @@ async (_accessToken: string, _refreshToken: string, profile: any, done: (err: an
 
   } catch (error) {
     console.error('Google OAuth error:', error);
-    return done(error, null);
+    return done(error, undefined);
   }
 }));
 
@@ -188,7 +188,7 @@ passport.use(new TwitchStrategy({
   clientID: process.env.TWITCH_CLIENT_ID || '',
   clientSecret: process.env.TWITCH_CLIENT_SECRET || '',
   callbackURL: process.env.TWITCH_CALLBACK_URL || "http://localhost:3000/api/auth/twitch/callback",
-  scope: ['user:read:email'] // Basic user profile + email
+  scope: ['user:read:email'] as any // Basic user profile + email
 },
 async (_accessToken: string, _refreshToken: string, profile: any, done: (err: any, user?: OAuthUser | false) => void) => {
   console.log('=== TWITCH OAUTH STRATEGY ===');
@@ -397,6 +397,6 @@ export function generateToken(user: OAuthUser): string {
   }
 }
 
-export { passport, generateToken, JWT_SECRET };
+export { passport, JWT_SECRET };
 export default { passport, generateToken, JWT_SECRET };
 

@@ -94,7 +94,7 @@ export function getClientIp(req: Request): string {
     const value = req.headers[header];
     if (value) {
       // Handle comma-separated IPs (take the first one)
-      const ip = value.split(',')[0].trim();
+      const ip = (Array.isArray(value) ? value[0] : value).split(',')[0].trim();
       if (isValidIp(ip)) {
         return ip;
       }

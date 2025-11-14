@@ -8,6 +8,7 @@ import subscriptionService from "../services/subscriptionService";
 import EmailService from "../services/emailService";
 import { authenticateToken } from "../middleware/auth";
 import { passport, generateToken, JWT_SECRET } from "../config/oauth";
+import { OAuthUser } from "../config/oauth";
 import { User } from "../types/entities";
 
 const router = express.Router();
@@ -471,8 +472,8 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
       email: user.email,
       displayName: user.display_name,
       avatarUrl: user.avatar_url,
-      streamKey: user.stream_key,
-      oauthProvider: user.oauth_provider,
+      streamKey: user.stream_key || '',
+      oauthProvider: user.oauth_provider || '',
     });
 
     res.json({
@@ -522,7 +523,7 @@ router.get(
       }
 
       // Generate JWT token for the authenticated user
-      const token = generateToken(req.user);
+      const token = generateToken(req.user as OAuthUser);
       console.log("Generated JWT token:", token.substring(0, 20) + "...");
 
       // Redirect to frontend auth page with token
@@ -557,7 +558,7 @@ router.post(
   passport.authenticate("google-token", { session: false }),
   (req: Request, res: Response) => {
     try {
-      const token = generateToken(req.user);
+      const token = generateToken(req.user as OAuthUser);
       res.json({
         token,
         user: req.user,
@@ -594,7 +595,7 @@ router.get(
     }
 
     // Generate JWT token for the authenticated user
-    const token = generateToken(req.user);
+    const token = generateToken(req.user as OAuthUser);
     console.log("Generated JWT token:", token.substring(0, 20) + "...");
 
     // Redirect to frontend auth page with token
