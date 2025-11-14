@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { authService } from "../services/auth";
+import { useApiHealth } from "../hooks/useApiHealth";
 import Header from "../components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { MaintenanceBanner } from "../components/MaintenanceBanner";
 
 function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,6 +38,10 @@ function Auth() {
     error: authError,
     user,
   } = useAuth();
+
+  // Monitor API health status
+  const { isHealthy, isChecking, lastChecked, error: apiError, checkHealth } =
+    useApiHealth();
 
   const { mutate: forgotPasswordMutation } = useMutation({
     mutationFn: async (email: string) => {
@@ -176,6 +182,13 @@ function Auth() {
       </div>
 
       <main className="relative py-4 px-4 sm:py-16 sm:px-6 lg:py-24 lg:px-8 lg:pt-8">
+        {/* Show maintenance banner if API is down */}
+        <MaintenanceBanner
+          isVisible={!isHealthy}
+          onRetry={() => checkHealth()}
+          isRetrying={isChecking}
+        />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-20">
             {/* Left side - Branding (Desktop only) */}
@@ -312,7 +325,7 @@ function Auth() {
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleSignIn}
-                    disabled={authMutation.isPending}
+                    disabled={authMutation.isPending || !isHealthy}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -344,7 +357,7 @@ function Auth() {
                     variant="outline"
                     className="w-full"
                     onClick={handleTwitchSignIn}
-                    disabled={authMutation.isPending}
+                    disabled={authMutation.isPending || !isHealthy}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -400,7 +413,7 @@ function Auth() {
                           placeholder="your@email.com"
                           className="pl-10"
                           required
-                          disabled={authMutation.isPending}
+                          disabled={authMutation.isPending || !isHealthy}
                         />
                       </div>
                     </div>
@@ -417,7 +430,7 @@ function Auth() {
                           placeholder="Enter your password"
                           className="pl-10"
                           required
-                          disabled={authMutation.isPending}
+                          disabled={authMutation.isPending || !isHealthy}
                           minLength={6}
                         />
                       </div>
@@ -425,7 +438,7 @@ function Auth() {
 
                     <Button
                       type="submit"
-                      disabled={authMutation.isPending}
+                      disabled={authMutation.isPending || !isHealthy}
                       className="w-full"
                     >
                       {authMutation.isPending ? (
@@ -453,7 +466,7 @@ function Auth() {
                           setForgotPasswordEmail(formData.email);
                           setError("");
                         }}
-                        disabled={authMutation.isPending}
+                        disabled={authMutation.isPending || !isHealthy}
                       >
                         Forgot your password?
                       </Button>
@@ -490,7 +503,7 @@ function Auth() {
                               placeholder="your@email.com"
                               className="pl-10"
                               required
-                              disabled={isSubmittingForgotPassword}
+                              disabled={isSubmittingForgotPassword || !isHealthy}
                             />
                           </div>
                         </div>
@@ -499,7 +512,7 @@ function Auth() {
                           <Button
                             type="submit"
                             className="flex-1"
-                            disabled={isSubmittingForgotPassword}
+                            disabled={isSubmittingForgotPassword || !isHealthy}
                           >
                             {isSubmittingForgotPassword ? (
                               <>
@@ -518,7 +531,7 @@ function Auth() {
                               setForgotPasswordEmail("");
                               setError("");
                             }}
-                            disabled={isSubmittingForgotPassword}
+                            disabled={isSubmittingForgotPassword || !isHealthy}
                           >
                             Cancel
                           </Button>
@@ -534,7 +547,7 @@ function Auth() {
                       variant="ghost"
                       className="w-full text-sm"
                       onClick={toggleMode}
-                      disabled={authMutation.isPending}
+                      disabled={authMutation.isPending || !isHealthy}
                     >
                       {isLogin
                         ? "Don't have an account? Sign up"
