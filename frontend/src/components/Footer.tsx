@@ -65,8 +65,8 @@ function Footer() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-black/50">
-              Techmorph Technology
+            <h3 className="text-3xl font-bold tracking-tighter text-black/50">
+              neustream.
             </h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Revolutionizing multi-platform streaming with advanced

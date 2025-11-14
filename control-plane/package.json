@@ -2,12 +2,21 @@
   "name": "neustream-control-plane",
   "version": "1.0.0",
   "description": "Control plane for multi-destination streaming service",
-  "main": "server.js",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
   "scripts": {
-    "start": "node server.js",
+    "start": "node dist/server.js",
     "dev": "nodemon server.js",
-    "migrate": "node scripts/run-migrations.js",
-    "migrate:subscriptions": "node scripts/migrate-subscriptions.js",
+    "dev:ts": "ts-node --transpile-only server.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rimraf dist",
+    "migrate": "node dist/scripts/run-migrations.js",
+    "migrate:ts": "ts-node scripts/run-migrations.ts",
+    "migrate:subscriptions": "node dist/scripts/migrate-subscriptions.js",
+    "migrate:subscriptions:ts": "ts-node scripts/migrate-subscriptions.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'Linting not configured yet'",
     "test": "echo 'No tests yet - add your test framework here' && exit 0"
   },
   "dependencies": {
@@ -36,6 +45,21 @@
     "tmi.js": "^1.8.5"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-session": "^1.17.10",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.0",
+    "@types/nodemailer": "^7.0.3",
+    "@types/passport": "^1.0.16",
+    "@types/passport-google-oauth20": "^2.0.14",
+    "@types/pg": "^8.10.9",
+    "@types/socket.io": "^3.0.2",
+    "nodemon": "^3.0.1",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.3.3"
   }
 }

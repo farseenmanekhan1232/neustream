@@ -1,2 +1,26 @@
+# Environment variables
 .env
 .env.*
+.env.local
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
