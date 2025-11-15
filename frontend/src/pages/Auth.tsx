@@ -40,8 +40,13 @@ function Auth() {
   } = useAuth();
 
   // Monitor API health status
-  const { isHealthy, isChecking, lastChecked, error: apiError, checkHealth } =
-    useApiHealth();
+  const {
+    isHealthy,
+    isChecking,
+    lastChecked,
+    error: apiError,
+    checkHealth,
+  } = useApiHealth();
 
   const { mutate: forgotPasswordMutation } = useMutation({
     mutationFn: async (email: string) => {
@@ -360,29 +365,14 @@ function Auth() {
                     disabled={authMutation.isPending || !isHealthy}
                   >
                     <svg
-                      className="mr-2 h-4 w-4"
-                      viewBox="0 0 24 24"
+                      viewBox="0 0 256 268"
                       xmlns="http://www.w3.org/2000/svg"
+                      width="256"
+                      height="268"
                     >
                       <path
-                        d="M11.64 5.36L10.2 8.74H14.38L12.96 12.12L16.28 12.13L14.86 15.5L18.18 15.51L19.6 12.13L22.92 12.14L11.64 5.36Z"
                         fill="#9146FF"
-                      />
-                      <path
-                        d="M2.43 21.5L4.7 15.5L8.02 15.51L5.75 21.5H2.43Z"
-                        fill="#9146FF"
-                      />
-                      <path
-                        d="M5.75 21.5L8.02 15.5L11.34 15.51L9.07 21.5H5.75Z"
-                        fill="#9146FF"
-                      />
-                      <path
-                        d="M9.07 21.5L11.34 15.5L14.66 15.51L12.39 21.5H9.07Z"
-                        fill="#9146FF"
-                      />
-                      <path
-                        d="M12.39 21.5L14.66 15.5L17.98 15.51L15.71 21.5H12.39Z"
-                        fill="#9146FF"
+                        d="M17.458 0L0 46.556v186.201h63.983v34.934h34.931l34.898-34.934h52.36L256 162.954V0H17.458zm23.259 23.263H232.73v128.029l-40.739 40.741H128L93.113 226.92v-34.886H40.717V23.263zm64.008 116.405H128V69.844h-23.275v69.824zm63.997 0h23.27V69.844h-23.27v69.824z"
                       />
                     </svg>
                     Continue with Twitch
@@ -503,7 +493,9 @@ function Auth() {
                               placeholder="your@email.com"
                               className="pl-10"
                               required
-                              disabled={isSubmittingForgotPassword || !isHealthy}
+                              disabled={
+                                isSubmittingForgotPassword || !isHealthy
+                              }
                             />
                           </div>
                         </div>
