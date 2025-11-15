@@ -5,6 +5,7 @@ import currencyService from "../services/currencyService";
 import { detectCurrency, getCurrencyContext } from "../middleware/currencyMiddleware";
 import { handleUserIdParam, handleGenericIdParam } from "../middleware/idHandler";
 import * as crypto from "crypto";
+import mediamtxService from "../services/mediamtxService";
 
 const router = express.Router();
 const db = new Database();
@@ -1231,6 +1232,93 @@ router.get("/user-subscriptions", async (req: Request, res: Response): Promise<v
 });
 
 // Update user subscription
+// Promote/Demote user subscription with audit logging
+router.put("/user-subscriptions/:userId/promote-demote", handleUserIdParam, async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.params;
+  const { plan_id, reason, effective_date = 'immediate' } = req.body as {
+    plan_id: number;
+    reason: string;
+    effective_date?: 'immediate' | 'next_billing';
+  };
+
+  try {
+    // User exists check is already handled by middleware
+    const targetUser = (req as any).targetUser;
+    const adminId = (req as any).user.id;
+
+    // Get current subscription
+    const currentSubscription = await db.query<any>(
+      `SELECT us.*, sp.name as plan_name, sp.price_monthly
+       FROM user_subscriptions us
+       JOIN subscription_plans sp ON us.plan_id = sp.id
+       WHERE us.user_id = $1 AND us.status = 'active'`,
+      [targetUser.id]
+    );
+
+    if (currentSubscription.length === 0) {
+      res.status(404).json({ error: "No active subscription found" });
+      return;
+    }
+
+    const currentPlan = currentSubscription[0];
+
+    // Check if new plan exists
+    const newPlan = await db.query<any>(
+      "SELECT * FROM subscription_plans WHERE id = $1",
+      [plan_id]
+    );
+
+    if (newPlan.length === 0) {
+      res.status(404).json({ error: "Subscription plan not found" });
+      return;
+    }
+
+    const newPlanData = newPlan[0];
+
+    // Determine if promotion or demotion
+    const isPromotion = newPlanData.price_monthly > currentPlan.price_monthly;
+    const changeType = isPromotion ? 'promotion' : 'demotion';
+
+    // Update subscription
+    const result = await db.run<any>(
+      `UPDATE user_subscriptions SET
+        plan_id = $1,
+        updated_at = NOW()
+      WHERE user_id = $2 AND status = 'active' RETURNING *`,
+      [plan_id, targetUser.id]
+    );
+
+    // Log the subscription change
+    await db.run(
+      `INSERT INTO subscription_change_logs (
+        user_id, from_plan_id, to_plan_id, change_type,
+        reason, admin_id, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [
+        targetUser.id,
+        currentPlan.plan_id,
+        plan_id,
+        changeType,
+        reason,
+        adminId
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `User ${changeType}d from ${currentPlan.plan_name} to ${newPlanData.name}`,
+      subscription: result,
+      change_type: changeType,
+      previous_plan: currentPlan.plan_name,
+      new_plan: newPlanData.name
+    });
+  } catch (error: any) {
+    console.error("Promote/demote subscription error:", error);
+    res.status(500).json({ error: "Failed to update user subscription" });
+  }
+});
+
+// Standard subscription update (existing endpoint, enhanced)
 router.put("/user-subscriptions/:userId", handleUserIdParam, async (req: Request, res: Response): Promise<void> => {
   const { userId } = req.params;
   const { plan_id, status, current_period_end } = req.body as {
@@ -1286,6 +1374,260 @@ router.put("/user-subscriptions/:userId", handleUserIdParam, async (req: Request
   } catch (error: any) {
     console.error("Update user subscription error:", error);
     res.status(500).json({ error: "Failed to update user subscription" });
+  }
+});
+
+// ============================================
+// LIMIT OVERRIDES MANAGEMENT
+// ============================================
+
+// Get all active limit overrides
+router.get("/limit-overrides", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const overrides = await (subscriptionService as any).getAllLimitOverrides();
+    res.json({ overrides });
+  } catch (error: any) {
+    console.error("Get limit overrides error:", error);
+    res.status(500).json({ error: "Failed to fetch limit overrides" });
+  }
+});
+
+// Get limit overrides for a specific user
+router.get("/users/:id/limits/overrides", handleUserIdParam, async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const targetUser = (req as any).targetUser;
+    const overrides = await (subscriptionService as any).getUserLimitOverrides(targetUser.id);
+    res.json({ overrides });
+  } catch (error: any) {
+    console.error("Get user limit overrides error:", error);
+    res.status(500).json({ error: "Failed to fetch user limit overrides" });
+  }
+});
+
+// Set a limit override for a user
+router.post("/users/:id/limits/override", handleUserIdParam, async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { limit_type, value, reason, expires_at } = req.body as {
+    limit_type: string;
+    value: number;
+    reason: string;
+    expires_at?: string;
+  };
+
+  try {
+    const targetUser = (req as any).targetUser;
+    const adminId = (req as any).user.id;
+
+    // Validate required fields
+    if (!limit_type || value === undefined || !reason) {
+      res.status(400).json({ error: "Missing required fields: limit_type, value, reason" });
+      return;
+    }
+
+    // Call subscription service
+    await (subscriptionService as any).setUserLimitOverride(
+      targetUser.id,
+      limit_type,
+      value,
+      reason,
+      adminId,
+      expires_at ? new Date(expires_at) : undefined
+    );
+
+    res.json({
+      success: true,
+      message: `Limit override set for ${targetUser.email}`,
+      limit_type,
+      value
+    });
+  } catch (error: any) {
+    console.error("Set limit override error:", error);
+    res.status(500).json({ error: "Failed to set limit override: " + error.message });
+  }
+});
+
+// Remove a limit override for a user
+router.delete("/users/:id/limits/override/:limitType", handleUserIdParam, async (req: Request, res: Response): Promise<void> => {
+  const { id, limitType } = req.params;
+
+  try {
+    const targetUser = (req as any).targetUser;
+
+    await (subscriptionService as any).removeUserLimitOverride(targetUser.id, limitType);
+
+    res.json({
+      success: true,
+      message: `Limit override removed for ${targetUser.email}`,
+      limit_type: limitType
+    });
+  } catch (error: any) {
+    console.error("Remove limit override error:", error);
+    res.status(500).json({ error: "Failed to remove limit override" });
+  }
+});
+
+// ============================================
+// STREAM PREVIEW & CONTROL
+// ============================================
+
+// Get active streams with enhanced details
+router.get("/streams/active", async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Get streams from MediaMTX
+    const activePaths = await mediamtxService.getActivePaths();
+
+    // Enhance with user data from database
+    const enhancedStreams = await Promise.all(
+      activePaths.map(async (path) => {
+        // Look up user by stream key
+        const userResult = await db.query<any>(
+          `SELECT u.id, u.email, u.display_name
+           FROM users u
+           WHERE u.stream_key = $1`,
+          [path.name]
+        );
+
+        // Also check active_streams table for additional info
+        const streamInfo = await db.query<any>(
+          `SELECT as_.*
+           FROM active_streams as_
+           WHERE as_.stream_key = $1 AND as_.ended_at IS NULL`,
+          [path.name]
+        );
+
+        return {
+          stream_key: path.name,
+          user_email: userResult[0]?.email || 'Unknown',
+          user_display_name: userResult[0]?.display_name,
+          user_id: userResult[0]?.id,
+          publisher_id: path.publisher?.id,
+          started_at: path.publisher?.created,
+          bytes_received: path.publisher?.bytesReceived || 0,
+          packets_received: path.publisher?.packetsReceived || 0,
+          stream_info: streamInfo[0] || null
+        };
+      })
+    );
+
+    res.json({
+      streams: enhancedStreams,
+      total: enhancedStreams.length
+    });
+  } catch (error: any) {
+    console.error("Get active streams error:", error);
+    res.status(500).json({ error: "Failed to fetch active streams" });
+  }
+});
+
+// Get stream preview information
+router.get("/streams/:streamKey/preview", async (req: Request, res: Response): Promise<void>=> {
+  const { streamKey } = req.params;
+
+  try {
+    // Get stream details from MediaMTX
+    const path = await mediamtxService.getPathDetails(streamKey);
+
+    if (!path) {
+      res.status(404).json({ error: "Stream not found" });
+      return;
+    }
+
+    // Generate HLS URL for preview
+    const mediaServerHost = process.env.MEDIA_SERVER_HOST || 'localhost';
+    const hlsPort = process.env.HLS_PORT || '8888';
+    const previewUrl = `http://${mediaServerHost}:${hlsPort}/hls/${streamKey}.m3u8`;
+
+    // Get stream metrics
+    const metrics = await mediamtxService.getStreamMetrics(streamKey);
+
+    // Get user info
+    const userResult = await db.query<any>(
+      `SELECT u.id, u.email, u.display_name
+       FROM users u
+       WHERE u.stream_key = $1`,
+      [streamKey]
+    );
+
+    res.json({
+      streamKey,
+      previewUrl,
+      isActive: !!path.publisher,
+      user: userResult[0] || null,
+      metrics,
+      startedAt: path.publisher?.created,
+      publisherId: path.publisher?.id
+    });
+  } catch (error: any) {
+    console.error("Get stream preview error:", error);
+    res.status(500).json({ error: "Failed to get stream preview" });
+  }
+});
+
+// Stop a stream
+router.post("/streams/:streamKey/stop", async (req: Request, res: Response): Promise<void> => {
+  const { streamKey } = req.params;
+  const { reason } = req.body as { reason?: string };
+  const adminId = (req as any).user.id;
+
+  try {
+    // Get stream info before stopping
+    const streamInfo = await db.query<any>(
+      `SELECT as_.*, u.email
+       FROM active_streams as_
+       JOIN users u ON as_.user_id = u.id
+       WHERE as_.stream_key = $1 AND as_.ended_at IS NULL`,
+      [streamKey]
+    );
+
+    // Stop the stream via MediaMTX API
+    const stopResult = await mediamtxService.stopStream(streamKey);
+
+    if (stopResult.success) {
+      // Log the action
+      await db.run(
+        `INSERT INTO stream_control_logs (
+          stream_key, action, reason, admin_id, created_at
+        ) VALUES ($1, $2, $3, $4, NOW())`,
+        [streamKey, 'stopped_by_admin', reason || 'No reason provided', adminId]
+      );
+
+      res.json({
+        success: true,
+        message: stopResult.message,
+        stream_key: streamKey,
+        user_email: streamInfo[0]?.email
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: stopResult.message
+      });
+    }
+  } catch (error: any) {
+    console.error("Stop stream error:", error);
+    res.status(500).json({ error: "Failed to stop stream" });
+  }
+});
+
+// Get stream control logs
+router.get("/streams/control-logs", async (req: Request, res: Response): Promise<void> {
+  const { limit = 50 } = req.query;
+
+  try {
+    const logs = await db.query<any>(
+      `SELECT scl.*, u.email as admin_email
+       FROM stream_control_logs scl
+       JOIN users u ON scl.admin_id = u.id
+       ORDER BY scl.created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+
+    res.json({ logs });
+  } catch (error: any) {
+    console.error("Get stream control logs error:", error);
+    res.status(500).json({ error: "Failed to fetch stream control logs" });
   }
 });
 

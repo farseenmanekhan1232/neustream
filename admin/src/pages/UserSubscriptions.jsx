@@ -14,6 +14,9 @@ import {
   Clock,
   Check,
   X,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi } from "@/services/api";
@@ -57,6 +60,22 @@ function UserSubscriptions() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [editingSubscription, setEditingSubscription] = useState(null);
+
+  // Promote/Demote subscription mutation
+  const promoteDemoteMutation = useMutation({
+    mutationFn: async ({ userId, data }) => {
+      const response = await adminApi.promoteDemoteUserSubscription(userId, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin-user-subscriptions"]);
+      setEditingSubscription(null);
+      toast.success("User subscription updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update user subscription: " + error.message);
+    },
+  });
 
   // Fetch user subscriptions
   const { data: subscriptionsData, isLoading } = useQuery({
@@ -105,6 +124,10 @@ function UserSubscriptions() {
       userId,
       subscriptionData,
     });
+  };
+
+  const handlePromoteDemote = (userId, data) => {
+    promoteDemoteMutation.mutate({ userId, data });
   };
 
   const getPlanIcon = (planName) => {
@@ -344,7 +367,8 @@ function UserSubscriptions() {
               subscription={editingSubscription}
               plans={plans}
               onSubmit={handleUpdateSubscription}
-              isLoading={updateSubscriptionMutation.isLoading}
+              onPromoteDemote={handlePromoteDemote}
+              isLoading={updateSubscriptionMutation.isLoading || promoteDemoteMutation.isLoading}
               onCancel={() => setEditingSubscription(null)}
             />
           )}
@@ -359,6 +383,7 @@ function EditSubscriptionForm({
   subscription,
   plans,
   onSubmit,
+  onPromoteDemote,
   isLoading,
   onCancel,
 }) {
@@ -368,16 +393,39 @@ function EditSubscriptionForm({
     current_period_end: subscription.current_period_end
       ? new Date(subscription.current_period_end).toISOString().split("T")[0]
       : "",
+    reason: "",
+    mode: "standard" // 'standard' or 'promote_demote'
   });
+
+  const selectedPlan = plans.find(p => p.id === parseInt(formData.plan_id));
+  const currentPlanPrice = subscription.price_monthly || 0;
+  const newPlanPrice = selectedPlan?.price_monthly || 0;
+
+  // Determine if this is a promotion or demotion
+  const priceDiff = newPlanPrice - currentPlanPrice;
+  const changeType = priceDiff > 0 ? "promotion" : priceDiff < 0 ? "demotion" : "no-change";
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(subscription.user_id, {
-      ...formData,
-      current_period_end: formData.current_period_end
-        ? new Date(formData.current_period_end).toISOString()
-        : null,
-    });
+
+    if (formData.mode === "promote_demote" && !formData.reason.trim()) {
+      alert("Please provide a reason for this plan change");
+      return;
+    }
+
+    if (formData.mode === "promote_demote") {
+      onPromoteDemote(subscription.user_id, {
+        plan_id: parseInt(formData.plan_id),
+        reason: formData.reason
+      });
+    } else {
+      onSubmit(subscription.user_id, {
+        ...formData,
+        current_period_end: formData.current_period_end
+          ? new Date(formData.current_period_end).toISOString()
+          : null,
+      });
+    }
   };
 
   const handleChange = (field, value) => {
@@ -387,6 +435,26 @@ function EditSubscriptionForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-4">
+        {/* Change Mode Toggle */}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={formData.mode === "standard" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFormData({...formData, mode: "standard"})}
+          >
+            Standard Update
+          </Button>
+          <Button
+            type="button"
+            variant={formData.mode === "promote_demote" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFormData({...formData, mode: "promote_demote"})}
+          >
+            Promotion/Demotion
+          </Button>
+        </div>
+
         <div className="grid gap-2">
           <Label htmlFor="plan_id">Subscription Plan</Label>
           <Select
@@ -399,39 +467,90 @@ function EditSubscriptionForm({
             <SelectContent>
               {plans.map((plan) => (
                 <SelectItem key={plan.id} value={plan.id}>
-                  {plan.name} - ${plan.price_monthly}/month
+                  <div className="flex items-center justify-between w-full">
+                    <span>{plan.name}</span>
+                    <span className="text-muted-foreground ml-2">${plan.price_monthly}/month</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => handleChange("status", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="canceled">Canceled</SelectItem>
-              <SelectItem value="past_due">Past Due</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Plan Comparison Card (only in promote_demote mode) */}
+        {formData.mode === "promote_demote" && selectedPlan && (
+          <Card className={`border-2 ${changeType === "promotion" ? "border-green-200 bg-green-50" : changeType === "demotion" ? "border-orange-200 bg-orange-50" : "border-gray-200"}`}>
+            <CardContent className="p-4">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                {changeType === "promotion" && <><TrendingUp className="h-4 w-4 text-green-600" /> Promotion</>}
+                {changeType === "demotion" && <><TrendingDown className="h-4 w-4 text-orange-600" /> Demotion</>}
+                {changeType === "no-change" && <><Minus className="h-4 w-4 text-gray-600" /> No Change</>}
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Current Plan</p>
+                  <p className="font-medium">{subscription.plan_name}</p>
+                  <p className="text-sm text-muted-foreground">${currentPlanPrice}/month</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">New Plan</p>
+                  <p className="font-medium">{selectedPlan.name}</p>
+                  <p className="text-sm text-muted-foreground">${newPlanPrice}/month</p>
+                  {changeType !== "no-change" && (
+                    <p className={`text-xs font-medium ${changeType === "promotion" ? "text-green-600" : "text-orange-600"}`}>
+                      {priceDiff > 0 ? "+" : ""}${priceDiff}/month
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <div className="grid gap-2">
-          <Label htmlFor="current_period_end">Renewal Date</Label>
-          <Input
-            id="current_period_end"
-            type="date"
-            value={formData.current_period_end}
-            onChange={(e) => handleChange("current_period_end", e.target.value)}
-          />
-        </div>
+        {formData.mode === "promote_demote" && (
+          <div className="grid gap-2">
+            <Label htmlFor="reason">Reason for Change *</Label>
+            <textarea
+              id="reason"
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={formData.reason}
+              onChange={(e) => handleChange("reason", e.target.value)}
+              placeholder="Explain why you're promoting/demoting this user's subscription..."
+              required
+            />
+          </div>
+        )}
+
+        {formData.mode === "standard" && (
+          <>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="past_due">Past Due</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="current_period_end">Renewal Date</Label>
+              <Input
+                id="current_period_end"
+                type="date"
+                value={formData.current_period_end}
+                onChange={(e) => handleChange("current_period_end", e.target.value)}
+              />
+            </div>
+          </>
+        )}
 
         {/* Current Plan Info */}
         <Card>
@@ -467,7 +586,15 @@ function EditSubscriptionForm({
           Cancel
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Updating..." : "Update Subscription"}
+          {isLoading
+            ? "Updating..."
+            : formData.mode === "promote_demote"
+            ? changeType === "promotion"
+              ? "Promote User"
+              : changeType === "demotion"
+              ? "Demote User"
+              : "Update Plan"
+            : "Update Subscription"}
         </Button>
       </DialogFooter>
     </form>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { adminApi } from "../services/api";
-import { Activity, Wifi, WifiOff, RefreshCw, Eye, Clock } from "lucide-react";
+import { Activity, Wifi, WifiOff, RefreshCw, Eye, Clock, Square, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,6 +28,8 @@ const Streams = () => {
   const [selectedStream, setSelectedStream] = useState(null);
   const [streamDetails, setStreamDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
 
   useEffect(() => {
     loadActiveStreams();
@@ -81,6 +83,36 @@ const Streams = () => {
     }
   };
 
+  // Preview stream handler
+  const handlePreview = async (stream) => {
+    try {
+      const response = await adminApi.getStreamPreview(stream.stream_key);
+      setPreviewData(response);
+      setSelectedStream(stream);
+      setShowPreviewDialog(true);
+    } catch (error) {
+      console.error('Failed to load stream preview:', error);
+      alert('Failed to load stream preview');
+    }
+  };
+
+  // Stop stream handler
+  const handleStopStream = async (stream) => {
+    if (!confirm(`Are you sure you want to stop ${stream.user_email}'s stream?`)) return;
+
+    const reason = prompt('Reason for stopping stream:');
+    if (!reason) return;
+
+    try {
+      await adminApi.stopStream(stream.stream_key, reason);
+      alert('Stream stopped successfully');
+      loadActiveStreams(); // Refresh list
+    } catch (error) {
+      console.error('Failed to stop stream:', error);
+      alert('Failed to stop stream');
+    }
+  };
+
   const StreamTableRow = ({ stream }) => (
     <TableRow
       className="cursor-pointer hover:bg-muted/50"
@@ -97,7 +129,7 @@ const Streams = () => {
             </div>
           </div>
           <div>
-            <p className="font-medium">{stream.email || "Unknown User"}</p>
+            <p className="font-medium">{stream.user_email || "Unknown User"}</p>
             <p className="text-sm text-muted-foreground">
               {stream.stream_key.substring(0, 8)}...
             </p>
@@ -124,14 +156,25 @@ const Streams = () => {
         </div>
       </TableCell>
       <TableCell>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-primary hover:text-primary/80"
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          View Details
-        </Button>
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:text-primary/80"
+            onClick={() => handlePreview(stream)}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Preview
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleStopStream(stream)}
+          >
+            <Square className="h-4 w-4 mr-1" />
+            Stop
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -276,7 +319,7 @@ const Streams = () => {
 
       {/* Stream Details Modal */}
       <Dialog
-        open={!!selectedStream}
+        open={!!selectedStream && !showPreviewDialog}
         onOpenChange={(open) => {
           if (!open) {
             setSelectedStream(null);
@@ -294,7 +337,7 @@ const Streams = () => {
               <h4 className="text-sm font-medium text-muted-foreground">
                 User
               </h4>
-              <p className="text-sm text-foreground">{selectedStream?.email}</p>
+              <p className="text-sm text-foreground">{selectedStream?.user_email}</p>
             </div>
 
             <div>
@@ -374,6 +417,95 @@ const Streams = () => {
               onClick={() => {
                 setSelectedStream(null);
                 setStreamDetails(null);
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stream Preview Modal */}
+      <Dialog
+        open={showPreviewDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowPreviewDialog(false);
+            setPreviewData(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Play className="h-5 w-5" />
+              Stream Preview
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewData && (
+            <div className="space-y-4">
+              {/* Video Player */}
+              <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                <video
+                  controls
+                  autoPlay
+                  className="w-full h-full"
+                  src={previewData.previewUrl}
+                >
+                  Your browser does not support video playback.
+                </video>
+              </div>
+
+              {/* Stream Info */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                        Stream Information
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>User:</span>
+                          <span className="font-medium">{previewData.user?.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <Badge className="bg-success/10 text-success">Live</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Started:</span>
+                          <span>{previewData.startedAt ? new Date(previewData.startedAt).toLocaleString() : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                        Metrics
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Bytes Received:</span>
+                          <span className="font-medium">{previewData.metrics?.bytesReceived || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Packets Received:</span>
+                          <span className="font-medium">{previewData.metrics?.packetsReceived || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setShowPreviewDialog(false);
+                setPreviewData(null);
               }}
             >
               Close

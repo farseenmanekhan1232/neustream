@@ -269,6 +269,60 @@ export const adminApi = {
     return response.data;
   },
 
+  // Promote/Demote user subscription
+  promoteDemoteUserSubscription: async (userId, data) => {
+    const response = await api.put(`/api/admin/user-subscriptions/${userId}/promote-demote`, data);
+    return response.data;
+  },
+
+  // Get all limit overrides
+  getLimitOverrides: async () => {
+    const response = await api.get('/api/admin/limit-overrides');
+    return response.data;
+  },
+
+  // Get user limit overrides
+  getUserLimitOverrides: async (userId) => {
+    const response = await api.get(`/api/admin/users/${userId}/limits/overrides`);
+    return response.data;
+  },
+
+  // Set limit override for user
+  setUserLimitOverride: async (userId, overrideData) => {
+    const response = await api.post(`/api/admin/users/${userId}/limits/override`, overrideData);
+    return response.data;
+  },
+
+  // Remove limit override for user
+  removeUserLimitOverride: async (userId, limitType) => {
+    const response = await api.delete(`/api/admin/users/${userId}/limits/override/${limitType}`);
+    return response.data;
+  },
+
+  // Get active streams with details
+  getActiveStreams: async () => {
+    const response = await api.get('/api/admin/streams/active');
+    return response.data;
+  },
+
+  // Get stream preview information
+  getStreamPreview: async (streamKey) => {
+    const response = await api.get(`/api/admin/streams/${streamKey}/preview`);
+    return response.data;
+  },
+
+  // Stop a stream
+  stopStream: async (streamKey, reason) => {
+    const response = await api.post(`/api/admin/streams/${streamKey}/stop`, { reason });
+    return response.data;
+  },
+
+  // Get stream control logs
+  getStreamControlLogs: async (limit = 50) => {
+    const response = await api.get(`/api/admin/streams/control-logs?limit=${limit}`);
+    return response.data;
+  },
+
   // ============================================
   // CONTACT SUBMISSION MANAGEMENT
   // ============================================

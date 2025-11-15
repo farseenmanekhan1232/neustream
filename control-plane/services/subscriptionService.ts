@@ -202,21 +202,52 @@ class SubscriptionService {
   }
 
   /**
-   * Get user's current limits from plan_limits_tracking
+   * Get user's current limits from plan_limits_tracking with overrides
    */
   async getUserLimits(userId: number): Promise<PlanLimitsTracking> {
     try {
-      const result = await this.db.query<PlanLimitsTracking>(
-        'SELECT * FROM plan_limits_tracking WHERE user_id = $1',
-        [userId]
-      );
-      return result[0] || {
+      // Get base limits from plan
+      const subscription = await this.getUserSubscription(userId);
+      const baseLimits = {
         user_id: userId,
         current_sources_count: 0,
         current_destinations_count: 0,
         current_month_streaming_hours: 0,
-        current_chat_connectors_count: 0
+        current_chat_connectors_count: 0,
+        max_sources: subscription.max_sources || 0,
+        max_destinations: subscription.max_destinations || 0,
+        max_streaming_hours_monthly: subscription.max_streaming_hours_monthly || 0
       };
+
+      // Get active overrides
+      const overrides = await this.db.query<any>(
+        `SELECT * FROM user_limit_overrides
+         WHERE user_id = $1 AND is_active = true
+         AND (expires_at IS NULL OR expires_at > NOW())`,
+        [userId]
+      );
+
+      // Apply overrides to base limits
+      const result = { ...baseLimits };
+
+      overrides.forEach((override: any) => {
+        switch (override.limit_type) {
+          case 'max_sources':
+            result.max_sources = override.override_value;
+            break;
+          case 'max_destinations':
+            result.max_destinations = override.override_value;
+            break;
+          case 'max_streaming_hours_monthly':
+            result.max_streaming_hours_monthly = override.override_value;
+            break;
+          case 'max_chat_connectors':
+            result.max_chat_connectors = override.override_value;
+            break;
+        }
+      });
+
+      return result as PlanLimitsTracking;
     } catch (error) {
       console.error('Error getting user limits:', error);
       throw error;
@@ -445,6 +476,100 @@ class SubscriptionService {
       `, [userId]);
     } catch (error) {
       console.error('Error getting monthly usage breakdown:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set a limit override for a user
+   */
+  async setUserLimitOverride(
+    userId: number,
+    limitType: string,
+    value: number,
+    reason: string,
+    adminId: number,
+    expiresAt?: Date
+  ): Promise<void> {
+    try {
+      // Validate limit type
+      const validLimits = ['max_sources', 'max_destinations', 'max_streaming_hours_monthly', 'max_chat_connectors'];
+      if (!validLimits.includes(limitType)) {
+        throw new Error(`Invalid limit type. Must be one of: ${validLimits.join(', ')}`);
+      }
+
+      // Deactivate existing override for this limit type
+      await this.db.query(
+        'UPDATE user_limit_overrides SET is_active = false WHERE user_id = $1 AND limit_type = $2 AND is_active = true',
+        [userId, limitType]
+      );
+
+      // Create new override
+      await this.db.query(
+        `INSERT INTO user_limit_overrides (
+          user_id, limit_type, override_value, reason, created_by, expires_at
+        ) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, limitType, value, reason, adminId, expiresAt]
+      );
+
+      console.log(`Limit override set: user ${userId}, ${limitType} = ${value}`);
+    } catch (error) {
+      console.error('Error setting user limit override:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a limit override for a user
+   */
+  async removeUserLimitOverride(userId: number, limitType: string): Promise<void> {
+    try {
+      await this.db.query(
+        'UPDATE user_limit_overrides SET is_active = false WHERE user_id = $1 AND limit_type = $2 AND is_active = true',
+        [userId, limitType]
+      );
+
+      console.log(`Limit override removed: user ${userId}, ${limitType}`);
+    } catch (error) {
+      console.error('Error removing user limit override:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active limit overrides for a user
+   */
+  async getUserLimitOverrides(userId: number): Promise<any[]> {
+    try {
+      return await this.db.query(
+        `SELECT ulo.*, u.email as admin_email
+         FROM user_limit_overrides ulo
+         JOIN users u ON ulo.created_by = u.id
+         WHERE ulo.user_id = $1 AND ulo.is_active = true
+         ORDER BY ulo.created_at DESC`,
+        [userId]
+      );
+    } catch (error) {
+      console.error('Error getting user limit overrides:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active overrides across all users (for admin overview)
+   */
+  async getAllLimitOverrides(): Promise<any[]> {
+    try {
+      return await this.db.query(
+        `SELECT ulo.*, u.email as user_email, au.email as admin_email
+         FROM user_limit_overrides ulo
+         JOIN users u ON ulo.user_id = u.id
+         JOIN users au ON ulo.created_by = au.id
+         WHERE ulo.is_active = true
+         ORDER BY ulo.created_at DESC`
+      );
+    } catch (error) {
+      console.error('Error getting all limit overrides:', error);
       throw error;
     }
   }
