@@ -65,11 +65,8 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req: Request, res
   try {
     // User info is already available from middleware
     const user = (req as any).entity;
-    const isUuid = (req as any).isUuid || false;
-    const userParam = isUuid ? user.uuid : user.id;
 
     // Get user's stream sources
-    // FIXED: Use conditional query instead of string interpolation
     const sources = await db.query<any>(
       `
       SELECT
@@ -81,26 +78,25 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req: Request, res
         ) as is_active
       FROM stream_sources ss
       LEFT JOIN source_destinations sd ON ss.id = sd.source_id
-      WHERE ${isUuid ? 'ss.user_uuid = $1' : 'ss.user_id = $1'}
+      WHERE ${(req as any).isUuid ? 'ss.user_uuid = $1' : 'ss.user_id = $1'}
       GROUP BY ss.id
       ORDER BY ss.created_at DESC
     `,
-      [userParam]
+      [(req as any).isUuid ? user.uuid : user.id]
     );
 
     // Get user's active streams
-    // FIXED: Use config->>'name' instead of non-existent ss.name column
     const activeStreams = await db.query<any>(
       `
       SELECT
         as_.*,
-        ss.config->>'name' as source_name
+        ss.name as source_name
       FROM active_streams as_
       LEFT JOIN stream_sources ss ON as_.source_id = ss.id
-      WHERE ${isUuid ? 'as_.user_uuid = $1' : 'as_.user_id = $1'} AND as_.ended_at IS NULL
+      WHERE ${(req as any).isUuid ? 'as_.user_uuid = $1' : 'as_.user_id = $1'} AND as_.ended_at IS NULL
       ORDER BY as_.started_at DESC
     `,
-      [userParam]
+      [(req as any).isUuid ? user.uuid : user.id]
     );
 
     // Get stream statistics
@@ -110,9 +106,9 @@ router.get("/users/:id", handleGenericIdParam('users'), async (req: Request, res
         COUNT(*) as total_streams,
         AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
       FROM active_streams
-      WHERE ${isUuid ? 'user_uuid = $1' : 'user_id = $1'} AND ended_at IS NOT NULL
+      WHERE ${(req as any).isUuid ? 'user_uuid = $1' : 'user_id = $1'} AND ended_at IS NOT NULL
     `,
-      [userParam]
+      [(req as any).isUuid ? user.uuid : user.id]
     );
 
     res.json({
@@ -163,16 +159,15 @@ router.get("/stats", async (req: Request, res: Response): Promise<void> => {
       WHERE ended_at IS NULL
     `);
 
-    // FIXED: Get destination statistics from correct table (destinations)
+    // Get destination statistics
     const destStats = await db.query<any>(`
       SELECT
         COUNT(*) as total_destinations,
-        COUNT(CASE WHEN d.platform = 'youtube' THEN 1 END) as youtube_dests,
-        COUNT(CASE WHEN d.platform = 'twitch' THEN 1 END) as twitch_dests,
-        COUNT(CASE WHEN d.platform = 'facebook' THEN 1 END) as facebook_dests
-      FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
-      WHERE sd.is_active = true
+        COUNT(CASE WHEN platform = 'youtube' THEN 1 END) as youtube_dests,
+        COUNT(CASE WHEN platform = 'twitch' THEN 1 END) as twitch_dests,
+        COUNT(CASE WHEN platform = 'facebook' THEN 1 END) as facebook_dests
+      FROM source_destinations
+      WHERE is_active = true
     `);
 
     // Get recent activity (last 24 hours)
@@ -210,10 +205,6 @@ router.get("/analytics", async (req: Request, res: Response): Promise<void> => {
   try {
     const { period = "7d" } = req.query as any;
 
-    // FIXED: Whitelist interval values to prevent SQL injection
-    const validIntervals = ['hour', 'day', 'week', 'month'];
-    const validPeriods = ['24h', '7d', '30d'];
-
     let interval = "day";
     let periodFilter = "NOW() - INTERVAL '7 days'";
 
@@ -224,43 +215,37 @@ router.get("/analytics", async (req: Request, res: Response): Promise<void> => {
       periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
-    // Validate interval
-    if (!validIntervals.includes(interval)) {
-      interval = "day";
-    }
-
     // Get user registration trends
     const userTrends = await db.query<any>(`
       SELECT
-        DATE_TRUNC($1, created_at) as period,
+        DATE_TRUNC('${interval}', created_at) as period,
         COUNT(*) as users
       FROM users
       WHERE created_at > ${periodFilter}
-      GROUP BY DATE_TRUNC($1, created_at)
+      GROUP BY DATE_TRUNC('${interval}', created_at)
       ORDER BY period ASC
-    `, [interval]);
+    `);
 
     // Get stream activity trends
     const streamTrends = await db.query<any>(`
       SELECT
-        DATE_TRUNC($1, started_at) as period,
+        DATE_TRUNC('${interval}', started_at) as period,
         COUNT(*) as streams_started,
         COUNT(CASE WHEN ended_at IS NOT NULL THEN 1 END) as streams_completed
       FROM active_streams
       WHERE started_at > ${periodFilter}
-      GROUP BY DATE_TRUNC($1, started_at)
+      GROUP BY DATE_TRUNC('${interval}', started_at)
       ORDER BY period ASC
-    `, [interval]);
+    `);
 
-    // FIXED: Get platform distribution from correct table
+    // Get platform distribution
     const platformDistribution = await db.query<any>(`
       SELECT
-        d.platform,
+        platform,
         COUNT(*) as count
-      FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
-      WHERE sd.is_active = true
-      GROUP BY d.platform
+      FROM source_destinations
+      WHERE is_active = true
+      GROUP BY platform
       ORDER BY count DESC
     `);
 
@@ -428,13 +413,12 @@ router.get("/sources/:id", handleGenericIdParam('stream_sources'), async (req: R
     // Stream source is already available from middleware
     const source = (req as any).entity;
 
-    // FIXED: Get destinations for this source from correct table
+    // Get destinations for this source
     const destinations = await db.query<any>(
       `
-      SELECT sd.*, d.* FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
-      WHERE sd.source_id = $1
-      ORDER BY sd.created_at DESC
+      SELECT * FROM source_destinations
+      WHERE source_id = $1
+      ORDER BY created_at DESC
     `,
       [id]
     );
@@ -501,22 +485,10 @@ router.put("/sources/:id", handleGenericIdParam('stream_sources'), async (req: R
       }
     }
 
-    // FIXED: Use config JSONB to store name and description
+    // Update the source
     const result = await db.run<any>(
-      `UPDATE stream_sources SET
-        config = jsonb_set(
-          COALESCE(config, '{}'::jsonb),
-          '{name}',
-          CASE WHEN $1 IS NULL THEN config->>'name' ELSE $1::text END
-        ),
-        config = jsonb_set(
-          COALESCE(config, '{}'::jsonb),
-          '{description}',
-          CASE WHEN $2 IS NULL THEN config->>'description' ELSE $2::text END
-        ),
-        is_active = COALESCE($3, is_active)
-      WHERE id = $4 RETURNING *`,
-      [name, description, is_active, id]
+      "UPDATE stream_sources SET name = COALESCE($1, name), description = COALESCE($2, description), is_active = COALESCE($3, is_active) WHERE id = $4 RETURNING *",
+      [name?.trim(), description?.trim(), is_active, id]
     );
 
     res.json({ source: result });
@@ -589,10 +561,10 @@ router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'
     while (!isUnique && attempts < 10) {
       streamKey = crypto.randomBytes(24).toString("hex");
 
-      // FIXED: Check uniqueness in destinations table (not stream_sources)
-      const existingInDestinations = await db.query<any>(
-        "SELECT id FROM destinations WHERE stream_key = $1",
-        [streamKey]
+      // Check uniqueness in both stream_sources and users table
+      const existingInSources = await db.query<any>(
+        "SELECT id FROM stream_sources WHERE stream_key = $1 AND id != $2",
+        [streamKey, id]
       );
 
       const existingInUsers = await db.query<any>(
@@ -600,7 +572,7 @@ router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'
         [streamKey]
       );
 
-      if (existingInDestinations.length === 0 && existingInUsers.length === 0) {
+      if (existingInSources.length === 0 && existingInUsers.length === 0) {
         isUnique = true;
       }
       attempts++;
@@ -611,16 +583,15 @@ router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'
       return;
     }
 
-    // FIXED: Update user stream key (not stream_sources)
-    const userId = existingSource.user_id;
+    // Update the stream key
     const result = await db.run<any>(
-      "UPDATE users SET stream_key = $1 WHERE id = $2 RETURNING *",
-      [streamKey, userId]
+      "UPDATE stream_sources SET stream_key = $1 WHERE id = $2 RETURNING *",
+      [streamKey, id]
     );
 
     res.json({
       message: "Stream key regenerated successfully",
-      user: result,
+      source: result,
     });
   } catch (error: any) {
     console.error("Regenerate stream key error:", error);
@@ -635,18 +606,15 @@ router.post("/sources/:id/regenerate-key", handleGenericIdParam('stream_sources'
 // Get all destinations with source info
 router.get("/destinations", async (req: Request, res: Response): Promise<void> => {
   try {
-    // FIXED: Query destinations table, not source_destinations
     const destinations = await db.query<any>(`
       SELECT
-        d.*,
-        ss.uuid as source_uuid,
-        ss.config->>'name' as source_name,
+        sd.*,
+        ss.name as source_name,
         u.email as user_email,
         u.display_name as user_display_name
-      FROM destinations d
-      JOIN source_destinations sd ON d.id = sd.destination_id
-      JOIN stream_sources ss ON sd.source_id = ss.id
-      JOIN users u ON ss.user_id = u.id
+      FROM source_destinations sd
+      LEFT JOIN stream_sources ss ON sd.source_id = ss.id
+      LEFT JOIN users u ON ss.user_id = u.id
       ORDER BY sd.created_at DESC
     `);
 
@@ -686,16 +654,9 @@ router.put("/destinations/:id", handleGenericIdParam('source_destinations'), asy
     // Destination exists check is already handled by middleware
     const existingDest = (req as any).entity;
 
-    // FIXED: Update destinations table, not source_destinations
+    // Update the destination
     const result = await db.run<any>(
-      `UPDATE destinations d
-       JOIN source_destinations sd ON d.id = sd.destination_id
-       SET d.platform = COALESCE($1, d.platform),
-           d.rtmp_url = COALESCE($2, d.rtmp_url),
-           d.stream_key = COALESCE($3, d.stream_key),
-           sd.is_active = COALESCE($4, sd.is_active)
-       WHERE sd.id = $5
-       RETURNING d.*, sd.id as source_destinations_id, sd.is_active`,
+      "UPDATE source_destinations SET platform = COALESCE($1, platform), rtmp_url = COALESCE($2, rtmp_url), stream_key = COALESCE($3, stream_key), is_active = COALESCE($4, is_active) WHERE id = $5 RETURNING *",
       [platform, rtmp_url, stream_key, is_active, id]
     );
 
@@ -820,9 +781,8 @@ router.post("/users/:id/reset-stream-key", handleGenericIdParam('users'), async 
     while (!isUnique && attempts < 10) {
       streamKey = crypto.randomBytes(24).toString("hex");
 
-      // FIXED: Only check destinations and users tables
-      const existingInDestinations = await db.query<any>(
-        "SELECT id FROM destinations WHERE stream_key = $1",
+      const existingInSources = await db.query<any>(
+        "SELECT id FROM stream_sources WHERE stream_key = $1",
         [streamKey]
       );
 
@@ -831,7 +791,7 @@ router.post("/users/:id/reset-stream-key", handleGenericIdParam('users'), async 
         [streamKey, id]
       );
 
-      if (existingInDestinations.length === 0 && existingInUsers.length === 0) {
+      if (existingInSources.length === 0 && existingInUsers.length === 0) {
         isUnique = true;
       }
       attempts++;
@@ -866,15 +826,12 @@ router.post("/users/:id/reset-stream-key", handleGenericIdParam('users'), async 
 router.get("/analytics/users", async (req: Request, res: Response): Promise<void> => {
   try {
     const { period = "30d" } = req.query as any;
-
-    // FIXED: Whitelist period values
-    const validPeriods = ['24h', '7d', '30d'];
     let periodFilter = "NOW() - INTERVAL '30 days'";
 
-    if (validPeriods.includes(period)) {
-      periodFilter = period === '24h' ? "NOW() - INTERVAL '24 hours'"
-        : period === '7d' ? "NOW() - INTERVAL '7 days'"
-        : "NOW() - INTERVAL '30 days'";
+    if (period === "7d") {
+      periodFilter = "NOW() - INTERVAL '7 days'";
+    } else if (period === "24h") {
+      periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
     // User registration trends
@@ -934,15 +891,12 @@ router.get("/analytics/users", async (req: Request, res: Response): Promise<void
 router.get("/analytics/streams", async (req: Request, res: Response): Promise<void> => {
   try {
     const { period = "30d" } = req.query as any;
-
-    // FIXED: Whitelist period values
-    const validPeriods = ['24h', '7d', '30d'];
     let periodFilter = "NOW() - INTERVAL '30 days'";
 
-    if (validPeriods.includes(period)) {
-      periodFilter = period === '24h' ? "NOW() - INTERVAL '24 hours'"
-        : period === '7d' ? "NOW() - INTERVAL '7 days'"
-        : "NOW() - INTERVAL '30 days'";
+    if (period === "7d") {
+      periodFilter = "NOW() - INTERVAL '7 days'";
+    } else if (period === "24h") {
+      periodFilter = "NOW() - INTERVAL '24 hours'";
     }
 
     // Stream activity trends
@@ -959,18 +913,17 @@ router.get("/analytics/streams", async (req: Request, res: Response): Promise<vo
       ORDER BY date ASC
     `);
 
-    // FIXED: Platform usage analytics from correct table
+    // Platform usage analytics
     const platformAnalytics = await db.query<any>(`
       SELECT
-        d.platform,
+        sd.platform,
         COUNT(*) as total_destinations,
         COUNT(CASE WHEN sd.is_active = true THEN 1 END) as active_destinations,
         COUNT(DISTINCT sd.source_id) as unique_sources,
         COUNT(DISTINCT ss.user_id) as unique_users
       FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
       LEFT JOIN stream_sources ss ON sd.source_id = ss.id
-      GROUP BY d.platform
+      GROUP BY sd.platform
       ORDER BY total_destinations DESC
     `);
 
@@ -1038,26 +991,22 @@ router.post("/subscription-plans", async (req: Request, res: Response): Promise<
   } = req.body as any;
 
   try {
-    // FIXED: Use limits JSONB instead of individual columns
     const result = await db.run<any>(
       `INSERT INTO subscription_plans (
-        name, description, price_monthly, price_yearly, currency,
-        features, limits
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        name, description, price_monthly, price_yearly, price_monthly_inr, price_yearly_inr,
+        max_sources, max_destinations, max_streaming_hours_monthly, features
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         name,
         description,
         price_monthly,
         price_yearly,
-        'USD',
-        JSON.stringify(features || []),
-        JSON.stringify({
-          price_monthly_inr,
-          price_yearly_inr,
-          max_sources,
-          max_destinations,
-          max_streaming_hours_monthly
-        })
+        price_monthly_inr,
+        price_yearly_inr,
+        max_sources,
+        max_destinations,
+        max_streaming_hours_monthly,
+        JSON.stringify(features || [])
       ]
     );
 
@@ -1088,35 +1037,35 @@ router.put("/subscription-plans/:id", handleGenericIdParam('subscription_plans')
     // Plan exists check is already handled by middleware
     const plan = (req as any).entity;
 
-    // FIXED: Use limits JSONB
     const result = await db.run<any>(
       `UPDATE subscription_plans SET
         name = $1,
         description = $2,
         price_monthly = $3,
         price_yearly = $4,
-        features = $5,
-        limits = $6
-      WHERE id = $7 RETURNING *`,
+        price_monthly_inr = $5,
+        price_yearly_inr = $6,
+        max_sources = $7,
+        max_destinations = $8,
+        max_streaming_hours_monthly = $9,
+        features = $10
+      WHERE id = $11 RETURNING *`,
       [
         name,
         description,
         price_monthly,
         price_yearly,
+        price_monthly_inr,
+        price_yearly_inr,
+        max_sources,
+        max_destinations,
+        max_streaming_hours_monthly,
         JSON.stringify(features || []),
-        JSON.stringify({
-          price_monthly_inr,
-          price_yearly_inr,
-          max_sources,
-          max_destinations,
-          max_streaming_hours_monthly
-        }),
         plan.id
       ]
     );
 
-    // FIXED: Proper return value check for db.run()
-    if (result.changes === 0) {
+    if (!result || (result.changes === 0 && !result.id)) {
       res.status(404).json({ error: "Subscription plan not found" });
       return;
     }
@@ -1162,8 +1111,7 @@ router.delete("/subscription-plans/:id", handleGenericIdParam('subscription_plan
       [plan.id]
     );
 
-    // FIXED: db.run() returns {changes}, not array
-    if (result.changes === 0) {
+    if (result.length === 0) {
       res.status(404).json({ error: "Subscription plan not found" });
       return;
     }
@@ -1317,8 +1265,8 @@ router.get("/subscription-analytics", async (req: Request, res: Response): Promi
     );
 
     // Subscription growth over time
-    const growthData = await db.query<any>(`
-      SELECT
+    const growthData = await db.query<any>(
+      `SELECT
          DATE_TRUNC('month', created_at) as month,
          COUNT(*) as new_subscriptions,
          SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', created_at)) as total_subscriptions
