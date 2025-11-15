@@ -27,14 +27,20 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
   const { user } = useAuth();
-  const { currency, currencyPreference, location, loading, error, updateCurrencyPreference, getCurrencyInfo } = useCurrency();
+
   const [activeTab, setActiveTab] = useState("profile");
   const [showApiKeys, setShowApiKeys] = useState({});
   const [notifications, setNotifications] = useState({
@@ -43,7 +49,6 @@ const SettingsPage = () => {
     systemAlerts: false,
     weeklyReports: true,
   });
-  const [savingCurrency, setSavingCurrency] = useState(false);
 
   const NotificationSettingsRow = ({ key, label, description, enabled }) => (
     <TableRow>
@@ -108,17 +113,6 @@ const SettingsPage = () => {
       ...prev,
       [key]: !prev[key],
     }));
-  };
-
-  const handleCurrencyPreferenceChange = async (newPreference) => {
-    try {
-      setSavingCurrency(true);
-      await updateCurrencyPreference(newPreference);
-    } catch (error) {
-      console.error('Failed to update currency preference:', error);
-    } finally {
-      setSavingCurrency(false);
-    }
   };
 
   const ProfileSettings = () => (
@@ -404,107 +398,6 @@ const SettingsPage = () => {
       </div>
     </div>
   );
-
-  const CurrencySettings = () => {
-    const currencyInfo = getCurrencyInfo();
-
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Currency Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="currency-preference">Display Currency</Label>
-                <Select
-                  value={currencyPreference}
-                  onValueChange={handleCurrencyPreferenceChange}
-                  disabled={loading || savingCurrency}
-                >
-                  <SelectTrigger id="currency-preference" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="AUTO">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        Auto-detect based on location
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="USD">
-                      <div className="flex items-center gap-2">
-                        <span>🇺🇸</span>
-                        US Dollar (USD)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="INR">
-                      <div className="flex items-center gap-2">
-                        <span>🇮🇳</span>
-                        Indian Rupee (INR)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {currencyPreference === 'AUTO'
-                    ? 'Prices will be shown in your local currency based on your location'
-                    : `Prices will be shown in ${currencyInfo.name} (${currency})`
-                  }
-                </p>
-              </div>
-
-              {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                  Error: {error}
-                </div>
-              )}
-
-              {location && (
-                <div className="bg-muted p-4 rounded-lg space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Globe className="h-4 w-4" />
-                    <span className="font-medium">Location Detected:</span>
-                    <span>{location.countryCode}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-medium">Active Currency:</span>
-                    <span>{currencyInfo.flag} {currencyInfo.name} ({currency})</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Exchange Rate Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Current Rate:</span>
-                <span className="text-sm font-medium">1 USD = 83.5 INR</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Last Updated:</span>
-                <span className="text-sm font-medium">Just now</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                Exchange rates are updated hourly and may vary slightly from market rates.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-6">

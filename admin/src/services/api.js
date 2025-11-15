@@ -102,18 +102,6 @@ export const adminApi = {
     return response.data;
   },
 
-  // Get all active streams
-  getActiveStreams: async () => {
-    const response = await api.get('/api/streams/active');
-    return response.data;
-  },
-
-  // Get stream info for a specific stream key
-  getStreamInfo: async (streamKey) => {
-    const response = await api.get(`/api/streams/forwarding/${streamKey}`);
-    return response.data;
-  },
-
   // Validate admin token
   validateToken: async (token) => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/validate-token`, {

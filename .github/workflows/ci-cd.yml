@@ -123,8 +123,8 @@ jobs:
             cd /opt/neustream
 
             # Install dependencies
-            if [ -f "dist/scripts/run-migrations.js" ]; then
-              node dist/scripts/run-migrations.js
+            if [ -f "./dist/scripts/run-migrations.js" ]; then
+              node ./dist/scripts/run-migrations.js
             fi
 
             pm2 start dist/server.js --name neustream-control-plane --env production

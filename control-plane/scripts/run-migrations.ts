@@ -21,11 +21,13 @@ async function runMigrations(): Promise<void> {
     `);
 
     // Get list of already executed migrations
-    const executedMigrations = await db.query<{ name: string }>("SELECT name FROM migrations");
+    const executedMigrations = await db.query<{ name: string }>(
+      "SELECT name FROM migrations",
+    );
     const executedNames = new Set(executedMigrations.map((m) => m.name));
 
     // Read migration files
-    const migrationsDir = path.join(__dirname, "../migrations");
+    const migrationsDir = path.join(__dirname, "../../migrations");
     const files = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))

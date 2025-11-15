@@ -40,9 +40,9 @@ declare global {
  * Middleware to handle user ID parameters (both integer and UUID)
  */
 export const handleUserIdParam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { userId } = req.params;
+  const { id } = req.params;
 
-  if (!userId) {
+  if (!id) {
     return next();
   }
 
@@ -50,15 +50,15 @@ export const handleUserIdParam = async (req: Request, res: Response, next: NextF
     let query: string;
     let params: any[];
 
-    if (isValidUuid(userId)) {
+    if (isValidUuid(id)) {
       // UUID parameter
       query = 'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE uuid = $1';
-      params = [userId];
+      params = [id];
       req.isUuid = true;
-    } else if (isValidInteger(userId)) {
+    } else if (isValidInteger(id)) {
       // Integer parameter (backward compatibility)
       query = 'SELECT id, uuid, email, display_name, avatar_url, stream_key, oauth_provider FROM users WHERE id = $1';
-      params = [parseInt(userId, 10)];
+      params = [parseInt(id, 10)];
       req.isUuid = false;
     } else {
       res.status(400).json({ error: 'Invalid user ID format' });

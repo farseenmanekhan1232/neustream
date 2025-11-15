@@ -170,13 +170,18 @@ export interface UsageTracking {
 }
 
 export interface PlanLimitsTracking {
-  id: number;
+  id?: number;
   user_id: number;
   current_sources_count?: number;
   current_destinations_count?: number;
   current_month_streaming_hours?: number;
-  current_chat_connectors_count?: number;
+  current_chat_connectors_count?: number; // Tracked usage, NOT a limit
   updated_at?: Date;
+  max_sources?: number;
+  max_destinations?: number;
+  max_streaming_hours_monthly?: number;
+  // Note: chat_connectors are NOT a configurable limit
+  // They are controlled by features or have separate tracking
 }
 
 // API Response Types

@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Key,
   X,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +45,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +63,10 @@ const UsersPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [showLimitsModal, setShowLimitsModal] = useState(false);
+  const [managingLimitsUser, setManagingLimitsUser] = useState(null);
+  const [userLimits, setUserLimits] = useState(null);
+  const [limitsLoading, setLimitsLoading] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -217,6 +223,77 @@ const UsersPage = () => {
 
   const isSuspended = (user) => user.display_name?.startsWith("[SUSPENDED]");
 
+  // Handle managing user limits
+  const handleManageLimits = async (user) => {
+    setManagingLimitsUser(user);
+    setShowLimitsModal(true);
+    await loadUserLimits(user.id);
+  };
+
+  const loadUserLimits = async (userId) => {
+    setLimitsLoading(true);
+    try {
+      const [limitsData, overridesData] = await Promise.all([
+        adminApi.getUserDetails(userId),
+        adminApi.getUserLimitOverrides(userId),
+      ]);
+
+      // Combine limits data with overrides
+      const limits = {
+        max_sources: limitsData.subscription?.max_sources || 0,
+        max_destinations: limitsData.subscription?.max_destinations || 0,
+        max_streaming_hours_monthly:
+          limitsData.subscription?.max_streaming_hours_monthly || 0,
+      };
+
+      // Apply overrides
+      overridesData.overrides?.forEach((override) => {
+        limits[override.limit_type] = override.override_value;
+      });
+
+      setUserLimits(limits);
+    } catch (error) {
+      console.error("Failed to load user limits:", error);
+      showNotification("Failed to load user limits", "error");
+    } finally {
+      setLimitsLoading(false);
+    }
+  };
+
+  const handleSetLimitOverride = async (limitType, value, reason) => {
+    try {
+      await adminApi.setUserLimitOverride(managingLimitsUser.id, {
+        limit_type: limitType,
+        override_value: parseInt(value),
+        reason: reason,
+      });
+      showNotification(`Limit override set successfully`);
+      await loadUserLimits(managingLimitsUser.id);
+    } catch (error) {
+      console.error("Failed to set limit override:", error);
+      showNotification(
+        error.response?.data?.error || "Failed to set limit override",
+        "error",
+      );
+    }
+  };
+
+  const handleRemoveLimitOverride = async (limitType) => {
+    if (!confirm(`Remove the override for ${limitType}?`)) return;
+
+    try {
+      await adminApi.removeUserLimitOverride(managingLimitsUser.id, limitType);
+      showNotification(`Limit override removed successfully`);
+      await loadUserLimits(managingLimitsUser.id);
+    } catch (error) {
+      console.error("Failed to remove limit override:", error);
+      showNotification(
+        error.response?.data?.error || "Failed to remove limit override",
+        "error",
+      );
+    }
+  };
+
   const UserTableRow = ({ user }) => {
     const suspended = isSuspended(user);
     return (
@@ -341,6 +418,16 @@ const UsersPage = () => {
               className="h-8 w-8 p-0 text-warning border-warning/30 hover:bg-warning/10"
             >
               <Key className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleManageLimits(user)}
+              disabled={actionLoading}
+              className="h-8 w-8 p-0 text-primary border-primary/30 hover:bg-primary/10"
+              title="Manage Custom Limits"
+            >
+              <Settings className="h-3 w-3" />
             </Button>
             <Button
               variant="outline"
@@ -787,8 +874,189 @@ const UsersPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Manage User Limits Dialog */}
+      <Dialog open={showLimitsModal} onOpenChange={setShowLimitsModal}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Manage User Limits</DialogTitle>
+            <DialogDescription>
+              Set custom limits for{" "}
+              {managingLimitsUser?.display_name || managingLimitsUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          {limitsLoading ? (
+            <div className="space-y-4 py-8">
+              <div className="animate-pulse space-y-3">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-1/2"></div>
+                <div className="h-4 bg-muted rounded w-5/6"></div>
+              </div>
+            </div>
+          ) : userLimits ? (
+            <LimitsManager
+              user={managingLimitsUser}
+              limits={userLimits}
+              onSetOverride={handleSetLimitOverride}
+              onRemoveOverride={handleRemoveLimitOverride}
+            />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Failed to load user limits
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowLimitsModal(false);
+                setManagingLimitsUser(null);
+                setUserLimits(null);
+              }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+// Limits Manager Component
+function LimitsManager({ user, limits, onSetOverride, onRemoveOverride }) {
+  const [editingLimit, setEditingLimit] = useState(null);
+  const [overrideValue, setOverrideValue] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
+
+  const limitTypes = [
+    {
+      key: "max_sources",
+      label: "Max Sources",
+      description: "Maximum number of stream sources",
+    },
+    {
+      key: "max_destinations",
+      label: "Max Destinations",
+      description: "Maximum number of destinations per source",
+    },
+    {
+      key: "max_streaming_hours_monthly",
+      label: "Max Streaming Hours (Monthly)",
+      description: "Maximum streaming hours per month",
+    },
+  ];
+
+  const handleStartEdit = (limitType, currentValue) => {
+    setEditingLimit(limitType);
+    setOverrideValue(currentValue.toString());
+    setOverrideReason("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLimit(null);
+    setOverrideValue("");
+    setOverrideReason("");
+  };
+
+  const handleSaveOverride = () => {
+    if (!overrideValue || !overrideReason) {
+      alert("Please provide both value and reason");
+      return;
+    }
+
+    onSetOverride(editingLimit, overrideValue, overrideReason);
+    handleCancelEdit();
+  };
+
+  return (
+    <div className="space-y-4">
+      {limitTypes.map((limit) => (
+        <Card key={limit.key}>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="font-medium">{limit.label}</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {limit.description}
+                </p>
+                {editingLimit === limit.key ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="override-value">Override Value</Label>
+                      <Input
+                        id="override-value"
+                        type="number"
+                        value={overrideValue}
+                        onChange={(e) => setOverrideValue(e.target.value)}
+                        placeholder="Enter new value"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="override-reason">Reason *</Label>
+                      <Input
+                        id="override-reason"
+                        value={overrideReason}
+                        onChange={(e) => setOverrideReason(e.target.value)}
+                        placeholder="Reason for override"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveOverride}>
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline" className="text-lg font-mono">
+                      {limits[limit.key]}
+                    </Badge>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleStartEdit(limit.key, limits[limit.key])
+                        }
+                      >
+                        Override
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => onRemoveOverride(limit.key)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <div className="mt-6 p-4 bg-muted rounded-lg">
+        <h4 className="font-medium mb-2">Current Plan Limits</h4>
+        <p className="text-sm text-muted-foreground">
+          These are the limits from the user's subscription plan. You can
+          override them using the controls above. Overrides take precedence over
+          plan limits.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default UsersPage;

@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';
+// Using global fetch (Node 18+)
+type FetchFunction = typeof fetch;
 
 interface MediaMTXPath {
   name: string;
@@ -36,7 +37,7 @@ class MediaMTXService {
    */
   async getActivePaths(): Promise<MediaMTXPath[]> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/paths/list`);
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/paths/list`);
       const data: MediaMTXResponse = await response.json();
 
       // Filter to only active streams (with publisher, excluding hls/webrtc paths)
@@ -57,7 +58,7 @@ class MediaMTXService {
    */
   async getPathDetails(streamName: string): Promise<MediaMTXPath | null> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/paths/get?name=${encodeURIComponent(streamName)}`);
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/paths/get?name=${encodeURIComponent(streamName)}`);
       const data: MediaMTXPath = await response.json();
       return data;
     } catch (error) {
@@ -71,7 +72,7 @@ class MediaMTXService {
    */
   async deletePath(streamName: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/paths/delete?name=${encodeURIComponent(streamName)}`, {
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/paths/delete?name=${encodeURIComponent(streamName)}`, {
         method: 'DELETE'
       });
 
@@ -87,7 +88,7 @@ class MediaMTXService {
    */
   async killWriter(streamName: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/writer/kill`, {
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/writer/kill`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -135,7 +136,7 @@ class MediaMTXService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/config/global/get`);
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/config/global/get`);
       return response.ok;
     } catch (error) {
       console.error('MediaMTX health check failed:', error);
@@ -148,7 +149,7 @@ class MediaMTXService {
    */
   async getGlobalConfig(): Promise<any> {
     try {
-      const response = await fetch(`${this.apiUrl}/v3/config/global/get`);
+      const response = await (global as any).fetch(`${this.apiUrl}/v3/config/global/get`);
       const data = await response.json();
       return data;
     } catch (error) {
