@@ -82,6 +82,7 @@ jobs:
             TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}
             TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}
             TWITCH_CALLBACK_URL=${{ secrets.TWITCH_CALLBACK_URL }}
+            ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }}
 
             TWITCH_CHAT_CALLBACK_URL=${{secrets.TWITCH_CHAT_CALLBACK_URL}}
             YOUTUBE_CHAT_CALLBACK_URL=${{secrets.YOUTUBE_CHAT_CALLBACK_URL}}

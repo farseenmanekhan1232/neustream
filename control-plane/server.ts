@@ -13,7 +13,7 @@ import { passport } from "./config/oauth";
 import authRoutes from "./routes/auth.js";
 import streamRoutes from "./routes/streams.js";
 import sourceRoutes from "./routes/sources.js";
-import adminRoutes from "./routes/admin.js";
+import adminRoutes from "./routes/admin/index.js";
 import subscriptionRoutes from "./routes/subscriptions.js";
 import paymentRoutes from "./routes/payments.js";
 import chatRoutes from "./routes/chat.js";
