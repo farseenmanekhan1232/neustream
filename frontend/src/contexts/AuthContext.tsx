@@ -126,9 +126,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           "No OAuth callback data found, proceeding with normal auth check",
         );
 
-        // If we're on the auth page but there's no OAuth callback,
-        // check if there's stored user data we can validate
-        if (currentPath === "/auth" && !loading) {
+        // Check if there's stored user data we can validate (on any page)
+        if (!loading) {
           const storedUser = authService.getCurrentUser();
           if (storedUser && authService.getToken()) {
             console.log("Found stored user data, attempting validation...");
