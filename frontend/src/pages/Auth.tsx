@@ -1,13 +1,8 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { authService } from "../services/auth";
 import { useApiHealth } from "../hooks/useApiHealth";
-import Header from "../components/Header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -15,24 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 import { MaintenanceBanner } from "../components/MaintenanceBanner";
 
 function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-  const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] =
-    useState(false);
-
   const {
-    login,
-    register,
     loginWithGoogle,
     loginWithTwitch,
     error: authError,
@@ -43,24 +26,9 @@ function Auth() {
   const {
     isHealthy,
     isChecking,
-    lastChecked,
-    error: apiError,
     checkHealth,
   } = useApiHealth();
 
-  const { mutate: forgotPasswordMutation } = useMutation({
-    mutationFn: async (email: string) => {
-      return await authService.forgotPassword(email);
-    },
-    onSuccess: () => {
-      toast.success("Password reset email sent! Please check your inbox.");
-      setShowForgotPassword(false);
-      setForgotPasswordEmail("");
-    },
-    onError: (error: Error) => {
-      setError(error.message || "Failed to send reset email");
-    },
-  });
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -86,82 +54,12 @@ function Auth() {
     }
   }, [user, location, navigate]);
 
-  const authMutation = useMutation({
-    mutationFn: async (data) => {
-      const { email, password } = data;
-      if (isLogin) {
-        return await login(email, password);
-      } else {
-        return await register(email, password);
-      }
-    },
-    onSuccess: (result) => {
-      // Check if this was an email verification flow
-      if (result && result.requiresVerification) {
-        // Show success toast
-        toast.success(
-          "Account created! Please check your email to verify your account.",
-        );
-        // Don't navigate - stay on auth page
-        return;
-      }
-
-      // Normal successful auth (shouldn't happen for registration)
-      navigate(from, { replace: true });
-    },
-    onError: (error) => {
-      setError(error.message || "Authentication failed");
-    },
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!formData.email || !formData.password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
-    authMutation.mutate(formData);
-  };
-
   const handleGoogleSignIn = () => {
-    setError("");
     loginWithGoogle();
   };
 
   const handleTwitchSignIn = () => {
-    setError("");
     loginWithTwitch();
-  };
-
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-    if (error) setError(""); // Clear error when user starts typing
-  };
-
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setError("");
-    setFormData({ email: "", password: "" });
-    setShowForgotPassword(false);
-  };
-
-  const handleForgotPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotPasswordEmail) {
-      setError("Please enter your email address");
-      return;
-    }
-    setIsSubmittingForgotPassword(true);
-    forgotPasswordMutation(forgotPasswordEmail);
   };
 
   return (
@@ -301,23 +199,12 @@ function Auth() {
             <div className="w-full max-w-md mx-auto order-1 lg:order-2 lg:flex-none lg:mx-0">
               <Card className="w-full shadow-2xl border-0 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
                 <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">
-                    {isLogin ? "Welcome Back" : "Create Account"}
-                  </CardTitle>
+                  <CardTitle className="text-2xl">Welcome</CardTitle>
                   <CardDescription>
-                    {isLogin
-                      ? "Sign in to your account to continue"
-                      : "Create a new account to get started"}
+                    Sign in to your account to continue
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-
                   {authError && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
@@ -330,7 +217,7 @@ function Auth() {
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleSignIn}
-                    disabled={authMutation.isPending || !isHealthy}
+                    disabled={!isHealthy}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -362,7 +249,7 @@ function Auth() {
                     variant="outline"
                     className="w-full"
                     onClick={handleTwitchSignIn}
-                    disabled={authMutation.isPending || !isHealthy}
+                    disabled={!isHealthy}
                   >
                     <svg
                       viewBox="0 0 256 268"
@@ -378,136 +265,21 @@ function Auth() {
                     Continue with Twitch
                   </Button>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 ">
-                        Or continue with email
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Forgot Password Link */}
-                  {isLogin && !showForgotPassword && (
-                    <div className="text-center">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-sm text-primary hover:text-primary"
-                        onClick={() => {
-                          setShowForgotPassword(true);
-                          setForgotPasswordEmail(formData.email);
-                          setError("");
-                        }}
-                        disabled={authMutation.isPending || !isHealthy}
-                      >
-                        Forgot your password?
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Forgot Password Form */}
-                  {showForgotPassword && (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <h3 className="text-lg font-medium">Reset Password</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Enter your email address and we'll send you a link to
-                          reset your password
-                        </p>
-                      </div>
-
-                      <form
-                        onSubmit={handleForgotPassword}
-                        className="space-y-4"
-                      >
-                        <div className="space-y-2">
-                          <Label htmlFor="forgot-email">Email Address</Label>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" />
-                            <Input
-                              id="forgot-email"
-                              type="email"
-                              value={forgotPasswordEmail}
-                              onChange={(e) => {
-                                setForgotPasswordEmail(e.target.value);
-                                if (error) setError("");
-                              }}
-                              placeholder="your@email.com"
-                              className="pl-10"
-                              required
-                              disabled={
-                                isSubmittingForgotPassword || !isHealthy
-                              }
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            type="submit"
-                            className="flex-1"
-                            disabled={isSubmittingForgotPassword || !isHealthy}
-                          >
-                            {isSubmittingForgotPassword ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Sending...
-                              </>
-                            ) : (
-                              "Send Reset Link"
-                            )}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setShowForgotPassword(false);
-                              setForgotPasswordEmail("");
-                              setError("");
-                            }}
-                            disabled={isSubmittingForgotPassword || !isHealthy}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* Toggle between login/register */}
-                  <div className="text-center space-y-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="w-full text-sm"
-                      onClick={toggleMode}
-                      disabled={authMutation.isPending || !isHealthy}
+                  <div className="text-xs text-center text-muted-foreground">
+                    By signing in, you agree to our{" "}
+                    <Link
+                      to="/terms"
+                      className="underline hover:text-foreground"
                     >
-                      {isLogin
-                        ? "Don't have an account? Sign up"
-                        : "Already have an account? Sign in"}
-                    </Button>
-
-                    <div className="text-xs ">
-                      By {isLogin ? "signing in" : "creating an account"}, you
-                      agree to our{" "}
-                      <Link
-                        to="/terms"
-                        className="underline hover:text-foreground"
-                      >
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link
-                        to="/privacy"
-                        className="underline hover:text-foreground"
-                      >
-                        Privacy Policy
-                      </Link>
-                    </div>
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/privacy"
+                      className="underline hover:text-foreground"
+                    >
+                      Privacy Policy
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

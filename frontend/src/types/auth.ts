@@ -1,6 +1,6 @@
 // Authentication and User types
 
-export type OAuthProvider = "google" | "twitch" | "email";
+export type OAuthProvider = "google" | "twitch";
 
 export interface User {
   id: string;
@@ -24,16 +24,6 @@ export interface AuthResponse {
   requiresVerification?: boolean;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterCredentials {
-  email: string;
-  password: string;
-}
-
 export interface OAuthCallbackData {
   token: string;
   user: string; // JSON string
@@ -51,11 +41,3 @@ export interface ValidateTokenRequest {
 // export interface ValidateTokenResponse {
 //   user: User;
 // }
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-}

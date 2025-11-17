@@ -154,50 +154,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [loading]);
 
-  const login = useCallback(
-    async (email: string, password: string): Promise<void> => {
-      try {
-        setError(null);
-        const response = await authService.login({ email, password });
-        setUser(response.user);
-      } catch (error) {
-        setError((error as Error).message);
-        throw error;
-      }
-    },
-    [],
-  );
-
-  const register = useCallback(
-    async (email: string, password: string): Promise<{ requiresVerification?: boolean; message?: string }> => {
-      try {
-        setError(null);
-        const response = await authService.register({ email, password });
-
-        // Handle email verification flow
-        if (response.requiresVerification) {
-          // Don't set user - they need to verify email first
-          return {
-            requiresVerification: true,
-            message: response.message,
-          };
-        }
-
-        // Handle normal registration (shouldn't happen with email verification)
-        if (response.user && response.token) {
-          setUser(response.user);
-          return { requiresVerification: false };
-        }
-
-        return { requiresVerification: false };
-      } catch (error) {
-        setError((error as Error).message);
-        throw error;
-      }
-    },
-    [],
-  );
-
   const loginWithGoogle = useCallback((): void => {
     authService.loginWithGoogle();
   }, []);
@@ -234,8 +190,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     loading,
     error,
-    login,
-    register,
     loginWithGoogle,
     loginWithTwitch,
     logout,
