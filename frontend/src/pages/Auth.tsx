@@ -389,61 +389,6 @@ function Auth() {
                     </div>
                   </div>
 
-                  {/* Email/Password Form */}
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 " />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="your@email.com"
-                          className="pl-10"
-                          required
-                          disabled={authMutation.isPending || !isHealthy}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 " />
-                        <Input
-                          id="password"
-                          type="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder="Enter your password"
-                          className="pl-10"
-                          required
-                          disabled={authMutation.isPending || !isHealthy}
-                          minLength={6}
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={authMutation.isPending || !isHealthy}
-                      className="w-full"
-                    >
-                      {authMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {isLogin ? "Signing In..." : "Creating Account..."}
-                        </>
-                      ) : isLogin ? (
-                        "Sign In"
-                      ) : (
-                        "Create Account"
-                      )}
-                    </Button>
-                  </form>
-
                   {/* Forgot Password Link */}
                   {isLogin && !showForgotPassword && (
                     <div className="text-center">
