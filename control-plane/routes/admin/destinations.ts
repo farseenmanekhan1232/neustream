@@ -10,17 +10,20 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const destinations = await db.query<any>(`
       SELECT
-        sd.*,
-        d.platform,
-        d.rtmp_url,
-        d.stream_key as destination_key,
-        d.is_active as destination_is_active,
-        ss.uuid as source_uuid,
+        sd.id,
+        sd.source_id,
+        sd.destination_id,
+        sd.is_active,
+        sd.created_at,
+        sd.platform,
+        sd.rtmp_url,
+        sd.stream_key,
+        ss.id as source_id,
         ss.name as source_name,
+        ss.user_id,
         u.email as user_email,
         u.display_name as user_display_name
       FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
       JOIN stream_sources ss ON sd.source_id = ss.id
       JOIN users u ON ss.user_id = u.id
       ORDER BY sd.created_at DESC
@@ -52,7 +55,7 @@ router.get(
   },
 );
 
-// Create new destination (FIXED: Was missing!)
+// Create new destination
 router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { source_id, platform, rtmp_url, stream_key, is_active = true } = req.body;
@@ -79,7 +82,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
 
     // Security: Prevent using Neustream stream keys as destinations
     const isNeustreamStreamKey = await db.query<any>(
-      "SELECT id FROM stream_sources WHERE stream_key = $1 UNION SELECT id FROM users WHERE stream_key = $1",
+      "SELECT id FROM users WHERE stream_key = $1",
       [stream_key],
     );
 
@@ -90,25 +93,14 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Insert into destinations table first
-    const destinationResult = await db.run<any>(
-      "INSERT INTO destinations (platform, rtmp_url, stream_key, is_active) VALUES ($1, $2, $3, $4) RETURNING *",
-      [platform, rtmp_url, stream_key, is_active],
-    );
-
-    // Then insert into source_destinations junction table
+    // Insert into source_destinations table with all fields
     const result = await db.run<any>(
-      "INSERT INTO source_destinations (source_id, destination_id, is_active) VALUES ($1, $2, $3) RETURNING *",
-      [source_id, destinationResult.id, is_active],
+      "INSERT INTO source_destinations (source_id, platform, rtmp_url, stream_key, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [source_id, platform, rtmp_url, stream_key, is_active],
     );
 
     res.status(201).json({
-      data: {
-        ...result,
-        platform,
-        rtmp_url,
-        stream_key,
-      },
+      data: result,
     });
   } catch (error: any) {
     console.error("Create destination error:", error);
@@ -133,18 +125,45 @@ router.put(
       // Destination exists check is already handled by middleware
       const existingDest = (req as any).entity;
 
-      // Update both source_destinations and destinations tables
+      // Build dynamic update query
+      const updates: string[] = [];
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      if (platform !== undefined) {
+        updates.push(`platform = $${paramIndex++}`);
+        params.push(platform);
+      }
+      if (rtmp_url !== undefined) {
+        updates.push(`rtmp_url = $${paramIndex++}`);
+        params.push(rtmp_url);
+      }
+      if (stream_key !== undefined) {
+        updates.push(`stream_key = $${paramIndex++}`);
+        params.push(stream_key);
+      }
+      if (is_active !== undefined) {
+        updates.push(`is_active = $${paramIndex++}`);
+        params.push(is_active);
+      }
+
+      if (updates.length === 0) {
+        res.status(400).json({ error: "No valid fields to update" });
+        return;
+      }
+
+      params.push(id);
+
+      // Update source_destinations table
       const result = await db.run<any>(
-        `UPDATE source_destinations sd
-       JOIN destinations d ON sd.destination_id = d.id
-       SET d.platform = COALESCE($1, d.platform),
-           d.rtmp_url = COALESCE($2, d.rtmp_url),
-           d.stream_key = COALESCE($3, d.stream_key),
-           sd.is_active = COALESCE($4, sd.is_active)
-       WHERE sd.id = $5
-       RETURNING sd.*, d.platform, d.rtmp_url, d.stream_key, d.is_active`,
-        [platform, rtmp_url, stream_key, is_active, id],
+        `UPDATE source_destinations SET ${updates.join(", ")} WHERE id = $${paramIndex} RETURNING *`,
+        params,
       );
+
+      if (!result) {
+        res.status(404).json({ error: "Destination not found" });
+        return;
+      }
 
       res.json({ data: result });
     } catch (error: any) {
@@ -162,15 +181,11 @@ router.delete(
     const { id } = req.params;
 
     try {
-      const result = await db.run<any>(
+      // Destination exists check is already handled by middleware
+      await db.query(
         "DELETE FROM source_destinations WHERE id = $1",
         [id],
       );
-
-      if (result.changes === 0) {
-        res.status(404).json({ error: "Destination not found" });
-        return;
-      }
 
       res.json({ message: "Destination deleted successfully" });
     } catch (error: any) {

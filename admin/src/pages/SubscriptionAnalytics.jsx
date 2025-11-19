@@ -35,7 +35,7 @@ function SubscriptionAnalytics() {
   const { data: analyticsData, isLoading } = useQuery({
     queryKey: ["admin-subscription-analytics"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/subscription-analytics");
+      const response = await fetch("/api/admin/subscriptions/subscription-analytics");
       if (!response.ok) throw new Error("Failed to fetch analytics");
       return response.json();
     },
@@ -56,7 +56,7 @@ function SubscriptionAnalytics() {
     );
   }
 
-  const { planDistribution, revenueProjection, growthData } = analyticsData || {
+  const { planDistribution, revenueProjection, growthData } = analyticsData?.data || {
     planDistribution: [],
     revenueProjection: [],
     growthData: [],

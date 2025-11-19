@@ -43,7 +43,7 @@ const Streams = () => {
   const loadActiveStreams = async () => {
     try {
       const response = await adminApi.getActiveStreams();
-      setStreams(response.activeStreams || []);
+      setStreams(response.data?.streams || []);
     } catch (error) {
       console.error("Failed to load streams:", error);
     } finally {

@@ -86,7 +86,7 @@ export const adminApi = {
 
   // Get system statistics
   getStats: async () => {
-    const response = await api.get('/api/admin/stats');
+    const response = await api.get('/api/admin/analytics/stats');
     return response.data;
   },
 
@@ -98,7 +98,7 @@ export const adminApi = {
 
   // Get system health
   getHealth: async () => {
-    const response = await api.get('/api/admin/health');
+    const response = await api.get('/api/admin/system/health');
     return response.data;
   },
 
@@ -132,15 +132,10 @@ export const adminApi = {
     return response.data;
   },
 
+
   // Delete stream source
   deleteSource: async (sourceId) => {
     const response = await api.delete(`/api/admin/sources/${sourceId}`);
-    return response.data;
-  },
-
-  // Regenerate stream source key
-  regenerateSourceKey: async (sourceId) => {
-    const response = await api.post(`/api/admin/sources/${sourceId}/regenerate-key`);
     return response.data;
   },
 
@@ -216,74 +211,74 @@ export const adminApi = {
 
   // Get subscription analytics
   getSubscriptionAnalytics: async () => {
-    const response = await api.get('/api/admin/subscription-analytics');
+    const response = await api.get('/api/admin/subscriptions/subscription-analytics');
     return response.data;
   },
 
   // Get subscription plans with currency support
   getSubscriptionPlans: async () => {
-    const response = await api.get('/api/admin/subscription-plans');
+    const response = await api.get('/api/admin/subscriptions/plans');
     return response.data;
   },
 
   // Create subscription plan
   createSubscriptionPlan: async (planData) => {
-    const response = await api.post('/api/admin/subscription-plans', planData);
+    const response = await api.post('/api/admin/subscriptions/plans', planData);
     return response.data;
   },
 
   // Update subscription plan
   updateSubscriptionPlan: async (planId, planData) => {
-    const response = await api.put(`/api/admin/subscription-plans/${planId}`, planData);
+    const response = await api.put(`/api/admin/subscriptions/plans/${planId}`, planData);
     return response.data;
   },
 
   // Delete subscription plan
   deleteSubscriptionPlan: async (planId) => {
-    const response = await api.delete(`/api/admin/subscription-plans/${planId}`);
+    const response = await api.delete(`/api/admin/subscriptions/plans/${planId}`);
     return response.data;
   },
 
   // Get user subscriptions
   getUserSubscriptions: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await api.get(`/api/admin/user-subscriptions?${queryParams}`);
+    const response = await api.get(`/api/admin/subscriptions/user-subscriptions?${queryParams}`);
     return response.data;
   },
 
   // Update user subscription
   updateUserSubscription: async (userId, subscriptionData) => {
-    const response = await api.put(`/api/admin/user-subscriptions/${userId}`, subscriptionData);
+    const response = await api.put(`/api/admin/subscriptions/user-subscriptions/${userId}`, subscriptionData);
     return response.data;
   },
 
   // Promote/Demote user subscription
   promoteDemoteUserSubscription: async (userId, data) => {
-    const response = await api.put(`/api/admin/user-subscriptions/${userId}/promote-demote`, data);
+    const response = await api.put(`/api/admin/subscriptions/user-subscriptions/${userId}/promote-demote`, data);
     return response.data;
   },
 
   // Get all limit overrides
   getLimitOverrides: async () => {
-    const response = await api.get('/api/admin/limit-overrides');
+    const response = await api.get('/api/admin/subscriptions/limit-overrides');
     return response.data;
   },
 
   // Get user limit overrides
   getUserLimitOverrides: async (userId) => {
-    const response = await api.get(`/api/admin/users/${userId}/limits/overrides`);
+    const response = await api.get(`/api/admin/subscriptions/users/${userId}/limits/overrides`);
     return response.data;
   },
 
   // Set limit override for user
   setUserLimitOverride: async (userId, overrideData) => {
-    const response = await api.post(`/api/admin/users/${userId}/limits/override`, overrideData);
+    const response = await api.post(`/api/admin/subscriptions/users/${userId}/limits/override`, overrideData);
     return response.data;
   },
 
   // Remove limit override for user
   removeUserLimitOverride: async (userId, limitType) => {
-    const response = await api.delete(`/api/admin/users/${userId}/limits/override/${limitType}`);
+    const response = await api.delete(`/api/admin/subscriptions/users/${userId}/limits/override/${limitType}`);
     return response.data;
   },
 

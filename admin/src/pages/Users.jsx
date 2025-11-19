@@ -76,7 +76,7 @@ const UsersPage = () => {
     setLoading(true);
     try {
       const response = await adminApi.getUsers();
-      setUsers(response.users || []);
+      setUsers(response.data || []);
     } catch (error) {
       console.error("Failed to load users:", error);
       showNotification("Failed to load users", "error");

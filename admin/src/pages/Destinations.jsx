@@ -73,7 +73,7 @@ const DestinationsPage = () => {
     setLoading(true);
     try {
       const response = await adminApi.getDestinations();
-      setDestinations(response.destinations || []);
+      setDestinations(response.data || []);
     } catch (error) {
       console.error("Failed to load destinations:", error);
       showNotification("Failed to load destinations", "error");
@@ -105,7 +105,7 @@ const DestinationsPage = () => {
   const handleViewDestination = async (destination) => {
     try {
       const response = await adminApi.getDestination(destination.id);
-      setSelectedDestination(response.destination);
+      setSelectedDestination(response.data);
       setShowDestinationDetails(true);
     } catch (error) {
       console.error("Failed to load destination details:", error);

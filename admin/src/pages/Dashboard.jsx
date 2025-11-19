@@ -11,6 +11,7 @@ import {
   DollarSign,
   Crown,
   CreditCard,
+  AlertCircle,
 } from "lucide-react";
 import {
   Card,
@@ -48,26 +49,37 @@ const Dashboard = () => {
     try {
       console.log("🔄 Loading dashboard data...");
 
-      // Get system statistics
-      console.log("📊 Fetching system statistics...");
-      const statsResponse = await adminApi.getStats();
-      console.log("📊 Stats response:", statsResponse);
-      const stats = statsResponse;
-
-      // Get active streams
-      console.log("📺 Fetching active streams...");
-      const streamsResponse = await adminApi.getActiveStreams();
-      console.log("📺 Streams response:", streamsResponse);
-      const activeStreams = streamsResponse.activeStreams || [];
-
-      // Get subscription analytics
-      console.log("💰 Fetching subscription analytics...");
+      let stats = { users: {}, streams: {} };
+      let activeStreams = [];
       let subscriptionData = {
         activeSubscriptions: 0,
         monthlyRevenue: 0,
         planDistribution: [],
       };
+
+      // Get system statistics with error handling
       try {
+        console.log("📊 Fetching system statistics...");
+        const statsResponse = await adminApi.getStats();
+        console.log("📊 Stats response:", statsResponse);
+        stats = statsResponse || stats;
+      } catch (statsError) {
+        console.warn("⚠️ Could not load stats:", statsError);
+      }
+
+      // Get active streams with error handling
+      try {
+        console.log("📺 Fetching active streams...");
+        const streamsResponse = await adminApi.getActiveStreams();
+        console.log("📺 Streams response:", streamsResponse);
+        activeStreams = streamsResponse.activeStreams || [];
+      } catch (streamsError) {
+        console.warn("⚠️ Could not load active streams:", streamsError);
+      }
+
+      // Get subscription analytics with error handling
+      try {
+        console.log("💰 Fetching subscription analytics...");
         const subscriptionResponse = await adminApi.getSubscriptionAnalytics();
         console.log("💰 Subscription response:", subscriptionResponse);
 
@@ -202,6 +214,23 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Error Alert - Show if data failed to load but don't break UI */}
+      {stats.totalUsers === 0 && stats.activeStreams === 0 && !loading && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+            <div>
+              <h3 className="font-medium text-yellow-800 dark:text-yellow-300">
+                Some data could not be loaded
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                Some dashboard stats may be unavailable. Please check the console for details.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -236,40 +265,81 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Plan Distribution */}
-      {stats.planDistribution.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.planDistribution.slice(0, 4).map((plan) => (
-            <StatCard
-              key={plan.name}
-              title={plan.name}
-              value={plan.user_count || 0}
-              icon={Crown}
-              change={`${
-                plan.percentage ? parseFloat(plan.percentage).toFixed(1) : 0
-              }%`}
-              changeType="positive"
-            />
-          ))}
-        </div>
-      )}
+      {/* Plan Distribution & System Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Plan Distribution */}
+        {stats.planDistribution.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Plan Distribution</CardTitle>
+              <CardDescription>
+                Breakdown of users across different subscription tiers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {stats.planDistribution.map((plan) => (
+                <div key={plan.name} className="flex items-center gap-4">
+                  <Crown className="h-5 w-5 text-yellow-500" />
+                  <div className="flex-1">
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>{plan.name}</span>
+                      <span>{plan.user_count || 0} users</span>
+                    </div>
+                    <Progress
+                      value={parseFloat(plan.percentage || "0")}
+                      className="mt-1 h-2"
+                    />
+                  </div>
+                  <Badge variant="secondary">
+                    {parseFloat(plan.percentage || "0").toFixed(1)}%
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* System Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatCard
-          title="System Status"
-          value="Online"
-          icon={Wifi}
-          change="All systems operational"
-          changeType="positive"
-        />
-        <StatCard
-          title="Uptime"
-          value={stats.systemUptime}
-          icon={Clock}
-          change="Last 30 days"
-          changeType="positive"
-        />
+        {/* System Metrics */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Health</CardTitle>
+            <CardDescription>
+              Key metrics for overall system performance.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <Wifi className="h-5 w-5 text-green-500" />
+              <div>
+                <p className="text-sm font-medium">System Status</p>
+                <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                  Online
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-blue-500" />
+              <div>
+                <p className="text-sm font-medium">Uptime</p>
+                <p className="text-lg font-semibold">{stats.systemUptime}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Server className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium">Total Streams</p>
+                <p className="text-lg font-semibold">{stats.totalStreams}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-purple-500" />
+              <div>
+                <p className="text-sm font-medium">Total Users</p>
+                <p className="text-lg font-semibold">{stats.totalUsers}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Activity */}
@@ -281,9 +351,9 @@ const Dashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {recentActivity.length > 0 ? (
+          {stats.recentActivity.length > 0 ? (
             <div className="space-y-4">
-              {recentActivity.map((activity) => {
+              {stats.recentActivity.map((activity) => {
                 const Icon = activity.icon;
                 return (
                   <div key={activity.id} className="flex items-center gap-3">
@@ -297,9 +367,18 @@ const Dashboard = () => {
                         {activity.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(activity.timestamp).toLocaleString()}
+                        {formatDistanceToNow(new Date(activity.timestamp), {
+                          addSuffix: true,
+                        })}
                       </p>
                     </div>
+                    <Badge
+                      variant={
+                        activity.status === "live" ? "success" : "secondary"
+                      }
+                    >
+                      {activity.status}
+                    </Badge>
                   </div>
                 );
               })}
@@ -331,11 +410,11 @@ const Dashboard = () => {
               View All Users
             </Button>
             <Button variant="outline" className="justify-start bg-transparent">
-              <Activity className="h-4 w-4 mr-2" />
+              <Monitor className="h-4 w-4 mr-2" />
               Monitor Streams
             </Button>
             <Button variant="outline" className="justify-start bg-transparent">
-              <TrendingUp className="h-4 w-4 mr-2" />
+              <BarChart className="h-4 w-4 mr-2" />
               View Analytics
             </Button>
           </div>

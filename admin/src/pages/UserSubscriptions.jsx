@@ -179,8 +179,8 @@ function UserSubscriptions() {
     );
   }
 
-  const { subscriptions, pagination } = subscriptionsData || {
-    subscriptions: [],
+  const { data: subscriptions, pagination } = subscriptionsData || {
+    data: [],
     pagination: {},
   };
   const plans = plansData || [];

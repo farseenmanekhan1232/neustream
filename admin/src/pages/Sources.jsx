@@ -70,7 +70,7 @@ const SourcesPage = () => {
     setLoading(true);
     try {
       const response = await adminApi.getSources();
-      setSources(response.sources || []);
+      setSources(response.data || []);
     } catch (error) {
       console.error("Failed to load sources:", error);
       showNotification("Failed to load sources", "error");
@@ -87,8 +87,7 @@ const SourcesPage = () => {
   const filteredSources = sources.filter((source) => {
     const matchesSearch =
       source.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      source.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      source.stream_key.toLowerCase().includes(searchTerm.toLowerCase());
+      source.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" ||
       (filterStatus === "active" && source.is_active) ||
@@ -99,7 +98,7 @@ const SourcesPage = () => {
   const handleViewSource = async (source) => {
     try {
       const response = await adminApi.getSource(source.id);
-      setSelectedSource(response.source);
+      setSelectedSource(response.data?.source || response.data);
       setShowSourceDetails(true);
     } catch (error) {
       console.error("Failed to load source details:", error);
@@ -162,31 +161,7 @@ const SourcesPage = () => {
     }
   };
 
-  const handleRegenerateKey = async (sourceId) => {
-    if (
-      !confirm(
-        "Are you sure you want to regenerate this stream key? This will invalidate the current key.",
-      )
-    ) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const response = await adminApi.regenerateSourceKey(sourceId);
-      showNotification("Stream key regenerated successfully");
-      alert(`New stream key: ${response.source.stream_key}`);
-      loadSources();
-    } catch (error) {
-      console.error("Failed to regenerate stream key:", error);
-      showNotification(
-        error.response?.data?.error || "Failed to regenerate stream key",
-        "error",
-      );
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  // Note: Stream key regeneration removed - stream_key doesn't exist in stream_sources table
 
   const handleCopyToClipboard = async (text, type) => {
     try {
@@ -268,19 +243,6 @@ const SourcesPage = () => {
         </div>
       </TableCell>
       <TableCell>
-        <div className="text-xs">
-          <span
-            className="font-mono bg-muted px-2 py-1 rounded cursor-pointer hover:bg-muted/80"
-            onClick={() => handleCopyToClipboard(source.stream_key, "stream")}
-          >
-            {source.stream_key?.substring(0, 12)}...
-          </span>
-          {copiedKey === "stream" && (
-            <CheckCircle className="inline h-3 w-3 text-success ml-1" />
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
         <div className="text-xs text-center">
           {source.last_used_at
             ? new Date(source.last_used_at).toLocaleDateString()
@@ -304,15 +266,6 @@ const SourcesPage = () => {
             className="h-8 w-8 p-0"
           >
             <Edit className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleRegenerateKey(source.id)}
-            disabled={actionLoading}
-            className="h-8 w-8 p-0 text-warning border-warning/30 hover:bg-warning/10"
-          >
-            <Key className="h-3 w-3" />
           </Button>
           <Button
             variant="outline"
@@ -633,27 +586,6 @@ const SourcesPage = () => {
                 disabled
                 className="bg-muted"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="streamKey">Stream Key</Label>
-              <div className="flex">
-                <Input
-                  id="streamKey"
-                  value={editingSource?.stream_key}
-                  disabled
-                  className="font-mono bg-muted"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleCopyToClipboard(editingSource.stream_key, "edit")
-                  }
-                  className="ml-2"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
             <div className="flex items-center space-x-2">
               <input

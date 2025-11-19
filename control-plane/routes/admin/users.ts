@@ -354,9 +354,9 @@ router.get(
         `
         SELECT
           us.*,
-          sp.max_sources,
-          sp.max_destinations,
-          sp.max_streaming_hours_monthly,
+          (sp.limits->>'max_sources')::integer as max_sources,
+          (sp.limits->>'max_destinations')::integer as max_destinations,
+          (sp.limits->>'max_streaming_hours_monthly')::integer as max_streaming_hours_monthly,
           plt.current_sources_count,
           plt.current_destinations_count,
           plt.current_month_streaming_hours
@@ -381,42 +381,8 @@ router.get(
   },
 );
 
-// Override user's plan limits
-router.post(
-  "/:id/limits",
-  handleGenericIdParam("users"),
-  async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const { max_sources, max_destinations, max_streaming_hours_monthly } = req.body;
-
-    try {
-      // Upsert into plan_limits_tracking
-      const result = await db.query<any>(
-        `
-        INSERT INTO plan_limits_tracking (
-          user_id,
-          max_sources,
-          max_destinations,
-          max_streaming_hours_monthly,
-          updated_at
-        ) VALUES ($1, $2, $3, $4, NOW())
-        ON CONFLICT (user_id)
-        DO UPDATE SET
-          max_sources = EXCLUDED.max_sources,
-          max_destinations = EXCLUDED.max_destinations,
-          max_streaming_hours_monthly = EXCLUDED.max_streaming_hours_monthly,
-          updated_at = NOW()
-        RETURNING *
-      `,
-        [id, max_sources, max_destinations, max_streaming_hours_monthly],
-      );
-
-      res.json({ data: result[0] });
-    } catch (error: any) {
-      console.error("Set user limits error:", error);
-      res.status(500).json({ error: "Failed to set user limits" });
-    }
-  },
-);
+// Note: plan_limits_tracking table only tracks current usage counts, not limit overrides.
+// The actual limits come from subscription_plans.limits JSONB field.
+// For limit overrides, use the subscription service's limit override functionality.
 
 export default router;

@@ -21,6 +21,9 @@ import subscriptionsRouter from "./subscriptions";
 import analyticsRouter from "./analytics";
 import streamsRouter from "./streams";
 import systemRouter from "./system";
+import paymentsRouter from "./payments";
+import monitoringRouter from "./monitoring";
+import chatRouter from "./chat";
 
 const router = express.Router();
 
@@ -32,9 +35,12 @@ router.use("/users", usersRouter);
 router.use("/sources", sourcesRouter);
 router.use("/destinations", destinationsRouter);
 router.use("/subscriptions", subscriptionsRouter);
-router.use("/", analyticsRouter); // Analytics routes at /api/admin/analytics/*
+router.use("/analytics", analyticsRouter); // Analytics routes at /api/admin/analytics/*
 router.use("/streams", streamsRouter);
 router.use("/system", systemRouter);
+router.use("/payments", paymentsRouter);
+router.use("/monitoring", monitoringRouter);
+router.use("/chat-connectors", chatRouter);
 
 // Health check endpoint for admin API
 router.get("/ping", (req: Request, res: Response): void => {

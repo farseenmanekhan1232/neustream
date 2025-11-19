@@ -47,10 +47,9 @@ router.get(
       // Get destinations for this source
       const destinations = await db.query<any>(
         `
-      SELECT sd.*, d.* FROM source_destinations sd
-      JOIN destinations d ON sd.destination_id = d.id
-      WHERE sd.source_id = $1
-      ORDER BY sd.created_at DESC
+      SELECT * FROM source_destinations
+      WHERE source_id = $1
+      ORDER BY created_at DESC
     `,
         [id],
       );
@@ -187,69 +186,8 @@ router.delete(
   },
 );
 
-// Regenerate stream key for source
-router.post(
-  "/:id/regenerate-key",
-  handleGenericIdParam("stream_sources"),
-  async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
-    try {
-      // Source exists check is already handled by middleware
-      const existingSource = (req as any).entity;
-
-      // Check if source is currently active
-      const activeStream = await db.query<any>(
-        "SELECT id FROM active_streams WHERE source_id = $1 AND ended_at IS NULL",
-        [id],
-      );
-
-      if (activeStream.length > 0) {
-        res
-          .status(400)
-          .json({ error: "Cannot regenerate stream key while streaming" });
-        return;
-      }
-
-      // Generate unique stream key
-      let streamKey: string = "";
-      let isUnique = false;
-      let attempts = 0;
-
-      while (!isUnique && attempts < 10) {
-        streamKey = crypto.randomBytes(24).toString("hex");
-
-        const existingInUsers = await db.query<any>(
-          "SELECT id FROM users WHERE stream_key = $1",
-          [streamKey],
-        );
-
-        if (existingInUsers.length === 0) {
-          isUnique = true;
-        }
-        attempts++;
-      }
-
-      if (!isUnique) {
-        res.status(500).json({ error: "Failed to generate unique stream key" });
-        return;
-      }
-
-      // Update source stream key
-      const result = await db.run<any>(
-        "UPDATE stream_sources SET stream_key = $1 WHERE id = $2 RETURNING *",
-        [streamKey, id],
-      );
-
-      res.json({
-        message: "Stream key regenerated successfully",
-        data: result,
-      });
-    } catch (error: any) {
-      console.error("Regenerate stream key error:", error);
-      res.status(500).json({ error: "Failed to regenerate stream key" });
-    }
-  },
-);
+// Note: Stream sources don't have their own stream_key column.
+// Stream keys are associated with users, not individual sources.
+// If stream key regeneration is needed, it should be done at the user level.
 
 export default router;

@@ -126,7 +126,7 @@ router.put(
       );
 
       // Check if update was successful
-      if (result.changes === 0) {
+      if (!result) {
         res.status(404).json({ error: "Subscription plan not found" });
         return;
       }
@@ -178,8 +178,8 @@ router.delete(
         [plan.id],
       );
 
-      // db.run() returns {changes}, not array
-      if (result.changes === 0) {
+      // Check if delete was successful
+      if (!result) {
         res.status(404).json({ error: "Subscription plan not found" });
         return;
       }
@@ -302,7 +302,7 @@ router.put(
         );
       }
 
-      res.json({ data: result[0] });
+      res.json({ data: result });
     } catch (error: any) {
       console.error("Update user subscription error:", error);
       res.status(500).json({ error: "Failed to update user subscription" });
