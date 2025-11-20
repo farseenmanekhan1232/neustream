@@ -200,7 +200,7 @@ export default function ChatConnectorSetup({ sourceId }: ChatConnectorSetupProps
         </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-3 grid-cols-2">
         {PLATFORMS.map((platform) => {
           const { status, connector } = getPlatformStatus(platform.id);
           const isConnected = status === "connected";

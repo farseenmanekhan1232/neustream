@@ -52,7 +52,6 @@ function SubscriptionManagement() {
   const { formatPrice } = useCurrency();
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState("yearly");
-  const [showPlanDialog, setShowPlanDialog] = useState(false);
 
   // Fetch current subscription
   const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery({
@@ -151,28 +150,88 @@ function SubscriptionManagement() {
     free: [
       { name: "Basic Analytics", icon: TrendingUp },
       { name: "Community Support", icon: Users },
-      { name: "50 Hours Streaming", icon: Clock },
+      { name: "Stream to platforms simultaneously", icon: Zap },
+      { name: "35 hours streaming monthly", icon: Clock },
+      { name: "1 chat connector", icon: Star },
     ],
     pro: [
       { name: "Advanced Analytics", icon: TrendingUp },
       { name: "Priority Support", icon: Users },
-      { name: "Unlimited Streaming Hours", icon: Clock },
-      { name: "Multiple Sources", icon: Zap },
-      { name: "Custom Destinations", icon: Star },
+      { name: "Stream to platforms simultaneously", icon: Zap },
+      { name: "1000 hours streaming monthly", icon: Clock },
+      { name: "Up to 2 streaming sources", icon: Zap },
+      { name: "3 chat connectors", icon: Star },
     ],
     business: [
       { name: "Enterprise Analytics", icon: TrendingUp },
       { name: "24/7 Support", icon: Users },
-      { name: "Unlimited Everything", icon: Clock },
-      { name: "Custom Branding", icon: Shield },
-      { name: "API Access", icon: Zap },
-      { name: "Dedicated Account Manager", icon: Star },
+      { name: "Stream to platforms simultaneously", icon: Zap },
+      { name: "5000 hours streaming monthly", icon: Clock },
+      { name: "Up to 5 streaming sources", icon: Zap },
+      { name: "10 chat connectors", icon: Star },
     ],
   };
 
-  const getPlanFeatures = (planName: string) => {
+  const getPlanFeatures = (planName: string, planData?: any) => {
     const planKey = planName.toLowerCase();
-    return planFeatures[planKey] || planFeatures.free;
+    const baseFeatures = planFeatures[planKey] || planFeatures.free;
+    
+    // If no plan data provided, return base features
+    if (!planData) return baseFeatures;
+
+    // Create a copy of base features to modify
+    const features = [...baseFeatures];
+
+    // Override with actual plan data from API
+    if (planData.max_destinations) {
+      const destIndex = features.findIndex(f => f.name.includes("Stream to"));
+      if (destIndex !== -1) {
+        features[destIndex] = {
+          ...features[destIndex],
+          name: `Stream to ${planData.max_destinations} platform${planData.max_destinations > 1 ? "s" : ""} simultaneously`
+        };
+      }
+    }
+
+    if (planData.max_streaming_hours_monthly) {
+      const hoursIndex = features.findIndex(f => f.name.includes("hours streaming"));
+      if (hoursIndex !== -1) {
+        features[hoursIndex] = {
+          ...features[hoursIndex],
+          name: `${planData.max_streaming_hours_monthly} hours streaming monthly`
+        };
+      }
+    }
+
+    if (planData.max_sources && planData.max_sources > 1) {
+      const sourcesIndex = features.findIndex(f => f.name.includes("streaming sources"));
+      if (sourcesIndex !== -1) {
+        features[sourcesIndex] = {
+          ...features[sourcesIndex],
+          name: `Up to ${planData.max_sources} streaming sources`
+        };
+      }
+    }
+
+    // Parse chat connectors from plan features array
+    if (planData.features && Array.isArray(planData.features)) {
+      const chatFeature = planData.features.find((f: string) => f.includes("Chat Connectors:"));
+      if (chatFeature) {
+        const match = chatFeature.match(/Chat Connectors:\s*(\d+)/);
+        if (match) {
+          const chatConnectorsCount = parseInt(match[1]);
+          const chatIndex = features.findIndex(f => f.name.includes("chat connector"));
+          if (chatIndex !== -1) {
+            features[chatIndex] = {
+              ...features[chatIndex],
+              name: `${chatConnectorsCount} chat connector${chatConnectorsCount > 1 ? "s" : ""}`
+            };
+          }
+        }
+      }
+    }
+
+    return features;
   };
 
   const getPlanPrice = (plan: any) => {
@@ -200,186 +259,177 @@ function SubscriptionManagement() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Subscription</h1>
-          <p className="text-muted-foreground">Manage your plan and billing details.</p>
+      <div className="text-center max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold tracking-tight mb-2">Subscription Plans</h1>
+        <p className="text-muted-foreground text-lg">Choose the perfect plan for your streaming needs</p>
+      </div>
+
+      {/* Current Usage Summary - Streamlined */}
+      <Card className="border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+          <Crown className="w-24 h-24" />
         </div>
-        <Button onClick={() => setShowPlanDialog(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
-          Upgrade Plan
-        </Button>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Current Plan Card */}
-        <Card className="lg:col-span-2 border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-            <Crown className="w-32 h-32" />
-          </div>
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                Current Plan
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+              Current Plan
+            </Badge>
+            {currentPlan?.status === "active" && (
+              <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
+                Active
               </Badge>
-              {currentPlan?.status === "active" && (
-                <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  Active
-                </Badge>
-              )}
+            )}
+          </div>
+          <CardTitle className="text-2xl">{currentPlan?.plan_name || "Free"} Plan</CardTitle>
+          <CardDescription>
+            {currentPlan?.billing_cycle === "yearly" ? "Billed Annually" : "Billed Monthly"}
+            {currentPlan?.current_period_end && (
+              <span> • Renews on {new Date(currentPlan.current_period_end).toLocaleDateString()}</span>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Streaming Hours</span>
+                <span className="font-medium">{streamingHours.toFixed(1)} / {currentLimits?.max_streaming_hours_monthly || "∞"}h</span>
+              </div>
+              <Progress value={Math.min(streamingUsagePercent, 100)} className="h-2" />
             </div>
-            <CardTitle className="text-3xl">{currentPlan?.plan_name || "Free"} Plan</CardTitle>
-            <CardDescription>
-              {currentPlan?.billing_cycle === "yearly" ? "Billed Annually" : "Billed Monthly"}
-              {currentPlan?.current_period_end && (
-                <span> • Renews on {new Date(currentPlan.current_period_end).toLocaleDateString()}</span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Streaming Hours</span>
-                  <span className="font-medium">{streamingHours.toFixed(1)} / {currentLimits?.max_streaming_hours_monthly || "∞"}h</span>
-                </div>
-                <Progress value={Math.min(streamingUsagePercent, 100)} className="h-2" />
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Sources</span>
+                <span className="font-medium">{currentUsage?.sources_count || 0} / {currentLimits?.max_sources || "∞"}</span>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Sources</span>
-                  <span className="font-medium">{currentUsage?.sources_count || 0} / {currentLimits?.max_sources || "∞"}</span>
-                </div>
-                <Progress value={Math.min(sourceUsagePercent, 100)} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Destinations</span>
-                  <span className="font-medium">{currentUsage?.destinations_count || 0} / {currentLimits?.max_destinations || "∞"}</span>
-                </div>
-                <Progress value={Math.min(destinationUsagePercent, 100)} className="h-2" />
-              </div>
+              <Progress value={Math.min(sourceUsagePercent, 100)} className="h-2" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Destinations</span>
+                <span className="font-medium">{currentUsage?.destinations_count || 0} / {currentLimits?.max_destinations || "∞"}</span>
+              </div>
+              <Progress value={Math.min(destinationUsagePercent, 100)} className="h-2" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Quick Actions / Support */}
-        <Card className="border-border/40 bg-card/50 backdrop-blur-sm flex flex-col justify-center">
-          <CardHeader>
-            <CardTitle>Need more power?</CardTitle>
-            <CardDescription>
-              Upgrade to unlock unlimited streaming, more destinations, and priority support.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/contact">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Contact Support
-                </Link>
-             </Button>
-             <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/dashboard/streaming">
-                  <Zap className="mr-2 h-4 w-4" />
-                  Manage Sources
-                </Link>
-             </Button>
-          </CardContent>
-        </Card>
+      {/* Billing Cycle Toggle */}
+      <div className="flex justify-center">
+        <div className="flex items-center p-1 bg-muted rounded-full border border-border/50">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className={cn(
+              "px-6 py-2 rounded-full text-sm font-medium transition-all",
+              billingCycle === "monthly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("yearly")}
+            className={cn(
+              "px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
+              billingCycle === "yearly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Yearly
+            <Badge variant="secondary" className="text-[10px] h-5 bg-green-500/10 text-green-600">Save 20%</Badge>
+          </button>
+        </div>
       </div>
 
-      {/* Plans Dialog */}
-      <Dialog open={showPlanDialog} onOpenChange={setShowPlanDialog}>
-        <DialogContent className="max-w-5xl w-full h-[90vh] md:h-auto overflow-y-auto">
-          <DialogHeader className="text-center pb-6">
-            <DialogTitle className="text-3xl font-bold">Choose Your Plan</DialogTitle>
-            <DialogDescription className="text-lg">
-              Unlock the full potential of Neustream with our flexible pricing plans.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex justify-center mb-8">
-            <div className="flex items-center p-1 bg-muted rounded-full border border-border/50">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={cn(
-                  "px-6 py-2 rounded-full text-sm font-medium transition-all",
-                  billingCycle === "monthly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle("yearly")}
-                className={cn(
-                  "px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
-                  billingCycle === "yearly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Yearly
-                <Badge variant="secondary" className="text-[10px] h-5 bg-green-500/10 text-green-600">Save 20%</Badge>
-              </button>
-            </div>
-          </div>
+      {/* Plan Cards - Inline */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {plans.map((plan: any) => {
+          const isCurrent = currentPlan?.plan_name?.toLowerCase() === plan.name.toLowerCase();
+          const isPro = plan.name.toLowerCase() === "pro";
+          const features = getPlanFeatures(plan.name, plan);
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {plans.map((plan: any) => {
-              const isCurrent = currentPlan?.plan_name?.toLowerCase() === plan.name.toLowerCase();
-              const isPro = plan.name.toLowerCase() === "pro";
-              const features = getPlanFeatures(plan.name);
-
-              return (
-                <div
-                  key={plan.id}
-                  className={cn(
-                    "relative rounded-2xl border p-6 flex flex-col transition-all hover:shadow-lg",
-                    isPro ? "border-primary/50 bg-primary/5 shadow-md" : "border-border/40 bg-card/50",
-                    isCurrent && "ring-2 ring-primary"
-                  )}
-                >
-                  {isPro && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground hover:bg-primary">Most Popular</Badge>
-                    </div>
-                  )}
-                  
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                    <div className="mt-2 flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">
-                        {plan.name.toLowerCase() === "free" ? "Free" : formatPrice(billingCycle === "yearly" ? plan.price_yearly / 12 : plan.price_monthly)}
-                      </span>
-                      {plan.name.toLowerCase() !== "free" && (
-                        <span className="text-muted-foreground">/mo</span>
-                      )}
-                    </div>
-                    {billingCycle === "yearly" && plan.name.toLowerCase() !== "free" && (
-                       <p className="text-xs text-muted-foreground mt-1">Billed {formatPrice(plan.price_yearly)} yearly</p>
-                    )}
-                  </div>
-
-                  <ul className="space-y-3 mb-6 flex-1">
-                    {features.map((feature: any, i: number) => (
-                      <li key={i} className="flex items-center gap-3 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{feature.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    className={cn("w-full", isPro ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}
-                    variant={isPro ? "default" : "outline"}
-                    disabled={isCurrent}
-                    onClick={() => setSelectedPlan(plan)}
-                  >
-                    {isCurrent ? "Current Plan" : "Select Plan"}
-                  </Button>
+          return (
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={cn(
+                "relative rounded-2xl border p-6 flex flex-col transition-all hover:shadow-lg",
+                isPro ? "border-primary/50 bg-primary/5 shadow-md" : "border-border/40 bg-card/50",
+                isCurrent && "ring-2 ring-primary"
+              )}
+            >
+              {isPro && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-primary text-primary-foreground hover:bg-primary">Most Popular</Badge>
                 </div>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
+              )}
+              {isCurrent && (
+                <div className="absolute -top-3 right-4">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Current</Badge>
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-bold">{plan.name}</h3>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold">
+                    {plan.name.toLowerCase() === "free" ? "Free" : formatPrice(billingCycle === "yearly" ? plan.price_yearly / 12 : plan.price_monthly)}
+                  </span>
+                  {plan.name.toLowerCase() !== "free" && (
+                    <span className="text-muted-foreground">/mo</span>
+                  )}
+                </div>
+                {billingCycle === "yearly" && plan.name.toLowerCase() !== "free" && (
+                   <p className="text-xs text-muted-foreground mt-1">Billed {formatPrice(plan.price_yearly)} yearly</p>
+                )}
+              </div>
+
+              <ul className="space-y-3 mb-6 flex-1">
+                {features.map((feature: any, i: number) => (
+                  <li key={i} className="flex items-center gap-3 text-sm">
+                    <Check className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-muted-foreground">{feature.name}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className={cn("w-full", isPro ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}
+                variant={isPro ? "default" : "outline"}
+                disabled={isCurrent}
+                onClick={() => setSelectedPlan(plan)}
+              >
+                {isCurrent ? "Current Plan" : "Select Plan"}
+              </Button>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Support Section */}
+      <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Need Help?</CardTitle>
+          <CardDescription>
+            Our team is here to help you choose the right plan and get the most out of Neustream.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex gap-4">
+          <Button variant="outline" asChild>
+            <Link to="/contact">
+              <Shield className="mr-2 h-4 w-4" />
+              Contact Support
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/dashboard/streaming">
+              <Zap className="mr-2 h-4 w-4" />
+              Manage Sources
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Confirmation Dialog */}
       <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>

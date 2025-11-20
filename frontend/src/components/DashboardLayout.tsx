@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { subscriptionService } from "@/services/subscription";
 import {
   LayoutDashboard,
   Radio,
@@ -25,6 +28,8 @@ import {
   X,
   ChevronRight,
   Zap,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -182,6 +187,17 @@ export default function DashboardLayout() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
+  // Fetch subscription data to check plan
+  const { data: subscriptionData } = useQuery({
+    queryKey: ["subscription", user?.id],
+    queryFn: async () => {
+      return await subscriptionService.getMySubscription();
+    },
+    enabled: !!user,
+  });
+
+  const isFreeplan = subscriptionData?.subscription?.plan_name?.toLowerCase() === "free";
+
   // Handle responsive sidebar
   useEffect(() => {
     const handleResize = () => {
@@ -268,6 +284,28 @@ export default function DashboardLayout() {
               />
             ))}
           </div>
+
+          {/* Pro Plan Upgrade Card - Free Users Only */}
+          {isFreeplan && isSidebarOpen && (
+            <Link to="/dashboard/subscription" className="block">
+              <div className="mx-2 p-3 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 transition-all duration-200 group">
+                <div className="flex items-start gap-2 mb-2">
+                  <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30 text-[10px] h-4">
+                    Pro
+                  </Badge>
+                  <Sparkles className="h-3 w-3 text-primary/70 shrink-0 mt-0.5" />
+                </div>
+                <p className="text-xs font-medium text-foreground mb-1">Upgrade for Unlimited</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                  Stream hours & destinations
+                </p>
+                <div className="flex items-center gap-1 text-[10px] font-medium text-primary group-hover:gap-2 transition-all">
+                  <span>Learn more</span>
+                  <ArrowRight className="h-3 w-3" />
+                </div>
+              </div>
+            </Link>
+          )}
 
           <Separator className="bg-border/40" />
 

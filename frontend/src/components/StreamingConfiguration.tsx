@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Settings,
@@ -48,6 +49,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { apiService } from "../services/api";
+import { subscriptionService } from "../services/subscription";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatConnectorSetup from "./ChatConnectorSetup";
@@ -553,7 +555,19 @@ function SourceDetails({ source, onUpdate, onDelete, onRegenerateKey }: any) {
 
 function DestinationsList({ sourceId }: { sourceId: string }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  // Fetch subscription data to check plan
+  const { data: subscriptionData } = useQuery({
+    queryKey: ["subscription", user?.id],
+    queryFn: async () => {
+      return await subscriptionService.getMySubscription();
+    },
+    enabled: !!user,
+  });
+
+  const isFreeplan = subscriptionData?.subscription?.plan_name?.toLowerCase() === "free";
 
   const { data: destinations, isLoading, error } = useQuery({
     queryKey: ["destinations", sourceId],
@@ -599,6 +613,26 @@ function DestinationsList({ sourceId }: { sourceId: string }) {
           Add Destination
         </Button>
       </div>
+
+      {/* Pro Plan Promotion Banner for Free Users */}
+      {isFreeplan && (
+        <div className="p-4 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background backdrop-blur-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 space-y-1.5">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">Pro Plan</Badge>
+                Unlock Unlimited Destinations
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Upgrade to Pro to stream to unlimited platforms simultaneously with unlimited hours per month
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="shrink-0" asChild>
+              <Link to="/dashboard/subscription">Upgrade</Link>
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-3">
         {isLoading ? (
