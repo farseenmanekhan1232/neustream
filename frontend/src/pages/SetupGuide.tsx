@@ -4,6 +4,8 @@ import { Search, ChevronRight, Menu, X, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { subscriptionService } from "../services/subscription";
 
 interface Section {
   id: string;
@@ -75,6 +77,16 @@ export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  // Fetch subscription plans from API
+  const { data: plansData } = useQuery({
+    queryKey: ["subscription-plans"],
+    queryFn: async () => {
+      return await subscriptionService.getPlans();
+    },
+  });
+
+  const plans = plansData?.data?.plans || plansData?.plans || plansData || [];
 
   // Sync activeSection with URL
   useEffect(() => {
@@ -534,64 +546,85 @@ export default function Help() {
 
                   <div className="space-y-4">
                     <h2 className="text-2xl font-semibold">Choose Your Plan</h2>
-                    <div className="grid gap-4 md:grid-cols-3">
-                      {[
-                        {
-                          name: "Free",
-                          price: "$0",
-                          features: [
-                            "2 streaming destinations",
-                            "720p quality",
-                            "Basic analytics",
-                            "Community support",
-                          ],
-                        },
-                        {
-                          name: "Pro",
-                          price: "$19/mo",
-                          features: [
-                            "Unlimited destinations",
-                            "1080p HD quality",
-                            "Advanced analytics",
-                            "Priority support",
-                          ],
-                          popular: true,
-                        },
-                        {
-                          name: "Business",
-                          price: "$49/mo",
-                          features: [
-                            "Everything in Pro",
-                            "4K streaming",
-                            "White-label options",
-                            "Dedicated support",
-                          ],
-                        },
-                      ].map((plan) => (
-                        <div
-                          key={plan.name}
-                          className={cn(
-                            "rounded-lg border p-6",
-                            plan.popular
-                              ? "border-primary bg-primary/5"
-                              : "border-border/50"
-                          )}
-                        >
-                          {plan.popular && (
-                            <span className="mb-2 inline-block rounded-full bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
-                              Most Popular
-                            </span>
-                          )}
-                          <h3 className="text-xl font-bold">{plan.name}</h3>
-                          <div className="my-4 text-3xl font-bold">{plan.price}</div>
-                          <ul className="space-y-2 text-sm text-muted-foreground">
-                            {plan.features.map((feature) => (
-                              <li key={feature}>• {feature}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
+                    {plans.length > 0 ? (
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {plans.map((plan: any) => {
+                          const isPro = plan.name.toLowerCase() === "pro";
+                          
+                          // Build features list dynamically from API data
+                          const features = [];
+                          if (plan.max_destinations) {
+                            features.push(`${plan.max_destinations} streaming destination${plan.max_destinations > 1 ? 's' : ''}`);
+                          }
+                          if (plan.max_streaming_hours_monthly) {
+                            features.push(`${plan.max_streaming_hours_monthly} hours/month`);
+                          }
+                          if (plan.max_sources && plan.max_sources > 1) {
+                            features.push(`Up to ${plan.max_sources} streaming sources`);
+                          }
+                          // Parse chat connectors from features array
+                          if (plan.features && Array.isArray(plan.features)) {
+                            const chatFeature = plan.features.find((f: string) => f.includes("Chat Connectors:"));
+                            if (chatFeature) {
+                              const match = chatFeature.match(/Chat Connectors:\s*(\d+)/);
+                              if (match) {
+                                features.push(`${match[1]} chat connector${parseInt(match[1]) > 1 ? 's' : ''}`);
+                              }
+                            }
+                          }
+                          // Add support type based on plan
+                          const planName = plan.name.toLowerCase();
+                          if (planName === 'free') {
+                            features.push('Community support');
+                          } else if (planName === 'pro') {
+                            features.push('Priority support');
+                          } else if (planName === 'business') {
+                            features.push('24/7 dedicated support');
+                          }
+
+                          return (
+                            <div
+                              key={plan.id}
+                              className={cn(
+                                "rounded-lg border p-6",
+                                isPro
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border/50"
+                              )}
+                            >
+                              {isPro && (
+                                <span className="mb-2 inline-block rounded-full bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
+                                  Most Popular
+                                </span>
+                              )}
+                              <h3 className="text-xl font-bold">{plan.name}</h3>
+                              <div className="my-4 text-3xl font-bold">
+                                {plan.formatted_price_monthly || `$${plan.price_monthly}`}
+                              </div>
+                              <ul className="space-y-2 text-sm text-muted-foreground">
+                                {features.map((feature, idx) => (
+                                  <li key={idx}>• {feature}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="rounded-lg border border-border/50 p-6 animate-pulse">
+                            <div className="h-6 bg-muted rounded w-20 mb-4"></div>
+                            <div className="h-8 bg-muted rounded w-24 mb-4"></div>
+                            <div className="space-y-2">
+                              <div className="h-4 bg-muted rounded"></div>
+                              <div className="h-4 bg-muted rounded"></div>
+                              <div className="h-4 bg-muted rounded w-3/4"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
