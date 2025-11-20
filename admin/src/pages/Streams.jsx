@@ -56,8 +56,8 @@ const Streams = () => {
 
     setDetailsLoading(true);
     try {
-      const details = await adminApi.getStreamInfo(streamKey);
-      setStreamDetails(details);
+      const response = await adminApi.getStreamInfo(streamKey);
+      setStreamDetails(response.data);
     } catch (error) {
       console.error("Failed to load stream details:", error);
     } finally {

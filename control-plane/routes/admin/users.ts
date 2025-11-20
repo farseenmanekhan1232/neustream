@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
 import Database from "../../lib/database";
 import { handleGenericIdParam } from "../../middleware/idHandler";
+import { User } from "../../types/entities";
+import crypto from "crypto";
 
 const router = express.Router();
 const db = new Database();
@@ -8,7 +10,7 @@ const db = new Database();
 // Get all users with their streaming info
 router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await db.query<any>(`
+    const users = await db.query<User & { total_sources: number; active_streams: number }>(`
       SELECT
         u.id,
         u.email,
@@ -17,8 +19,10 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
         u.oauth_provider,
         u.stream_key,
         u.created_at,
-        COALESCE(ss.source_count, 0) as total_sources,
-        COALESCE(active.active_count, 0) as active_streams
+        u.uuid,
+        u.email_verified,
+        COALESCE(ss.source_count, 0)::integer as total_sources,
+        COALESCE(active.active_count, 0)::integer as active_streams
       FROM users u
       LEFT JOIN (
         SELECT user_id, COUNT(*) as source_count
@@ -47,8 +51,6 @@ router.get(
   "/:id",
   handleGenericIdParam("users"),
   async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
     try {
       // User info is already available from middleware
       const user = (req as any).entity;
@@ -60,7 +62,7 @@ router.get(
         `
       SELECT
         ss.*,
-        COUNT(sd.id) as destinations_count,
+        COUNT(sd.id)::integer as destinations_count,
         EXISTS(
           SELECT 1 FROM active_streams
           WHERE source_id = ss.id AND ended_at IS NULL
@@ -92,8 +94,8 @@ router.get(
       const streamStats = await db.query<any>(
         `
       SELECT
-        COUNT(*) as total_streams,
-        AVG(EXTRACT(EPOCH FROM (ended_at - started_at))) as avg_duration
+        COUNT(*)::integer as total_streams,
+        COALESCE(AVG(EXTRACT(EPOCH FROM (ended_at - started_at))), 0)::float as avg_duration
       FROM active_streams
       WHERE ${isUuid ? "user_uuid = $1" : "user_id = $1"} AND ended_at IS NOT NULL
     `,
@@ -107,8 +109,8 @@ router.get(
             sources,
             activeStreams,
             stats: {
-              totalStreams: parseInt(streamStats[0]?.total_streams) || 0,
-              avgDuration: parseFloat(streamStats[0]?.avg_duration) || 0,
+              totalStreams: streamStats[0]?.total_streams || 0,
+              avgDuration: streamStats[0]?.avg_duration || 0,
             },
           },
         },
@@ -132,9 +134,6 @@ router.put(
     };
 
     try {
-      // User exists check is already handled by middleware
-      const user = (req as any).entity;
-
       // Update user (limited fields for admin)
       const updates: string[] = [];
       const params: any[] = [];
@@ -145,6 +144,15 @@ router.put(
         params.push(displayName);
       }
 
+      // Note: 'isActive' is not a direct column on users table in the schema provided, 
+      // but might be intended for a soft delete or status field. 
+      // If it's not in schema, we should probably skip it or map it to something else.
+      // Looking at schema, there is no 'is_active' on users. 
+      // There is 'email_verified', 'totp_enabled'. 
+      // Assuming 'isActive' might refer to suspension which is handled by suspend/unsuspend endpoints.
+      // For now, I will ignore isActive if it's not in schema, or if it was a mistake in previous code.
+      // The previous code didn't actually use 'isActive' in the update query logic effectively if it wasn't in the updates array.
+      
       if (updates.length === 0) {
         res.status(400).json({ error: "No valid fields to update" });
         return;
@@ -152,7 +160,7 @@ router.put(
 
       params.push(id);
 
-      const result = await db.query<any>(
+      const result = await db.query<User>(
         `UPDATE users SET ${updates.join(
           ", ",
         )} WHERE id = $${paramIndex} RETURNING *`,
@@ -175,11 +183,10 @@ router.delete(
     const { id } = req.params;
 
     try {
-      // User exists check is already handled by middleware
       const user = (req as any).entity;
 
       // Check if user has active streams
-      const activeStreams = await db.query<any>(
+      const activeStreams = await db.query<{ count: string }>(
         "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
         [id],
       );
@@ -191,7 +198,7 @@ router.delete(
         return;
       }
 
-      // Delete user (cascades to sources, destinations, etc.)
+      // Delete user (cascades to sources, destinations, etc. based on schema FKs)
       await db.query("DELETE FROM users WHERE id = $1", [id]);
 
       res.json({
@@ -213,11 +220,8 @@ router.post(
     const { id } = req.params;
 
     try {
-      // User exists check is already handled by middleware
-      const user = (req as any).entity;
-
       // Check if user has active streams
-      const activeStreams = await db.query<any>(
+      const activeStreams = await db.query<{ count: string }>(
         "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
         [id],
       );
@@ -235,7 +239,8 @@ router.post(
         [id],
       );
 
-      // Update user with suspended flag (using display_name to store suspension info)
+      // Update user with suspended flag (using display_name to store suspension info as per previous logic)
+      // Ideally we should have a status column, but sticking to existing pattern if schema doesn't support it.
       await db.run(
         "UPDATE users SET display_name = CASE WHEN display_name LIKE '[SUSPENDED]%' THEN display_name ELSE '[SUSPENDED] ' || COALESCE(display_name, email) END WHERE id = $1",
         [id],
@@ -257,9 +262,6 @@ router.post(
     const { id } = req.params;
 
     try {
-      // User exists check is already handled by middleware
-      const user = (req as any).entity;
-
       // Remove suspension prefix from display_name
       await db.run(
         "UPDATE users SET display_name = CASE WHEN display_name LIKE '[SUSPENDED]%' THEN SUBSTRING(display_name, 12) ELSE display_name END WHERE id = $1",
@@ -280,14 +282,10 @@ router.post(
   handleGenericIdParam("users"),
   async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const crypto = require("crypto");
 
     try {
-      // User exists check is already handled by middleware
-      const user = (req as any).entity;
-
       // Check if user has active streams
-      const activeStreams = await db.query<any>(
+      const activeStreams = await db.query<{ count: string }>(
         "SELECT COUNT(*) as count FROM active_streams WHERE user_id = $1 AND ended_at IS NULL",
         [id],
       );
@@ -308,7 +306,7 @@ router.post(
         streamKey = crypto.randomBytes(24).toString("hex");
 
         // Check uniqueness in destinations and users tables
-        const existingInUsers = await db.query<any>(
+        const existingInUsers = await db.query<{ id: number }>(
           "SELECT id FROM users WHERE stream_key = $1 AND id != $2",
           [streamKey, id],
         );
@@ -380,9 +378,5 @@ router.get(
     }
   },
 );
-
-// Note: plan_limits_tracking table only tracks current usage counts, not limit overrides.
-// The actual limits come from subscription_plans.limits JSONB field.
-// For limit overrides, use the subscription service's limit override functionality.
 
 export default router;

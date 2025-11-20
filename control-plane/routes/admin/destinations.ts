@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import Database from "../../lib/database";
 import { handleGenericIdParam } from "../../middleware/idHandler";
+import { SourceDestination } from "../../types/entities";
 
 const router = express.Router();
 const db = new Database();
@@ -12,13 +13,11 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
       SELECT
         sd.id,
         sd.source_id,
-        sd.destination_id,
-        sd.is_active,
-        sd.created_at,
         sd.platform,
         sd.rtmp_url,
         sd.stream_key,
-        ss.id as source_id,
+        sd.is_active,
+        sd.created_at,
         ss.name as source_name,
         ss.user_id,
         u.email as user_email,
@@ -41,8 +40,6 @@ router.get(
   "/:id",
   handleGenericIdParam("source_destinations"),
   async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
     try {
       // Destination is already available from middleware
       const destination = (req as any).entity;
@@ -70,8 +67,8 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     }
 
     // Verify source exists
-    const sourceCheck = await db.query<any>(
-      "SELECT id, name, user_id FROM stream_sources WHERE id = $1",
+    const sourceCheck = await db.query<{ id: number; user_id: number }>(
+      "SELECT id, user_id FROM stream_sources WHERE id = $1",
       [source_id],
     );
 
@@ -81,7 +78,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     }
 
     // Security: Prevent using Neustream stream keys as destinations
-    const isNeustreamStreamKey = await db.query<any>(
+    const isNeustreamStreamKey = await db.query<{ id: number }>(
       "SELECT id FROM users WHERE stream_key = $1",
       [stream_key],
     );
@@ -93,7 +90,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Insert into source_destinations table with all fields
+    // Insert into source_destinations table
     const result = await db.run<any>(
       "INSERT INTO source_destinations (source_id, platform, rtmp_url, stream_key, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [source_id, platform, rtmp_url, stream_key, is_active],
@@ -122,9 +119,6 @@ router.put(
     };
 
     try {
-      // Destination exists check is already handled by middleware
-      const existingDest = (req as any).entity;
-
       // Build dynamic update query
       const updates: string[] = [];
       const params: any[] = [];
@@ -181,7 +175,6 @@ router.delete(
     const { id } = req.params;
 
     try {
-      // Destination exists check is already handled by middleware
       await db.query(
         "DELETE FROM source_destinations WHERE id = $1",
         [id],

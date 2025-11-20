@@ -62,7 +62,7 @@ const Dashboard = () => {
         console.log("📊 Fetching system statistics...");
         const statsResponse = await adminApi.getStats();
         console.log("📊 Stats response:", statsResponse);
-        stats = statsResponse || stats;
+        stats = statsResponse?.data || stats;
       } catch (statsError) {
         console.warn("⚠️ Could not load stats:", statsError);
       }
@@ -72,7 +72,7 @@ const Dashboard = () => {
         console.log("📺 Fetching active streams...");
         const streamsResponse = await adminApi.getActiveStreams();
         console.log("📺 Streams response:", streamsResponse);
-        activeStreams = streamsResponse.activeStreams || [];
+        activeStreams = streamsResponse?.data?.streams || [];
       } catch (streamsError) {
         console.warn("⚠️ Could not load active streams:", streamsError);
       }
@@ -84,8 +84,9 @@ const Dashboard = () => {
         console.log("💰 Subscription response:", subscriptionResponse);
 
         // Calculate subscription metrics
-        const revenueProjection = subscriptionResponse.revenueProjection || [];
-        const planDistribution = subscriptionResponse.planDistribution || [];
+        const data = subscriptionResponse?.data || {};
+        const revenueProjection = data.revenueProjection || [];
+        const planDistribution = data.planDistribution || [];
 
         const totalActiveUsers = revenueProjection.reduce(
           (sum, plan) => sum + (plan.active_users || 0),

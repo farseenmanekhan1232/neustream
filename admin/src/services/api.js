@@ -84,6 +84,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Get user limits
+  getUserLimits: async (userId) => {
+    const response = await api.get(`/api/admin/users/${userId}/limits`);
+    return response.data;
+  },
+
   // Get system statistics
   getStats: async () => {
     const response = await api.get('/api/admin/analytics/stats');
@@ -211,7 +217,7 @@ export const adminApi = {
 
   // Get subscription analytics
   getSubscriptionAnalytics: async () => {
-    const response = await api.get('/api/admin/subscriptions/subscription-analytics');
+    const response = await api.get('/api/admin/analytics/subscription-analytics');
     return response.data;
   },
 
@@ -288,6 +294,12 @@ export const adminApi = {
     return response.data;
   },
 
+  // Get specific stream info
+  getStreamInfo: async (streamKey) => {
+    const response = await api.get(`/api/admin/streams/${streamKey}`);
+    return response.data;
+  },
+
   // Get stream preview information
   getStreamPreview: async (streamKey) => {
     const response = await api.get(`/api/admin/streams/${streamKey}/preview`);
@@ -332,6 +344,32 @@ export const adminApi = {
   // Add response to contact submission
   addContactResponse: async (submissionId, responseData) => {
     const response = await api.post(`/api/contact/${submissionId}/responses`, responseData);
+    return response.data;
+  },
+
+  // ============================================
+  // SYSTEM MONITORING
+  // ============================================
+
+  // Get system monitoring data
+  getSystemMonitoring: async () => {
+    const response = await api.get('/api/admin/monitoring');
+    return response.data;
+  },
+
+  // Get system health
+  getSystemHealth: async () => {
+    const response = await api.get('/api/admin/monitoring/health');
+    return response.data;
+  },
+
+  // ============================================
+  // CHAT CONNECTORS
+  // ============================================
+
+  // Toggle chat connector status
+  toggleChatConnector: async (connectorId) => {
+    const response = await api.post(`/api/admin/chat-connectors/${connectorId}/toggle`);
     return response.data;
   }
 };

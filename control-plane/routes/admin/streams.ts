@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import Database from "../../lib/database";
 import mediamtxService from "../../services/mediamtxService";
+import { ActiveStream, User } from "../../types/entities";
 
 const router = express.Router();
 const db = new Database();
@@ -15,7 +16,7 @@ router.get("/active", async (req: Request, res: Response): Promise<void> => {
     const enhancedStreams = await Promise.all(
       activePaths.map(async (path) => {
         // Look up user by stream key
-        const userResult = await db.query<any>(
+        const userResult = await db.query<User>(
           `SELECT u.id, u.email, u.display_name
            FROM users u
            WHERE u.stream_key = $1`,
@@ -23,7 +24,7 @@ router.get("/active", async (req: Request, res: Response): Promise<void> => {
         );
 
         // Also check active_streams table for additional info
-        const streamInfo = await db.query<any>(
+        const streamInfo = await db.query<ActiveStream>(
           `SELECT as_.*
            FROM active_streams as_
            WHERE as_.stream_key = $1 AND as_.ended_at IS NULL`,
@@ -56,6 +57,56 @@ router.get("/active", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Get specific stream details
+router.get("/:streamKey", async (req: Request, res: Response): Promise<void> => {
+  const { streamKey } = req.params;
+
+  try {
+    // Get stream info from active_streams
+    const streamInfo = await db.query<ActiveStream & { source_id: number }>(
+      `SELECT as_.*, ss.id as source_id
+       FROM active_streams as_
+       LEFT JOIN stream_sources ss ON as_.source_id = ss.id
+       WHERE as_.stream_key = $1 AND as_.ended_at IS NULL`,
+      [streamKey],
+    );
+
+    if (streamInfo.length === 0) {
+      res.status(404).json({ error: "Stream not found or not active" });
+      return;
+    }
+
+    const stream = streamInfo[0];
+
+    // Get user info
+    const userResult = await db.query<User>(
+      `SELECT u.id, u.email, u.display_name
+       FROM users u
+       WHERE u.id = $1`,
+      [stream.user_id],
+    );
+
+    // Get forwarding destinations for this source
+    const destinations = await db.query<any>(
+      `SELECT sd.*
+       FROM source_destinations sd
+       WHERE sd.source_id = $1 AND sd.is_active = true`,
+      [stream.source_id],
+    );
+
+    res.json({
+      data: {
+        ...stream,
+        user: userResult[0],
+        destinations,
+      },
+    });
+  } catch (error: any) {
+    console.error("Get stream details error:", error);
+    res.status(500).json({ error: "Failed to fetch stream details" });
+  }
+});
+
 // Get stream preview information
 router.get("/:streamKey/preview", async (req: Request, res: Response): Promise<void> => {
   const { streamKey } = req.params;
@@ -78,7 +129,7 @@ router.get("/:streamKey/preview", async (req: Request, res: Response): Promise<v
     const metrics = await mediamtxService.getStreamMetrics(streamKey);
 
     // Get user info
-    const userResult = await db.query<any>(
+    const userResult = await db.query<User>(
       `SELECT u.id, u.email, u.display_name
        FROM users u
        WHERE u.stream_key = $1`,
@@ -110,7 +161,7 @@ router.post("/:streamKey/stop", async (req: Request, res: Response): Promise<voi
 
   try {
     // Get stream info before stopping
-    const streamInfo = await db.query<any>(
+    const streamInfo = await db.query<ActiveStream & { email: string }>(
       `SELECT as_.*, u.email
        FROM active_streams as_
        JOIN users u ON as_.user_id = u.id

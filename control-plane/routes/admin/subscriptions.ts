@@ -5,6 +5,7 @@ import {
   handleUserIdParam,
   handleGenericIdParam,
 } from "../../middleware/idHandler";
+import { SubscriptionPlan, UserSubscription, User } from "../../types/entities";
 
 const router = express.Router();
 const db = new Database();
@@ -12,10 +13,10 @@ const db = new Database();
 // Get all subscription plans
 router.get("/plans", async (req: Request, res: Response): Promise<void> => {
   try {
-    const plans = await db.query<any>(
+    const plans = await db.query<SubscriptionPlan & { active_subscriptions: number }>(
       `SELECT
          sp.*,
-         COUNT(us.id) as active_subscriptions
+         COUNT(us.id)::integer as active_subscriptions
        FROM subscription_plans sp
        LEFT JOIN user_subscriptions us ON sp.id = us.plan_id AND us.status = 'active'
        GROUP BY sp.id
@@ -46,11 +47,12 @@ router.post("/plans", async (req: Request, res: Response): Promise<void> => {
 
   try {
     // Use limits JSONB instead of individual columns
-    const result = await db.run<any>(
+    const result = await db.run<SubscriptionPlan>(
       `INSERT INTO subscription_plans (
         name, description, price_monthly, price_yearly, currency,
-        features, limits
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        features, max_sources, max_destinations, max_streaming_hours_monthly,
+        price_monthly_inr, price_yearly_inr
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
       [
         name,
         description,
@@ -58,13 +60,11 @@ router.post("/plans", async (req: Request, res: Response): Promise<void> => {
         price_yearly,
         "USD",
         JSON.stringify(features || []),
-        JSON.stringify({
-          price_monthly_inr,
-          price_yearly_inr,
-          max_sources,
-          max_destinations,
-          max_streaming_hours_monthly,
-        }),
+        max_sources,
+        max_destinations,
+        max_streaming_hours_monthly,
+        price_monthly_inr,
+        price_yearly_inr,
       ],
     );
 
@@ -99,28 +99,30 @@ router.put(
       const plan = (req as any).entity;
 
       // Use limits JSONB
-      const result = await db.run<any>(
+      const result = await db.run<SubscriptionPlan>(
         `UPDATE subscription_plans SET
         name = $1,
         description = $2,
         price_monthly = $3,
         price_yearly = $4,
         features = $5,
-        limits = $6
-      WHERE id = $7 RETURNING *`,
+        max_sources = $6,
+        max_destinations = $7,
+        max_streaming_hours_monthly = $8,
+        price_monthly_inr = $9,
+        price_yearly_inr = $10
+      WHERE id = $11 RETURNING *`,
         [
           name,
           description,
           price_monthly,
           price_yearly,
           JSON.stringify(features || []),
-          JSON.stringify({
-            price_monthly_inr,
-            price_yearly_inr,
-            max_sources,
-            max_destinations,
-            max_streaming_hours_monthly,
-          }),
+          max_sources,
+          max_destinations,
+          max_streaming_hours_monthly,
+          price_monthly_inr,
+          price_yearly_inr,
           plan.id,
         ],
       );
@@ -160,7 +162,7 @@ router.delete(
       const plan = (req as any).entity;
 
       // Check if plan has active subscriptions
-      const activeSubscriptions = await db.query<any>(
+      const activeSubscriptions = await db.query<{ count: string }>(
         "SELECT COUNT(*) as count FROM user_subscriptions WHERE plan_id = $1 AND status = 'active'",
         [plan.id],
       );
@@ -199,7 +201,18 @@ router.get("/user-subscriptions", async (req: Request, res: Response): Promise<v
 
   try {
     // Get subscriptions with user and plan details
-    const subscriptions = await db.query<any>(
+    const subscriptions = await db.query<UserSubscription & {
+      email: string;
+      display_name: string;
+      avatar_url: string;
+      oauth_provider: string;
+      plan_name: string;
+      price_monthly: number;
+      price_yearly: number;
+      sources_count: number;
+      destinations_count: number;
+      streaming_hours: number;
+    }>(
       `SELECT
          us.*,
          u.email,
@@ -223,7 +236,7 @@ router.get("/user-subscriptions", async (req: Request, res: Response): Promise<v
     );
 
     // Get total count for pagination
-    const totalCount = await db.query<any>(
+    const totalCount = await db.query<{ count: string }>(
       `SELECT COUNT(*) as count
        FROM user_subscriptions us
        JOIN users u ON us.user_id = u.id
@@ -238,7 +251,7 @@ router.get("/user-subscriptions", async (req: Request, res: Response): Promise<v
         page: parseInt(page),
         limit: parseInt(limit),
         total: parseInt(totalCount[0].count),
-        totalPages: Math.ceil(totalCount[0].count / limit),
+        totalPages: Math.ceil(parseInt(totalCount[0].count) / limit),
       },
     });
   } catch (error: any) {
@@ -264,7 +277,7 @@ router.put(
       const targetUser = (req as any).targetUser;
 
       // Check if plan exists
-      const planCheck = await db.query<any>(
+      const planCheck = await db.query<{ id: number }>(
         "SELECT id FROM subscription_plans WHERE id = $1",
         [plan_id],
       );
@@ -275,7 +288,7 @@ router.put(
       }
 
       // Update or create subscription
-      const existingSubscription = await db.query<any>(
+      const existingSubscription = await db.query<{ id: number }>(
         "SELECT id FROM user_subscriptions WHERE user_id = $1",
         [targetUser.id],
       );
@@ -283,7 +296,7 @@ router.put(
       let result: any;
       if (existingSubscription.length > 0) {
         // Update existing subscription
-        result = await db.run<any>(
+        result = await db.run<UserSubscription>(
           `UPDATE user_subscriptions SET
           plan_id = $1,
           status = $2,
@@ -294,7 +307,7 @@ router.put(
         );
       } else {
         // Create new subscription
-        result = await db.run<any>(
+        result = await db.run<UserSubscription>(
           `INSERT INTO user_subscriptions (
           user_id, plan_id, status, current_period_start, current_period_end
         ) VALUES ($1, $2, $3, NOW(), $4) RETURNING *`,
@@ -332,7 +345,7 @@ router.put(
       const adminId = (req as any).user.id;
 
       // Get current subscription
-      const currentSubscription = await db.query<any>(
+      const currentSubscription = await db.query<UserSubscription & { plan_name: string; price_monthly: number }>(
         `SELECT us.*, sp.name as plan_name, sp.price_monthly
        FROM user_subscriptions us
        JOIN subscription_plans sp ON us.plan_id = sp.id
@@ -348,7 +361,7 @@ router.put(
       const currentPlan = currentSubscription[0];
 
       // Check if new plan exists
-      const newPlan = await db.query<any>(
+      const newPlan = await db.query<SubscriptionPlan>(
         "SELECT * FROM subscription_plans WHERE id = $1",
         [plan_id],
       );
@@ -361,11 +374,11 @@ router.put(
       const newPlanData = newPlan[0];
 
       // Determine if promotion or demotion
-      const isPromotion = newPlanData.price_monthly > currentPlan.price_monthly;
+      const isPromotion = newPlanData.price_monthly! > currentPlan.price_monthly;
       const changeType = isPromotion ? "promotion" : "demotion";
 
       // Update subscription
-      const result = await db.run<any>(
+      const result = await db.run<UserSubscription>(
         `UPDATE user_subscriptions SET
         plan_id = $1,
         updated_at = NOW()

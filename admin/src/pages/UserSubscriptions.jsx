@@ -179,11 +179,9 @@ function UserSubscriptions() {
     );
   }
 
-  const { data: subscriptions, pagination } = subscriptionsData || {
-    data: [],
-    pagination: {},
-  };
-  const plans = plansData || [];
+  const subscriptions = subscriptionsData?.data || [];
+  const pagination = subscriptionsData?.pagination || {};
+  const plans = plansData?.data || [];
 
   return (
     <div className="space-y-6">
@@ -223,7 +221,7 @@ function UserSubscriptions() {
         <CardHeader>
           <CardTitle>User Subscriptions</CardTitle>
           <CardDescription>
-            {pagination.total} total subscriptions
+            {pagination?.total} total subscriptions
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -239,7 +237,7 @@ function UserSubscriptions() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subscriptions.map((subscription) => (
+              {subscriptions?.map((subscription) => (
                 <TableRow
                   key={`${subscription.user_id}-${subscription.plan_id}`}
                 >
@@ -465,7 +463,7 @@ function EditSubscriptionForm({
               <SelectValue placeholder="Select a plan" />
             </SelectTrigger>
             <SelectContent>
-              {plans.map((plan) => (
+              {plans?.map((plan) => (
                 <SelectItem key={plan.id} value={plan.id}>
                   <div className="flex items-center justify-between w-full">
                     <span>{plan.name}</span>

@@ -55,7 +55,9 @@ function SubscriptionPlans() {
 
   // Helper to deserialize plan data from backend JSONB format  
   const deserializePlan = (plan) => {
-    const limits = typeof plan.limits === 'string' ? JSON.parse(plan.limits) : (plan.limits || {});
+    // Check if limits are at the root (flattened) or in a limits object
+    const limits = plan.limits ? (typeof plan.limits === 'string' ? JSON.parse(plan.limits) : plan.limits) : {};
+
     let features = plan.features || [];
     
     // Ensure features is an array (handle stringified JSON if necessary)
@@ -75,15 +77,15 @@ function SubscriptionPlans() {
 
     return {
       ...plan,
-      max_sources: limits.max_sources || 0,
-      max_destinations: limits.max_destinations || 0,
-      max_streaming_hours_monthly: limits.max_streaming_hours_monthly || 0,
-      price_monthly_inr: limits.price_monthly_inr || null,
-      price_yearly_inr: limits.price_yearly_inr || null,
+      max_sources: plan.max_sources ?? limits.max_sources ?? 0,
+      max_destinations: plan.max_destinations ?? limits.max_destinations ?? 0,
+      max_streaming_hours_monthly: plan.max_streaming_hours_monthly ?? limits.max_streaming_hours_monthly ?? 0,
+      price_monthly_inr: plan.price_monthly_inr ?? limits.price_monthly_inr ?? null,
+      price_yearly_inr: plan.price_yearly_inr ?? limits.price_yearly_inr ?? null,
       formatted_price_monthly: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price_monthly || 0),
       formatted_price_yearly: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(plan.price_yearly || 0),
-      formatted_price_monthly_inr: limits.price_monthly_inr ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(limits.price_monthly_inr) : null,
-      formatted_price_yearly_inr: limits.price_yearly_inr ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(limits.price_yearly_inr) : null,
+      formatted_price_monthly_inr: (plan.price_monthly_inr || limits.price_monthly_inr) ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(plan.price_monthly_inr || limits.price_monthly_inr) : null,
+      formatted_price_yearly_inr: (plan.price_yearly_inr || limits.price_yearly_inr) ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(plan.price_yearly_inr || limits.price_yearly_inr) : null,
       features: features,
     };
   };
@@ -155,21 +157,20 @@ function SubscriptionPlans() {
     features: formData.features
       ? formData.features.split("\n").filter((f) => f.trim())
       : [],
-    limits: {
-      max_sources: parseInt(formData.max_sources),
-      max_destinations: parseInt(formData.max_destinations),
-      max_streaming_hours_monthly: parseInt(formData.max_streaming_hours_monthly),
-      price_monthly_inr: formData.price_monthly_inr
-        ? parseFloat(formData.price_monthly_inr)
-        : null,
-      price_yearly_inr: formData.price_yearly_inr
-        ? parseFloat(formData.price_yearly_inr)
-        : null,
-    },
+    // Flatten limits fields for backend
+    max_sources: parseInt(formData.max_sources),
+    max_destinations: parseInt(formData.max_destinations),
+    max_streaming_hours_monthly: parseInt(formData.max_streaming_hours_monthly),
+    price_monthly_inr: formData.price_monthly_inr
+      ? parseFloat(formData.price_monthly_inr)
+      : null,
+    price_yearly_inr: formData.price_yearly_inr
+      ? parseFloat(formData.price_yearly_inr)
+      : null,
   });
 
   const handleCreatePlan = (formData) => {
-    createPlanMutation.mutate({ planData: serializePlan(formData) });
+    createPlanMutation.mutate(serializePlan(formData));
   };
 
   const handleUpdatePlan = (id, formData) => {

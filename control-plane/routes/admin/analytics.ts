@@ -8,7 +8,14 @@ const db = new Database();
 router.get("/stats", async (req: Request, res: Response): Promise<void> => {
   try {
     // Get user statistics
-    const userStats = await db.query<any>(`
+    const userStats = await db.query<{
+      total_users: string;
+      new_users_week: string;
+      new_users_month: string;
+      google_users: string;
+      twitch_users: string;
+      email_users: string;
+    }>(`
       SELECT
         COUNT(*) as total_users,
         COUNT(CASE WHEN created_at > NOW() - INTERVAL '7 days' THEN 1 END) as new_users_week,
@@ -20,34 +27,46 @@ router.get("/stats", async (req: Request, res: Response): Promise<void> => {
     `);
 
     // Get stream statistics
-    const streamStats = await db.query<any>(`
+    const streamStats = await db.query<{
+      total_sources: string;
+      active_sources: string;
+      new_sources_week: string;
+    }>(`
       SELECT
         COUNT(*) as total_sources,
-        COUNT(CASE WHEN ss.is_active = true THEN 1 END) as active_sources,
-        COUNT(CASE WHEN ss.created_at > NOW() - INTERVAL '7 days' THEN 1 END) as new_sources_week
-      FROM stream_sources ss
+        COUNT(CASE WHEN is_active = true THEN 1 END) as active_sources,
+        COUNT(CASE WHEN created_at > NOW() - INTERVAL '7 days' THEN 1 END) as new_sources_week
+      FROM stream_sources
     `);
 
     // Get active streams
-    const activeStreamsCount = await db.query<any>(`
+    const activeStreamsCount = await db.query<{ active_streams: string }>(`
       SELECT COUNT(*) as active_streams
       FROM active_streams
       WHERE ended_at IS NULL
     `);
 
     // Get destination statistics
-    const destStats = await db.query<any>(`
+    const destStats = await db.query<{
+      total_destinations: string;
+      youtube_dests: string;
+      twitch_dests: string;
+      facebook_dests: string;
+    }>(`
       SELECT
         COUNT(*) as total_destinations,
-        COUNT(CASE WHEN sd.platform = 'youtube' THEN 1 END) as youtube_dests,
-        COUNT(CASE WHEN sd.platform = 'twitch' THEN 1 END) as twitch_dests,
-        COUNT(CASE WHEN sd.platform = 'facebook' THEN 1 END) as facebook_dests
-      FROM source_destinations sd
-      WHERE sd.is_active = true
+        COUNT(CASE WHEN platform = 'youtube' THEN 1 END) as youtube_dests,
+        COUNT(CASE WHEN platform = 'twitch' THEN 1 END) as twitch_dests,
+        COUNT(CASE WHEN platform = 'facebook' THEN 1 END) as facebook_dests
+      FROM source_destinations
+      WHERE is_active = true
     `);
 
     // Get recent activity (last 24 hours)
-    const recentActivity = await db.query<any>(`
+    const recentActivity = await db.query<{
+      streams_started_24h: string;
+      streams_started_1h: string;
+    }>(`
       SELECT
         COUNT(*) as streams_started_24h,
         COUNT(CASE WHEN started_at > NOW() - INTERVAL '1 hour' THEN 1 END) as streams_started_1h
@@ -57,13 +76,30 @@ router.get("/stats", async (req: Request, res: Response): Promise<void> => {
 
     res.json({
       data: {
-        users: userStats[0],
+        users: {
+          total_users: parseInt(userStats[0]?.total_users) || 0,
+          new_users_week: parseInt(userStats[0]?.new_users_week) || 0,
+          new_users_month: parseInt(userStats[0]?.new_users_month) || 0,
+          google_users: parseInt(userStats[0]?.google_users) || 0,
+          twitch_users: parseInt(userStats[0]?.twitch_users) || 0,
+          email_users: parseInt(userStats[0]?.email_users) || 0,
+        },
         streams: {
-          ...streamStats[0],
+          total_sources: parseInt(streamStats[0]?.total_sources) || 0,
+          active_sources: parseInt(streamStats[0]?.active_sources) || 0,
+          new_sources_week: parseInt(streamStats[0]?.new_sources_week) || 0,
           activeStreams: parseInt(activeStreamsCount[0]?.active_streams) || 0,
         },
-        destinations: destStats[0],
-        activity: recentActivity[0],
+        destinations: {
+          total_destinations: parseInt(destStats[0]?.total_destinations) || 0,
+          youtube_dests: parseInt(destStats[0]?.youtube_dests) || 0,
+          twitch_dests: parseInt(destStats[0]?.twitch_dests) || 0,
+          facebook_dests: parseInt(destStats[0]?.facebook_dests) || 0,
+        },
+        activity: {
+          streams_started_24h: parseInt(recentActivity[0]?.streams_started_24h) || 0,
+          streams_started_1h: parseInt(recentActivity[0]?.streams_started_1h) || 0,
+        },
         system: {
           uptime: process.uptime(),
           memory: process.memoryUsage(),
@@ -85,8 +121,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
     // Whitelist interval values to prevent SQL injection
     const validIntervals = ["hour", "day", "week", "month"];
-    const validPeriods = ["24h", "7d", "30d"];
-
+    
     let interval = "day";
     let periodFilter = "NOW() - INTERVAL '7 days'";
 
@@ -134,11 +169,11 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
     // Get platform distribution
     const platformDistribution = await db.query<any>(`
       SELECT
-        sd.platform,
+        platform,
         COUNT(*) as count
-      FROM source_destinations sd
-      WHERE sd.is_active = true
-      GROUP BY sd.platform
+      FROM source_destinations
+      WHERE is_active = true
+      GROUP BY platform
       ORDER BY count DESC
     `);
 
@@ -319,7 +354,7 @@ router.get("/subscription-analytics", async (req: Request, res: Response): Promi
       `SELECT
          sp.name,
          COUNT(us.id) as user_count,
-         COUNT(us.id) * 100.0 / (SELECT COUNT(*) FROM user_subscriptions WHERE status = 'active') as percentage
+         COUNT(us.id) * 100.0 / NULLIF((SELECT COUNT(*) FROM user_subscriptions WHERE status = 'active'), 0) as percentage
        FROM subscription_plans sp
        LEFT JOIN user_subscriptions us ON sp.id = us.plan_id AND us.status = 'active'
        GROUP BY sp.id, sp.name

@@ -233,21 +233,35 @@ const UsersPage = () => {
   const loadUserLimits = async (userId) => {
     setLimitsLoading(true);
     try {
-      const [limitsData, overridesData] = await Promise.all([
-        adminApi.getUserDetails(userId),
+      const [limitsResponse, overridesResponse] = await Promise.all([
+        adminApi.getUserLimits(userId),
         adminApi.getUserLimitOverrides(userId),
       ]);
 
+      const limitsData = limitsResponse.data;
+      const overridesData = overridesResponse.data;
+
       // Combine limits data with overrides
+      // Backend returns limits flattened in the data object
       const limits = {
-        max_sources: limitsData.subscription?.max_sources || 0,
-        max_destinations: limitsData.subscription?.max_destinations || 0,
-        max_streaming_hours_monthly:
-          limitsData.subscription?.max_streaming_hours_monthly || 0,
+        max_sources: limitsData.max_sources || 0,
+        max_destinations: limitsData.max_destinations || 0,
+        max_streaming_hours_monthly: limitsData.max_streaming_hours_monthly || 0,
+        current_sources_count: limitsData.current_sources_count || 0,
+        current_destinations_count: limitsData.current_destinations_count || 0,
+        current_month_streaming_hours: limitsData.current_month_streaming_hours || 0,
       };
 
       // Apply overrides
-      overridesData.overrides?.forEach((override) => {
+      // Backend returns overrides in { data: { overrides: [...] } } or just { data: [...] }?
+      // Let's check subscriptions.ts: res.json({ data: overrides }); where overrides is from subscriptionService.getUserLimitOverrides
+      // subscriptionService likely returns an array or object with overrides.
+      // Assuming overridesData is the array or object containing overrides.
+      // If overridesResponse.data is the array, then overridesData is the array.
+      
+      const overrides = Array.isArray(overridesData) ? overridesData : (overridesData.overrides || []);
+
+      overrides.forEach((override) => {
         limits[override.limit_type] = override.override_value;
       });
 

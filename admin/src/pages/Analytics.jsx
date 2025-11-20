@@ -105,9 +105,9 @@ const AnalyticsPage = () => {
         adminApi.getStats(),
       ]);
 
-      setUserAnalytics(userStats);
-      setStreamAnalytics(streamStats);
-      setSystemStats(systemData);
+      setUserAnalytics(userStats.data);
+      setStreamAnalytics(streamStats.data);
+      setSystemStats(systemData.data);
     } catch (error) {
       console.error("Failed to load analytics:", error);
     } finally {

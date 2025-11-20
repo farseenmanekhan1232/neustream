@@ -50,7 +50,7 @@ export default function ChatConnectors() {
   // Toggle connector mutation
   const toggleMutation = useMutation({
     mutationFn: async (connectorId) => {
-      const response = await adminApi.post(`/admin/chat-connectors/${connectorId}/toggle`);
+      const response = await adminApi.toggleChatConnector(connectorId);
       return response;
     },
     onSuccess: () => {

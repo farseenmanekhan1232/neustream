@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { adminApi } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   TrendingUp,
@@ -35,9 +36,8 @@ function SubscriptionAnalytics() {
   const { data: analyticsData, isLoading } = useQuery({
     queryKey: ["admin-subscription-analytics"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/subscriptions/subscription-analytics");
-      if (!response.ok) throw new Error("Failed to fetch analytics");
-      return response.json();
+      const response = await adminApi.getSubscriptionAnalytics();
+      return { data: response };
     },
   });
 

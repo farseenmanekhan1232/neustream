@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { adminApi } from '@/services/api';
+import api from '@/services/api';
 
 /**
  * useAdminTable Hook
@@ -44,7 +44,7 @@ export function useAdminTable(endpoint, options = {}) {
       });
 
       // Make API request
-      const response = await adminApi.get(endpoint, { params });
+      const response = await api.get(endpoint, { params });
       return response;
     },
     enabled,

@@ -28,8 +28,8 @@ export default function SystemMonitoring() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['admin-monitoring'],
     queryFn: async () => {
-      const response = await adminApi.get('/admin/monitoring');
-      return response;
+      const response = await adminApi.getSystemMonitoring();
+      return { data: response };
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -37,8 +37,8 @@ export default function SystemMonitoring() {
   const { data: healthData } = useQuery({
     queryKey: ['admin-health'],
     queryFn: async () => {
-      const response = await adminApi.get('/admin/monitoring/health');
-      return response;
+      const response = await adminApi.getSystemHealth();
+      return { data: response };
     },
     refetchInterval: 10000, // Refresh every 10 seconds
   });
