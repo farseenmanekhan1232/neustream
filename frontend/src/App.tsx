@@ -28,6 +28,39 @@ const RestreamAlternative = lazy(() => import("./pages/alternatives/RestreamAlte
 const OBSLiveAlternative = lazy(() => import("./pages/alternatives/OBSLiveAlternative"));
 const StreamYardAlternative = lazy(() => import("./pages/alternatives/StreamYardAlternative"));
 const CastrAlternative = lazy(() => import("./pages/alternatives/CastrAlternative"));
+
+// Platform Guides
+const YouTubeLiveGuide = lazy(() => import("./pages/guides/YouTubeLiveGuide"));
+const TwitchGuide = lazy(() => import("./pages/guides/TwitchGuide"));
+const FacebookLiveGuide = lazy(() => import("./pages/guides/FacebookLiveGuide"));
+const LinkedInLiveGuide = lazy(() => import("./pages/guides/LinkedInLiveGuide"));
+const TwitterLiveGuide = lazy(() => import("./pages/guides/TwitterLiveGuide"));
+const InstagramLiveGuide = lazy(() => import("./pages/guides/InstagramLiveGuide"));
+const TikTokLiveGuide = lazy(() => import("./pages/guides/TikTokLiveGuide"));
+const KickGuide = lazy(() => import("./pages/guides/KickGuide"));
+const RumbleGuide = lazy(() => import("./pages/guides/RumbleGuide"));
+const DLiveGuide = lazy(() => import("./pages/guides/DLiveGuide"));
+const TrovoGuide = lazy(() => import("./pages/guides/TrovoGuide"));
+const CaffeineGuide = lazy(() => import("./pages/guides/CaffeineGuide"));
+const NimoTVGuide = lazy(() => import("./pages/guides/NimoTVGuide"));
+const SteamBroadcastingGuide = lazy(() => import("./pages/guides/SteamBroadcastingGuide"));
+const VimeoLiveGuide = lazy(() => import("./pages/guides/VimeoLiveGuide"));
+const DailymotionGuide = lazy(() => import("./pages/guides/DailymotionGuide"));
+const IBMVideoStreamingGuide = lazy(() => import("./pages/guides/IBMVideoStreamingGuide"));
+const WowzaGuide = lazy(() => import("./pages/guides/WowzaGuide"));
+const BilibiliGuide = lazy(() => import("./pages/guides/BilibiliGuide"));
+const DouyuGuide = lazy(() => import("./pages/guides/DouyuGuide"));
+const HuyaGuide = lazy(() => import("./pages/guides/HuyaGuide"));
+const AfreecaTVGuide = lazy(() => import("./pages/guides/AfreecaTVGuide"));
+const NicoNicoGuide = lazy(() => import("./pages/guides/NicoNicoGuide"));
+const OpenrecGuide = lazy(() => import("./pages/guides/OpenrecGuide"));
+const BigoLiveGuide = lazy(() => import("./pages/guides/BigoLiveGuide"));
+const NonoliveGuide = lazy(() => import("./pages/guides/NonoliveGuide"));
+const VKLiveGuide = lazy(() => import("./pages/guides/VKLiveGuide"));
+const OKruGuide = lazy(() => import("./pages/guides/OKruGuide"));
+const VaughnLiveGuide = lazy(() => import("./pages/guides/VaughnLiveGuide"));
+const PicartoGuide = lazy(() => import("./pages/guides/PicartoGuide"));
+const MobcrushGuide = lazy(() => import("./pages/guides/MobcrushGuide"));
 const PublicChatPage = lazy(() => import("./components/PublicChatPage.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
@@ -82,7 +115,39 @@ function AppContent() {
         <Route path="contact" element={<Contact />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="features" element={<Features />} />
-        <Route path="help" element={<SetupGuide />} />
+        <Route path="help" element={<SetupGuide />}>
+          <Route path="platforms/youtube-live" element={<YouTubeLiveGuide />} />
+          <Route path="platforms/twitch" element={<TwitchGuide />} />
+          <Route path="platforms/facebook-live" element={<FacebookLiveGuide />} />
+          <Route path="platforms/linkedin-live" element={<LinkedInLiveGuide />} />
+          <Route path="platforms/twitter-live" element={<TwitterLiveGuide />} />
+          <Route path="platforms/instagram-live" element={<InstagramLiveGuide />} />
+          <Route path="platforms/tiktok-live" element={<TikTokLiveGuide />} />
+          <Route path="platforms/kick" element={<KickGuide />} />
+          <Route path="platforms/rumble" element={<RumbleGuide />} />
+          <Route path="platforms/dlive" element={<DLiveGuide />} />
+          <Route path="platforms/trovo" element={<TrovoGuide />} />
+          <Route path="platforms/caffeine" element={<CaffeineGuide />} />
+          <Route path="platforms/nimo-tv" element={<NimoTVGuide />} />
+          <Route path="platforms/steam-broadcasting" element={<SteamBroadcastingGuide />} />
+          <Route path="platforms/vimeo-live" element={<VimeoLiveGuide />} />
+          <Route path="platforms/dailymotion" element={<DailymotionGuide />} />
+          <Route path="platforms/ibm-video-streaming" element={<IBMVideoStreamingGuide />} />
+          <Route path="platforms/wowza" element={<WowzaGuide />} />
+          <Route path="platforms/bilibili" element={<BilibiliGuide />} />
+          <Route path="platforms/douyu" element={<DouyuGuide />} />
+          <Route path="platforms/huya" element={<HuyaGuide />} />
+          <Route path="platforms/afreecatv" element={<AfreecaTVGuide />} />
+          <Route path="platforms/niconico" element={<NicoNicoGuide />} />
+          <Route path="platforms/openrec" element={<OpenrecGuide />} />
+          <Route path="platforms/bigo-live" element={<BigoLiveGuide />} />
+          <Route path="platforms/nonolive" element={<NonoliveGuide />} />
+          <Route path="platforms/vk-live" element={<VKLiveGuide />} />
+          <Route path="platforms/ok-ru" element={<OKruGuide />} />
+          <Route path="platforms/vaughn-live" element={<VaughnLiveGuide />} />
+          <Route path="platforms/picarto" element={<PicartoGuide />} />
+          <Route path="platforms/mobcrush" element={<MobcrushGuide />} />
+        </Route>
 
         {/* Blog routes */}
         <Route path="blog" element={<Blog />} />

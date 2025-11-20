@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -17,6 +17,7 @@ import {
   MonitorSpeaker,
   Settings,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DestinationsSkeleton } from "@/components/LoadingSkeletons";
@@ -44,7 +45,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -54,39 +57,353 @@ import { apiService } from "../services/api";
 import { Link, useSearchParams } from "react-router-dom";
 
 // Platform configuration
-const platformConfig = {
+interface PlatformConfigItem {
+  id: string;
+  name: string;
+  category: string;
+  icon: any;
+  color: string;
+  rtmpUrl: string;
+  description: string;
+  helpUrl: string | null;
+}
+
+const platformConfig: Record<string, PlatformConfigItem> = {
+  // Global Major
   youtube: {
-    name: "YouTube",
+    id: "youtube",
+    name: "YouTube Live",
+    category: "Global Major",
     icon: Youtube,
-    color: "bg-red-500",
+    color: "bg-red-600",
     rtmpUrl: "rtmp://a.rtmp.youtube.com/live2",
-    description: "YouTube Live Streaming",
+    description: "Global video sharing giant",
     helpUrl: "https://support.google.com/youtube/answer/2907883",
   },
   twitch: {
+    id: "twitch",
     name: "Twitch",
+    category: "Global Major",
     icon: Twitch,
-    color: "bg-purple-500",
+    color: "bg-purple-600",
     rtmpUrl: "rtmp://live.twitch.tv/app",
-    description: "Twitch Live Streaming",
+    description: "Leading live streaming platform",
     helpUrl: "https://help.twitch.tv/s/article/broadcast-guidelines",
   },
   facebook: {
-    name: "Facebook",
+    id: "facebook",
+    name: "Facebook Live",
+    category: "Global Major",
     icon: Facebook,
-    color: "bg-blue-500",
-    rtmpUrl: "rtmp://live-api-s.facebook.com:80/rtmp",
-    description: "Facebook Live Streaming",
+    color: "bg-blue-600",
+    rtmpUrl: "rtmp://live-api-s.facebook.com:80/rtmp/",
+    description: "Social media streaming",
     helpUrl: "https://www.facebook.com/business/help/1968268143233387",
   },
+  linkedin: {
+    id: "linkedin",
+    name: "LinkedIn Live",
+    category: "Global Major",
+    icon: Globe, // Fallback
+    color: "bg-blue-700",
+    rtmpUrl: "rtmps://live-api.linkedin.com:443/rtmp/",
+    description: "Professional network streaming",
+    helpUrl: "https://www.linkedin.com/help/linkedin/answer/a564446",
+  },
+  twitter: {
+    id: "twitter",
+    name: "X (Twitter)",
+    category: "Global Major",
+    icon: Globe, // Fallback
+    color: "bg-black",
+    rtmpUrl: "rtmps://va.pscp.tv:443/x/",
+    description: "Real-time conversations",
+    helpUrl: "https://help.twitter.com/en/using-twitter/twitter-live",
+  },
+  instagram: {
+    id: "instagram",
+    name: "Instagram Live",
+    category: "Global Major",
+    icon: Globe, // Fallback
+    color: "bg-gradient-to-tr from-yellow-400 to-purple-600",
+    rtmpUrl: "rtmps://live-upload.instagram.com:443/rtmp/",
+    description: "Visual storytelling",
+    helpUrl: "https://help.instagram.com/1696695837282384",
+  },
+  tiktok: {
+    id: "tiktok",
+    name: "TikTok Live",
+    category: "Global Major",
+    icon: Globe, // Fallback
+    color: "bg-black",
+    rtmpUrl: "rtmp://push-rtmp-l11-us01.tiktokcdn.com/game/",
+    description: "Short-form video platform",
+    helpUrl: "https://www.tiktok.com/creators/creator-portal/en-us/live-on-tiktok/going-live/",
+  },
+
+  // Alternative & Gaming
+  kick: {
+    id: "kick",
+    name: "Kick",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-green-500",
+    rtmpUrl: "rtmps://fa723fc1b171.global-contribute.live-video.net/app/",
+    description: "Creator-friendly streaming",
+    helpUrl: "https://help.kick.com/",
+  },
+  rumble: {
+    id: "rumble",
+    name: "Rumble",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-green-600",
+    rtmpUrl: "rtmp://live.rumble.com/live/",
+    description: "Video platform alternative",
+    helpUrl: "https://rumblefaq.groovehq.com/help",
+  },
+  dlive: {
+    id: "dlive",
+    name: "DLive",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-yellow-500",
+    rtmpUrl: "rtmp://stream.dlive.tv/live/",
+    description: "Blockchain-based streaming",
+    helpUrl: "https://help.dlive.tv/",
+  },
+  trovo: {
+    id: "trovo",
+    name: "Trovo",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-green-500",
+    rtmpUrl: "rtmp://live.trovo.live/live/",
+    description: "Gaming community platform",
+    helpUrl: "https://trovo.live/support",
+  },
+  caffeine: {
+    id: "caffeine",
+    name: "Caffeine",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-blue-400",
+    rtmpUrl: "rtmp://ingest.caffeine.tv/app/",
+    description: "Social broadcasting",
+    helpUrl: "https://www.caffeine.tv/help",
+  },
+  nimotv: {
+    id: "nimotv",
+    name: "Nimo TV",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-purple-500",
+    rtmpUrl: "rtmp://tx.direct.huya.com/huyalive/",
+    description: "Global game streaming",
+    helpUrl: "https://www.nimo.tv/",
+  },
+  steam: {
+    id: "steam",
+    name: "Steam",
+    category: "Alternative & Gaming",
+    icon: Globe,
+    color: "bg-blue-900",
+    rtmpUrl: "rtmp://upload.broadcast.steampowered.com/app/",
+    description: "PC gaming platform",
+    helpUrl: "https://steamcommunity.com/updates/broadcasting",
+  },
+
+  // Professional
+  vimeo: {
+    id: "vimeo",
+    name: "Vimeo",
+    category: "Professional",
+    icon: Globe,
+    color: "bg-blue-400",
+    rtmpUrl: "rtmps://rtmp-global.cloud.vimeo.com/live",
+    description: "High-quality video hosting",
+    helpUrl: "https://vimeo.com/help",
+  },
+  dailymotion: {
+    id: "dailymotion",
+    name: "Dailymotion",
+    category: "Professional",
+    icon: Globe,
+    color: "bg-gray-900",
+    rtmpUrl: "rtmp://publish.dailymotion.com/publish-dm/",
+    description: "Video technology platform",
+    helpUrl: "https://faq.dailymotion.com/",
+  },
+  ibm: {
+    id: "ibm",
+    name: "IBM Video",
+    category: "Professional",
+    icon: Globe,
+    color: "bg-blue-700",
+    rtmpUrl: "rtmp://ws-ingest.video.ibm.com/live/",
+    description: "Enterprise video streaming",
+    helpUrl: "https://video.ibm.com/",
+  },
+  wowza: {
+    id: "wowza",
+    name: "Wowza",
+    category: "Professional",
+    icon: Globe,
+    color: "bg-orange-600",
+    rtmpUrl: "rtmp://entry.cloud.wowza.com/app-",
+    description: "Cloud streaming services",
+    helpUrl: "https://www.wowza.com/docs",
+  },
+
+  // Asian Platforms
+  bilibili: {
+    id: "bilibili",
+    name: "Bilibili",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-pink-400",
+    rtmpUrl: "rtmp://live-push.bilivideo.com/live-bvc/",
+    description: "Chinese video sharing",
+    helpUrl: "https://link.bilibili.com/p/center/index",
+  },
+  douyu: {
+    id: "douyu",
+    name: "Douyu",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-orange-500",
+    rtmpUrl: "rtmp://sendtc3.douyu.com/live/",
+    description: "Chinese live streaming",
+    helpUrl: "https://www.douyu.com/",
+  },
+  huya: {
+    id: "huya",
+    name: "Huya",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-orange-400",
+    rtmpUrl: "rtmp://tx.direct.huya.com/huyalive/",
+    description: "Chinese game streaming",
+    helpUrl: "https://www.huya.com/",
+  },
+  afreecatv: {
+    id: "afreecatv",
+    name: "AfreecaTV",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-blue-500",
+    rtmpUrl: "rtmp://rtmp.afreecatv.com/app/",
+    description: "South Korean streaming",
+    helpUrl: "https://www.afreecatv.com/",
+  },
+  niconico: {
+    id: "niconico",
+    name: "NicoNico",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-gray-800",
+    rtmpUrl: "rtmp://nl-nishitokyo.live.nicovideo.jp/live/",
+    description: "Japanese video service",
+    helpUrl: "https://www.nicovideo.jp/",
+  },
+  openrec: {
+    id: "openrec",
+    name: "Openrec.tv",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-red-500",
+    rtmpUrl: "rtmp://auth.openrec.tv/live/",
+    description: "Japanese gaming platform",
+    helpUrl: "https://www.openrec.tv/",
+  },
+  bigo: {
+    id: "bigo",
+    name: "Bigo Live",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-blue-400",
+    rtmpUrl: "rtmp://live-push.bigo.tv/live/",
+    description: "Singaporean streaming app",
+    helpUrl: "https://www.bigo.tv/",
+  },
+  nonolive: {
+    id: "nonolive",
+    name: "Nonolive",
+    category: "Asian Platforms",
+    icon: Globe,
+    color: "bg-purple-500",
+    rtmpUrl: "rtmp://publish.nonolive.com/live/",
+    description: "Global game live streaming",
+    helpUrl: "https://www.nonolive.com/",
+  },
+
+  // Regional
+  vk: {
+    id: "vk",
+    name: "VK Live",
+    category: "Regional",
+    icon: Globe,
+    color: "bg-blue-600",
+    rtmpUrl: "rtmp://ovsu.mycdn.me/input/",
+    description: "Russian social network",
+    helpUrl: "https://vk.com/",
+  },
+  okru: {
+    id: "okru",
+    name: "OK.ru",
+    category: "Regional",
+    icon: Globe,
+    color: "bg-orange-500",
+    rtmpUrl: "rtmp://ovsu.mycdn.me/input/",
+    description: "Russian social network",
+    helpUrl: "https://ok.ru/",
+  },
+  vaughn: {
+    id: "vaughn",
+    name: "Vaughn Live",
+    category: "Regional",
+    icon: Globe,
+    color: "bg-blue-800",
+    rtmpUrl: "rtmp://live.vaughn.live/live/",
+    description: "Live streaming community",
+    helpUrl: "https://vaughn.live/",
+  },
+  picarto: {
+    id: "picarto",
+    name: "Picarto",
+    category: "Regional",
+    icon: Globe,
+    color: "bg-green-600",
+    rtmpUrl: "rtmp://live.picarto.tv/golive/",
+    description: "Art streaming platform",
+    helpUrl: "https://picarto.tv/",
+  },
+  mobcrush: {
+    id: "mobcrush",
+    name: "Mobcrush",
+    category: "Regional",
+    icon: Globe,
+    color: "bg-yellow-400",
+    rtmpUrl: "rtmp://live.mobcrush.com/stream/",
+    description: "Mobile game streaming",
+    helpUrl: "https://www.mobcrush.com/",
+  },
+
+  // Custom
   custom: {
+    id: "custom",
     name: "Custom RTMP",
+    category: "Custom",
     icon: Radio,
     color: "bg-gray-500",
     rtmpUrl: "",
     description: "Custom RTMP Server",
     helpUrl: null,
   },
+};
+
+const getPlatformConfig = (platform: string): PlatformConfigItem => {
+  return platformConfig[platform] || platformConfig['custom']!;
 };
 
 function DestinationsManager() {
@@ -97,7 +414,7 @@ function DestinationsManager() {
   const [selectedSourceId, setSelectedSourceId] = useState(null);
   const [newDestination, setNewDestination] = useState({
     platform: "youtube",
-    rtmpUrl: platformConfig.youtube.rtmpUrl,
+    rtmpUrl: getPlatformConfig('youtube').rtmpUrl,
     streamKey: "",
   });
   const [searchParams] = useSearchParams();
@@ -144,6 +461,18 @@ function DestinationsManager() {
   const currentSource = sources.find((s) => s.id === selectedSourceId);
   const isUsingSources = sources.length > 0;
 
+
+
+  // Group platforms by category
+  const groupedPlatforms = useMemo(() => {
+    return Object.entries(platformConfig).reduce((acc, [key, config]) => {
+      const category = config.category || "Other";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push({ key, ...config });
+      return acc;
+    }, {} as Record<string, any[]>);
+  }, []);
+
   // Add destination mutation
   const addDestinationMutation = useMutation({
     mutationFn: async (destination) => {
@@ -169,7 +498,7 @@ function DestinationsManager() {
       });
       setNewDestination({
         platform: "youtube",
-        rtmpUrl: platformConfig.youtube.rtmpUrl,
+        rtmpUrl: getPlatformConfig('youtube').rtmpUrl,
         streamKey: "",
       });
       setShowAddForm(false);
@@ -248,8 +577,8 @@ function DestinationsManager() {
   };
 
   // Handle platform selection change
-  const handlePlatformChange = (platform) => {
-    const config = platformConfig[platform];
+  const handlePlatformChange = (platform: string) => {
+    const config = getPlatformConfig(platform);
     setNewDestination({
       ...newDestination,
       platform,
@@ -383,44 +712,36 @@ function DestinationsManager() {
                 {/* Platform Selection */}
                 <div className="space-y-4">
                   <Label>Select Platform</Label>
-                  <div className="grid lg:grid-cols-2 gap-3">
-                    {Object.entries(platformConfig).map(([key, config]) => {
-                      const Icon = config.icon;
-                      const isSelected = newDestination.platform === key;
-
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => handlePlatformChange(key)}
-                          className={`relative p-4 border rounded-lg text-left transition-all group ${
-                            isSelected
-                              ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                              : "border-border hover:border-primary/50 hover:bg-accent/50"
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`p-2 rounded-lg ${config.color} text-white group-hover:scale-105 transition-transform`}
-                            >
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <div className="font-medium">{config.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {config.description}
-                              </div>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <div className="absolute text-sm font-medium right-1 top-1 text-green-700">
-                              ✓ Selected
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <Select
+                    value={newDestination.platform}
+                    onValueChange={handlePlatformChange}
+                  >
+                    <SelectTrigger className="w-full h-12">
+                      <SelectValue placeholder="Select a platform" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {Object.entries(groupedPlatforms).map(([category, platforms]: [string, any[]]) => (
+                        <SelectGroup key={category}>
+                          <SelectLabel className="sticky top-0 bg-popover z-10 px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                            {category}
+                          </SelectLabel>
+                          {platforms.map((platform: any) => {
+                            const Icon = platform.icon;
+                            return (
+                              <SelectItem key={platform.key} value={platform.key}>
+                                <div className="flex items-center gap-2">
+                                  <div className={`p-1 rounded ${platform.color} text-white`}>
+                                    <Icon className="h-3 w-3" />
+                                  </div>
+                                  <span>{platform.name}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Configuration */}
@@ -463,7 +784,7 @@ function DestinationsManager() {
                     {newDestination.platform !== "custom" && (
                       <p className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full inline-block">
                         Auto-filled for{" "}
-                        {platformConfig[newDestination.platform].name}
+                        {getPlatformConfig(newDestination.platform).name}
                       </p>
                     )}
                   </div>
@@ -489,11 +810,11 @@ function DestinationsManager() {
                     />
                     <p className="text-xs text-muted-foreground">
                       Get this from your{" "}
-                      {platformConfig[newDestination.platform].name} streaming
+                      {getPlatformConfig(newDestination.platform).name} streaming
                       dashboard
-                      {platformConfig[newDestination.platform].helpUrl && (
+                      {getPlatformConfig(newDestination.platform).helpUrl && (
                         <a
-                          href={platformConfig[newDestination.platform].helpUrl}
+                          href={getPlatformConfig(newDestination.platform).helpUrl!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline ml-1"
@@ -541,8 +862,7 @@ function DestinationsManager() {
       {/* Destinations Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {destinations.map((destination) => {
-          const config =
-            platformConfig[destination.platform] || platformConfig.custom;
+          const config = getPlatformConfig(destination.platform);
           const Icon = config.icon;
 
           return (

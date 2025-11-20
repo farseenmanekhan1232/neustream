@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { Search, ChevronRight, Menu, X, Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ interface Section {
   id: string;
   title: string;
   category: string;
+  path?: string;
 }
 
 const sections: Section[] = [
@@ -18,9 +19,48 @@ const sections: Section[] = [
   { id: "streaming-basics", title: "Streaming Basics", category: "Configuration" },
   { id: "obs-setup", title: "OBS Setup", category: "Configuration" },
   { id: "encoder-settings", title: "Encoder Settings", category: "Configuration" },
-  { id: "platform-youtube", title: "YouTube", category: "Platforms" },
-  { id: "platform-twitch", title: "Twitch", category: "Platforms" },
-  { id: "platform-facebook", title: "Facebook", category: "Platforms" },
+  
+  // Global Major Platforms
+  { id: "platform-youtube", title: "YouTube Live", category: "Platform Guides: Global", path: "/help/platforms/youtube-live" },
+  { id: "platform-twitch", title: "Twitch", category: "Platform Guides: Global", path: "/help/platforms/twitch" },
+  { id: "platform-facebook", title: "Facebook Live", category: "Platform Guides: Global", path: "/help/platforms/facebook-live" },
+  { id: "platform-linkedin", title: "LinkedIn Live", category: "Platform Guides: Global", path: "/help/platforms/linkedin-live" },
+  { id: "platform-twitter", title: "Twitter/X Live", category: "Platform Guides: Global", path: "/help/platforms/twitter-live" },
+  { id: "platform-instagram", title: "Instagram Live", category: "Platform Guides: Global", path: "/help/platforms/instagram-live" },
+  { id: "platform-tiktok", title: "TikTok Live", category: "Platform Guides: Global", path: "/help/platforms/tiktok-live" },
+  
+  // Alternative & Gaming Platforms
+  { id: "platform-kick", title: "Kick", category: "Platform Guides: Gaming", path: "/help/platforms/kick" },
+  { id: "platform-rumble", title: "Rumble", category: "Platform Guides: Gaming", path: "/help/platforms/rumble" },
+  { id: "platform-dlive", title: "DLive", category: "Platform Guides: Gaming", path: "/help/platforms/dlive" },
+  { id: "platform-trovo", title: "Trovo", category: "Platform Guides: Gaming", path: "/help/platforms/trovo" },
+  { id: "platform-caffeine", title: "Caffeine", category: "Platform Guides: Gaming", path: "/help/platforms/caffeine" },
+  { id: "platform-nimo", title: "Nimo TV", category: "Platform Guides: Gaming", path: "/help/platforms/nimo-tv" },
+  { id: "platform-steam", title: "Steam Broadcasting", category: "Platform Guides: Gaming", path: "/help/platforms/steam-broadcasting" },
+  
+  // Professional/Enterprise
+  { id: "platform-vimeo", title: "Vimeo Live", category: "Platform Guides: Professional", path: "/help/platforms/vimeo-live" },
+  { id: "platform-dailymotion", title: "Dailymotion", category: "Platform Guides: Professional", path: "/help/platforms/dailymotion" },
+  { id: "platform-ibm", title: "IBM Video Streaming", category: "Platform Guides: Professional", path: "/help/platforms/ibm-video-streaming" },
+  { id: "platform-wowza", title: "Wowza Streaming Cloud", category: "Platform Guides: Professional", path: "/help/platforms/wowza" },
+  
+  // Asian Platforms
+  { id: "platform-bilibili", title: "Bilibili", category: "Platform Guides: Asia", path: "/help/platforms/bilibili" },
+  { id: "platform-douyu", title: "Douyu", category: "Platform Guides: Asia", path: "/help/platforms/douyu" },
+  { id: "platform-huya", title: "Huya", category: "Platform Guides: Asia", path: "/help/platforms/huya" },
+  { id: "platform-afreecatv", title: "AfreecaTV", category: "Platform Guides: Asia", path: "/help/platforms/afreecatv" },
+  { id: "platform-niconico", title: "NicoNico Douga", category: "Platform Guides: Asia", path: "/help/platforms/niconico" },
+  { id: "platform-openrec", title: "Openrec.tv", category: "Platform Guides: Asia", path: "/help/platforms/openrec" },
+  { id: "platform-bigo", title: "Bigo Live", category: "Platform Guides: Asia", path: "/help/platforms/bigo-live" },
+  { id: "platform-nonolive", title: "Nonolive", category: "Platform Guides: Asia", path: "/help/platforms/nonolive" },
+  
+  // Regional & Alternative
+  { id: "platform-vk", title: "VK Live", category: "Platform Guides: Regional", path: "/help/platforms/vk-live" },
+  { id: "platform-ok", title: "OK.ru", category: "Platform Guides: Regional", path: "/help/platforms/ok-ru" },
+  { id: "platform-vaughn", title: "Vaughn Live", category: "Platform Guides: Regional", path: "/help/platforms/vaughn-live" },
+  { id: "platform-picarto", title: "Picarto", category: "Platform Guides: Regional", path: "/help/platforms/picarto" },
+  { id: "platform-mobcrush", title: "Mobcrush", category: "Platform Guides: Regional", path: "/help/platforms/mobcrush" },
+  
   { id: "troubleshooting", title: "Troubleshooting", category: "Support" },
   { id: "faq", title: "FAQ", category: "Support" },
   { id: "api-reference", title: "API Reference", category: "Advanced" },
@@ -29,10 +69,26 @@ const sections: Section[] = [
 const categories = Array.from(new Set(sections.map((s) => s.category)));
 
 export default function Help() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  // Sync activeSection with URL
+  useEffect(() => {
+    if (location.pathname === "/help") {
+      if (activeSection.startsWith("platform-")) {
+        setActiveSection("overview");
+      }
+    } else {
+      const matchingSection = sections.find((s) => s.path === location.pathname);
+      if (matchingSection) {
+        setActiveSection(matchingSection.id);
+      }
+    }
+  }, [location.pathname]);
 
   // Keyboard shortcut for search (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -115,20 +171,38 @@ export default function Help() {
               {searchQuery && (
                 <div className="mt-2 rounded-lg border border-border bg-card p-2 shadow-lg">
                   {filteredSections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => {
-                        setActiveSection(section.id);
-                        setShowSearch(false);
-                        setSearchQuery("");
-                      }}
-                      className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent"
-                    >
-                      <div className="font-medium">{section.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {section.category}
-                      </div>
-                    </button>
+                    section.path ? (
+                      <Link
+                        key={section.id}
+                        to={section.path}
+                        onClick={() => {
+                          setShowSearch(false);
+                          setSearchQuery("");
+                        }}
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent"
+                      >
+                        <div className="font-medium">{section.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {section.category}
+                        </div>
+                      </Link>
+                    ) : (
+                      <button
+                        key={section.id}
+                        onClick={() => {
+                          setActiveSection(section.id);
+                          setShowSearch(false);
+                          setSearchQuery("");
+                          if (location.pathname !== "/help") navigate("/help");
+                        }}
+                        className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent"
+                      >
+                        <div className="font-medium">{section.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {section.category}
+                        </div>
+                      </button>
+                    )
                   ))}
                   {filteredSections.length === 0 && (
                     <div className="px-3 py-6 text-center text-sm text-muted-foreground">
@@ -151,22 +225,40 @@ export default function Help() {
                 <div key={category}>
                   <h4 className="mb-2 text-sm font-semibold">{category}</h4>
                   <div className="space-y-1">
-                    {sections
-                      .filter((s) => s.category === category)
-                      .map((section) => (
-                        <button
-                          key={section.id}
-                          onClick={() => setActiveSection(section.id)}
-                          className={cn(
-                            "w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:text-foreground",
-                            activeSection === section.id
-                              ? "bg-accent font-medium text-foreground"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {section.title}
-                        </button>
-                      ))}
+                      {sections
+                        .filter((s) => s.category === category)
+                        .map((section) => (
+                          section.path ? (
+                            <Link
+                              key={section.id}
+                              to={section.path}
+                              className={cn(
+                                "block w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:text-foreground",
+                                activeSection === section.id
+                                  ? "bg-accent font-medium text-foreground"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {section.title}
+                            </Link>
+                          ) : (
+                            <button
+                              key={section.id}
+                              onClick={() => {
+                                setActiveSection(section.id);
+                                if (location.pathname !== "/help") navigate("/help");
+                              }}
+                              className={cn(
+                                "w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:text-foreground",
+                                activeSection === section.id
+                                  ? "bg-accent font-medium text-foreground"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {section.title}
+                            </button>
+                          )
+                        ))}
                   </div>
                 </div>
               ))}
@@ -197,25 +289,42 @@ export default function Help() {
                   <div key={category}>
                     <h4 className="mb-2 text-sm font-semibold">{category}</h4>
                     <div className="space-y-1">
-                      {sections
-                        .filter((s) => s.category === category)
-                        .map((section) => (
-                          <button
-                            key={section.id}
-                            onClick={() => {
-                              setActiveSection(section.id);
-                              setMobileMenuOpen(false);
-                            }}
-                            className={cn(
-                              "w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                              activeSection === section.id
-                                ? "bg-accent font-medium text-foreground"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {section.title}
-                          </button>
-                        ))}
+                        {sections
+                          .filter((s) => s.category === category)
+                          .map((section) => (
+                            section.path ? (
+                              <Link
+                                key={section.id}
+                                to={section.path}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={cn(
+                                  "block w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                                  activeSection === section.id
+                                    ? "bg-accent font-medium text-foreground"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {section.title}
+                              </Link>
+                            ) : (
+                              <button
+                                key={section.id}
+                                onClick={() => {
+                                  setActiveSection(section.id);
+                                  setMobileMenuOpen(false);
+                                  if (location.pathname !== "/help") navigate("/help");
+                                }}
+                                className={cn(
+                                  "w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                                  activeSection === section.id
+                                    ? "bg-accent font-medium text-foreground"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {section.title}
+                              </button>
+                            )
+                          ))}
                     </div>
                   </div>
                 ))}
@@ -360,8 +469,9 @@ export default function Help() {
                               Open OBS Studio and go to Settings → Stream. Enter:
                             </p>
                             <div className="rounded-md bg-muted p-3 font-mono text-sm">
-                              <div>Server: rtmp://stream.neustream.app</div>
-                              <div>Stream Key: [Your unique key]</div>
+                              <strong>Server: rtmp://stream.neustream.app/live</strong>
+                              <br/>
+                              <strong>Stream Key: [Your unique key]</strong>
                             </div>
                           </div>
                         ),
@@ -709,47 +819,9 @@ export default function Help() {
                 </div>
               )}
 
-              {(activeSection === "platform-youtube" ||
-                activeSection === "platform-twitch" ||
-                activeSection === "platform-facebook") && (
-                <div className="space-y-6">
-                  <div>
-                    <h1 className="mb-2 text-3xl font-bold">
-                      {activeSection === "platform-youtube" && "YouTube Integration"}
-                      {activeSection === "platform-twitch" && "Twitch Integration"}
-                      {activeSection === "platform-facebook" &&
-                        "Facebook Integration"}
-                    </h1>
-                    <p className="text-lg text-muted-foreground">
-                      Connect and stream to{" "}
-                      {activeSection.replace("platform-", "")}.
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold">Connection Steps</h2>
-                    <ol className="list-decimal space-y-2 pl-6">
-                      <li>Navigate to your neustream dashboard</li>
-                      <li>Click "Add Destination"</li>
-                      <li>
-                        Select {activeSection.replace("platform-", "")} from the
-                        list
-                      </li>
-                      <li>Click "Authorize" to connect your account</li>
-                      <li>Configure stream settings and save</li>
-                    </ol>
-                  </div>
-
-                  <div className="not-prose rounded-lg border border-blue-500/50 bg-blue-500/10 p-4">
-                    <h3 className="mb-2 text-sm font-semibold">💡 Pro Tip</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Make sure your {activeSection.replace("platform-", "")}{" "}
-                      account is in good standing and has streaming permissions
-                      enabled before connecting.
-                    </p>
-                  </div>
-                </div>
-              )}
+              {/* YouTube Live */}
+              {/* Platform Guides - Rendered via Outlet */}
+              {activeSection.startsWith("platform-") && <Outlet />}
 
               {activeSection === "troubleshooting" && (
                 <div className="space-y-6">
