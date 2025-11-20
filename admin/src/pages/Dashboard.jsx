@@ -5,13 +5,10 @@ import { adminApi } from "../services/api";
 import {
   Users,
   Activity,
-  Wifi,
-  Clock,
-  TrendingUp,
   DollarSign,
-  Crown,
   CreditCard,
   AlertCircle,
+  TrendingUp,
 } from "lucide-react";
 import {
   Card,
@@ -22,6 +19,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { MinimalStatCard } from "../components/common/MinimalStatCard";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -35,6 +36,7 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [showAllActivity, setShowAllActivity] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -121,10 +123,11 @@ const Dashboard = () => {
       });
 
       // Process recent activity from streams
-      const activity = activeStreams.slice(0, 5).map((stream) => ({
+      const activity = activeStreams.slice(0, 10).map((stream) => ({
         id: stream.id,
         type: "stream_started",
-        message: `Stream started by ${stream.email}`,
+        user: stream.email,
+        message: `Started streaming`,
         timestamp: stream.started_at,
         icon: Activity,
       }));
@@ -150,53 +153,28 @@ const Dashboard = () => {
     return uptime;
   };
 
-  // eslint-disable-next-line no-unused-vars
-  const StatCard = ({ title, value, icon: Icon, change, changeType }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold text-foreground mt-2">
-              {value}
-            </p>
-            {change && (
-              <p
-                className={`text-sm mt-1 ${
-                  changeType === "positive"
-                    ? "text-success"
-                    : "text-destructive"
-                }`}
-              >
-                {change}
-              </p>
-            )}
-          </div>
-          <div
-            className={`p-3 rounded-full ${
-              title.includes("Active") ? "bg-success/10" : "bg-primary/10"
-            }`}
-          >
-            <Icon
-              className={`h-6 w-6 ${
-                title.includes("Active") ? "text-success" : "text-primary"
-              }`}
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - then) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="card-minimal">
               <CardContent className="p-6">
                 <Skeleton className="h-4 w-1/2 mb-4" />
-                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-10 w-3/4" />
               </CardContent>
             </Card>
           ))}
@@ -205,189 +183,195 @@ const Dashboard = () => {
     );
   }
 
+  const displayedActivity = showAllActivity
+    ? recentActivity
+    : recentActivity.slice(0, 5);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <div className="text-2xl font-normal text-foreground">Dashboard</div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+          Dashboard
+        </h1>
+        <p className="mt-2 text-muted-foreground">
           Welcome back! Here's what's happening on Neustream today.
         </p>
       </div>
 
       {/* Error Alert - Show if data failed to load but don't break UI */}
       {stats.totalUsers === 0 && stats.activeStreams === 0 && !loading && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            <div>
-              <h3 className="font-medium text-yellow-800 dark:text-yellow-300">
-                Some data could not be loaded
-              </h3>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                Some dashboard stats may be unavailable. Please check the console for details.
-              </p>
+        <Card className="border-warning/50 bg-warning/5">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-foreground">
+                  Some data could not be loaded
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Some dashboard stats may be unavailable. Please check the
+                  console for details.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
+      {/* Key Metrics - 3 cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <MinimalStatCard
           title="Active Streams"
           value={stats.activeStreams}
           icon={Activity}
-          change="Live now"
-          changeType="positive"
+          trend="Live now"
+          trendType="positive"
         />
-        <StatCard
+        <MinimalStatCard
           title="Total Users"
           value={stats.totalUsers}
           icon={Users}
-          change="+12% from last month"
-          changeType="positive"
+          trend="+12% from last month"
+          trendType="positive"
         />
-        <StatCard
-          title="Active Subscriptions"
-          value={stats.activeSubscriptions}
-          icon={CreditCard}
-          change={`${Math.round(
-            (stats.activeSubscriptions / Math.max(stats.totalUsers, 1)) * 100,
-          )}% of users`}
-          changeType="positive"
-        />
-        <StatCard
+        <MinimalStatCard
           title="Monthly Revenue"
           value={`$${stats.monthlyRevenue.toFixed(2)}`}
           icon={DollarSign}
-          change="+8% from last month"
-          changeType="positive"
+          trend="+8% from last month"
+          trendType="positive"
         />
       </div>
 
-      {/* Plan Distribution & System Metrics */}
+      {/* Secondary Metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Plan Distribution */}
+        {/* Subscription Plans Distribution */}
         {stats.planDistribution.length > 0 && (
-          <Card>
+          <Card className="card-minimal hover-lift">
             <CardHeader>
-              <CardTitle>Subscription Plan Distribution</CardTitle>
+              <CardTitle className="text-lg">Subscription Plans</CardTitle>
               <CardDescription>
-                Breakdown of users across different subscription tiers.
+                User distribution across subscription tiers
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {stats.planDistribution.map((plan) => (
-                <div key={plan.name} className="flex items-center gap-4">
-                  <Crown className="h-5 w-5 text-yellow-500" />
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>{plan.name}</span>
-                      <span>{plan.user_count || 0} users</span>
+                <div key={plan.name} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`h-2 w-2 rounded-full ${
+                          plan.name === "Free"
+                            ? "bg-muted-foreground"
+                            : plan.name === "Pro"
+                            ? "bg-primary"
+                            : "bg-success"
+                        }`}
+                      />
+                      <span className="font-medium">{plan.name}</span>
                     </div>
-                    <Progress
-                      value={parseFloat(plan.percentage || "0")}
-                      className="mt-1 h-2"
-                    />
+                    <span className="text-muted-foreground">
+                      {plan.user_count || 0} users ({parseFloat(plan.percentage || "0").toFixed(1)}%)
+                    </span>
                   </div>
-                  <Badge variant="secondary">
-                    {parseFloat(plan.percentage || "0").toFixed(1)}%
-                  </Badge>
+                  <Progress
+                    value={parseFloat(plan.percentage || "0")}
+                    className="h-2"
+                  />
                 </div>
               ))}
             </CardContent>
           </Card>
         )}
 
-        {/* System Metrics */}
-        <Card>
+        {/* System Health */}
+        <Card className="card-minimal hover-lift">
           <CardHeader>
-            <CardTitle>System Health</CardTitle>
+            <CardTitle className="text-lg">System Health</CardTitle>
             <CardDescription>
-              Key metrics for overall system performance.
+              Key metrics for platform performance
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3">
-              <Wifi className="h-5 w-5 text-green-500" />
-              <div>
-                <p className="text-sm font-medium">System Status</p>
-                <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                  Online
-                </p>
-              </div>
+          <CardContent className="grid grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Uptime</p>
+              <p className="text-2xl font-semibold">{stats.systemUptime}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-blue-500" />
-              <div>
-                <p className="text-sm font-medium">Uptime</p>
-                <p className="text-lg font-semibold">{stats.systemUptime}</p>
-              </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Total Streams</p>
+              <p className="text-2xl font-semibold">{stats.totalStreams}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Server className="h-5 w-5 text-gray-500" />
-              <div>
-                <p className="text-sm font-medium">Total Streams</p>
-                <p className="text-lg font-semibold">{stats.totalStreams}</p>
-              </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Subscriptions</p>
+              <p className="text-2xl font-semibold">
+                {stats.activeSubscriptions}
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-purple-500" />
-              <div>
-                <p className="text-sm font-medium">Total Users</p>
-                <p className="text-lg font-semibold">{stats.totalUsers}</p>
-              </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Status</p>
+              <Badge className="bg-success/10 text-success border-success/20">
+                Online
+              </Badge>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <Card className="card-minimal">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>
-            Latest streaming activity across the platform
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Recent Activity</CardTitle>
+              <CardDescription>
+                Latest streaming activity across the platform
+              </CardDescription>
+            </div>
+            {recentActivity.length > 5 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllActivity(!showAllActivity)}
+              >
+                {showAllActivity ? "Show Less" : "Show More"}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          {stats.recentActivity.length > 0 ? (
+          {displayedActivity.length > 0 ? (
             <div className="space-y-4">
-              {stats.recentActivity.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">
-                        {activity.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(activity.timestamp), {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        activity.status === "live" ? "success" : "secondary"
-                      }
-                    >
-                      {activity.status}
-                    </Badge>
+              {displayedActivity.map((activity, index) => (
+                <div
+                  key={activity.id}
+                  className={`flex items-center gap-4 py-3 ${
+                    index !== displayedActivity.length - 1
+                      ? "border-b border-border/50"
+                      : ""
+                  }`}
+                >
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Activity className="h-4 w-4 text-primary" />
                   </div>
-                );
-              })}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      {activity.user}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.message}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatTimeAgo(activity.timestamp)}
+                  </span>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Activity className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium text-foreground">
+            <div className="text-center py-12">
+              <Activity className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-sm font-medium text-foreground">
                 No recent activity
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -399,25 +383,49 @@ const Dashboard = () => {
       </Card>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="card-minimal">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="text-lg">Quick Actions</CardTitle>
           <CardDescription>Common administrative tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="justify-start bg-transparent">
-              <Users className="h-4 w-4 mr-2" />
-              View All Users
-            </Button>
-            <Button variant="outline" className="justify-start bg-transparent">
-              <Monitor className="h-4 w-4 mr-2" />
-              Monitor Streams
-            </Button>
-            <Button variant="outline" className="justify-start bg-transparent">
-              <BarChart className="h-4 w-4 mr-2" />
-              View Analytics
-            </Button>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link to="/users">
+              <Button
+                variant="outline"
+                className="w-full h-auto flex-col gap-3 py-6 hover-lift"
+              >
+                <Users className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium">Manage Users</span>
+              </Button>
+            </Link>
+            <Link to="/streams">
+              <Button
+                variant="outline"
+                className="w-full h-auto flex-col gap-3 py-6 hover-lift"
+              >
+                <Activity className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium">Monitor Streams</span>
+              </Button>
+            </Link>
+            <Link to="/analytics">
+              <Button
+                variant="outline"
+                className="w-full h-auto flex-col gap-3 py-6 hover-lift"
+              >
+                <TrendingUp className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium">View Analytics</span>
+              </Button>
+            </Link>
+            <Link to="/user-subscriptions">
+              <Button
+                variant="outline"
+                className="w-full h-auto flex-col gap-3 py-6 hover-lift"
+              >
+                <CreditCard className="h-6 w-6 text-primary" />
+                <span className="text-sm font-medium">Subscriptions</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

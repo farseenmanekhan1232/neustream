@@ -3,20 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Edit,
-  Filter,
   Users,
   Crown,
   Zap,
   Shield,
-  Calendar,
-  Radio,
-  Target,
-  Clock,
-  Check,
-  X,
-  TrendingUp,
-  TrendingDown,
-  Minus,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi } from "@/services/api";
@@ -24,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,7 +24,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -54,28 +43,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MinimalStatCard } from "../components/common/MinimalStatCard";
+import { ActionMenu } from "../components/common/ActionMenu";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 function UserSubscriptions() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [editingSubscription, setEditingSubscription] = useState(null);
-
-  // Promote/Demote subscription mutation
-  const promoteDemoteMutation = useMutation({
-    mutationFn: async ({ userId, data }) => {
-      const response = await adminApi.promoteDemoteUserSubscription(userId, data);
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["admin-user-subscriptions"]);
-      setEditingSubscription(null);
-      toast.success("User subscription updated successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to update user subscription: " + error.message);
-    },
-  });
+  const [isPromoteDemoteMode, setIsPromoteDemoteMode] = useState(false);
+  const [reason, setReason] = useState("");
 
   // Fetch user subscriptions
   const { data: subscriptionsData, isLoading } = useQuery({
@@ -112,6 +91,8 @@ function UserSubscriptions() {
     onSuccess: () => {
       queryClient.invalidateQueries(["admin-user-subscriptions"]);
       setEditingSubscription(null);
+      setIsPromoteDemoteMode(false);
+      setReason("");
       toast.success("User subscription updated successfully");
     },
     onError: (error) => {
@@ -119,483 +100,416 @@ function UserSubscriptions() {
     },
   });
 
-  const handleUpdateSubscription = (userId, subscriptionData) => {
-    updateSubscriptionMutation.mutate({
-      userId,
-      subscriptionData,
-    });
-  };
+  // Promote/Demote mutation
+  const promoteDemoteMutation = useMutation({
+    mutationFn: async ({ userId, data }) => {
+      const response = await adminApi.promoteDemoteUserSubscription(userId, data);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["admin-user-subscriptions"]);
+      setEditingSubscription(null);
+      setIsPromoteDemoteMode(false);
+      setReason("");
+      toast.success("User subscription updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update user subscription: " + error.message);
+    },
+  });
 
-  const handlePromoteDemote = (userId, data) => {
-    promoteDemoteMutation.mutate({ userId, data });
+  const handleUpdateSubscription = () => {
+    if (!editingSubscription) return;
+
+    if (isPromoteDemoteMode) {
+      if (!reason || reason.trim() === "") {
+        toast.error("Please provide a reason for this change");
+        return;
+      }
+
+      promoteDemoteMutation.mutate({
+        userId: editingSubscription.user_id,
+        data: {
+          planId: editingSubscription.plan_id,
+          reason: reason,
+        },
+      });
+    } else {
+      updateSubscriptionMutation.mutate({
+        userId: editingSubscription.user_id,
+        subscriptionData: {
+          planId: editingSubscription.plan_id,
+          status: editingSubscription.status,
+        },
+      });
+    }
   };
 
   const getPlanIcon = (planName) => {
-    switch (planName.toLowerCase()) {
+    switch (planName?.toLowerCase()) {
       case "free":
-        return <Crown className="h-4 w-4 text-yellow-500" />;
+        return Crown;
       case "pro":
-        return <Zap className="h-4 w-4 text-blue-500" />;
+        return Zap;
       case "business":
-        return <Shield className="h-4 w-4 text-purple-500" />;
+        return Shield;
       default:
-        return <Crown className="h-4 w-4 text-gray-500" />;
+        return Crown;
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
-            Active
-          </Badge>
-        );
-      case "canceled":
-        return (
-          <Badge className="bg-red-100 text-red-800 border-red-200">
-            Canceled
-          </Badge>
-        );
-      case "past_due":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-            Past Due
-          </Badge>
-        );
+  const getPlanColor = (planName) => {
+    switch (planName?.toLowerCase()) {
+      case "free":
+        return "text-muted-foreground";
+      case "pro":
+        return "text-primary";
+      case "business":
+        return "text-success";
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return "text-muted-foreground";
     }
   };
+
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case "active":
+        return "default";
+      case "cancelled":
+        return "destructive";
+      case "expired":
+        return "secondary";
+      default:
+        return "outline";
+    }
+  };
+
+  const SubscriptionRow = ({ subscription }) => {
+    const PlanIcon = getPlanIcon(subscription.plan_name);
+
+    const actions = [
+      {
+        label: "Edit Subscription",
+        icon: Edit,
+        onClick: () => {
+          setEditingSubscription(subscription);
+          setIsPromoteDemoteMode(false);
+          setReason("");
+        },
+      },
+    ];
+
+    return (
+      <TableRow className="hover:bg-muted/50 transition-smooth">
+        <TableCell>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-sm font-medium text-primary">
+                {subscription.user_email?.[0]?.toUpperCase() || "U"}
+              </span>
+            </div>
+            <div>
+              <p className="font-medium text-foreground">
+                {subscription.user_display_name || "Unknown User"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {subscription.user_email}
+              </p>
+            </div>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            <PlanIcon className={cn("h-4 w-4", getPlanColor(subscription.plan_name))} />
+            <span className="font-medium">{subscription.plan_name}</span>
+          </div>
+        </TableCell>
+        <TableCell>
+          <Badge variant={getStatusBadgeVariant(subscription.status)}>
+            {subscription.status}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-center">
+          <ActionMenu actions={actions} />
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  const subscriptions = subscriptionsData?.data?.subscriptions || [];
+  const plans = plansData?.data || [];
+  const totalSubscriptions = subscriptionsData?.data?.total || 0;
+
+  const activeSubscriptions = subscriptions.filter(
+    (s) => s.status === "active",
+  ).length;
+  const paidSubscriptions = subscriptions.filter(
+    (s) => s.plan_name?.toLowerCase() !== "free" && s.status === "active",
+  ).length;
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="card-minimal">
+              <CardContent className="p-6">
+                <div className="h-4 w-1/2 bg-muted rounded mb-4 animate-pulse" />
+                <div className="h-10 w-3/4 bg-muted rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   }
 
-  const subscriptions = subscriptionsData?.data || [];
-  const pagination = subscriptionsData?.pagination || {};
-  const plans = plansData?.data || [];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <div className="text-3xl font-normal">User Subscriptions</div>
-        <p className="text-muted-foreground mt-2">
-          Manage user subscriptions and billing information
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+          User Subscriptions
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Manage user subscription plans and status
         </p>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
+      {/* Key Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <MinimalStatCard
+          title="Total Subscriptions"
+          value={totalSubscriptions}
+          icon={CreditCard}
+          trend="All plans"
+          trendType="neutral"
+        />
+        <MinimalStatCard
+          title="Active Subscriptions"
+          value={activeSubscriptions}
+          icon={Users}
+          trend={`${Math.round((activeSubscriptions / Math.max(totalSubscriptions, 1)) * 100)}% of total`}
+          trendType="positive"
+        />
+        <MinimalStatCard
+          title="Paid Subscriptions"
+          value={paidSubscriptions}
+          icon={Zap}
+          trend={`${Math.round((paidSubscriptions / Math.max(totalSubscriptions, 1)) * 100)}% of total`}
+          trendType="positive"
+        />
+      </div>
+
+      {/* Search */}
+      <Card className="card-minimal">
         <CardContent className="p-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users or plans..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by user email or name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="mt-3 text-sm text-muted-foreground">
+            Showing {subscriptions.length} of {totalSubscriptions} subscriptions
           </div>
         </CardContent>
       </Card>
 
       {/* Subscriptions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User Subscriptions</CardTitle>
-          <CardDescription>
-            {pagination?.total} total subscriptions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Usage</TableHead>
-                <TableHead>Renewal Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subscriptions?.map((subscription) => (
-                <TableRow
-                  key={`${subscription.user_id}-${subscription.plan_id}`}
-                >
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium text-primary">
-                          {subscription.email?.[0]?.toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {subscription.display_name || subscription.email}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {subscription.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {getPlanIcon(subscription.plan_name)}
-                      <span className="font-medium">
-                        {subscription.plan_name}
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      ${subscription.price_monthly}/month
-                    </div>
-                  </TableCell>
-                  <TableCell>{getStatusBadge(subscription.status)}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Radio className="h-3 w-3 text-muted-foreground" />
-                        <span>{subscription.sources_count || 0} sources</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Target className="h-3 w-3 text-muted-foreground" />
-                        <span>
-                          {subscription.destinations_count || 0} destinations
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span>{subscription.streaming_hours || 0} hours</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {subscription.current_period_end ? (
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>
-                          {new Date(
-                            subscription.current_period_end,
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingSubscription(subscription)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+      {subscriptions.length > 0 ? (
+        <Card className="card-minimal">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {subscriptions.length} of {pagination.total}{" "}
-                subscriptions
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setPage((p) => Math.min(pagination.totalPages, p + 1))
-                  }
-                  disabled={page === pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {subscriptions.map((subscription) => (
+                  <SubscriptionRow
+                    key={subscription.user_id}
+                    subscription={subscription}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="card-minimal">
+          <CardContent className="p-12 text-center">
+            <CreditCard className="mx-auto h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-medium text-foreground">
+              {search ? "No matching subscriptions" : "No subscriptions found"}
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {search
+                ? "Try adjusting your search query."
+                : "Subscriptions will appear here as users subscribe to plans."}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Edit Subscription Dialog */}
       <Dialog
         open={!!editingSubscription}
-        onOpenChange={() => setEditingSubscription(null)}
+        onOpenChange={() => {
+          setEditingSubscription(null);
+          setIsPromoteDemoteMode(false);
+          setReason("");
+        }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Edit User Subscription</DialogTitle>
-            <DialogDescription>
-              Update the subscription plan and status for this user.
-            </DialogDescription>
+            <DialogTitle>
+              {isPromoteDemoteMode ? "Promote/Demote User" : "Edit Subscription"}
+            </DialogTitle>
           </DialogHeader>
+
           {editingSubscription && (
-            <EditSubscriptionForm
-              subscription={editingSubscription}
-              plans={plans}
-              onSubmit={handleUpdateSubscription}
-              onPromoteDemote={handlePromoteDemote}
-              isLoading={updateSubscriptionMutation.isLoading || promoteDemoteMutation.isLoading}
-              onCancel={() => setEditingSubscription(null)}
-            />
+            <div className="space-y-6 py-4">
+              {/* User Info */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm font-medium text-foreground">
+                  {editingSubscription.user_display_name || "Unknown User"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {editingSubscription.user_email}
+                </p>
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex gap-2">
+                <Button
+                  variant={!isPromoteDemoteMode ? "default" : "outline"}
+                  onClick={() => setIsPromoteDemoteMode(false)}
+                  className="flex-1"
+                >
+                  Standard Edit
+                </Button>
+                <Button
+                  variant={isPromoteDemoteMode ? "default" : "outline"}
+                  onClick={() => setIsPromoteDemoteMode(true)}
+                  className="flex-1"
+                >
+                  Promote/Demote
+                </Button>
+              </div>
+
+              {/* Plan Selection */}
+              <div className="space-y-2">
+                <Label>Subscription Plan</Label>
+                <Select
+                  value={editingSubscription.plan_id}
+                  onValueChange={(value) =>
+                    setEditingSubscription({
+                      ...editingSubscription,
+                      plan_id: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        <div className="flex items-center gap-2">
+                          {getPlanIcon(plan.name) && (
+                            <span className={getPlanColor(plan.name)}>
+                              {getPlanIcon(plan.name).type.name}
+                            </span>
+                          )}
+                          {plan.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status Selection (only in standard mode) */}
+              {!isPromoteDemoteMode && (
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={editingSubscription.status}
+                    onValueChange={(value) =>
+                      setEditingSubscription({
+                        ...editingSubscription,
+                        status: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Reason Field (only in promote/demote mode) */}
+              {isPromoteDemoteMode && (
+                <div className="space-y-2">
+                  <Label>
+                    Reason <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Enter the reason for this promotion/demotion..."
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This reason will be logged for audit purposes.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingSubscription(null);
+                setIsPromoteDemoteMode(false);
+                setReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateSubscription}
+              disabled={
+                updateSubscriptionMutation.isPending ||
+                promoteDemoteMutation.isPending
+              }
+            >
+              {updateSubscriptionMutation.isPending ||
+              promoteDemoteMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-// Edit Subscription Form Component
-function EditSubscriptionForm({
-  subscription,
-  plans,
-  onSubmit,
-  onPromoteDemote,
-  isLoading,
-  onCancel,
-}) {
-  const [formData, setFormData] = useState({
-    plan_id: subscription.plan_id,
-    status: subscription.status,
-    current_period_end: subscription.current_period_end
-      ? new Date(subscription.current_period_end).toISOString().split("T")[0]
-      : "",
-    reason: "",
-    mode: "standard" // 'standard' or 'promote_demote'
-  });
-
-  const selectedPlan = plans.find(p => p.id === parseInt(formData.plan_id));
-  const currentPlanPrice = subscription.price_monthly || 0;
-  const newPlanPrice = selectedPlan?.price_monthly || 0;
-
-  // Determine if this is a promotion or demotion
-  const priceDiff = newPlanPrice - currentPlanPrice;
-  const changeType = priceDiff > 0 ? "promotion" : priceDiff < 0 ? "demotion" : "no-change";
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (formData.mode === "promote_demote" && !formData.reason.trim()) {
-      alert("Please provide a reason for this plan change");
-      return;
-    }
-
-    if (formData.mode === "promote_demote") {
-      onPromoteDemote(subscription.user_id, {
-        plan_id: parseInt(formData.plan_id),
-        reason: formData.reason
-      });
-    } else {
-      onSubmit(subscription.user_id, {
-        ...formData,
-        current_period_end: formData.current_period_end
-          ? new Date(formData.current_period_end).toISOString()
-          : null,
-      });
-    }
-  };
-
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-4">
-        {/* Change Mode Toggle */}
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant={formData.mode === "standard" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFormData({...formData, mode: "standard"})}
-          >
-            Standard Update
-          </Button>
-          <Button
-            type="button"
-            variant={formData.mode === "promote_demote" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFormData({...formData, mode: "promote_demote"})}
-          >
-            Promotion/Demotion
-          </Button>
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="plan_id">Subscription Plan</Label>
-          <Select
-            value={formData.plan_id}
-            onValueChange={(value) => handleChange("plan_id", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a plan" />
-            </SelectTrigger>
-            <SelectContent>
-              {plans?.map((plan) => (
-                <SelectItem key={plan.id} value={plan.id}>
-                  <div className="flex items-center justify-between w-full">
-                    <span>{plan.name}</span>
-                    <span className="text-muted-foreground ml-2">${plan.price_monthly}/month</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Plan Comparison Card (only in promote_demote mode) */}
-        {formData.mode === "promote_demote" && selectedPlan && (
-          <Card className={`border-2 ${changeType === "promotion" ? "border-green-200 bg-green-50" : changeType === "demotion" ? "border-orange-200 bg-orange-50" : "border-gray-200"}`}>
-            <CardContent className="p-4">
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                {changeType === "promotion" && <><TrendingUp className="h-4 w-4 text-green-600" /> Promotion</>}
-                {changeType === "demotion" && <><TrendingDown className="h-4 w-4 text-orange-600" /> Demotion</>}
-                {changeType === "no-change" && <><Minus className="h-4 w-4 text-gray-600" /> No Change</>}
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Current Plan</p>
-                  <p className="font-medium">{subscription.plan_name}</p>
-                  <p className="text-sm text-muted-foreground">${currentPlanPrice}/month</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">New Plan</p>
-                  <p className="font-medium">{selectedPlan.name}</p>
-                  <p className="text-sm text-muted-foreground">${newPlanPrice}/month</p>
-                  {changeType !== "no-change" && (
-                    <p className={`text-xs font-medium ${changeType === "promotion" ? "text-green-600" : "text-orange-600"}`}>
-                      {priceDiff > 0 ? "+" : ""}${priceDiff}/month
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {formData.mode === "promote_demote" && (
-          <div className="grid gap-2">
-            <Label htmlFor="reason">Reason for Change *</Label>
-            <textarea
-              id="reason"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={formData.reason}
-              onChange={(e) => handleChange("reason", e.target.value)}
-              placeholder="Explain why you're promoting/demoting this user's subscription..."
-              required
-            />
-          </div>
-        )}
-
-        {formData.mode === "standard" && (
-          <>
-            <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleChange("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
-                  <SelectItem value="past_due">Past Due</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="current_period_end">Renewal Date</Label>
-              <Input
-                id="current_period_end"
-                type="date"
-                value={formData.current_period_end}
-                onChange={(e) => handleChange("current_period_end", e.target.value)}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Current Plan Info */}
-        <Card>
-          <CardContent className="p-4">
-            <h4 className="font-medium mb-2">Current Plan</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>User:</span>
-                <span className="font-medium">
-                  {subscription.display_name || subscription.email}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Current Plan:</span>
-                <span className="font-medium">{subscription.plan_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Current Status:</span>
-                <span className="font-medium">{subscription.status}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? "Updating..."
-            : formData.mode === "promote_demote"
-            ? changeType === "promotion"
-              ? "Promote User"
-              : changeType === "demotion"
-              ? "Demote User"
-              : "Update Plan"
-            : "Update Subscription"}
-        </Button>
-      </DialogFooter>
-    </form>
   );
 }
 
