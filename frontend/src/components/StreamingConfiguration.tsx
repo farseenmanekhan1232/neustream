@@ -581,7 +581,7 @@ function DestinationsList({ sourceId }: { sourceId: string }) {
 
   const deleteMutation = useMutation({
     mutationFn: async (destId: string) => {
-      await apiService.delete(`/destinations/${destId}`);
+      await apiService.delete(`/sources/${sourceId}/destinations/${destId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["destinations", sourceId] });
