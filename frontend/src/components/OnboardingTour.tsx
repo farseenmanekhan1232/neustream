@@ -34,7 +34,7 @@ interface OnboardingStep {
 
 const onboardingSteps: OnboardingStep[] = [
   {
-    title: "Welcome to NeuStream!",
+    title: "Welcome to neustream!",
     description:
       "Let's set up your first stream in just a few simple steps. This will help you get started quickly.",
     icon: Zap,

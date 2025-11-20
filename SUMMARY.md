@@ -1,8 +1,8 @@
-# NeuStream - Complete Architecture Summary
+# neustream - Complete Architecture Summary
 
 ## 🎯 Overview
 
-NeuStream is a comprehensive multi-destination streaming platform that enables content creators to broadcast their live streams simultaneously to multiple platforms. The architecture follows a microservices pattern with dedicated services for control plane operations, media streaming, user interfaces, and platform integrations.
+neustream is a comprehensive multi-destination streaming platform that enables content creators to broadcast their live streams simultaneously to multiple platforms. The architecture follows a microservices pattern with dedicated services for control plane operations, media streaming, user interfaces, and platform integrations.
 
 ## 🏗️ System Architecture
 
@@ -329,6 +329,6 @@ NeuStream is a comprehensive multi-destination streaming platform that enables c
 
 ## 🎯 Conclusion
 
-NeuStream represents a modern, scalable approach to multi-platform streaming with a focus on reliability, performance, and user experience. The architecture is designed to handle growth while maintaining security and performance standards. The system provides a solid foundation for content creators to expand their reach across multiple streaming platforms efficiently.
+neustream represents a modern, scalable approach to multi-platform streaming with a focus on reliability, performance, and user experience. The architecture is designed to handle growth while maintaining security and performance standards. The system provides a solid foundation for content creators to expand their reach across multiple streaming platforms efficiently.
 
-The modular design allows for easy expansion and modification, while the comprehensive monitoring and analytics ensure optimal performance and user satisfaction. With a strong emphasis on security and scalability, NeuStream is well-positioned for future growth and feature enhancements.
+The modular design allows for easy expansion and modification, while the comprehensive monitoring and analytics ensure optimal performance and user satisfaction. With a strong emphasis on security and scalability, neustream is well-positioned for future growth and feature enhancements.

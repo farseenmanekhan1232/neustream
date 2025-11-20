@@ -432,7 +432,7 @@ jobs:
     steps:
       - name: Deployment Summary
         run: |
-          echo "🎉 NeuStream Multi-Source Architecture Deployment Summary"
+          echo "🎉 neustream Multi-Source Architecture Deployment Summary"
           echo "=================================================="
           echo ""
           echo "✅ What was deployed:"

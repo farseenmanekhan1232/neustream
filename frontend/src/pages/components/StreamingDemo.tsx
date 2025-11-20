@@ -154,7 +154,7 @@ const StreamingDemo = () => {
             Interactive Streaming Demo
           </CardTitle>
           <CardDescription>
-            Try out the NeuStream interface without going live. This is a fully
+            Try out the neustream interface without going live. This is a fully
             functional demo that simulates the real streaming experience.
           </CardDescription>
         </CardHeader>

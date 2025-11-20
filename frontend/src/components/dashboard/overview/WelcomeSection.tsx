@@ -45,7 +45,7 @@ const WelcomeSection = memo(function WelcomeSection({
       <CardHeader>
         <CardTitle className="text-2xl max-sm:text-xl">
           {isNewUser
-            ? `Welcome to NeuStream, ${getUserName()}!`
+            ? `Welcome to neustream, ${getUserName()}!`
             : `Welcome back, ${getUserName()}!`}
         </CardTitle>
         <CardDescription>

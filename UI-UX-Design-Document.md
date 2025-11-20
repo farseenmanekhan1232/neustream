@@ -1,4 +1,4 @@
-# NeuStream UI/UX Design Document
+# neustream UI/UX Design Document
 **Comprehensive Product & Experience Analysis for UI/UX Designers**
 
 ---
@@ -21,7 +21,7 @@
 
 ## Executive Summary
 
-NeuStream is a **cloud-based multistreaming platform** that enables content creators to broadcast to multiple streaming platforms (YouTube, Twitch, Facebook, LinkedIn, etc.) simultaneously from a single source. The platform focuses on eliminating performance compromises by offloading video encoding to the cloud, ensuring local machine performance remains unaffected.
+neustream is a **cloud-based multistreaming platform** that enables content creators to broadcast to multiple streaming platforms (YouTube, Twitch, Facebook, LinkedIn, etc.) simultaneously from a single source. The platform focuses on eliminating performance compromises by offloading video encoding to the cloud, ensuring local machine performance remains unaffected.
 
 ### Key Differentiators
 - **Cloud-based encoding** - No local CPU strain
@@ -36,7 +36,7 @@ NeuStream is a **cloud-based multistreaming platform** that enables content crea
 ### Core Value Proposition
 "Stream to all platforms simultaneously without performance compromises"
 
-NeuStream solves a critical problem for content creators: the technical complexity and performance impact of streaming to multiple platforms. Instead of using local resources to encode and stream to each platform separately, NeuStream handles all encoding and distribution in the cloud.
+neustream solves a critical problem for content creators: the technical complexity and performance impact of streaming to multiple platforms. Instead of using local resources to encode and stream to each platform separately, neustream handles all encoding and distribution in the cloud.
 
 ### Business Model
 - **Freemium subscription model** with 3 tiers:
@@ -62,22 +62,22 @@ NeuStream solves a critical problem for content creators: the technical complexi
 #### 1. **Gamers**
 - **Goal**: Stream gameplay to multiple platforms without FPS drops
 - **Pain Points**: Local encoding consumes CPU/GPU resources, causing performance issues
-- **NeuStream Benefit**: Cloud encoding preserves local performance
+- **neustream Benefit**: Cloud encoding preserves local performance
 
 #### 2. **Content Creators**
 - **Goal**: Maximize audience reach across platforms
 - **Pain Points**: Managing multiple streaming setups is complex and time-consuming
-- **NeuStream Benefit**: One setup streams everywhere
+- **neustream Benefit**: One setup streams everywhere
 
 #### 3. **Mobile Creators**
 - **Goal**: Stream from anywhere without powerful hardware
 - **Pain Points**: Mobile devices can't handle multi-stream encoding
-- **NeuStream Benefit**: Cloud-based solution works on any device
+- **neustream Benefit**: Cloud-based solution works on any device
 
 #### 4. **Professional Streamers/Teams**
 - **Goal**: Stream to many platforms with reliability and analytics
 - **Pain Points**: Need enterprise-grade features and support
-- **NeuStream Benefit**: Business plan with dedicated support
+- **neustream Benefit**: Business plan with dedicated support
 
 ### Key Use Cases
 1. **Live Event Streaming** - Stream to all platforms during conferences, concerts, or events
@@ -953,7 +953,7 @@ Step 1: Create First Source → Step 2: Select Platforms → Step 3: Configure D
    - Simpler interface
    - Fewer platforms
 
-### NeuStream's Advantages
+### neustream's Advantages
 - Cloud-based encoding (unique)
 - Performance focus
 - Clean interface
@@ -1001,7 +1001,7 @@ Step 1: Create First Source → Step 2: Select Platforms → Step 3: Configure D
 
 ## Conclusion
 
-NeuStream has a strong foundation with a modern tech stack, clean design, and powerful features. The cloud-based encoding approach is a genuine differentiator that addresses a real pain point for content creators.
+neustream has a strong foundation with a modern tech stack, clean design, and powerful features. The cloud-based encoding approach is a genuine differentiator that addresses a real pain point for content creators.
 
 **Key Strengths**:
 - Clear value proposition
@@ -1021,7 +1021,7 @@ NeuStream has a strong foundation with a modern tech stack, clean design, and po
 - Advanced analytics
 - Mobile application
 
-With focused UX improvements, particularly around onboarding and setup, NeuStream has the potential to significantly reduce the barrier to entry for multistreaming and capture a larger share of the content creator market.
+With focused UX improvements, particularly around onboarding and setup, neustream has the potential to significantly reduce the barrier to entry for multistreaming and capture a larger share of the content creator market.
 
 ---
 

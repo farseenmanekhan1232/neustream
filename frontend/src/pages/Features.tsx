@@ -205,10 +205,10 @@ function Features() {
   return (
     <div className="min-h-screen bg-teal-gradient text-white">
       <Helmet>
-        <title>Features - NeuStream | Advanced Multistreaming Platform</title>
+        <title>Features - neustream | Advanced Multistreaming Platform</title>
         <meta
           name="description"
-          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
+          content="Explore neustream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta
           name="keywords"
@@ -216,22 +216,22 @@ function Features() {
         />
         <meta
           property="og:title"
-          content="Features - NeuStream | Advanced Multistreaming Platform"
+          content="Features - neustream | Advanced Multistreaming Platform"
         />
         <meta
           property="og:description"
-          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
+          content="Explore neustream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Features - NeuStream | Advanced Multistreaming Platform"
+          content="Features - neustream | Advanced Multistreaming Platform"
         />
         <meta
           name="twitter:description"
-          content="Explore NeuStream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
+          content="Explore neustream's powerful features: multi-platform streaming, unified chat management, performance optimization, and enterprise security."
         />
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app/features" />
@@ -258,7 +258,7 @@ function Features() {
                 </TextHighlighter>
               </div>
               <p className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto">
-                Discover how NeuStream's comprehensive feature set helps you
+                Discover how neustream's comprehensive feature set helps you
                 reach more viewers, engage your audience, and grow your
                 streaming presence across all platforms.
               </p>
@@ -398,7 +398,7 @@ function Features() {
               Seamless Platform Integration
             </h2>
             <p className="text-lg opacity-80">
-              NeuStream works with all major streaming platforms and software,
+              neustream works with all major streaming platforms and software,
               ensuring you can reach your audience wherever they are.
             </p>
           </div>
@@ -439,7 +439,7 @@ function Features() {
               Ready to Experience Professional Streaming?
             </h2>
             <p className="text-lg opacity-80 mb-8">
-              Join thousands of creators who trust NeuStream to power their
+              Join thousands of creators who trust neustream to power their
               multi-platform streaming strategy. Start reaching more viewers and
               growing your audience today.
             </p>

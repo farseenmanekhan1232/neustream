@@ -64,7 +64,7 @@ export default function Help() {
         <div className="container mx-auto flex h-14 max-w-screen-2xl items-center px-4 md:px-6 lg:px-8">
           <div className="mr-4 flex">
             <Link to="/" className="mr-6 flex items-center space-x-2">
-              <img src="/logo2.png" alt="NeuStream" className="h-6 w-6" />
+              <img src="/logo2.png" alt="neustream" className="h-6 w-6" />
               <span className="font-semibold tracking-tighter text-lg">neustream.</span>
             </Link>
           </div>
@@ -248,7 +248,7 @@ export default function Help() {
                 <div className="space-y-6">
                   <div>
                     <h1 className="mb-2 text-3xl font-bold">
-                      NeuStream Documentation
+                      neustream Documentation
                     </h1>
                     <p className="text-lg text-muted-foreground">
                       Professional multistreaming made simple.
@@ -256,9 +256,9 @@ export default function Help() {
                   </div>
 
                   <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold">What is NeuStream?</h2>
+                    <h2 className="text-2xl font-semibold">What is neustream?</h2>
                     <p className="leading-7">
-                      NeuStream is a cloud-based multistreaming platform that
+                      neustream is a cloud-based multistreaming platform that
                       enables content creators to broadcast simultaneously to
                       multiple streaming platforms (YouTube, Twitch, Facebook,
                       LinkedIn, and more) from a single source.
@@ -331,7 +331,7 @@ export default function Help() {
                         content: (
                           <>
                             <p className="leading-7">
-                              Sign up for a free NeuStream account. No credit card
+                              Sign up for a free neustream account. No credit card
                               required to get started.
                             </p>
                             <Link to="/auth">
@@ -409,14 +409,14 @@ export default function Help() {
                   <div>
                     <h1 className="mb-2 text-3xl font-bold">Create Account</h1>
                     <p className="text-lg text-muted-foreground">
-                      Set up your NeuStream account to start streaming.
+                      Set up your neustream account to start streaming.
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <h2 className="text-2xl font-semibold">Sign Up Process</h2>
                     <p className="leading-7">
-                      NeuStream offers multiple sign-up options for your convenience.
+                      neustream offers multiple sign-up options for your convenience.
                       You can create an account using your email or connect with your
                       existing social accounts.
                     </p>
@@ -498,7 +498,7 @@ export default function Help() {
                   <div className="space-y-4">
                     <h2 className="text-2xl font-semibold">RTMP Configuration</h2>
                     <p className="leading-7">
-                      NeuStream uses RTMP (Real-Time Messaging Protocol) to receive
+                      neustream uses RTMP (Real-Time Messaging Protocol) to receive
                       your stream. Configure your streaming software with these
                       settings:
                     </p>
@@ -603,7 +603,7 @@ export default function Help() {
                       <li>
                         Select "Custom" as service
                       </li>
-                      <li>Enter your NeuStream RTMP URL and stream key</li>
+                      <li>Enter your neustream RTMP URL and stream key</li>
                       <li>Click "Apply" and "OK"</li>
                     </ol>
                   </div>
@@ -729,7 +729,7 @@ export default function Help() {
                   <div className="space-y-4">
                     <h2 className="text-2xl font-semibold">Connection Steps</h2>
                     <ol className="list-decimal space-y-2 pl-6">
-                      <li>Navigate to your NeuStream dashboard</li>
+                      <li>Navigate to your neustream dashboard</li>
                       <li>Click "Add Destination"</li>
                       <li>
                         Select {activeSection.replace("platform-", "")} from the
@@ -846,7 +846,7 @@ export default function Help() {
                         a: "Typical delay is 5-10 seconds, similar to single-platform streaming. This is normal for all streaming platforms.",
                       },
                       {
-                        q: "Can I use NeuStream on mobile?",
+                        q: "Can I use neustream on mobile?",
                         a: "Yes! Our dashboard is mobile-responsive. You can manage streams and view analytics from any device.",
                       },
                       {
@@ -872,7 +872,7 @@ export default function Help() {
                   <div>
                     <h1 className="mb-2 text-3xl font-bold">API Reference</h1>
                     <p className="text-lg text-muted-foreground">
-                      Integrate NeuStream into your applications.
+                      Integrate neustream into your applications.
                     </p>
                   </div>
 

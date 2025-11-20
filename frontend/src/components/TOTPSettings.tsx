@@ -221,7 +221,7 @@ const TOTPSettings = () => {
   };
 
   const downloadBackupCodes = () => {
-    const content = `NeuStream Backup Codes\nGenerated: ${new Date().toLocaleString()}\n\n${backupCodes.join("\n")}\n\nImportant: Keep these codes in a safe place. Each code can only be used once.`;
+    const content = `neustream Backup Codes\nGenerated: ${new Date().toLocaleString()}\n\n${backupCodes.join("\n")}\n\nImportant: Keep these codes in a safe place. Each code can only be used once.`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

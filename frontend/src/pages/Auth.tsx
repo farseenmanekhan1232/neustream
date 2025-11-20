@@ -77,9 +77,9 @@ function Auth() {
         <div className="max-w-md mx-auto px-4 flex items-center justify-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
-              <img src="/logo.png" alt="NeuStream" className="w-6 h-6" />
+              <img src="/logo.png" alt="neustream" className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-medium text-white">NeuStream</h1>
+            <h1 className="text-2xl font-medium text-white">neustream</h1>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ function Auth() {
               <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 mb-6 sm:mb-8 bg-white/10 rounded-2xl sm:rounded-3xl backdrop-blur-sm border border-white/20">
                 <img
                   src="/logo.png"
-                  alt="NeuStream Logo"
+                  alt="neustream Logo"
                   className="w-12 h-12 sm:w-16 sm:h-16 animate-oscillate"
                 />
               </div>

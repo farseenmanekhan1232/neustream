@@ -23,6 +23,11 @@ const Features = lazy(() => import("./pages/Features.jsx"));
 const Blog = lazy(() => import("./pages/Blog.jsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.jsx"));
 const SetupGuide = lazy(() => import("./pages/SetupGuide.jsx"));
+const Alternatives = lazy(() => import("./pages/Alternatives"));
+const RestreamAlternative = lazy(() => import("./pages/alternatives/RestreamAlternative"));
+const OBSLiveAlternative = lazy(() => import("./pages/alternatives/OBSLiveAlternative"));
+const StreamYardAlternative = lazy(() => import("./pages/alternatives/StreamYardAlternative"));
+const CastrAlternative = lazy(() => import("./pages/alternatives/CastrAlternative"));
 const PublicChatPage = lazy(() => import("./components/PublicChatPage.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
@@ -86,6 +91,13 @@ function AppContent() {
         {/* Legal pages */}
         <Route path="privacy" element={<PrivacyPolicy />} />
         <Route path="terms" element={<TermsOfService />} />
+
+        {/* Alternatives pages */}
+        <Route path="alternatives" element={<Alternatives />} />
+        <Route path="alternatives/restream" element={<RestreamAlternative />} />
+        <Route path="alternatives/obs-live" element={<OBSLiveAlternative />} />
+        <Route path="alternatives/streamyard" element={<StreamYardAlternative />} />
+        <Route path="alternatives/castr" element={<CastrAlternative />} />
 
         {/* Public utilities */}
         <Route path="chat/:sourceId" element={<PublicChatPage />} />

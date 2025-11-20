@@ -32,7 +32,7 @@ import {
 
 const data = {
   user: {
-    name: "NeuStream User",
+    name: "neustream User",
     email: "user@neustream.app",
     avatar: "/logo.png",
   },
@@ -87,7 +87,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   <IconVideo className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">NeuStream</span>
+                  <span className="truncate font-medium">neustream</span>
                   <span className="truncate text-xs">Streaming Platform</span>
                 </div>
               </a>

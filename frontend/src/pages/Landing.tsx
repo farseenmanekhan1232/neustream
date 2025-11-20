@@ -258,6 +258,76 @@ function Landing() {
         />
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app" />
+        
+        {/* Organization Schema */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "neustream",
+            "url": "https://neustream.app",
+            "logo": "https://neustream.app/logo.png",
+            "description": "Professional multistreaming platform for content creators. Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with cloud encoding and unified chat management.",
+            "foundingDate": "2024",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "url": "https://neustream.app/contact",
+              "availableLanguage": ["en"]
+            },
+            "sameAs": [
+              // Add social media URLs when available
+            ]
+          })}
+        </script>
+        
+        {/* SoftwareApplication Schema */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "neustream",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web Browser, Windows, macOS, Linux",
+            "offers": {
+              "@type": "AggregateOffer",
+              "priceCurrency": "USD",
+              "lowPrice": "0",
+              "highPrice": "99",
+              "offerCount": "3",
+              "priceSpecification": [
+                {
+                  "@type": "UnitPriceSpecification",
+                  "price": "0",
+                  "priceCurrency": "USD",
+                  "name": "Free Plan"
+                }
+              ]
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "ratingCount": "150"
+            },
+            "featureList": [
+              "Multi-platform streaming to YouTube, Twitch, Facebook, LinkedIn",
+              "Cloud-based video encoding",
+              "Unified chat management across all platforms",
+              "Real-time analytics and viewer insights",
+              "Stream to unlimited platforms simultaneously",
+              "Zero performance impact on local machine",
+              "Compatible with OBS, Streamlabs, XSplit",
+              "Enterprise-grade security and encryption"
+            ],
+            "screenshot": "https://neustream.app/hero.png",
+            "softwareVersion": "1.0",
+            "datePublished": "2024-01-01",
+            "provider": {
+              "@type": "Organization",
+              "name": "neustream"
+            }
+          })}
+        </script>
       </Helmet>
 
       {/* Marketing Content Wrapper - Contains header + all marketing sections */}

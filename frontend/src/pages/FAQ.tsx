@@ -160,6 +160,24 @@ export default function FAQ() {
           name="twitter:description"
           content="Find answers to frequently asked questions about Neustream's multistreaming platform, pricing, features, and support."
         />
+        
+        {/* FAQPage Schema */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqData.flatMap((category) =>
+              category.questions.map((faq) => ({
+                "@type": "Question",
+                "name": faq.question,
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": faq.answer,
+                },
+              }))
+            ),
+          })}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">

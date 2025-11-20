@@ -93,7 +93,7 @@ class LocationService {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'User-Agent': 'NeuStream/1.0'
+          'User-Agent': 'neustream/1.0'
         }
       });
 

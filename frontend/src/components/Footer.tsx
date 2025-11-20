@@ -174,7 +174,7 @@ function Footer() {
               >
                 <img
                   src="https://startupfa.me/badges/featured/default.webp"
-                  alt="NeuStream - Featured on Startup Fame"
+                  alt="neustream - Featured on Startup Fame"
                   width="85"
                   height="26"
                 />
