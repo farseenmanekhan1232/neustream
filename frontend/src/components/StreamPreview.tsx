@@ -495,7 +495,7 @@ const StreamPreview = ({ streamKey, isActive }) => {
   return (
     <TooltipProvider>
       <Card
-        className="relative group aspect-video bg-black overflow-hidden border-0"
+        className="relative group h-full w-full bg-black overflow-hidden border-0"
         onKeyDown={handleKeyDown}
         tabIndex={0}
         role="application"

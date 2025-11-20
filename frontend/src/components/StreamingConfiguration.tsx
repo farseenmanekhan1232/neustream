@@ -1,40 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
 import {
   Plus,
-  Radio,
-  Play,
-  Pause,
   Settings,
-  Copy,
-  Zap,
-  Check,
-  Eye,
-  EyeOff,
-  Edit2,
   Trash2,
-  ExternalLink,
+  Copy,
   RefreshCw,
-  MessageCircle,
-  MonitorSpeaker,
+  MoreVertical,
   Youtube,
   Twitch,
   Facebook,
+  Globe,
+  Check,
   AlertCircle,
-  ChevronDown,
-  Loader2,
+  Video,
 } from "lucide-react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -42,13 +25,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -56,1171 +39,574 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "../contexts/AuthContext";
-import { usePostHog } from "../hooks/usePostHog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { apiService } from "../services/api";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import ChatConnectorSetup from "./ChatConnectorSetup";
-import StreamConfig from "./StreamConfig";
-import PlatformSelector from "./PlatformSelector";
-import DestinationConfig from "./DestinationConfig";
 
-// Platform configuration
-const platformConfig = {
-  youtube: {
-    name: "YouTube",
-    icon: Youtube,
-    color: "bg-red-500",
-    rtmpUrl: "rtmp://a.rtmp.youtube.com/live2",
-    description: "YouTube Live Streaming",
-    helpUrl: "https://support.google.com/youtube/answer/2907883",
-  },
-  twitch: {
-    name: "Twitch",
-    icon: Twitch,
-    color: "bg-purple-500",
-    rtmpUrl: "rtmp://live.twitch.tv/app",
-    description: "Twitch Live Streaming",
-    helpUrl: "https://help.twitch.tv/s/article/broadcast-guidelines",
-  },
-  facebook: {
-    name: "Facebook",
-    icon: Facebook,
-    color: "bg-blue-500",
-    rtmpUrl: "rtmp://live-api-s.facebook.com:80/rtmp",
-    description: "Facebook Live Streaming",
-    helpUrl: "https://www.facebook.com/business/help/1968268143233387",
-  },
-  custom: {
-    name: "Custom RTMP",
-    icon: Radio,
-    color: "bg-gray-500",
-    rtmpUrl: "",
-    description: "Custom RTMP Server",
-    helpUrl: null,
-  },
-};
+// --- Components ---
 
-function StreamingConfiguration() {
-  const { user } = useAuth();
-  const { trackUIInteraction, trackDestinationEvent } = usePostHog();
+function SourceList({ sources, selectedId, onSelect, onAdd }: any) {
+  return (
+    <div className="w-full md:w-80 border-r border-border/40 bg-card/30 flex flex-col h-[calc(100vh]">
+      <div className="p-4 border-b border-border/40 flex items-center justify-between">
+        <h2 className="font-semibold">Sources</h2>
+        <Button size="sm" variant="ghost" onClick={onAdd}>
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-3 space-y-2">
+          {sources.map((source: any) => (
+            <button
+              key={source.id}
+              onClick={() => onSelect(source.id)}
+              className={cn(
+                "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all",
+                selectedId === source.id
+                  ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                  : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <div className={cn(
+                "h-10 w-10 rounded-md flex items-center justify-center shrink-0",
+                selectedId === source.id ? "bg-primary/20" : "bg-muted"
+              )}>
+                <Video className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{source.name}</div>
+                <div className="text-xs opacity-70 truncate">
+                  {source.destinations_count} destinations
+                </div>
+              </div>
+              {source.is_active && (
+                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+              )}
+            </button>
+          ))}
+          {sources.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No sources found.
+              <br />
+              <Button variant="link" onClick={onAdd} className="mt-2">Create one to get started</Button>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function SourceDetails({ source, onUpdate, onDelete, onRegenerateKey }: any) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!source) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        Select a source to view details
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-[calc(100vh)] overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-border/40 flex items-center justify-between bg-card/10">
+        <div>
+          <h2 className="text-2xl font-bold">{source.name}</h2>
+          <p className="text-muted-foreground text-sm mt-1">
+            Manage your stream configuration and destinations
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => onUpdate(source)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(source.id)}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-6 space-y-8 max-w-4xl">
+          {/* Stream Key Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                RTMP
+              </Badge>
+              Stream Configuration
+            </h3>
+            <div className="grid gap-4 p-4 rounded-xl border border-border/40 bg-card/30">
+              <div className="grid gap-2">
+                <Label>RTMP URL</Label>
+                <div className="flex gap-2">
+                  <Input readOnly value="rtmp://live.neustream.com/app" className="font-mono bg-muted/30" />
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard("rtmp://live.neustream.com/app")}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Stream Key</Label>
+                <div className="flex gap-2">
+                  <Input readOnly value={source.stream_key} type="password" className="font-mono bg-muted/30" />
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard(source.stream_key)}>
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={() => onRegenerateKey(source.id)}>
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Keep this key secret. Anyone with this key can stream to your channel.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="bg-border/40" />
+
+          {/* Destinations Section */}
+          <DestinationsList sourceId={source.id} />
+
+          <Separator className="bg-border/40" />
+
+          {/* Chat Connectors Section */}
+          <ChatConnectorSetup sourceId={source.id} sourceName={source.name} />
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function DestinationsList({ sourceId }: { sourceId: string }) {
   const queryClient = useQueryClient();
-  const [searchParams, _] = useSearchParams();
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
-  // State for UI interactions
-  const [selectedSourceId, setSelectedSourceId] = useState(null);
-  const [showAddSourceDialog, setShowAddSourceDialog] = useState(false);
-  const [showSwitchSourceDialog, setShowSwitchSourceDialog] = useState(false);
-  const [showManageSourceDialog, setShowManageSourceDialog] = useState(false);
-  const [showAddDestinationDialog, setShowAddDestinationDialog] =
-    useState(false);
-  const [addDestinationStep, setAddDestinationStep] = useState(1); // Step 1: Platform, Step 2: Configuration
-  const [copiedField, setCopiedField] = useState(null);
-
-  // Form state
-  const [sourceFormData, setSourceFormData] = useState({
-    name: "",
-    description: "",
+  const { data: destinations, isLoading, error } = useQuery({
+    queryKey: ["destinations", sourceId],
+    queryFn: async () => {
+      const res = await apiService.get(`/sources/${sourceId}/destinations`);
+      // Handle different possible response structures
+      const destData = res?.destinations || res?.data?.destinations || res || [];
+      return destData;
+    },
   });
 
-  const [destinationFormData, setDestinationFormData] = useState({
-    platform: "youtube",
-    rtmpUrl: platformConfig.youtube.rtmpUrl,
-    streamKey: "",
+  const deleteMutation = useMutation({
+    mutationFn: async (destId: string) => {
+      await apiService.delete(`/destinations/${destId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["destinations", sourceId] });
+      toast.success("Destination removed");
+    },
+    onError: (error: any) => {
+      console.error('Delete error:', error);
+      toast.error(error?.message || "Failed to remove destination");
+    }
   });
 
-  // Fetch stream sources
-  const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
+  const getPlatformIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "youtube": return <Youtube className="h-5 w-5 text-red-500" />;
+      case "twitch": return <Twitch className="h-5 w-5 text-purple-500" />;
+      case "facebook": return <Facebook className="h-5 w-5 text-blue-500" />;
+      default: return <Globe className="h-5 w-5 text-muted-foreground" />;
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Destinations</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Platforms where your stream will be broadcasted.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setIsAddOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Destination
+        </Button>
+      </div>
+
+      <div className="grid gap-3">
+        {isLoading ? (
+          <div className="text-center py-4 text-muted-foreground">Loading destinations...</div>
+        ) : error ? (
+          <div className="text-center py-8 border border-destructive/50 rounded-xl bg-destructive/10">
+            <p className="text-destructive">Error loading destinations</p>
+            <p className="text-xs text-muted-foreground mt-1">{(error as any)?.message || 'Unknown error'}</p>
+          </div>
+        ) : !destinations || destinations.length === 0 ? (
+          <div className="text-center py-8 border border-dashed border-border/50 rounded-xl bg-card/10">
+            <p className="text-muted-foreground">No destinations configured.</p>
+            <Button variant="link" onClick={() => setIsAddOpen(true)}>Add your first destination</Button>
+          </div>
+        ) : (
+          Array.isArray(destinations) && destinations.map((dest: any) => {
+            // API returns: platform, rtmp_url, stream_key, is_active
+            const platform = dest.platform || dest.type || 'custom';
+            const url = dest.rtmp_url || dest.stream_url || dest.url || 'N/A';
+            const displayName = dest.name || `${platform.charAt(0).toUpperCase() + platform.slice(1)} Destination`;
+            
+            return (
+              <div
+                key={dest.id}
+                className="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-card/30 hover:bg-card/50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
+                    {getPlatformIcon(platform)}
+                  </div>
+                  <div>
+                    <div className="font-medium flex items-center gap-2">
+                      {displayName}
+                      <Badge variant="secondary" className="text-[10px] h-5 bg-muted/50">
+                        {platform}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate max-w-[300px] flex items-center gap-1 mt-0.5">
+                      <span className="opacity-70">Target:</span>
+                      <code className="bg-muted/30 px-1 rounded">{url}</code>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Removed toggle as requested */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        className="text-red-500 focus:text-red-500" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteMutation.mutate(dest.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove Destination
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <AddDestinationDialog
+        open={isAddOpen}
+        onOpenChange={setIsAddOpen}
+        sourceId={sourceId}
+      />
+    </div>
+  );
+}
+
+function AddDestinationDialog({ open, onOpenChange, sourceId }: any) {
+  const queryClient = useQueryClient();
+  const [platform, setPlatform] = useState("youtube");
+  const [url, setUrl] = useState("");
+  const [key, setKey] = useState("");
+
+  // Platform-specific RTMP URLs
+  const PLATFORM_RTMP_URLS: Record<string, string> = {
+    youtube: "rtmp://a.rtmp.youtube.com/live2",
+    twitch: "rtmp://live.twitch.tv/app",
+    facebook: "rtmp://live-api-s.facebook.com:80/rtmp/",
+    custom: "",
+  };
+
+  // Auto-fill RTMP URL when platform changes
+  React.useEffect(() => {
+    setUrl(PLATFORM_RTMP_URLS[platform] || "");
+  }, [platform]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!url || !key) throw new Error("URL and Stream Key are required");
+      // Backend expects camelCase: rtmpUrl and streamKey (not rtmp_url and stream_key)
+      await apiService.post(`/sources/${sourceId}/destinations`, {
+        platform,
+        rtmpUrl: url,  // Backend expects 'rtmpUrl' in camelCase
+        streamKey: key, // Backend expects 'streamKey' in camelCase
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["destinations", sourceId] });
+      onOpenChange(false);
+      toast.success("Destination added successfully");
+      setUrl("");
+      setKey("");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to add destination");
+    }
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Destination</DialogTitle>
+          <DialogDescription>
+            Stream to multiple platforms simultaneously.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label>Platform</Label>
+            <Select value={platform} onValueChange={setPlatform}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="twitch">Twitch</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="custom">Custom RTMP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>RTMP URL</Label>
+            <Input 
+              placeholder="rtmp://live.twitch.tv/app" 
+              value={url} 
+              onChange={(e) => setUrl(e.target.value)}
+              autoComplete="off"
+            />
+            <p className="text-xs text-muted-foreground">
+              The RTMP server URL for your streaming platform
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <Label>Stream Key</Label>
+            <Input 
+              type="password" 
+              placeholder="••••••••" 
+              value={key} 
+              onChange={(e) => setKey(e.target.value)}
+              autoComplete="new-password"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your platform-specific stream key
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? "Adding..." : "Add Destination"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddSourceDialog({ open, onOpenChange }: any) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!name) throw new Error("Name is required");
+      await apiService.post("/sources", { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["streamSources"] });
+      onOpenChange(false);
+      toast.success("Source created");
+      setName("");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create source");
+    }
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Source</DialogTitle>
+          <DialogDescription>
+            Create a new RTMP source to stream to.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label>Source Name</Label>
+            <Input placeholder="OBS Studio" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? "Creating..." : "Create Source"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UpdateSourceDialog({ open, onOpenChange, source }: any) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(source?.name || "");
+
+  // Update name when source changes
+  if (source && name === "" && open) {
+     // This is a bit hacky, better to use useEffect or key
+  }
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!name) throw new Error("Name is required");
+      await apiService.put(`/sources/${source.id}`, { name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["streamSources"] });
+      onOpenChange(false);
+      toast.success("Source updated");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update source");
+    }
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Source</DialogTitle>
+          <DialogDescription>
+            Rename your stream source.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label>Source Name</Label>
+            <Input 
+              placeholder="OBS Studio" 
+              defaultValue={source?.name} 
+              onChange={(e) => setName(e.target.value)} 
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? "Updating..." : "Update Source"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- Main Page Component ---
+
+export default function StreamingConfiguration() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
+  const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
+  const [sourceToUpdate, setSourceToUpdate] = useState<any>(null);
+
+  const { data: sourcesData, isLoading } = useQuery({
     queryKey: ["streamSources", user?.id],
     queryFn: async () => {
       const response = await apiService.get("/sources");
       return response;
     },
     enabled: !!user,
-    refetchInterval: 10000, // Refresh every 10 seconds
-  });
-
-  // Fetch destinations for selected source
-  const { data: destinationsData, isLoading: destinationsLoading } = useQuery({
-    queryKey: ["sourceDestinations", selectedSourceId],
-    queryFn: async () => {
-      if (!selectedSourceId) return { destinations: [] };
-      const response = await apiService.get(`/sources/${selectedSourceId}`);
-      return response;
-    },
-    enabled: !!user && !!selectedSourceId,
-    refetchInterval: 5000, // Refresh destinations more frequently
   });
 
   const sources = sourcesData?.sources || [];
-  const destinations = destinationsData?.destinations || [];
-  const currentSource = sources.find((s) => s.id === selectedSourceId);
-  const isUsingSources = sources.length > 0;
-  const hasSources = sources.length > 0;
 
-  // Auto-select first source if available and no source is selected
-  useEffect(() => {
-    if (sources.length > 0 && !selectedSourceId) {
-      setSelectedSourceId(sources[0].id);
-    } else if (sources.length === 0) {
-      setSelectedSourceId(null);
-    }
-  }, [sources, selectedSourceId]);
-
-  // Handle URL parameter for source selection
-  useEffect(() => {
-    const urlSourceId = searchParams.get("source");
-    if (urlSourceId && sources.find((s) => s.id === urlSourceId)) {
-      setSelectedSourceId(urlSourceId);
-    }
-  }, [searchParams, sources]);
-
-  // Handle OAuth success redirect
-  useEffect(() => {
-    const oauthSuccess = searchParams.get("oauth_success");
-    const platform = searchParams.get("platform");
-
-    if (oauthSuccess === "true" && platform && selectedSourceId) {
-      // Show success message
-      toast.success(
-        `${
-          platform.charAt(0).toUpperCase() + platform.slice(1)
-        } account connected successfully!`,
-      );
-
-      // Clear the OAuth parameters from URL
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete("oauth_success");
-      newSearchParams.delete("platform");
-      window.history.replaceState(
-        {},
-        "",
-        `${window.location.pathname}?${newSearchParams.toString()}`,
-      );
-
-      // Refresh the chat connectors query
-      queryClient.invalidateQueries(["chatConnectors", selectedSourceId]);
-    }
-  }, [searchParams, selectedSourceId, queryClient]);
-
-  // Create source mutation
-  const createSourceMutation = useMutation({
-    mutationFn: async (data) => {
-      const response = await apiService.post("/sources", data);
-      return response;
-    },
-    onSuccess: (response) => {
-      toast.success("Stream source created successfully!");
-      setShowAddSourceDialog(false);
-      setSourceFormData({ name: "", description: "" });
-      queryClient.invalidateQueries(["streamSources"]);
-
-      // Auto-select the new source
-      setSelectedSourceId(response.source.id);
-
-      trackUIInteraction("stream_source_created", "click", {
-        source_id: response.source.id,
-        source_name: response.source.name,
-      });
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.error || "Failed to create stream source",
-      );
-    },
-  });
-
-  // Update source mutation
-  const updateSourceMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const response = await apiService.put(`/sources/${id}`, data);
-      return response;
-    },
-    onSuccess: () => {
-      toast.success("Stream source updated successfully!");
-      setShowManageSourceDialog(false);
-      queryClient.invalidateQueries(["streamSources"]);
-
-      trackUIInteraction("stream_source_updated", "click", {
-        source_id: selectedSourceId,
-      });
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.error || "Failed to update stream source",
-      );
-    },
-  });
-
-  // Delete source mutation
-  const deleteSourceMutation = useMutation({
-    mutationFn: async (id) => {
-      const response = await apiService.delete(`/sources/${id}`);
-      return response;
-    },
-    onSuccess: () => {
-      toast.success("Stream source deleted successfully!");
-      setShowManageSourceDialog(false);
-      queryClient.invalidateQueries(["streamSources"]);
-
-      // Select another source if available
-      const remainingSources = sources.filter((s) => s.id !== selectedSourceId);
-      if (remainingSources.length > 0) {
-        setSelectedSourceId(remainingSources[0].id);
-      } else {
-        setSelectedSourceId(null);
-      }
-
-      trackUIInteraction("stream_source_deleted", "click", {
-        source_id: selectedSourceId,
-      });
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.error || "Failed to delete stream source",
-      );
-    },
-  });
-
-  // Regenerate stream key mutation
-  const regenerateKeyMutation = useMutation({
-    mutationFn: async (id) => {
-      const response = await apiService.post(`/sources/${id}/regenerate-key`);
-      return response;
-    },
-    onSuccess: () => {
-      toast.success("Stream key regenerated successfully!");
-      queryClient.invalidateQueries(["streamSources"]);
-
-      trackUIInteraction("stream_key_regenerated", "click", {
-        source_id: selectedSourceId,
-      });
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.error || "Failed to regenerate stream key",
-      );
-    },
-  });
-
-  // Add destination mutation
-  const addDestinationMutation = useMutation({
-    mutationFn: async (destination) => {
-      const response = await apiService.post(
-        `/sources/${selectedSourceId}/destinations`,
-        destination,
-      );
-      return response;
-    },
-    onSuccess: (data) => {
-      trackDestinationEvent(data.destination.id, "destination_added", {
-        platform: destinationFormData.platform,
-        rtmp_url: destinationFormData.rtmpUrl,
-        source_id: selectedSourceId,
-        source_name: currentSource?.name,
-      });
-
-      setDestinationFormData({
-        platform: "youtube",
-        rtmpUrl: platformConfig.youtube.rtmpUrl,
-        streamKey: "",
-      });
-      setShowAddDestinationDialog(false);
-
-      // Invalidate destinations query
-      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-
-      toast.success("Destination added successfully!");
-    },
-    onError: (error) => {
-      trackDestinationEvent(null, "destination_add_failed", {
-        platform: destinationFormData.platform,
-        error: error.message,
-        source_id: selectedSourceId,
-      });
-      toast.error(error.response?.data?.error || "Failed to add destination");
-    },
-  });
-
-  // Delete destination mutation
-  const deleteDestinationMutation = useMutation({
-    mutationFn: async (id) => {
-      const response = await apiService.delete(
-        `/sources/${selectedSourceId}/destinations/${id}`,
-      );
-      return response;
-    },
-    onSuccess: (_, id) => {
-      trackDestinationEvent(id, "destination_removed", {
-        source_id: selectedSourceId,
-        source_name: currentSource?.name,
-      });
-
-      // Invalidate destinations query
-      queryClient.invalidateQueries(["sourceDestinations", selectedSourceId]);
-
-      toast.success("Destination removed successfully!");
-    },
-    onError: (error, id) => {
-      trackDestinationEvent(id, "destination_remove_failed", {
-        error: error.message,
-        source_id: selectedSourceId,
-      });
-      toast.error(
-        error.response?.data?.error || "Failed to remove destination",
-      );
-    },
-  });
-
-  // Copy to clipboard function
-  const copyToClipboard = async (text, field) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      toast.success(`${field} copied to clipboard!`);
-
-      trackUIInteraction(
-        `copy_${field.toLowerCase().replace(/\s+/g, "_")}`,
-        "click",
-        {
-          field_type: field,
-          content_length: text.length,
-        },
-      );
-
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      toast.error("Failed to copy to clipboard");
-    }
-  };
-
-  // Handle copy from StreamConfig component
-  const handleStreamConfigCopy = (field, text) => {
-    trackUIInteraction(
-      `copy_${field.toLowerCase().replace(/\s+/g, "_")}`,
-      "click",
-      {
-        field_type: field,
-        content_length: text.length,
-      },
-    );
-  };
-
-  // Handle platform selection change
-  const handlePlatformChange = (platform) => {
-    const config = platformConfig[platform];
-    setDestinationFormData({
-      ...destinationFormData,
-      platform,
-      rtmpUrl: config.rtmpUrl,
-    });
-    trackUIInteraction("platform_selection", "change", {
-      selected_platform: platform,
-    });
-  };
-
-  // Handle step navigation for Add Destination dialog
-  const handleNextStep = () => {
-    if (addDestinationStep === 1) {
-      setAddDestinationStep(2);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (addDestinationStep === 2) {
-      setAddDestinationStep(1);
-    }
-  };
-
-  const handleCloseAddDestinationDialog = () => {
-    setShowAddDestinationDialog(false);
-    setAddDestinationStep(1);
-    setDestinationFormData({
-      platform: "youtube",
-      rtmpUrl: platformConfig.youtube.rtmpUrl,
-      streamKey: "",
-    });
-  };
-
-  // Handle form submissions
-  const handleCreateSource = () => {
-    if (!sourceFormData.name.trim()) {
-      toast.error("Source name is required");
-      return;
-    }
-
-    createSourceMutation.mutate({
-      name: sourceFormData.name.trim(),
-      description: sourceFormData.description.trim(),
-    });
-  };
-
-  const handleUpdateSource = () => {
-    if (!sourceFormData.name.trim()) {
-      toast.error("Source name is required");
-      return;
-    }
-
-    updateSourceMutation.mutate({
-      id: selectedSourceId,
-      data: {
-        name: sourceFormData.name.trim(),
-        description: sourceFormData.description.trim(),
-        is_active: currentSource.is_active,
-      },
-    });
-  };
-
-  const handleAddDestination = (e) => {
-    e.preventDefault();
-    trackUIInteraction("add_destination_form", "submit", {
-      platform: destinationFormData.platform,
-    });
-    addDestinationMutation.mutate(destinationFormData);
-  };
-
-  const handleDeleteSource = () => {
-    if (currentSource.is_active) {
-      toast.error("Cannot delete an active stream source");
-      return;
-    }
-
-    if (
-      window.confirm(
-        "Are you sure you want to delete this stream source? This action cannot be undone and will remove all associated destinations.",
-      )
-    ) {
-      deleteSourceMutation.mutate(selectedSourceId);
-    }
-  };
-
-  const handleRegenerateKey = () => {
-    if (currentSource.is_active) {
-      toast.error("Cannot regenerate stream key while source is active");
-      return;
-    }
-
-    if (
-      window.confirm(
-        "Are you sure you want to regenerate the stream key? Your current stream key will stop working immediately.",
-      )
-    ) {
-      regenerateKeyMutation.mutate(selectedSourceId);
-    }
-  };
-
-  // Open manage source dialog with current source data
-  const openManageSourceDialog = () => {
-    if (!currentSource) return;
-
-    setSourceFormData({
-      name: currentSource.name,
-      description: currentSource.description || "",
-    });
-    setShowManageSourceDialog(true);
-  };
-  const isLoading = sourcesLoading || destinationsLoading;
-
-  if (isLoading) {
-    return (
-      <div className="w-full px-6 py-6 space-y-6  mx-auto">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-64 animate-pulse mt-2"></div>
-            </div>
-            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="h-32 bg-muted rounded animate-pulse"></div>
-            <div className="h-64 bg-muted rounded animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-    );
+  // Auto-select first source
+  if (!selectedSourceId && sources.length > 0) {
+    setSelectedSourceId(sources[0].id);
   }
 
+  const selectedSource = sources.find((s: any) => s.id === selectedSourceId);
+
+  const deleteSourceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiService.delete(`/sources/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["streamSources"] });
+      toast.success("Source deleted");
+      setSelectedSourceId(null);
+    },
+    onError: () => {
+      toast.error("Failed to delete source");
+    }
+  });
+
+  const regenerateKeyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiService.post(`/sources/${id}/regenerate-key`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["streamSources"] });
+      toast.success("Stream key regenerated");
+    },
+    onError: () => {
+      toast.error("Failed to regenerate key");
+    }
+  });
+
+  if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+
   return (
-    <div className="w-full px-4 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-normal text-foreground">
-            Streaming Configuration
-          </h1>
-          <p className="text-muted-foreground">
-            Configure your stream sources and destinations
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setShowAddSourceDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Source
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4">
-        <div className="lg:col-span-3 flex flex-col gap-3">
-          {/* Current Source Selection */}
-          {isUsingSources && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <MonitorSpeaker className="h-5 w-5 text-primary" />
-                      Current Source
-                    </CardTitle>
-                    <CardDescription>
-                      Configure destinations for the selected stream source
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowSwitchSourceDialog(true)}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Switch Source
-                    </Button>
-                    <Button variant="outline" onClick={openManageSourceDialog}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {currentSource ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`p-3 rounded-lg ${
-                          currentSource.is_active
-                            ? "bg-green-100"
-                            : "bg-gray-100"
-                        }`}
-                      >
-                        <MonitorSpeaker
-                          className={`h-8 w-8 ${
-                            currentSource.is_active
-                              ? "text-green-600"
-                              : "text-gray-600"
-                          }`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold">
-                          {currentSource.name}
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {currentSource.description || "No description"}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <Badge
-                            variant={
-                              currentSource.is_active ? "default" : "secondary"
-                            }
-                          >
-                            {currentSource.is_active ? (
-                              <>
-                                <Play className="h-3 w-3 mr-1" />
-                                Live
-                              </>
-                            ) : (
-                              <>
-                                <Pause className="h-3 w-3 mr-1" />
-                                Offline
-                              </>
-                            )}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {destinations.length} destination
-                            {destinations.length !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stream Configuration */}
-                    <div className="border-t pt-4">
-                      <StreamConfig
-                        streamKey={currentSource.stream_key}
-                        onCopy={handleStreamConfigCopy}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <MonitorSpeaker className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      No Stream Sources
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      Create your first stream source to start configuring
-                      destinations
-                    </p>
-                    <Button onClick={() => setShowAddSourceDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Source
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Destinations Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Destinations</CardTitle>
-                  <CardDescription>
-                    {isUsingSources
-                      ? `Configure platforms for "${
-                          currentSource?.name || "selected source"
-                        }"`
-                      : "Create a stream source first to configure destinations"}
-                  </CardDescription>
-                </div>
-                <Button
-                  onClick={() => {
-                    if (!isUsingSources || !currentSource) {
-                      toast.error(
-                        "Create a stream source first before adding destinations",
-                      );
-                      return;
-                    }
-                    setShowAddDestinationDialog(true);
-                  }}
-                  disabled={!isUsingSources || !currentSource}
-                  title={
-                    !isUsingSources || !currentSource
-                      ? "Create a stream source first"
-                      : "Add destination"
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Destination
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {!isUsingSources || !currentSource ? (
-                <EmptyState
-                  icon="source"
-                  title="No Stream Source Available"
-                  description="Create a stream source first before you can configure destinations for multi-platform broadcasting."
-                  actionLabel="Create Your First Source"
-                  onAction={() => setShowAddSourceDialog(true)}
-                  secondaryActionLabel="Learn More"
-                  onSecondaryAction={() => {
-                    window.open("/help", "_blank");
-                  }}
-                />
-              ) : destinations.length === 0 ? (
-                <EmptyState
-                  icon="platform"
-                  title="No Destinations Configured"
-                  description={`Add streaming platforms to ${currentSource.name} to start broadcasting to multiple destinations.`}
-                  actionLabel="Add Your First Destination"
-                  onAction={() => {
-                    if (!isUsingSources || !currentSource) {
-                      toast.error(
-                        "Create a stream source first before adding destinations",
-                      );
-                      return;
-                    }
-                    setShowAddDestinationDialog(true);
-                  }}
-                  secondaryActionLabel="View Integration Guide"
-                  onSecondaryAction={() => {
-                    window.open("/help", "_blank");
-                  }}
-                />
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {destinations.map((destination) => {
-                    const config =
-                      platformConfig[destination.platform] ||
-                      platformConfig.custom;
-                    const Icon = config.icon;
-
-                    return (
-                      <Card
-                        key={destination.id}
-                        className="group hover:border-primary/50 transition-colors"
-                      >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`p-2 rounded-lg ${config.color} text-white`}
-                            >
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-base">
-                                {config.name}
-                              </CardTitle>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={
-                              destination.is_active ? "default" : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {destination.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">
-                              RTMP URL
-                            </label>
-                            <div className="flex items-center space-x-2">
-                              <code className="flex-1 text-xs font-mono bg-muted px-2 py-1 rounded truncate">
-                                {destination.rtmp_url}
-                              </code>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  copyToClipboard(
-                                    destination.rtmp_url,
-                                    `${config.name} RTMP URL`,
-                                  )
-                                }
-                                className="h-6 w-6"
-                              >
-                                {copiedField === `${config.name} RTMP URL` ? (
-                                  <Check className="h-3 w-3 text-green-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end space-x-2">
-                            {config.helpUrl && (
-                              <Button variant="ghost" size="sm" asChild>
-                                <a
-                                  href={config.helpUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs"
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Help
-                                </a>
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                deleteDestinationMutation.mutate(destination.id)
-                              }
-                              disabled={deleteDestinationMutation.isPending}
-                              className="text-destructive hover:text-destructive text-xs"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Remove
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:col-span-1">
-          {/* Chat Connectors Section */}
-          {isUsingSources && currentSource ? (
-            <ChatConnectorSetup
-              sourceId={currentSource.id}
-              sourceName={currentSource.name}
-            />
-          ) : (
-            /* Live Chat Section - Empty State */
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center">
-                    <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-                    Live Chat
-                  </span>
-                </CardTitle>
-                <CardDescription>
-                  Engage with your audience in real-time
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center h-[400px] text-center space-y-4">
-                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
-                  <MessageCircle className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">
-                    All your chats appear here
-                  </h3>
-                  <p className="text-sm text-muted-foreground max-w-[250px]">
-                    Add a source first
-                  </p>
-                </div>
-                <Button
-                  variant="default"
-                  onClick={() => setShowAddSourceDialog(true)}
-                  className="mt-4"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Source
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Add Source Dialog */}
-      <Dialog open={showAddSourceDialog} onOpenChange={setShowAddSourceDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Stream Source</DialogTitle>
-            <DialogDescription>
-              Create a new streaming source with its own stream key and
-              destinations
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="source-name">Source Name</Label>
-              <Input
-                id="source-name"
-                placeholder="e.g., Main Gaming Stream, Backup Stream, Chat Only"
-                value={sourceFormData.name}
-                onChange={(e) =>
-                  setSourceFormData({ ...sourceFormData, name: e.target.value })
-                }
-                maxLength={255}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="source-description">Description (Optional)</Label>
-              <Textarea
-                id="source-description"
-                placeholder="Describe what this stream source is used for..."
-                value={sourceFormData.description}
-                onChange={(e) =>
-                  setSourceFormData({
-                    ...sourceFormData,
-                    description: e.target.value,
-                  })
-                }
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAddSourceDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateSource}
-              disabled={createSourceMutation.isPending}
-            >
-              {createSourceMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              Create Source
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Switch Source Dialog */}
-      <Dialog
-        open={showSwitchSourceDialog}
-        onOpenChange={setShowSwitchSourceDialog}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Switch Stream Source</DialogTitle>
-            <DialogDescription>
-              Select which source to configure destinations for
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            {sources.map((source) => (
-              <div
-                key={source.id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  source.id === selectedSourceId
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
-                }`}
-                onClick={() => {
-                  setSelectedSourceId(source.id);
-                  setShowSwitchSourceDialog(false);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        source.is_active ? "bg-green-100" : "bg-gray-100"
-                      }`}
-                    >
-                      <MonitorSpeaker
-                        className={`h-5 w-5 ${
-                          source.is_active ? "text-green-600" : "text-gray-600"
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium">{source.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {source.destinations_count} destination
-                        {source.destinations_count !== 1 ? "s" : ""}
-                        {source.is_active && " • Currently Active"}
-                      </div>
-                    </div>
-                  </div>
-                  {source.id === selectedSourceId && (
-                    <Check className="h-5 w-5 text-primary" />
-                  )}
-                </div>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => {
-                setShowSwitchSourceDialog(false);
-                setShowAddSourceDialog(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Source
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Manage Source Dialog */}
-      <Dialog
-        open={showManageSourceDialog}
-        onOpenChange={setShowManageSourceDialog}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Manage Stream Source</DialogTitle>
-            <DialogDescription>
-              Modify your stream source settings and configuration
-            </DialogDescription>
-          </DialogHeader>
-          {currentSource && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="manage-name">Source Name</Label>
-                <Input
-                  id="manage-name"
-                  value={sourceFormData.name}
-                  onChange={(e) =>
-                    setSourceFormData({
-                      ...sourceFormData,
-                      name: e.target.value,
-                    })
-                  }
-                  maxLength={255}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="manage-description">Description</Label>
-                <Textarea
-                  id="manage-description"
-                  value={sourceFormData.description}
-                  onChange={(e) =>
-                    setSourceFormData({
-                      ...sourceFormData,
-                      description: e.target.value,
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>Status</Label>
-                <Badge
-                  variant={currentSource.is_active ? "default" : "secondary"}
-                >
-                  {currentSource.is_active ? "Currently Active" : "Offline"}
-                </Badge>
-              </div>
-
-              {/* Stream Configuration */}
-              <div className="border-t pt-4">
-                <StreamConfig
-                  streamKey={currentSource.stream_key}
-                  showRegenerateButton={true}
-                  onRegenerate={() =>
-                    regenerateKeyMutation.mutate(selectedSourceId)
-                  }
-                  isRegenerating={regenerateKeyMutation.isPending}
-                  canRegenerate={!currentSource.is_active}
-                  size="compact"
-                  onCopy={handleStreamConfigCopy}
-                />
-              </div>
-
-              {/* Danger Zone */}
-              <div className="border-t pt-4">
-                <Label className="text-sm font-medium text-destructive">
-                  Danger Zone
-                </Label>
-                <div className="mt-2 space-y-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRegenerateKey}
-                    disabled={
-                      regenerateKeyMutation.isPending || currentSource.is_active
-                    }
-                    className="w-full justify-start"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Regenerate Stream Key
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleDeleteSource}
-                    disabled={
-                      deleteSourceMutation.isPending || currentSource.is_active
-                    }
-                    className="w-full justify-start"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Source
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowManageSourceDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateSource}
-              disabled={updateSourceMutation.isPending}
-            >
-              {updateSourceMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Destination Dialog */}
-      <Dialog
-        open={showAddDestinationDialog}
-        onOpenChange={handleCloseAddDestinationDialog}
-      >
-        <DialogContent
-          className={addDestinationStep === 1 ? "max-w-2xl" : "max-w-md"}
-        >
-          <DialogHeader>
-            <DialogTitle>Add New Destination</DialogTitle>
-            <DialogDescription>
-              {addDestinationStep === 1
-                ? `Select a platform to broadcast "${currentSource?.name || "your stream"}"`
-                : `Configure your ${platformConfig[destinationFormData.platform]?.name} destination`}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleAddDestination} className="space-y-6">
-            {addDestinationStep === 1 ? (
-              <PlatformSelector
-                platformConfig={platformConfig}
-                selectedPlatform={destinationFormData.platform}
-                onPlatformChange={handlePlatformChange}
-              />
-            ) : (
-              <DestinationConfig
-                platform={destinationFormData.platform}
-                rtmpUrl={destinationFormData.rtmpUrl}
-                streamKey={destinationFormData.streamKey}
-                onRtmpUrlChange={(value) =>
-                  setDestinationFormData({
-                    ...destinationFormData,
-                    rtmpUrl: value,
-                  })
-                }
-                onStreamKeyChange={(value) =>
-                  setDestinationFormData({
-                    ...destinationFormData,
-                    streamKey: value,
-                  })
-                }
-                onCopy={copyToClipboard}
-                platformConfig={platformConfig}
-                copiedField={copiedField}
-              />
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={
-                  addDestinationStep === 1
-                    ? handleCloseAddDestinationDialog
-                    : handlePreviousStep
-                }
-              >
-                {addDestinationStep === 1 ? "Cancel" : "Back"}
-              </Button>
-              <Button
-                type={addDestinationStep === 2 ? "submit" : "button"}
-                onClick={addDestinationStep === 1 ? handleNextStep : undefined}
-                disabled={
-                  addDestinationStep === 2 &&
-                  (addDestinationMutation.isPending ||
-                    !destinationFormData.streamKey)
-                }
-              >
-                {addDestinationStep === 1 ? (
-                  "Next"
-                ) : addDestinationMutation.isPending ? (
-                  <>
-                    <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                    Adding...
-                  </>
-                ) : (
-                  "Add Destination"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+    <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-background">
+      <SourceList
+        sources={sources}
+        selectedId={selectedSourceId}
+        onSelect={setSelectedSourceId}
+        onAdd={() => setIsAddSourceOpen(true)}
+      />
+      <SourceDetails
+        source={selectedSource}
+        onUpdate={(source: any) => setSourceToUpdate(source)}
+        onDelete={(id: string) => deleteSourceMutation.mutate(id)}
+        onRegenerateKey={(id: string) => regenerateKeyMutation.mutate(id)}
+      />
+      <AddSourceDialog open={isAddSourceOpen} onOpenChange={setIsAddSourceOpen} />
+      {sourceToUpdate && (
+        <UpdateSourceDialog 
+          open={!!sourceToUpdate} 
+          onOpenChange={(open: boolean) => !open && setSourceToUpdate(null)} 
+          source={sourceToUpdate} 
+        />
+      )}
     </div>
   );
 }
-
-export default StreamingConfiguration;

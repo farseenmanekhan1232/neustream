@@ -2,68 +2,61 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  MonitorSpeaker,
-  ChevronLeft,
-  ChevronRight,
-  MessageCircle,
-  Users,
-  Send,
-  Smile,
+  Monitor,
+  MessageSquare,
   Settings,
-  Crown,
   Share2,
   Maximize2,
   Volume2,
   VolumeX,
+  Radio,
+  LayoutTemplate,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import StreamPreview from "./StreamPreview";
 import LiveChat from "./LiveChat";
 import OnboardingTour, { useOnboarding } from "./OnboardingTour";
 import { useAuth } from "../contexts/AuthContext";
 import { usePostHog } from "../hooks/usePostHog";
 import { apiService } from "../services/api";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 function StreamPreviewPage() {
   const { user } = useAuth();
-  const [selectedSourceId, setSelectedSourceId] = useState(null);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [chatMessage, setChatMessage] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const { trackUIInteraction } = usePostHog();
   const { showOnboarding, completeOnboarding } = useOnboarding();
 
   // Fetch stream sources
   const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
-    queryKey: ["streamSources", user.id],
+    queryKey: ["streamSources", user?.id],
     queryFn: async () => {
       const response = await apiService.get("/sources");
       return response;
     },
     enabled: !!user,
-    refetchInterval: 10000, // Refresh every 10 seconds for live status
+    refetchInterval: 10000,
   });
 
   const sources = sourcesData?.sources || [];
-  const activeSources = sources.filter((source) => source.is_active);
+  const activeSources = sources.filter((source: any) => source.is_active);
 
-  // Auto-select first active source if none selected
-  const selectedSource = selectedSourceId
-    ? activeSources.find((source) => source.id === selectedSourceId) ||
-      activeSources[0]
-    : activeSources[0];
-
-  // Update selected source when active sources change
+  // Auto-select first active source
   useEffect(() => {
     if (activeSources.length > 0 && !selectedSourceId) {
       setSelectedSourceId(activeSources[0].id);
@@ -72,126 +65,56 @@ function StreamPreviewPage() {
     }
   }, [activeSources, selectedSourceId]);
 
-  // Handle source switching
-  const handleSourceSwitch = (sourceId) => {
+  const selectedSource = activeSources.find((s: any) => s.id === selectedSourceId) || activeSources[0];
+
+  const handleSourceSwitch = (sourceId: string) => {
     setSelectedSourceId(sourceId);
-    const source = activeSources.find((s) => s.id === sourceId);
-    if (source) {
-      trackUIInteraction("switch_preview_source", "click", {
-        source_id: sourceId,
-        source_name: source.name,
-        total_active_sources: activeSources.length,
-        page: "stream_preview",
-      });
-    }
+    trackUIInteraction("switch_preview_source", "click", { source_id: sourceId });
   };
 
   if (sourcesLoading) {
     return (
-      <div className="w-full px-6 py-6 space-y-6  mx-auto">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-          <div className="aspect-video bg-muted rounded-lg mb-4"></div>
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-muted" />
+          <div className="h-4 w-48 bg-muted rounded" />
         </div>
       </div>
     );
   }
 
-  // No active streams - Show encouraging message
+  // Empty State
   if (activeSources.length === 0) {
-    // Positive psychology messages (rotate based on time for variety)
-    const hour = new Date().getHours();
-    const messages = [
-      {
-        title: "Your stage is set!",
-        description:
-          "Everything's ready to go. When you start streaming from your broadcasting software, you'll see the magic happen here!",
-      },
-      {
-        title: "All systems ready! ",
-        description:
-          "Your stream is prepped and waiting. Time to create some amazing content!",
-      },
-      {
-        title: "Ready to shine bright! ",
-        description:
-          "The digital stage is yours. Start streaming whenever you're ready to put on a show!",
-      },
-      {
-        title: "The spotlight's on you! ",
-        description:
-          "Everything's configured and waiting. Your audience is eager to see what you'll create!",
-      },
-    ];
-
-    const message = messages[hour % messages.length];
-
     return (
-      <div className="w-full px-6 py-6 space-y-6  mx-auto">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-3xl font-normal text-foreground text-primary-foreground">
-                Stream Preview
-              </div>
-              <p className="text-muted-foreground">
-                Monitor your live streams and engage with your audience
-              </p>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-6 text-center">
+        <div className="w-full max-w-md space-y-8">
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+            <div className="relative flex items-center justify-center w-full h-full bg-primary/10 rounded-full border-2 border-primary/20">
+              <Radio className="w-10 h-10 text-primary" />
             </div>
           </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Ready to Go Live?</h2>
+            <p className="text-muted-foreground text-lg">
+              Configure your streaming software to start broadcasting. Your preview will appear here automatically.
+            </p>
+          </div>
 
-          {/* Main Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Stream Preview - Takes 2 columns */}
-            <div className="lg:col-span-2">
-              <EmptyState
-                icon="stream"
-                title={message.title}
-                description={message.description}
-                actionLabel="Configure Stream Sources"
-                actionHref="/dashboard/streaming"
-                secondaryActionLabel="Quick Start Guide"
-                onSecondaryAction={() => {
-                  window.open("/help", "_blank");
-                }}
-              />
-            </div>
-
-            {/* Live Chat Section - Empty State */}
-            <div className="lg:col-span-1">
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-                      Live Chat
-                    </span>
-                  </CardTitle>
-                  <CardDescription>
-                    Engage with your audience in real-time
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center h-[400px] text-center space-y-4">
-                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
-                    <MessageCircle className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">
-                      All your chats appear here
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-[250px]">
-                      Make sure to connect them
-                    </p>
-                  </div>
-                  <Button variant="default" asChild className="mt-4">
-                    <Link to="/dashboard/streaming">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Streams
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+          <div className="grid gap-4">
+            <Button size="lg" className="w-full gap-2 text-base" asChild>
+              <Link to="/dashboard/streaming">
+                <Settings className="w-5 h-5" />
+                Get Stream Key
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" className="w-full gap-2" asChild>
+              <Link to="/help">
+                <LayoutTemplate className="w-5 h-5" />
+                View Setup Guide
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -199,299 +122,121 @@ function StreamPreviewPage() {
   }
 
   return (
-    <div className="w-full px-4 py-4 md:px-6 md:py-6 space-y-4 md:space-y-6 mx-auto min-h-0 flex flex-col">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-3xl font-normal text-foreground">
-            Stream Preview
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-black/95 relative">
+      {/* Main Stage */}
+      <div className="flex-1 flex flex-col relative min-w-0">
+        
+        {/* Top Control Bar */}
+        <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 bg-black/40 backdrop-blur-md z-10">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+            
+              <span className="font-medium text-white/90 truncate max-w-[200px]">
+                {selectedSource?.name}
+              </span>
+            </div>
+            
+            <div className="h-4 w-px bg-white/10 mx-2 hidden sm:block" />
+            
+            <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-white/50">
+              {/* Stats will be implemented when backend API supports real-time metrics */}
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Monitor your live streams and engage with your audience
-          </p>
+
+          <div className="flex items-center gap-2">
+            
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={cn(
+                "gap-2 text-white/70 hover:text-white hover:bg-white/10",
+                isChatOpen && "bg-white/10 text-white"
+              )}
+              onClick={() => setIsChatOpen(!isChatOpen)}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/dashboard/streaming">
-              <Settings className="h-4 w-4 mr-2" />
-              Stream Settings
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/dashboard">
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
-      </div>
 
-      {/* Mini Dashboard Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Active Streams</CardDescription>
-            <CardTitle className="text-2xl">{activeSources.length}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              {sources.length - activeSources.length} inactive
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Current Viewers</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="h-5 w-5" />0
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Real-time count</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Stream Quality</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <MonitorSpeaker className="h-5 w-5" />
-              1080p
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">60 fps</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Status</CardDescription>
-            <CardTitle className="text-2xl">
-              <Badge
-                variant="outline"
-                className="text-green-600 border-green-600"
-              >
-                <div className="w-2 h-2 rounded-full bg-green-600 mr-2 animate-pulse" />
-                Live
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              {selectedSource?.name || "No source selected"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Source Selector */}
-      {activeSources.length > 1 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>Active Stream Sources</span>
-              <Badge variant="outline">
-                {activeSources.findIndex((s) => s.id === selectedSource.id) + 1}{" "}
-                of {activeSources.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const currentIndex = activeSources.findIndex(
-                    (s) => s.id === selectedSource.id,
-                  );
-                  const prevIndex =
-                    currentIndex === 0
-                      ? activeSources.length - 1
-                      : currentIndex - 1;
-                  handleSourceSwitch(activeSources[prevIndex].id);
-                }}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
-
-              <div className="flex-1 text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <MonitorSpeaker className="h-4 w-4 text-emerald-500" />
-                  <span className="font-medium">{selectedSource.name}</span>
-                  <Badge variant="default" className="bg-emerald-500">
-                    LIVE
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedSource.description || "Stream source"}
-                </p>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const currentIndex = activeSources.findIndex(
-                    (s) => s.id === selectedSource.id,
-                  );
-                  const nextIndex = (currentIndex + 1) % activeSources.length;
-                  handleSourceSwitch(activeSources[nextIndex].id);
-                }}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-
-            {/* Source dots indicator */}
-            <div className="flex items-center justify-center space-x-2 mt-4">
-              {activeSources.map((source) => (
-                <button
-                  key={source.id}
-                  onClick={() => handleSourceSwitch(source.id)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    source.id === selectedSource.id
-                      ? "bg-primary"
-                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                  title={source.name}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 flex-1 min-h-0">
-        {/* Stream Preview - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <MonitorSpeaker className="h-5 w-5 mr-2 text-primary" />
-                  {selectedSource.name}
-                </span>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="default" className="bg-emerald-500">
-                    <div className="h-2 w-2 bg-white rounded-full animate-pulse mr-2"></div>
-                    LIVE
-                  </Badge>
-                  <Button variant="ghost" size="sm">
-                    <Maximize2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                High-quality preview of your live stream
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pb-4">
-              <StreamPreview
-                streamKey={selectedSource.stream_key}
-                isActive={selectedSource.is_active}
+        {/* Video Player Area */}
+        <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden group">
+          <div className="w-full h-full relative">
+             <StreamPreview
+                streamKey={selectedSource?.stream_key}
+                isActive={selectedSource?.is_active}
               />
+              
 
-              {/* Stream Actions Bar */}
-              <div className="flex items-center justify-between mt-4 p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Users className="h-4 w-4 mr-2" />
-                    Viewers: --
-                  </Button>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsMuted(!isMuted)}
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-4 w-4" />
-                    ) : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <span>Stream Quality: Auto</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
 
-        {/* Live Chat Section */}
-        <div className="lg:col-span-1 self-stretch h-full">
-          {selectedSource && <LiveChat sourceId={selectedSource.id} />}
-        </div>
+        {/* Bottom Source Selector (if multiple sources) */}
+        {activeSources.length > 1 && (
+          <div className="h-20 bg-black/40 backdrop-blur-md border-t border-white/10 flex items-center px-4 gap-4 overflow-x-auto">
+            {activeSources.map((source: any) => (
+              <button
+                key={source.id}
+                onClick={() => handleSourceSwitch(source.id)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-2 rounded-lg border transition-all min-w-[200px]",
+                  selectedSourceId === source.id
+                    ? "bg-primary/20 border-primary/50 text-white"
+                    : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <div className="relative">
+                  <Monitor className="w-8 h-8" />
+                  {source.is_active && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-black" />
+                  )}
+                </div>
+                <div className="text-left overflow-hidden">
+                  <div className="font-medium truncate text-sm">{source.name}</div>
+                  <div className="text-xs opacity-70 truncate">
+                    {source.destinations_count} destinations
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Additional Stream Sources */}
-      {activeSources.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">All Active Streams</CardTitle>
-            <CardDescription>
-              Switch between different stream sources to monitor each one
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {activeSources.map((source) => (
-                <button
-                  key={source.id}
-                  onClick={() => handleSourceSwitch(source.id)}
-                  className={`p-4 rounded-lg border transition-colors text-left ${
-                    source.id === selectedSource.id
-                      ? "bg-primary/10 border-primary/30"
-                      : "bg-background border-border hover:border-primary/50"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                      <MonitorSpeaker className="h-5 w-5 text-emerald-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium truncate">{source.name}</h4>
-                        {source.id === selectedSource.id ? (
-                          <Badge
-                            variant="default"
-                            className="text-xs bg-emerald-500"
-                          >
-                            Current
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            Active
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {source.description || "Stream source"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {source.destinations_count} destination
-                        {source.destinations_count !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
+      {/* Chat Sidebar */}
+      <AnimatePresence initial={false}>
+        {isChatOpen && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 360, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="border-l border-white/10 bg-card/95 backdrop-blur-xl relative flex flex-col z-20"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border/40">
+              <h3 className="font-semibold flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                Live Chat
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={() => setIsChatOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            
+            <div className="flex-1 overflow-hidden relative">
+              {selectedSource && <LiveChat sourceId={selectedSource.id} />}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Onboarding Tour for first-time users */}
       <OnboardingTour
         isOpen={showOnboarding}
         onClose={() => {}}

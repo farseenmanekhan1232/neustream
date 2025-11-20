@@ -377,11 +377,8 @@ function LiveChat({
       {showHeader && (
         <CardHeader className="pb-3 flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center">
-              <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-              Live Chat
-            </span>
-            <div className="flex items-center space-x-2">
+            <div className="flex gap-1">
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -405,6 +402,8 @@ function LiveChat({
                   <Copy className="h-4 w-4" />
                 )}
               </Button>
+            </div>
+            <div className="flex items-center space-x-2">
               <Badge
                 variant={isConnected ? "default" : "secondary"}
                 className={isConnected ? "bg-green-500" : ""}
