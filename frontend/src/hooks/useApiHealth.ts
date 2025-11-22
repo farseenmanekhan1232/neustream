@@ -25,7 +25,7 @@ export const useApiHealth = (): ApiHealthStatus => {
     setStatus((prev) => ({ ...prev, isChecking: true, error: null }));
 
     try {
-      const response = await fetch(`http://localhost:3000/health`, {
+      const response = await fetch(`https://api.neustream.app/health`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
