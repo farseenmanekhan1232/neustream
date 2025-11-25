@@ -70,7 +70,15 @@ const secondaryNavItems = [
   },
 ];
 
-function NavItem({ item, isActive, isCollapsed }: { item: any; isActive: boolean; isCollapsed: boolean }) {
+function NavItem({
+  item,
+  isActive,
+  isCollapsed,
+}: {
+  item: any;
+  isActive: boolean;
+  isCollapsed: boolean;
+}) {
   return (
     <Button
       variant="ghost"
@@ -80,7 +88,7 @@ function NavItem({ item, isActive, isCollapsed }: { item: any; isActive: boolean
         isActive
           ? "bg-primary/10 text-primary hover:bg-primary/15"
           : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-        isCollapsed && "justify-center px-2"
+        isCollapsed && "justify-center px-2",
       )}
       asChild
     >
@@ -101,7 +109,15 @@ function NavItem({ item, isActive, isCollapsed }: { item: any; isActive: boolean
   );
 }
 
-function UserMenu({ user, logout, isCollapsed }: { user: any; logout: () => void; isCollapsed: boolean }) {
+function UserMenu({
+  user,
+  logout,
+  isCollapsed,
+}: {
+  user: any;
+  logout: () => void;
+  isCollapsed: boolean;
+}) {
   const getUserInitials = () => {
     if (user?.displayName) {
       return user.displayName.charAt(0).toUpperCase();
@@ -116,11 +132,14 @@ function UserMenu({ user, logout, isCollapsed }: { user: any; logout: () => void
           variant="ghost"
           className={cn(
             "w-full justify-start gap-3 p-2 h-auto hover:bg-muted/50",
-            isCollapsed && "justify-center px-0"
+            isCollapsed && "justify-center px-0",
           )}
         >
           <Avatar className="h-9 w-9 border border-border/50">
-            <AvatarImage src={user?.avatarUrl} alt={user?.displayName || "User"} />
+            <AvatarImage
+              src={user?.avatarUrl}
+              alt={user?.displayName || "User"}
+            />
             <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {getUserInitials()}
             </AvatarFallback>
@@ -137,7 +156,12 @@ function UserMenu({ user, logout, isCollapsed }: { user: any; logout: () => void
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" side="right" sideOffset={8}>
+      <DropdownMenuContent
+        className="w-56"
+        align="end"
+        side="right"
+        sideOffset={8}
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
@@ -155,7 +179,10 @@ function UserMenu({ user, logout, isCollapsed }: { user: any; logout: () => void
             <span>Account Settings</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={logout} className="text-red-500 focus:text-red-500 cursor-pointer">
+        <DropdownMenuItem
+          onClick={logout}
+          className="text-red-500 focus:text-red-500 cursor-pointer"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
@@ -196,7 +223,8 @@ export default function DashboardLayout() {
     enabled: !!user,
   });
 
-  const isFreeplan = subscriptionData?.subscription?.plan_name?.toLowerCase() === "free";
+  const isFreeplan =
+    subscriptionData?.subscription?.plan_name?.toLowerCase() === "free";
 
   // Handle responsive sidebar
   useEffect(() => {
@@ -247,7 +275,7 @@ export default function DashboardLayout() {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl transition-all duration-300 lg:static",
           isSidebarOpen ? "w-64" : "w-20",
-          !isMobileMenuOpen && "lg:flex hidden"
+          !isMobileMenuOpen && "lg:flex hidden",
         )}
         animate={{
           width: isSidebarOpen ? 256 : 80,
@@ -255,10 +283,15 @@ export default function DashboardLayout() {
         }}
       >
         {/* Logo Area */}
-        <div className={cn("flex h-16 items-center border-b border-border/40", isSidebarOpen ? "px-6" : "justify-center")}>
+        <div
+          className={cn(
+            "flex h-16 items-center border-b border-border/40",
+            isSidebarOpen ? "px-6" : "justify-center",
+          )}
+        >
           <Link to="/" className="flex items-center gap-2 overflow-hidden">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <img src="logo.png"/>
+              <img src="logo.png" />
             </div>
             {isSidebarOpen && (
               <motion.span
@@ -279,7 +312,11 @@ export default function DashboardLayout() {
               <NavItem
                 key={item.url}
                 item={item}
-                isActive={location.pathname === item.url || (item.url !== "/dashboard" && location.pathname.startsWith(item.url))}
+                isActive={
+                  location.pathname === item.url ||
+                  (item.url !== "/dashboard" &&
+                    location.pathname.startsWith(item.url))
+                }
                 isCollapsed={!isSidebarOpen}
               />
             ))}
@@ -290,12 +327,17 @@ export default function DashboardLayout() {
             <Link to="/dashboard/subscription" className="block">
               <div className="mx-2 p-3 rounded-lg border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 transition-all duration-200 group">
                 <div className="flex items-start gap-2 mb-2">
-                  <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30 text-[10px] h-4">
+                  <Badge
+                    variant="outline"
+                    className="bg-primary/20 text-primary border-primary/30 text-[10px] h-4"
+                  >
                     Pro
                   </Badge>
                   <Sparkles className="h-3 w-3 text-primary/70 shrink-0 mt-0.5" />
                 </div>
-                <p className="text-xs font-medium text-foreground mb-1">Upgrade for Unlimited</p>
+                <p className="text-xs font-medium text-foreground mb-1">
+                  Upgrade for Unlimited
+                </p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
                   Stream hours & destinations
                 </p>
@@ -340,11 +382,17 @@ export default function DashboardLayout() {
             <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
               <Link to="/" className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                  <Zap className="h-5 w-5 text-primary" />
+                  <img src="logo.png" />
                 </div>
-                <span className="font-bold text-lg tracking-tight">neustream.</span>
+                <span className="font-bold text-lg tracking-tight">
+                  neustream.
+                </span>
               </Link>
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -354,7 +402,11 @@ export default function DashboardLayout() {
                   <NavItem
                     key={item.url}
                     item={item}
-                    isActive={location.pathname === item.url || (item.url !== "/dashboard" && location.pathname.startsWith(item.url))}
+                    isActive={
+                      location.pathname === item.url ||
+                      (item.url !== "/dashboard" &&
+                        location.pathname.startsWith(item.url))
+                    }
                     isCollapsed={false}
                   />
                 ))}
@@ -397,28 +449,34 @@ export default function DashboardLayout() {
               className="hidden lg:flex text-muted-foreground hover:text-foreground"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
-              {isSidebarOpen ? <Menu className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+              {isSidebarOpen ? (
+                <Menu className="h-5 w-5" />
+              ) : (
+                <ChevronRight className="h-5 w-5" />
+              )}
             </Button>
-            
+
             {/* Breadcrumbs / Page Title */}
             <div className="hidden md:flex items-center text-sm text-muted-foreground">
-               <span className="hover:text-foreground transition-colors cursor-default">Dashboard</span>
-               {location.pathname !== "/dashboard" && (
-                 <>
-                   <ChevronRight className="h-4 w-4 mx-2" />
-                   <span className="font-medium text-foreground capitalize">
-                     {location.pathname.split("/").pop()?.replace("-", " ")}
-                   </span>
-                 </>
-               )}
+              <span className="hover:text-foreground transition-colors cursor-default">
+                Dashboard
+              </span>
+              {location.pathname !== "/dashboard" && (
+                <>
+                  <ChevronRight className="h-4 w-4 mx-2" />
+                  <span className="font-medium text-foreground capitalize">
+                    {location.pathname.split("/").pop()?.replace("-", " ")}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Global Status Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
-               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-xs font-medium">System Operational</span>
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-medium">System Operational</span>
             </div>
           </div>
         </header>
