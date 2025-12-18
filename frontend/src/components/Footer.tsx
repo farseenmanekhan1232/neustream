@@ -254,7 +254,7 @@ function Footer() {
               }
             />
             <SocialLink
-              href="https://github.com/farseenmanekhan1232"
+              href="https://github.com/farseenmanekhan1232/neustream"
               label="GitHub"
               icon={
                 <svg

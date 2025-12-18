@@ -228,33 +228,33 @@ function Landing() {
   return (
     <div className="min-h-screen bg-teal-gradient text-white">
       <Helmet>
-        <title>Neustream - Multistream to all platforms from one place</title>
+        <title>Neustream - Open Source Multistreaming Platform</title>
         <meta
           name="description"
-          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+          content="Free and open-source multistreaming platform. Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously. Self-hostable alternative to Restream."
         />
         <meta
           name="keywords"
-          content="multistream, live streaming, youtube, twitch, facebook, linkedin, streaming software, content creator"
+          content="open source multistream, live streaming, youtube, twitch, facebook, linkedin, streaming software, self-hosted streaming"
         />
         <meta
           property="og:title"
-          content="Neustream - Multistream to all platforms from one place"
+          content="Neustream - Open Source Multistreaming Platform"
         />
         <meta
           property="og:description"
-          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+          content="Free and open-source multistreaming platform. Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously. Self-hostable alternative to Restream."
         />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Neustream - Multistream to all platforms from one place"
+          content="Neustream - Open Source Multistreaming Platform"
         />
         <meta
           name="twitter:description"
-          content="Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously with Neustream. Professional multistreaming platform for content creators."
+          content="Free and open-source multistreaming platform. Stream to YouTube, Twitch, Facebook, and LinkedIn simultaneously. Self-hostable alternative to Restream."
         />
         <meta name="twitter:image" content="/twitter-image.png" />
         <link rel="canonical" href="https://neustream.app" />
@@ -361,10 +361,9 @@ function Landing() {
                   </TextHighlighter>
                 </div>
                 <p className="text-lg md:text-2xl font-light opacity-90 max-w-3xl mx-auto max-lg:tracking-tight max-lg:leading-5">
-                  Multistream to <strong className="italic">YouTube</strong>,{" "}
+                  The <strong className="italic">Open Source</strong> alternative to Restream. Multistream to <strong className="italic">YouTube</strong>,{" "}
                   <strong className="italic">Twitch</strong>,{" "}
-                  <strong className="italic">Facebook</strong>, and more from
-                  one place. Cloud encoding keeps your machine fast.
+                  <strong className="italic">Facebook</strong>, and more. Cloud encoding keeps your machine fast.
                 </p>
               </div>
 
