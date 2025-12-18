@@ -1,4 +1,6 @@
-# Neustream - Multi-Destination Streaming SaaS
+# Neustream - Multi-Destination Streaming
+
+<img width="1200" height="630" alt="og" src="https://github.com/user-attachments/assets/469ef6ea-f8be-41fe-998a-a5a5887db153" />
 
 Neustream is a comprehensive multi-destination streaming service designed to simplify broadcasting to multiple platforms simultaneously (e.g., YouTube, Twitch, Facebook) from a single ingestion point.
 
@@ -31,7 +33,7 @@ This repository is organized into several components:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/yourusername/neustream.git
+    git clone https://github.com/farseenmanekhan1232/neustream.git
     cd neustream
     ```
 
