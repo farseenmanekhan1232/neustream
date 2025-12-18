@@ -1,8 +1,13 @@
 # Neustream - Multi-Destination Streaming
 
+[![License](https://img.shields.io/github/license/farseenmanekhan1232/neustream)](https://github.com/farseenmanekhan1232/neustream/blob/main/LICENSE)
+[![CI/CD](https://github.com/farseenmanekhan1232/neustream/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/farseenmanekhan1232/neustream/actions/workflows/ci-cd.yml)
+[![GitHub Issues](https://img.shields.io/github/issues/farseenmanekhan1232/neustream)](https://github.com/farseenmanekhan1232/neustream/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/farseenmanekhan1232/neustream?style=social)](https://github.com/farseenmanekhan1232/neustream/stargazers)
+
 <img width="1200" height="630" alt="og" src="https://github.com/user-attachments/assets/469ef6ea-f8be-41fe-998a-a5a5887db153" />
 
-Neustream is a comprehensive multi-destination streaming service designed to simplify broadcasting to multiple platforms simultaneously (e.g., YouTube, Twitch, Facebook) from a single ingestion point.
+Neustream is a comprehensive, **open-source alternative to platforms like Restream.io, StreamYard, and Castr**. It is designed to simplify broadcasting to multiple platforms simultaneously (e.g., YouTube, Twitch, Facebook) from a single ingestion point, giving you full control over your streaming infrastructure.
 
 ## Project Structure
 
