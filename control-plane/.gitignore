@@ -2,6 +2,7 @@
 .env
 .env.*
 .env.local
+!.env.example
 
 # TypeScript build output
 dist/

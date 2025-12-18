@@ -1,0 +1,10 @@
+{
+  "blank_issues_enabled": true,
+  "contact_links": [
+    {
+      "name": "Support",
+      "url": "https://github.com/your-username/neustream/discussions",
+      "about": "Please search for existing questions first"
+    }
+  ]
+}
