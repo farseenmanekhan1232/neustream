@@ -13,10 +13,14 @@ Neustream is a comprehensive, **open-source alternative to platforms like Restre
 
 This repository is organized into several components:
 
-*   **[admin](./admin)**: The administrative dashboard for managing users, streams, and system configuration. Built with React/Vite.
-*   **[control-plane](./control-plane)**: The core backend service managing authentication, stream orchestration, and API endpoints. Built with Node.js/TypeScript.
-*   **[frontend](./frontend)**: The main user-facing application for streamers to configure their destinations and monitor streams. Built with React/Vite.
-*   **[media-server](./media-server)**: The streaming engine handling RTMP ingest and relay logic. Powered by NGINX-RTMP and custom scripts.
+*   **[admin](./admin)**: Internal dashboard for platform administration.
+    *   *Stack*: React 19, Vite, Tailwind CSS, TanStack Query.
+*   **[control-plane](./control-plane)**: The central API backend and orchestration service.
+    *   *Stack*: Node.js, Express, PostgreSQL, Redis, Socket.IO, Passport.js.
+*   **[frontend](./frontend)**: The public-facing dashboard for streamers.
+    *   *Stack*: React 19, Vite, Tailwind CSS v4, Radix UI, Motion.
+*   **[media-server](./media-server)**: The high-performance RTMP ingestion and relay engine.
+    *   *Stack*: MediaMTX (or NGINX-RTMP), FFmpeg, Shell Scripts.
 
 ## Features
 
@@ -24,6 +28,15 @@ This repository is organized into several components:
 *   **Real-time Monitoring**: Monitor ingestion health and destination delivery status.
 *   **User Management**: Dashboard for configuring stream keys and destinations.
 *   **Scalable Architecture**: Designed for growth with separation of concerns between control plane and media handling.
+
+## Architecture
+
+Neustream operates on a decoupled architecture to ensure stability and scalability:
+
+1.  **Ingestion**: Streamers send video via OBS/vMix to the **Media Server** (RTMP).
+2.  **Authentication**: The Media Server validates the stream key against the **Control Plane** API.
+3.  **Forwarding**: Upon successful auth, the Media Server fetches the user's destination config (YouTube, Twitch, etc.) and spawns **FFmpeg** processes to relay the stream.
+4.  **Monitoring**: The Frontend connects to the Control Plane via **WebSockets** for real-time status updates and chat aggregation.
 
 ## Getting Started
 

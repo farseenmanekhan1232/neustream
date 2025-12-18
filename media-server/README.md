@@ -1,66 +1,72 @@
 # Neustream Media Server
 
-The Media Server is the core streaming engine for Neustream. It handles the ingestion of RTMP streams from OBS (or other encoders) and relays them to multiple destinations (YouTube, Twitch, Facebook, etc.).
+The Media Server is the high-performance streaming engine for Neustream. It handles RTMP ingestion, authentication, and multi-destination relaying using **MediaMTX** and **FFmpeg**.
 
-It utilizes **MediaMTX** (formerly rtsp-simple-server) or **NGINX-RTMP** for high-performance streaming and custom shell scripts for stream lifecycle management.
+## Architecture
 
-## Components
+The media server is designed to be lightweight and stateless. It relies on the Control Plane for authentication and configuration.
 
-*   **Media Engine**: Handles RTMP/RTMPS ingestion and fan-out.
-*   **Lifecycle Scripts**:
-    *   `on_stream_ready.sh`: Triggered when a new stream starts. Authenticates the stream key with the Control Plane and retrieves the list of target destinations.
-    *   `on_stream_unpublish.sh`: Triggered when a stream ends. Updates the status in the Control Plane.
-*   **Configuration**:
-    *   `mediamtx.yml`: Configuration file for MediaMTX.
-    *   `nginx-media-server.conf`: Alternative configuration for NGINX-RTMP.
+### Streaming Flow
 
-## Setup & Usage
+1.  **Ingest**: User streams from OBS to `rtmp://current-server-ip/live/{stream_key}`.
+2.  **Trigger**: MediaMTX receives the stream and triggers `on_stream_ready.sh`.
+3.  **Authentication**:
+    *   Script calls `POST /api/auth/stream` on the Control Plane.
+    *   If invalid, the script exits with error, and MediaMTX rejects the connection.
+4.  **Configuration Fetch**:
+    *   Script calls `GET /api/streams/forwarding/{stream_key}`.
+    *   Control Plane returns JSON with a list of destination RTMP URLs (YouTube, Twitch, etc.).
+5.  **Fan-out (Relay)**:
+    *   The script spawns a detached `ffmpeg` process.
+    *   FFmpeg pulls the local stream and pushes it to all target destinations simultaneously using `-c copy` (zero transcoding) for minimal CPU usage.
+6.  **Cleanup**:
+    *   When the stream stops, `on_stream_unpublish.sh` is triggered.
+    *   It kills the specific FFmpeg process associated with that stream ID and notifies the Control Plane.
 
-### Prerequisites
+## Prerequisites
 
-*   A Linux server (Ubuntu/Debian recommended) or Docker environment.
-*   `ffmpeg` installed and available in the system PATH.
-*   `curl` for API requests in scripts.
+*   **OS**: Linux (Ubuntu 20.04+ / Debian 11+ recommended)
+*   **Media Server**: [MediaMTX](https://github.com/bluenviron/mediamtx) (v1.0+)
+*   **Utilities**:
+    *   `ffmpeg` (must be in system PATH)
+    *   `curl` (for API requests)
+    *   `jq` (for JSON parsing)
 
-### Configuration
+## Installation & Setup
 
-1.  **Environment Variables**:
-    Copy `.env.example` to `.env` (or set system environment variables) to configure the callback URLs for the Control Plane.
-
+1.  **Install Dependencies**:
     ```bash
-    cp .env.example .env
+    apt-get update && apt-get install -y ffmpeg curl jq
     ```
 
-2.  **Scripts Permission**:
-    Ensure the shell scripts are executable:
+2.  **Configure Environment**:
+    *   Copy `.env.example` to `.env`.
+    *   Ensure the `CONTROL_PLANE_URL` points to your deployed backend (e.g., `https://api.neustream.app`).
 
-    ```bash
-    chmod +x on_stream_ready.sh
-    chmod +x on_stream_unpublish.sh
-    ```
+3.  **Install MediaMTX**:
+    *   Download the binary from the [official releases](https://github.com/bluenviron/mediamtx/releases).
+    *   Place it in `/opt/neustream/` (or your preferred directory).
 
-### Running with MediaMTX
+4.  **Configuration**:
+    *   Copy `mediamtx.yml` to the same directory as the binary.
+    *   Verify the paths in `mediamtx.yml` point to the correct location of your scripts:
+        ```yaml
+        runOnReady: /opt/neustream/on_stream_ready.sh $MTX_PATH
+        ```
 
-1.  Download the latest release of [MediaMTX](https://github.com/bluenviron/mediamtx).
-2.  Place `mediamtx.yml` in the same directory as the binary.
-3.  Run the server:
+5.  **Scripts**:
+    *   Copy `on_stream_ready.sh` and `on_stream_unpublish.sh` to `/opt/neustream/`.
+    *   Make them executable:
+        ```bash
+        chmod +x /opt/neustream/*.sh
+        ```
+
+6.  **Run Server**:
     ```bash
     ./mediamtx
     ```
 
-### Running with NGINX-RTMP
+## Scripts Overview
 
-1.  Install NGINX with the RTMP module (`libnginx-mod-rtmp` on Debian/Ubuntu).
-2.  Replace the default `nginx.conf` with `nginx-media-server.conf` (or include it).
-3.  Reload NGINX:
-    ```bash
-    sudo systemctl reload nginx
-    ```
-
-## How it Works
-
-1.  **Ingestion**: User streams to `rtmp://your-server/live/{stream_key}`.
-2.  **Authentication**: The media server triggers `on_stream_ready.sh`.
-3.  **Validation**: The script calls the Control Plane API to validate the `{stream_key}`.
-4.  **Fan-out**: If valid, the Control Plane returns a list of destination RTMP URLs.
-5.  **Relay**: The script (or media server) spawns `ffmpeg` processes to push the stream to each destination.
+*   **`on_stream_ready.sh`**: Authenticates stream, fetches destinations, starts FFmpeg relay.
+*   **`on_stream_unpublish.sh`**: cleans up resources and updates stream status.

@@ -1,29 +1,54 @@
 # Neustream Control Plane
 
-The Control Plane is the central backend service for Neustream. It handles user authentication, stream management, payment processing, and orchestration between the frontend and the media server.
+The Control Plane is the brain of the Neustream architecture. It manages user authentication, stream configuration, payment processing, and real-time chat aggregation.
 
 ## Tech Stack
 
 *   **Runtime**: Node.js
-*   **Language**: TypeScript
 *   **Framework**: Express.js
 *   **Database**: PostgreSQL
-*   **Real-time**: Socket.IO
-*   **Authentication**: Passport.js (Google, Twitch OAuth)
+*   **Real-time Communication**: Socket.IO & WebSocket
+*   **Authentication**: Passport.js (JWT, Google OAuth, Twitch OAuth)
 *   **Payments**: Razorpay
-*   **Communication**: gRPC (for internal services), REST API
+*   **Analytics**: PostHog
+*   **External APIs**: YouTube Data API, Twitch API (for chat & stats)
+
+## Core Services
+
+### 1. Stream Management
+*   **Ingest Auth**: Authenticates incoming streams from the Media Server (`/api/auth/stream`).
+*   **Orchestration**: Directs the Media Server where to forward streams based on active configurations (`/api/streams/forwarding/:streamKey`).
+
+### 2. Multi-Platform Chat
+*   **Aggregation**: Connects to YouTube Live Chat and Twitch Chat APIs.
+*   **Unified Interface**: Merges messages from all platforms into a single WebSocket stream for the Frontend.
+
+### 3. User & Subscription
+*   **Management**: Handles user profiles, stream keys, and plan quotas.
+*   **Billing**: Manages subscription lifecycles via Razorpay webhooks.
+
+## API Structure
+
+| Route Prefix | Purpose |
+|Data|Description|
+| `api/auth` | User login/signup (Google, Twitch) |
+| `api/streams` | Stream key management & active stream status |
+| `api/destinations` | CRUD for destination platforms (YouTube, Twitch, etc.) |
+| `api/chat` | Chat history and WebSocket connection details |
+| `api/payments` | Razorpay checkout and webhooks |
+| `api/admin` | Administrative endpoints (restricted) |
 
 ## Getting Started
 
 ### Prerequisites
 
 *   Node.js (v18+)
-*   PostgreSQL
-*   Redis (optional, depending on configuration)
+*   PostgreSQL (local or cloud)
+*   Redis (optional, for session store if configured)
 
 ### Installation
 
-1.  Navigate to the control-plane directory:
+1.  Navigate to the directory:
     ```bash
     cd control-plane
     ```
@@ -33,53 +58,30 @@ The Control Plane is the central backend service for Neustream. It handles user 
     npm install
     ```
 
-3.  Configure environment variables:
-    Copy `.env.example` to `.env` and fill in your database credentials, API keys, and other secrets.
+3.  **Database Setup**:
+    *   Create a Postgres database (e.g., `neustream`).
+    *   Copy `.env.example` to `.env` and update `DB_HOST`, `DB_USER`, `DB_PASSWORD`, etc.
+
+4.  **Run Migrations**:
     ```bash
-    cp .env.example .env
+    npm run migrate:ts
     ```
-
-### Database Migration
-
-Run database migrations to set up the schema:
-
-```bash
-npm run migrate:ts
-```
 
 ### Development
 
-Start the development server with hot-reload:
+Start the server in development mode (hot-reload):
 
 ```bash
 npm run dev
 ```
 
-Or with TypeScript execution directly:
-
-```bash
-npm run dev:ts
-```
-
-### Build
-
-Compile TypeScript to JavaScript:
+### Production Build
 
 ```bash
 npm run build
-```
-
-Start the production server:
-
-```bash
 npm start
 ```
 
-## API Documentation
+## Environment Variables
 
-The API endpoints are organized in the `routes` directory. Key resources include:
-
-*   `/api/auth`: Authentication endpoints
-*   `/api/user`: User profile management
-*   `/api/streams`: Stream key and ingestion configuration
-*   `/api/destinations`: Managing downstream platforms (YouTube, Twitch, etc.)
+See `.env.example` for the full list of required variables, including OAuth credentials (Google/Twitch) and Payment keys.

@@ -1,16 +1,32 @@
 # Neustream Admin Dashboard
 
-The Admin Dashboard provides an interface for administrators to manage users, streams, subscriptions, and system configurations.
+The Admin Dashboard is a restricted access interface for platform administrators to manage the Neustream SaaS instance. It provides tools for user management, subscription oversight, and global system configuration.
 
 ## Tech Stack
 
 *   **Framework**: React 19 (Vite)
-*   **Language**: TypeScript
+*   **Language**: JavaScript/JSX (Migration to TypeScript in progress)
 *   **UI Library**: Radix UI
-*   **Styling**: Tailwind CSS
+*   **Styling**: Tailwind CSS (v3)
 *   **State Management**: TanStack Query (React Query)
 *   **Icons**: Lucide React
-*   **Deployment**: Cloudflare Pages
+*   **Routing**: React Router v6
+
+## Features
+
+### User & Subscription Management
+*   **Users**: View, edit, and ban users.
+*   **Subscriptions**: Manage subscription plans (pricing, limits) and view active user subscriptions.
+
+### Stream Operations
+*   **Active Streams**: Monitor all currently active streams on the platform.
+*   **Destinations**: Global view of connected destination platforms.
+*   **Sources**: Manage ingest sources.
+
+### System & Support
+*   **Analytics**: System-wide performance and usage metrics.
+*   **Contact Messages**: View and manage support (Contact Us) submissions.
+*   **Settings**: Global platform configurations.
 
 ## Getting Started
 
@@ -18,6 +34,7 @@ The Admin Dashboard provides an interface for administrators to manage users, st
 
 *   Node.js (v18+)
 *   npm or yarn
+*   A user account with `is_admin = true` in the `users` database table.
 
 ### Installation
 
@@ -32,7 +49,7 @@ The Admin Dashboard provides an interface for administrators to manage users, st
     ```
 
 3.  Configure environment variables:
-    Copy `.env.example` to `.env` and update the values.
+    Copy `.env.example` to `.env`.
     ```bash
     cp .env.example .env
     ```
@@ -45,22 +62,16 @@ Start the development server:
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173` (or the port shown in the terminal).
+The admin dashboard will be available at `http://localhost:5174` (default Vite port for second app).
 
 ### Build
 
-Build the application for production:
+Build for production:
 
 ```bash
 npm run build
 ```
 
-The output will be in the `dist` directory.
+## Security Note
 
-### Deployment
-
-This application is configured for deployment on Cloudflare Pages.
-
-```bash
-npm run deploy
-```
+This dashboard is protected by an `isAdmin` check in the `AuthProvider`. Ensure your API correctly validates admin privileges for all `/api/admin/*` endpoints to prevent unauthorized access.
