@@ -513,8 +513,8 @@ function SourceDetails({ source, onUpdate, onDelete, onRegenerateKey }: any) {
               <div className="grid gap-2">
                 <Label>RTMP URL</Label>
                 <div className="flex gap-2">
-                  <Input readOnly value="rtmp://stream.neustream.com/live" className="font-mono bg-muted/30" />
-                  <Button variant="outline" size="icon" onClick={() => copyToClipboard("rtmp://stream.neustream.com/live")}>
+                  <Input readOnly value="rtmp://stream.neustream.app/live" className="font-mono bg-muted/30" />
+                  <Button variant="outline" size="icon" onClick={() => copyToClipboard("rtmp://stream.neustream.app/live")}>
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
