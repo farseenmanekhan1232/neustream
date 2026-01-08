@@ -200,7 +200,7 @@ export default function ChatConnectorSetup({ sourceId }: ChatConnectorSetupProps
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 xl:grid-cols-2">
         {PLATFORMS.map((platform) => {
           const { status, connector } = getPlatformStatus(platform.id);
           const isConnected = status === "connected";
@@ -226,7 +226,7 @@ export default function ChatConnectorSetup({ sourceId }: ChatConnectorSetupProps
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{platform.name}</span>
                     {isConnected && (
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20 h-5 text-[10px]">
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px]">
                         Connected
                       </Badge>
                     )}

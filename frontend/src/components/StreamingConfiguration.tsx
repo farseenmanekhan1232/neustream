@@ -409,7 +409,7 @@ const getPlatformConfig = (platform: string): PlatformConfigItem => {
 
 function SourceList({ sources, selectedId, onSelect, onAdd }: any) {
   return (
-    <div className="w-full md:w-80 border-r border-border/40 bg-card/30 flex flex-col h-[calc(100vh]">
+    <div className="w-full md:w-80 border-r border-border/40 bg-card/30 flex flex-col h-auto md:h-full shrink-0">
       <div className="p-4 border-b border-border/40 flex items-center justify-between">
         <h2 className="font-semibold">Sources</h2>
         <Button size="sm" variant="ghost" onClick={onAdd}>
@@ -478,7 +478,7 @@ function SourceDetails({ source, onUpdate, onDelete, onRegenerateKey }: any) {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh)] overflow-hidden">
+    <div className="flex-1 flex flex-col h-auto md:h-full overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-border/40 flex items-center justify-between bg-card/10">
         <div>
@@ -1012,7 +1012,7 @@ export default function StreamingConfiguration() {
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-background">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-y-auto md:overflow-hidden bg-background">
       <SourceList
         sources={sources}
         selectedId={selectedSourceId}
