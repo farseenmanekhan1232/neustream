@@ -33,7 +33,7 @@ This repository is organized into several components:
 
 Neustream operates on a decoupled architecture to ensure stability and scalability:
 
-1.  **Ingestion**: Streamers send video via OBS/vMix to the **Media Server** (RTMP).
+1.  **Ingestion**: Streamers send video via OBS/vMix ( or similar ) to the **Media Server** (RTMP).
 2.  **Authentication**: The Media Server validates the stream key against the **Control Plane** API.
 3.  **Forwarding**: Upon successful auth, the Media Server fetches the user's destination config (YouTube, Twitch, etc.) and spawns **FFmpeg** processes to relay the stream.
 4.  **Monitoring**: The Frontend connects to the Control Plane via **WebSockets** for real-time status updates and chat aggregation.
